@@ -67,6 +67,7 @@
 /* ===== RADIUS SCALE ===== */
   --radius-xs: 4px;     /* мелкие контролы, бейджи (точный захват массового 4px) */
   --radius-sm: 6px;
+  --radius-8: 8px;      /* рабочая ступень между sm(6) и md(10); согласовано в design-consistency-audit */
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;

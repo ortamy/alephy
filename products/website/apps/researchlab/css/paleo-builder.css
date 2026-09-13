@@ -1,175 +1,178 @@
+/* ============================================================
+   paleo-builder.css — Палео-конструктор: компактный экран.
+   Канон: hairline 1px, --radius-8, отступы только --space-*,
+   без теней и декоративных панелей (минимализм).
+   ============================================================ */
+
 .paleo-builder-shell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   color: var(--text-primary);
 }
 
-.paleo-builder-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-6);
-  margin-bottom: var(--space-6);
+/* Локальная hero-шапка видна только в embed-режиме:
+   в SPA её заменяет LabHero (см. lab-hero.css). */
+.paleo-builder-shell .section-hero {
+  padding: var(--space-3) var(--space-4) var(--space-3);
+  margin-bottom: var(--space-3);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-.paleo-builder-header h1 {
-  margin: 0 0 var(--space-2);
-  font-family: var(--font-heading);
+.paleo-builder-shell .section-hero-watermark {
+  display: none;
 }
 
-.paleo-builder-kicker,
-.zone-index {
-  color: var(--accent-gold);
-  font-size: 0.72rem;
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
+.paleo-builder-shell .section-hero h1 {
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-size: 1.35rem;
 }
 
-.paleo-builder-kicker {
-  margin: 0 0 var(--space-2);
+.paleo-builder-shell .section-hero-lead {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
 }
 
-.paleo-builder-mark {
-  color: var(--accent-gold);
-  font-family: var(--font-paleo);
-  font-size: 3rem;
-  line-height: 1;
-  white-space: nowrap;
-}
-
+/* ===== ДВЕ КОЛОНКИ: палитра глифов | зона сборки ===== */
 .paleo-builder-layout {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) minmax(300px, 1.15fr) minmax(250px, 0.9fr);
-  align-items: start;
+  grid-template-columns: minmax(180px, 0.6fr) minmax(320px, 1.4fr);
+  flex: 1;
   gap: var(--space-3);
+  align-items: stretch;
+  min-height: 0;
 }
 
-.paleo-builder-layout > .lab-card {
-  min-width: 0;
-  padding: 14px;
-  border-radius: var(--radius-md);
-}
-
+/* Заголовки секций — uppercase-лейблы 12px, без панелей. */
 .zone-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: baseline;
   justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
+  gap: var(--space-2);
 }
 
 .zone-heading h2 {
-  margin: 3px 0 0;
-  font-family: var(--font-heading);
-  font-size: 1.1rem;
+  margin: 0;
+  font-family: var(--font-ui, inherit);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
 .zone-count,
 .workspace-count {
-  min-width: 30px;
-  padding: var(--space-1) var(--space-2);
-  border: 1px solid var(--accent-gold);
-  border-radius: var(--radius-pill, 999px);
-  color: var(--accent-gold);
-  text-align: center;
+  min-width: 22px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
   font-family: var(--font-heading);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+  color: var(--text-secondary);
 }
 
-.zone-note,
-.drop-status {
-  margin: 0 0 var(--space-3);
-  color: var(--text-secondary);
-  font-size: 0.8rem;
+.zone-note {
+  margin: 0 0 var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ===== ПАЛИТРА ГЛИФОВ: сетка чипов 36px, скролл внутри блока ===== */
+.letter-palette {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
 }
 
 .palette-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
   gap: var(--space-2);
+  flex: 1 1 0;
+  align-content: start;
+  min-height: 84px;
+  overflow-y: auto;
 }
 
 .paleo-letter-card {
-  display: flex;
-  align-items: center;
-  gap: 9px;
+  display: grid;
+  place-items: center;
+  height: 36px;
   min-width: 0;
-  min-height: 76px;
-  padding: var(--space-2);
-  border: 1px solid var(--accent-gold);
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
-  color: var(--text-primary);
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--accent-gold);
+  font-family: var(--font-paleo);
+  font-size: 1.25rem;
+  line-height: 1;
   cursor: grab;
-  text-align: left;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease;
 }
 
 .paleo-letter-card:hover,
 .paleo-letter-card:focus-visible {
-  border-color: var(--accent-gold-hover);
-  box-shadow: 0 5px 14px rgba(117, 82, 27, 0.16);
-  transform: translateY(-2px);
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
   outline: none;
 }
 
 .paleo-letter-card.is-dragging {
   opacity: 0.45;
-  transform: rotate(2deg) scale(0.96);
 }
 
-.letter-glyph {
-  flex: 0 0 38px;
-  color: var(--accent-gold);
-  font-family: var(--font-paleo);
-  font-size: 2rem;
-  line-height: 1;
-  text-align: center;
-}
-
-.letter-meta {
-  display: grid;
+/* ===== ЗОНА СБОРКИ ===== */
+.assembly-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   min-width: 0;
-  gap: 3px;
-}
-
-.letter-meta strong,
-.letter-meta span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.letter-meta span {
-  color: var(--text-muted);
-  font-size: 0.74rem;
+  min-height: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
 }
 
 .workspace-drop {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 345px;
-  padding: 18px;
-  border: 1px dashed var(--accent-gold);
-  background: var(--bg-primary);
-  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  min-height: 64px;
+  padding: var(--space-3);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
 }
 
 .workspace-drop.is-over {
   border-style: solid;
-  background: rgba(194, 147, 55, 0.08);
-  box-shadow: inset 0 0 0 3px rgba(194, 147, 55, 0.12);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
 }
 
 .workspace-drop:focus-visible {
   outline: 2px solid var(--accent-gold-hover);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
 .workspace-empty {
   display: grid;
   justify-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   color: var(--text-muted);
   text-align: center;
+  font-size: var(--text-xs);
 }
 
 .workspace-empty[hidden] {
@@ -179,114 +182,99 @@
 .drop-glyph {
   color: var(--accent-gold);
   font-family: var(--font-paleo);
-  font-size: 3.2rem;
+  font-size: 1.8rem;
+  line-height: 1;
 }
 
 .workspace-letters {
   display: flex;
   flex-wrap: wrap;
-  align-content: center;
+  gap: var(--space-2);
   justify-content: center;
-  gap: 10px;
+  min-width: 0;
 }
 
+/* Чип слова: глиф + иврит + удаление. */
 .workspace-letter {
-  display: grid;
-  justify-items: center;
-  gap: 3px;
-  min-width: 62px;
-  padding: var(--space-2) 6px;
-  border-bottom: 2px solid var(--accent-gold);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
   animation: paleo-letter-in 180ms ease both;
 }
 
-.workspace-letter-index,
-.breakdown-index {
-  color: var(--text-muted);
-  font-size: 0.7rem;
-}
-
-.workspace-letter-glyph,
-.breakdown-glyph {
+.workspace-letter-glyph {
   color: var(--accent-gold);
   font-family: var(--font-paleo);
-  font-size: 2.1rem;
+  font-size: 1.15rem;
   line-height: 1;
 }
 
-.drop-status {
-  margin: var(--space-3) 0 0;
-  font-size: 0.78rem;
-}
-
-.assembly-word {
-  min-height: 48px;
-  margin: var(--space-2) 0;
-  color: var(--text-primary);
-  font-family: var(--font-paleo);
-  font-size: 2rem;
-  text-align: center;
-}
-
-.assembly-paleo {
-  min-height: 28px;
-  padding: var(--space-2);
+/* Одна строка: слово + транслитерация + значение. */
+.assembly-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-height: 20px;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
   border-block: 1px solid var(--border-light);
+}
+
+.assembly-summary .sum-hebrew {
   color: var(--accent-gold);
   font-family: var(--font-paleo);
-  font-size: 1.3rem;
-  letter-spacing: var(--tracking-caps);
-  text-align: center;
+  font-size: 1.35rem;
+  line-height: 1.2;
 }
 
-.assembly-breakdown {
-  display: grid;
-  gap: 7px;
-  min-height: 100px;
-  margin: 14px 0;
-}
-
-.breakdown-row {
-  display: grid;
-  grid-template-columns: 24px 28px 1fr;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.breakdown-copy {
+.assembly-summary .sum-translit {
   color: var(--text-secondary);
-  font-size: 0.78rem;
-  line-height: 1.25;
+  font-size: var(--text-xs);
 }
 
-.assembly-placeholder {
-  align-self: center;
-  margin: 0;
+.assembly-summary .sum-meaning {
   color: var(--text-muted);
-  font-size: 0.85rem;
-  text-align: center;
+  font-size: var(--text-xs);
 }
 
+.assembly-summary .sum-placeholder {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* Действия: primary «Проверить» + icon-кнопка «Очистить». */
 .assembly-actions {
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: var(--space-2);
+  width: 100%;
 }
 
-.assembly-actions .lab-btn {
-  width: 100%;
+.assembly-actions .lab-btn[data-action="check"] {
+  flex: 1 1 auto;
   justify-content: center;
 }
 
-.assembly-actions .lab-btn img {
-  margin-right: 6px;
-  vertical-align: middle;
+.assembly-clear {
+  flex: 0 0 auto;
+  width: 40px;
+  padding: 0;
+  justify-content: center;
 }
 
+.assembly-actions .lab-btn svg {
+  flex: none;
+}
+
+/* Результат проверки по словарю. */
 .dictionary-result {
-  margin-top: 14px;
+  margin-top: var(--space-2);
+  min-width: 0;
 }
 
 .dictionary-match {
@@ -302,20 +290,20 @@
 .dictionary-match-root {
   margin: 6px 0;
   font-family: var(--font-paleo);
-  font-size: 1.45rem;
+  font-size: 1.35rem;
 }
 
 .dictionary-match p {
   margin: 6px 0;
   color: var(--text-secondary);
-  font-size: 0.84rem;
+  font-size: var(--text-xs);
 }
 
 .dictionary-examples {
   margin: var(--space-2) 0 0;
   padding-left: 18px;
   color: var(--text-muted);
-  font-size: 0.78rem;
+  font-size: var(--text-xs);
 }
 
 @keyframes paleo-letter-in {
@@ -323,27 +311,37 @@
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-@media (max-width: 1100px) {
-  .paleo-builder-layout {
-    grid-template-columns: minmax(240px, 0.9fr) minmax(300px, 1.1fr);
+@media (prefers-reduced-motion: reduce) {
+  .workspace-letter {
+    animation: none;
   }
-
-  .assembly-panel {
-    grid-column: 1 / -1;
-  }
-
-  .assembly-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .paleo-letter-card {
+    transition: none;
   }
 }
 
+/* ===== МОБИЛЬНАЯ (и узкая) раскладка: одна колонка, сборка сверху ===== */
 @media (max-width: 700px) {
-  .paleo-builder-header {
-    gap: var(--space-3);
+  .paleo-builder-shell {
+    min-height: 0;
+    overflow-x: hidden;
   }
 
-  .paleo-builder-mark {
-    font-size: 2rem;
+  .paleo-builder-shell .section-hero-lead {
+    display: none;
+  }
+
+  .paleo-builder-shell .section-hero h1 {
+    font-size: 1.15rem;
+    line-height: 1.2;
+  }
+
+  .paleo-builder-shell .section-hero-kicker {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .paleo-builder-layout {
@@ -351,14 +349,61 @@
   }
 
   .assembly-panel {
-    grid-column: auto;
+    order: 1;
+  }
+
+  .letter-palette {
+    order: 2;
+  }
+
+  .palette-grid {
+    grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+    max-height: 236px;
+  }
+
+  .paleo-letter-card {
+    height: 32px;
+    font-size: 1.1rem;
   }
 
   .workspace-drop {
-    min-height: 260px;
+    min-height: 56px;
+    padding: var(--space-2);
   }
 
   .assembly-actions {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: 1fr 40px;
+    gap: var(--space-2);
+    width: 100%;
   }
+}
+.workspace-letter-hebrew {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.workspace-letter-remove {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.workspace-letter-remove:hover,
+.workspace-letter-remove:focus-visible {
+  color: var(--accent-red);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+}
+
+.drop-status {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
 }

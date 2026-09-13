@@ -57,13 +57,14 @@
     if (!palette) return;
     palette.innerHTML = '';
     PALEO_LETTERS.forEach(function(letter, index) {
-      var card = makeElement('button', 'paleo-letter-card', letter.name);
+      var card = makeElement('button', 'paleo-letter-card');
       card.type = 'button';
       card.draggable = true;
       card.dataset.letterIndex = String(index);
       card.setAttribute('aria-label', letter.name + ': ' + letter.image + ', ' + letter.meaning);
-      card.innerHTML = '<span class="letter-glyph" aria-hidden="true">' + letter.paleo + '</span>' +
-        '<span class="letter-meta"><strong>' + letter.name + '</strong><span>' + letter.image + ' · ' + letter.meaning + '</span></span>';
+      card.title = letter.name + ' — ' + letter.image + ' · ' + letter.meaning;
+      // Компактный чип 36px: только знак; имя/образ/значение — в title и aria-label.
+      card.textContent = letter.paleo;
       card.addEventListener('click', function() { addLetter(index); });
       card.addEventListener('dragstart', function(event) {
         event.dataTransfer.effectAllowed = 'copy';
@@ -86,34 +87,44 @@
     var letters = activeContainer.querySelector('[data-workspace-letters]');
     var empty = activeContainer.querySelector('[data-workspace-empty]');
     var count = activeContainer.querySelector('[data-workspace-count]');
-    var word = activeContainer.querySelector('[data-assembly-word]');
-    var paleo = activeContainer.querySelector('[data-assembly-paleo]');
-    var breakdown = activeContainer.querySelector('[data-assembly-breakdown]');
-    if (!letters || !empty || !count || !word || !paleo || !breakdown) return;
+    var summary = activeContainer.querySelector('[data-assembly-summary]');
+    if (!letters || !empty || !count || !summary) return;
 
     letters.innerHTML = '';
     assembly.forEach(function(letter, index) {
-      var item = makeElement('div', 'workspace-letter', letter.name);
+      var item = makeElement('div', 'workspace-letter');
       item.setAttribute('role', 'listitem');
-      item.innerHTML = '<span class="workspace-letter-index">' + (index + 1) + '</span><span class="workspace-letter-glyph">' + letter.paleo + '</span><span>' + letter.hebrew + '</span>';
+      var glyph = makeElement('span', 'workspace-letter-glyph', letter.paleo);
+      var hebrew = makeElement('span', 'workspace-letter-hebrew', letter.hebrew);
+      var remove = makeElement('button', 'workspace-letter-remove', '×');
+      remove.type = 'button';
+      remove.setAttribute('aria-label', 'Убрать букву ' + letter.name);
+      remove.title = 'Убрать ' + letter.name;
+      remove.addEventListener('click', function() { removeLetterAt(index); });
+      item.appendChild(glyph);
+      item.appendChild(hebrew);
+      item.appendChild(remove);
       letters.appendChild(item);
     });
+
     empty.hidden = assembly.length > 0;
     count.textContent = String(assembly.length);
-    word.textContent = assembly.length ? assembly.map(function(letter) { return letter.hebrew; }).join('') : '—';
-    paleo.textContent = assembly.length ? assembly.map(function(letter) { return letter.paleo; }).join(' ') : 'Поле пусто';
-    breakdown.innerHTML = '';
+
+    summary.innerHTML = '';
     if (!assembly.length) {
-      breakdown.appendChild(makeElement('p', 'assembly-placeholder', 'Побуквенный разбор появится здесь.'));
-      return;
+      summary.appendChild(makeElement('span', 'sum-placeholder', 'Поле пусто'));
+    } else {
+      var hebrewWord = assembly.map(function(letter) { return letter.hebrew; }).join('');
+      var translit = assembly.map(function(letter) { return letter.translit; }).join('·');
+      var meaning = assembly.map(function(letter) { return letter.image + '·' + letter.meaning; }).join(' + ');
+      var word = makeElement('span', 'sum-hebrew', hebrewWord);
+      word.dir = 'rtl';
+      word.lang = 'hbo';
+      summary.appendChild(word);
+      summary.appendChild(makeElement('span', 'sum-translit', translit));
+      summary.appendChild(makeElement('span', 'sum-meaning', meaning));
     }
-    assembly.forEach(function(letter, index) {
-      var row = makeElement('div', 'breakdown-row');
-      row.appendChild(makeElement('span', 'breakdown-index', String(index + 1).padStart(2, '0')));
-      row.appendChild(makeElement('span', 'breakdown-glyph', letter.paleo));
-      row.appendChild(makeElement('span', 'breakdown-copy', letter.name + ' · ' + letter.image + ' · ' + letter.meaning));
-      breakdown.appendChild(row);
-    });
+
     var result = activeContainer.querySelector('[data-dictionary-result]');
     if (result) result.innerHTML = '';
   }
@@ -145,6 +156,12 @@
   function removeLast() {
     if (!assembly.length) return;
     assembly.pop();
+    renderAssembly();
+  }
+
+  function removeLetterAt(index) {
+    if (!Number.isInteger(index) || index < 0 || index >= assembly.length) return;
+    assembly.splice(index, 1);
     renderAssembly();
   }
 
@@ -216,9 +233,12 @@
     assembly = [];
     renderPalette(container);
     bindWorkspace(container);
-    container.querySelector('[data-action="check"]').addEventListener('click', checkDictionary);
-    container.querySelector('[data-action="remove"]').addEventListener('click', removeLast);
-    container.querySelector('[data-action="clear"]').addEventListener('click', clearAssembly);
+    var checkBtn = container.querySelector('[data-action="check"]');
+    if (checkBtn) checkBtn.addEventListener('click', checkDictionary);
+    var removeBtn = container.querySelector('[data-action="remove"]');
+    if (removeBtn) removeBtn.addEventListener('click', removeLast);
+    var clearBtn = container.querySelector('[data-action="clear"]');
+    if (clearBtn) clearBtn.addEventListener('click', clearAssembly);
     renderAssembly();
   }
 
