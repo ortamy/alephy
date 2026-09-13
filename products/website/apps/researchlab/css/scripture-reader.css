@@ -33,29 +33,131 @@
   min-width: 180px;
 }
 
-.scripture-book-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  justify-content: center;
-  gap: var(--space-5);
-  margin-bottom: var(--space-5);
+/* --- Поиск по книгам --- */
+.scripture-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-4);
 }
 
-.scripture-book-card {
+.scripture-category-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.scripture-category-select,
+.scripture-search-input {
+  box-sizing: border-box;
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--motion-base);
+}
+
+.scripture-category-select {
+  flex: 0 1 200px;
+  min-width: 160px;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+}
+
+.scripture-search-input {
+  flex: 1 1 220px;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+}
+
+.scripture-search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.scripture-category-select:focus,
+.scripture-search-input:focus {
+  border-color: var(--accent-gold);
+  box-shadow: var(--ring-focus);
+}
+
+/* --- Сетка книг --- */
+.scripture-book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.scripture-book-card.tool-card {
   position: relative;
-  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  transition: border-color var(--motion-base);
+}
+
+.scripture-book-card.tool-card:hover,
+.scripture-book-card.tool-card:focus-visible {
+  border-color: var(--accent-gold);
+  outline: none;
+  transform: none;
+  box-shadow: none;
 }
 
 .scripture-book-card .tool-icon {
-  margin-bottom: var(--space-2);
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0;
+  font-size: 0;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.scripture-book-card .tool-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
 }
 
 .scripture-book-card .tool-name {
-  font-size: var(--text-base);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
 }
 
 .scripture-book-card .tool-desc {
-  font-size: var(--text-xs);
+  display: none;
+}
+
+.scripture-search-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: var(--space-3) 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 .book-status {
@@ -67,6 +169,13 @@
   font-size: 11px;
   font-weight: 700;
   line-height: 1.2;
+}
+
+.scripture-book-card .book-status {
+  margin-top: 0;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 .book-status-ready {
@@ -1146,6 +1255,9 @@
 }
 
 @media (max-width: 600px) {
+  .scripture-search { flex-direction: column; align-items: stretch; }
+  .scripture-category-select,
+  .scripture-search-input { width: 100%; max-width: 100%; flex: 1 1 auto; }
   .scripture-book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
   .scripture-verse {
@@ -1174,7 +1286,7 @@
 }
 
 @media (max-width: 380px) {
-  .scripture-book-grid { grid-template-columns: 1fr; }
+  .scripture-book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

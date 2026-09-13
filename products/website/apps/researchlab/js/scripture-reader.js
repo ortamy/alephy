@@ -382,15 +382,79 @@ const ScriptureReader = (function() {
       '</div>';
   }
 
+  var BOOK_CATEGORY_LABELS = {
+    torah: 'Тора',
+    neviim: 'Невиим',
+    ketuvim: 'Кетувим',
+    samaritan: 'Самаритянская Тора',
+    yahad: 'Кумран / йахад'
+  };
+  var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad'];
+
+  function bookSearchQuery() {
+    var input = get('scripture-search-input');
+    return input ? String(input.value || '').trim().toLowerCase() : '';
+  }
+
+  function bookCategoryFilter() {
+    var select = get('scripture-category');
+    return select ? String(select.value || '').trim() : '';
+  }
+
+  function bookMatchesQuery(book, query) {
+    if (!query) return true;
+    var haystack = [book.ru, book.paleo, book.id].join(' ').toLowerCase();
+    return haystack.indexOf(query) !== -1;
+  }
+
+  function bookMatchesCategory(book, category) {
+    if (!category) return true;
+    return String(book.category || '') === category;
+  }
+
+  function fillCategorySelect() {
+    var select = get('scripture-category');
+    if (!select) return;
+    var present = {};
+    state.books.forEach(function(book) {
+      if (book.category) present[book.category] = true;
+    });
+    var current = String(select.value || '');
+    var html = '<option value="">Все книги</option>';
+    BOOK_CATEGORY_ORDER.forEach(function(id) {
+      if (!present[id]) return;
+      html += '<option value="' + escapeHtml(id) + '">' + escapeHtml(BOOK_CATEGORY_LABELS[id] || id) + '</option>';
+    });
+    Object.keys(present).forEach(function(id) {
+      if (BOOK_CATEGORY_ORDER.indexOf(id) !== -1) return;
+      html += '<option value="' + escapeHtml(id) + '">' + escapeHtml(BOOK_CATEGORY_LABELS[id] || id) + '</option>';
+    });
+    select.innerHTML = html;
+    if (current && present[current]) select.value = current;
+  }
+
+  function setBookSearchVisible(visible) {
+    var search = get('scripture-search');
+    if (search) search.style.display = visible ? '' : 'none';
+  }
+
   function renderBookGrid() {
     var grid = get('scripture-book-grid');
     if (!grid) return;
-    grid.innerHTML = state.books.map(function(book) {
+    fillCategorySelect();
+    var books = state.books.filter(function(book) {
+      return bookMatchesCategory(book, bookCategoryFilter()) && bookMatchesQuery(book, bookSearchQuery());
+    });
+    if (!books.length) {
+      grid.innerHTML = '<p class="scripture-search-empty">Книги не найдены.</p>';
+      return;
+    }
+    grid.innerHTML = books.map(function(book) {
       var statusClass = book.dataFile ? 'book-status-ready' : 'book-status-pending';
       var statusLabel = book.dataFile ? 'Есть данные' : 'В работе';
       var badge = '<div class="book-status ' + statusClass + '">' + statusLabel + '</div>';
       return '<a href="#" class="tool-card scripture-book-card" data-book-id="' + escapeHtml(book.id) + '">' +
-'<span class="tool-icon"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt=""></span>' +
+        '<span class="tool-icon"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt=""></span>' +
         '<div class="tool-name">' + escapeHtml(book.ru) + '</div>' +
         '<div class="tool-desc">' + escapeHtml(book.paleo || '') + '</div>' +
         badge +
@@ -407,6 +471,7 @@ const ScriptureReader = (function() {
     var analysis = get('scripture-analysis');
     var tools = get('scripture-tools');
     if (grid) grid.style.display = 'grid';
+    setBookSearchVisible(true);
     if (article) article.style.display = 'none';
     if (verseNav) verseNav.style.display = 'none';
     if (nav) nav.style.display = 'none';
@@ -425,6 +490,7 @@ const ScriptureReader = (function() {
     var analysis = get('scripture-analysis');
     var tools = get('scripture-tools');
     if (grid) grid.style.display = 'none';
+    setBookSearchVisible(false);
     if (article) article.style.display = '';
     if (verseNav) verseNav.style.display = '';
     if (nav) nav.style.display = '';
@@ -448,7 +514,6 @@ const ScriptureReader = (function() {
   }
   function loadVerses(book, verseNumber) {
     setLoading('Загрузка ' + book.ru + '…');
-    // Не запрашиваем несуществующий файл: в каталоге пока есть только Берешит.
     if (!book.dataFile) {
       var pendingArticle = get('scripture-verse-article');
       if (pendingArticle) {
@@ -464,9 +529,12 @@ const ScriptureReader = (function() {
         return response.json();
       })
       .then(function(data) {
-        if (!Array.isArray(data) || !data.length) throw new Error('Пустой набор стихов');
-        state.verses = data;
-        var requestedIndex = verseNumber == null ? -1 : data.findIndex(function(item) {
+        var verses = (window.ScriptureAdapters && window.ScriptureAdapters.normalizeScripturePayload)
+          ? window.ScriptureAdapters.normalizeScripturePayload(data, PALEO)
+          : (Array.isArray(data) ? data : ((data && data.verses) || []));
+        if (!Array.isArray(verses) || !verses.length) throw new Error('Пустой набор стихов');
+        state.verses = verses;
+        var requestedIndex = verseNumber == null ? -1 : verses.findIndex(function(item) {
           return String(item && item.verse) === String(verseNumber);
         });
         state.currentVerse = requestedIndex >= 0 ? requestedIndex : 0;
@@ -892,8 +960,15 @@ const ScriptureReader = (function() {
     var paleo = get('scripture-paleo');
     var reader = get('scripture-reader');
     var grid = get('scripture-book-grid');
+    var searchInput = get('scripture-search-input');
+    var categorySelect = get('scripture-category');
 
     if (previous) previous.addEventListener('click', function() { moveVerse(-1); });
+    if (searchInput) {
+      searchInput.addEventListener('input', renderBookGrid);
+      searchInput.addEventListener('search', renderBookGrid);
+    }
+    if (categorySelect) categorySelect.addEventListener('change', renderBookGrid);
     if (next) next.addEventListener('click', function() { moveVerse(1); });
     if (paleo) paleo.addEventListener('click', handleLetterClick);
     if (paleo) paleo.addEventListener('keydown', handlePaleoKeydown);

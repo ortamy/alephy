@@ -1437,6 +1437,13 @@ const PageController = (function() {
           '</div>' +
           '<div id="scripture-verse-nav" class="scripture-verse-nav" style="display:none;" aria-label="Выбор главы и стиха"></div>' +
           '<div class="scripture-reader-layout"><main class="scripture-main">' +
+          '<div class="scripture-search" id="scripture-search">' +
+          '<label class="scripture-category-label" for="scripture-category">Категория</label>' +
+          '<select class="scripture-category-select" id="scripture-category" aria-label="Категория книг">' +
+          '<option value="">Все книги</option>' +
+          '</select>' +
+          '<input type="search" class="scripture-search-input" id="scripture-search-input" placeholder="Поиск по книгам…" aria-label="Поиск по книгам">' +
+          '</div>' +
           '<div id="scripture-book-grid" class="scripture-book-grid"></div>' +
           '<article class="scripture-verse" id="scripture-verse-article" style="display:none;" aria-labelledby="scripture-verse-title">' +
           '<div class="scripture-verse-meta" id="scripture-verse-title">Берешит 1:1</div>' +

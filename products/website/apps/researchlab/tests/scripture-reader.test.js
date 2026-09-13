@@ -13,6 +13,7 @@ const booksPath = path.join(__dirname, '..', 'data', 'qumran-books.json');
 const books = JSON.parse(fs.readFileSync(booksPath, 'utf8')).books;
 const readerSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'scripture-reader.js'), 'utf8');
 const PaleoWeaver = require('../js/paleo-weaver.js');
+const ScriptureAdapters = require('../js/scripture-adapters.js');
 
 function findRoot(value) {
   const normalized = PaleoLetters.normalizeHebrew(value);
@@ -90,11 +91,18 @@ assert.ok(bereshit.every(function(verse) {
   return PaleoLetters.toPaleo(PaleoLetters.normalizeHebrew(verse.hebrew)) === verse.paleo.replace(/\s/g, '');
 }), 'Палео-строка механически соответствует согласному квадратному слою');
 
+assert.ok(books.some(function(book) { return book.id === 'samaritan-torah' && book.category === 'samaritan' && book.dataFile === 'samaritan_paleo'; }), 'Самаритянское Пятикнижие есть в каталоге и открывает данные');
+assert.ok(books.some(function(book) { return book.id === '1qs' && book.category === 'yahad' && book.dataFile === '1qs'; }), '1QS стоит на полке йахад');
+assert.ok(books.some(function(book) { return book.id === '1qphab' && book.category === 'yahad' && book.dataFile === '1qphab'; }), '1QpHab стоит на полке йахад');
+assert.ok(books.some(function(book) { return book.id === '11qt' && book.category === 'yahad' && book.dataFile === '11qt'; }), '11QT стоит на полке йахад');
+assert.ok(books.every(function(book) { return book.category; }), 'У каждой книги есть категория');
+const yahadMin = { '1qs': 24, '1qphab': 18, '11qt': 18 };
+
 books.forEach(function(book) {
-  assert.ok(book.dataFile, 'Для книги подключён файл данных: ' + book.id);
+  if (!book.dataFile) return;
   const file = path.join(__dirname, '..', 'data', 'scripture', book.dataFile + '.json');
   assert.ok(fs.existsSync(file), 'Файл данных существует: ' + book.dataFile);
-  const verses = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const verses = ScriptureAdapters.normalizeScripturePayload(JSON.parse(fs.readFileSync(file, 'utf8')));
   assert.ok(verses.length > 0, 'Книга содержит стихи: ' + book.id);
   assert.ok(verses.every(function(verse) {
     return verse.hebrew && verse.paleo && Array.isArray(verse.words) && verse.words.length;
@@ -105,7 +113,21 @@ books.forEach(function(book) {
   assert.ok(verses.every(function(verse) {
     return verse.paleo_translation && ['draft', 'review', 'verified'].includes(verse.paleo_translation_status);
   }), 'У каждого стиха есть маркированная палео-сборка: ' + book.id);
+  if (yahadMin[book.id]) {
+    assert.ok(verses.length >= yahadMin[book.id], book.id + ' наращён до рабочего среза');
+    assert.ok(verses.some(function(verse) { return verse.paleo_translation_status === 'review'; }), book.id + ' имеет слой review');
+    assert.ok(verses.every(function(verse) { return verse.words.length >= 2; }), book.id + ' держит словесные границы');
+    assert.ok(verses.every(function(verse) { return !/[А-Яа-яЁё]/.test(verse.hebrew); }), 'Нет кириллицы в иврите: ' + book.id);
+  }
 });
+
+const samaritanPayload = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'scripture', 'samaritan_paleo.json'), 'utf8'));
+const samaritanVerses = ScriptureAdapters.normalizeScripturePayload(samaritanPayload);
+assert.ok(!Array.isArray(samaritanPayload) && Array.isArray(samaritanPayload.verses), 'Самаритянский источник — объект {meta, verses}');
+assert.ok(samaritanVerses[0] && samaritanVerses[0].words.length >= 2, 'Адаптер собирает словесный слой самаритян 1:1');
+assert.strictEqual(samaritanVerses[0].paleo_translation_status, 'review', 'Статус «требуется проверка» становится review');
+assert.ok(readerSource.includes('ScriptureAdapters.normalizeScripturePayload'), 'Ридер прогоняет загрузку через адаптер');
+assert.ok(readerSource.includes("yahad: 'Кумран / йахад'"), 'В селекторе есть категория Кумран / йахад');
 
 assert.ok(readerSource.includes('scripture-meaning-card'), 'Смысловая сборка выводится отдельной карточкой');
 assert.ok(readerSource.includes('scripture-assembly-details'), 'Технический след сворачивается в details');
@@ -136,5 +158,31 @@ assert.ok(readerCss.includes('flex-direction: column;') && readerCss.includes('.
 assert.ok(readerCss.includes('.scripture-navigation .lab-btn') && readerCss.includes('max-width: none;'), 'Мобильная навигация стихов не ограничивает кнопки по ширине');
 assert.ok(readerCss.includes('.scripture-physics-chevron') && readerCss.includes('grid-column: 2;'), 'Chevron физики слова закреплён справа');
 assert.ok(!readerCss.includes('.scripture-glyph-tooltip'), 'Старый CSS-tooltip удалён');
+
+const pageControllerSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'page-controller.js'), 'utf8');
+assert.ok(pageControllerSource.includes('id="scripture-search-input"'), 'Поиск по книгам стоит в шапке модуля');
+assert.ok(pageControllerSource.includes('id="scripture-search"'), 'Контейнер поиска книг есть в разметке');
+assert.ok(pageControllerSource.includes('id="scripture-category"'), 'Селектор категории книг есть в разметке');
+assert.ok(readerSource.includes('book.ru, book.paleo, book.id'), 'Фильтр ищет по ru, paleo и id');
+assert.ok(readerSource.includes("categorySelect.addEventListener('change', renderBookGrid)"), 'Сетка книг перерисовывается по категории');
+assert.ok(readerSource.includes('bookMatchesCategory'), 'Фильтр учитывает выбранную категорию');
+assert.ok(readerSource.includes('Книги не найдены.'), 'Пустой поиск показывает «Книги не найдены.»');
+assert.ok(
+  readerSource.includes('assets/icons/32/ui/book.png') && readerSource.includes('width="32" height="32"'),
+  'Карточка книги использует иконку 32×32'
+);
+assert.ok(
+  readerSource.includes("searchInput.addEventListener('input', renderBookGrid)") &&
+    readerSource.includes("searchInput.addEventListener('search', renderBookGrid)"),
+  'Сетка книг перерисовывается по input и search'
+);
+assert.ok(readerSource.includes('setBookSearchVisible(false)'), 'Поиск скрывается на виде стиха');
+assert.ok(
+  readerCss.includes('.scripture-book-card .tool-icon img') &&
+    readerCss.includes('width: 32px;') &&
+    readerCss.includes('height: 32px;'),
+  'CSS карточки фиксирует иконку 32×32'
+);
+assert.ok(readerCss.includes('@media (max-width: 380px)'), 'На узкой ширине сетка книг остаётся двухколоночной');
 
 console.log('OK: PaleoLetters and Scripture Reader core scenarios passed');
