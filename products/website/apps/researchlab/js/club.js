@@ -236,7 +236,7 @@ const ClubModule = (function() {
     }
     return '<section class="club-top-panel" aria-label="Информация клуба">' +
       actionBar +
-      '<div class="club-top-card club-side-card">' +
+      '<div class="club-top-card club-side-card club-members">' +
         '<h3>Сейчас в клубе</h3>' +
         renderAvatarStack(ClubData.MOCK.profiles, 5) +
         '<p class="club-side-stub">Исследователи онлайн: 6</p>' +
