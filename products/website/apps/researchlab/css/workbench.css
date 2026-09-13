@@ -3,146 +3,246 @@
    Хаб конвейеров, раннер, проект. Токены lab.css.
    ============================================= */
 
-.wb-section { margin-bottom: 34px; }
+.wb-hub, #workbench {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding-inline: var(--space-3);
+}
+.wb-section { margin-bottom: var(--space-4); }
+.wb-section + .wb-section { margin-top: 0; }
 
 .wb-pipeline-section, .wb-project-section {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 24px;
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
   box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
-.wb-pipeline-section .wb-section-head, .wb-project-section .wb-section-head {
-  margin-bottom: var(--space-4);
+.wb-pipeline-section .wb-section-head,
+.wb-project-section .wb-section-head {
+  margin-bottom: var(--space-3);
 }
 
 .wb-pipeline-section .wb-pipeline-grid {
   gap: var(--space-3);
+  max-width: 100%;
 }
 
 .wb-project-section .wb-projects {
   gap: var(--space-3);
+  max-width: 100%;
 }
 
 @media (max-width: 720px) {
   .wb-pipeline-section, .wb-project-section {
-    padding: var(--space-4);
-    border-radius: var(--radius-sm);
+    padding: var(--space-2);
   }
 }
-.wb-hub, #workbench { width: 100%; max-width: 100%; min-width: 0; }
-.wb-section-title { margin: 0; color: var(--accent-gold); font-size: 24px; }
-.wb-section-sub { margin: 4px 0 16px; color: var(--text-muted); }
-.wb-section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+.wb-hub, #workbench {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding-inline: var(--space-3);
+}
+.wb-section-title { margin: 0; color: var(--accent-gold); font-size: 20px; font-weight: 700; }
+.wb-section-sub { margin: 2px 0 10px; color: var(--text-muted); font-size: 13px; line-height: 1.4; }
+.wb-section-head { display: flex; align-items: baseline; gap: 6px; margin-bottom: var(--space-3); }
 .wb-count { color: var(--text-muted); font-size: 14px; }
 
 /* --- Каталог конвейеров --- */
-.wb-pipeline-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 14px; min-width: 0; }
+.wb-pipeline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
 .wb-pipeline-card {
-  display: flex; flex-direction: column; gap: 10px;
-  width: 100%;
-  padding: 16px; background: var(--bg-card);
-  border: 1px solid var(--border-light); border-radius: 10px;
-  box-shadow: var(--shadow-soft); box-sizing: border-box; min-width: 0; max-width: 100%;
+  display: flex; flex-direction: column; gap: var(--space-2);
+  width: 100%; max-width: 100%; min-width: 0;
+  padding: var(--space-2) var(--space-3); background: var(--bg-card);
+  border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft); box-sizing: border-box;
+  align-self: start;
+  overflow-wrap: anywhere;
 }
-.wb-pipeline-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.wb-pipeline-icon { width: 28px; height: 28px; object-fit: contain; }
-.wb-pipeline-title { min-width: 0; margin: 0; font-size: 17px; color: var(--text-primary); overflow-wrap: anywhere; }
-.wb-pipeline-desc { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5; flex: 1; }
-.wb-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+
+@media (max-width: 390px) {
+  .wb-pipeline-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+  }
+  .wb-pipeline-card { padding: var(--space-2) var(--space-3); }
+  .wb-pipeline-title { font-size: 15px; }
+  .wb-pipeline-desc { font-size: 12px; line-height: 1.35; }
+  .wb-tag { font-size: 11px; padding: 2px 6px; }
+  .wb-pipeline-foot .lab-btn { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); }
+  .wb-steps-hint { font-size: 11px; }
+}
+
+.wb-pipeline-head { display: flex; align-items: center; gap: var(--space-2); min-width: 0; width: 100%; }
+
+.wb-pipeline-title { min-width: 0; margin: 0; font-size: 16px; color: var(--text-primary); overflow-wrap: anywhere; }
+.wb-pipeline-desc { margin: 0; color: var(--text-secondary); font-size: 13px; line-height: 1.4; flex: 1; }
+.wb-tags { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .wb-tag {
-  padding: 2px 8px; border: 1px solid var(--border-light); border-radius: 999px;
-  color: var(--text-muted); font-size: 12px;
+  padding: 2px 8px; border: 1px solid var(--border-light); border-radius: var(--radius-pill);
+  color: var(--text-muted); font-size: 12px; line-height: 1;
 }
-.wb-pipeline-foot { display: flex; align-items: center; justify-content: space-between; }
-.wb-steps-hint { color: var(--text-muted); font-size: 13px; }
+.wb-pipeline-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.wb-steps-hint { color: var(--text-muted); font-size: 12px; }
+
+@media (max-width: 720px) {
+  .wb-pipeline-foot {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+    padding-inline: var(--space-2);
+  }
+  .wb-pipeline-foot .lab-btn { width: 100%; max-width: 100%; }
+}
 
 /* --- Мои проекты --- */
-.wb-projects { display: grid; gap: 10px; }
+.wb-projects { display: grid; gap: var(--space-2); max-width: 100%; }
 .wb-project-row {
-  display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: center;
-  padding: 12px 14px; background: var(--bg-card);
-  border: 1px solid var(--border-light); border-radius: 10px;
+  display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-2); align-items: center;
+  padding: var(--space-2) var(--space-3); background: var(--bg-card);
+  border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+  box-sizing: border-box; min-width: 0; max-width: 100%; width: 100%;
+  align-self: start;
 }
-.wb-project-name { color: var(--text-primary); font-weight: 700; text-decoration: none; }
-.wb-project-name:hover { color: var(--accent-gold); }
-.wb-project-meta { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-.wb-project-status { display: flex; align-items: center; gap: 10px; }
+
+@media (max-width: 720px) {
+  .wb-project-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 390px) {
+  .wb-project-row { padding: var(--space-2) var(--space-3); }
+  .wb-project-name { font-size: 15px; }
+  .wb-project-meta { font-size: 11px; }
+  .wb-badge { font-size: 11px; padding: 2px 6px; }
+  .wb-miniprogress { width: 70px; }
+}
+.wb-project-name { color: var(--text-primary); font-weight: 700; text-decoration: none; font-size: 15px; line-height: 1.2; }
+.wb-project-meta { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+.wb-project-status { display: flex; align-items: center; gap: 8px; }
 .wb-project-actions { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
 .wb-badge {
-  padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700;
-  border: 1px solid var(--border-light); color: var(--text-secondary); white-space: nowrap;
+  padding: 2px 8px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700;
+  border: 1px solid var(--border-light); color: var(--text-secondary); white-space: nowrap; line-height: 1;
 }
 .wb-badge.is-done { color: #2e7d32; border-color: #2e7d32; }
 .wb-badge.is-running { color: var(--accent-gold); border-color: var(--accent-gold); }
 .wb-badge.is-cancelled { color: var(--text-muted); }
 
+.wb-pipeline-foot, .wb-form, .wb-monitor, .wb-estimate, .wb-steps, .wb-progress, .wb-log, .wb-viewer-meta, .wb-bilingual-head, .wb-bilingual, .wb-pair, .wb-viewer-stub, .wb-project-toolbar, .wb-export-actions {
+  max-width: 100%;
+}
+
+@media (max-width: 390px) {
+  .wb-form, .wb-monitor { padding: var(--space-2) var(--space-3); }
+  .wb-group-title { font-size: 12px; }
+  .wb-label { font-size: 12px; }
+  .wb-field-hint { font-size: 11px; }
+  .wb-estimate { padding: var(--space-2) var(--space-3); }
+  .wb-estimate-body { font-size: 12px; }
+  .wb-estimate-list { font-size: 12px; padding-left: 14px; }
+  .wb-run-actions { gap: 4px; }
+  .wb-form-status { font-size: 12px; }
+  .wb-steps { gap: 3px; }
+  .wb-step { font-size: 11px; gap: 4px; }
+  .wb-step-mark { width: 12px; }
+  .wb-percent { font-size: 10px; }
+  .wb-log { padding: 6px 8px; font-size: 10px; max-height: 120px; }
+  .wb-viewer-meta { gap: 6px; font-size: 11px; }
+  .wb-bilingual-head { gap: 6px; font-size: 10px; padding-bottom: 2px; }
+  .wb-bilingual { gap: 6px; }
+  .wb-pair { padding: 8px; }
+  .wb-pair-title { font-size: 12px; }
+  .wb-col-label { font-size: 10px; }
+  .wb-col-text { font-size: 12px; line-height: 1.4; }
+  .wb-viewer-stub { padding: 12px; }
+  .wb-viewer-stub h3 { font-size: 14px; }
+  .wb-viewer-stub p { font-size: 12px; }
+  .wb-project-toolbar { gap: 4px; margin-bottom: 8px; }
+  .wb-export-actions { gap: 3px; }
+}
+
+.wb-pipeline-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+
 /* --- Форма запуска --- */
 .wb-form, .wb-monitor {
-  padding: 18px; background: var(--bg-card);
-  border: 1px solid var(--border-light); border-radius: 10px;
+  padding: var(--space-3); background: var(--bg-card);
+  border: 1px solid var(--border-light); border-radius: var(--radius-sm);
   box-shadow: var(--shadow-soft);
+  box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0;
 }
-.wb-group-title { margin: 0 0 10px; font-size: 15px; color: var(--accent-gold); text-transform: uppercase; letter-spacing: .08em; }
-.wb-form .wb-group-title:not(:first-child) { margin-top: 18px; }
-.wb-field { margin-bottom: 14px; }
-.wb-label { display: block; margin-bottom: 6px; color: var(--text-secondary); font-weight: 700; }
-.wb-field-hint { display: block; margin-top: 3px; color: var(--text-muted); font-weight: 400; }
-.wb-file-status { margin-top: 6px; color: var(--text-muted); font-size: 13px; }
-.wb-file-progress { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
-.wb-file-progress-track { flex: 1; height: 7px; overflow: hidden; background: var(--border-light); border-radius: 999px; }
+.wb-group-title { margin: 0 0 8px; font-size: 13px; color: var(--accent-gold); text-transform: uppercase; letter-spacing: .08em; }
+.wb-form .wb-group-title:not(:first-child) { margin-top: 14px; }
+.wb-field { margin-bottom: 12px; }
+.wb-label { display: block; margin-bottom: 4px; color: var(--text-secondary); font-weight: 700; font-size: 13px; }
+.wb-field-hint { display: block; margin-top: 2px; color: var(--text-muted); font-weight: 400; font-size: 12px; }
+.wb-file-status { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
+.wb-file-progress { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.wb-file-progress-track { flex: 1; height: 6px; overflow: hidden; background: var(--border-light); border-radius: 999px; }
 .wb-file-progress-fill { display: block; width: 0; height: 100%; background: var(--accent-gold); transition: width var(--motion-base, 180ms); }
-.wb-file-progress-label { min-width: 78px; color: var(--text-muted); font-size: 12px; text-align: right; }
-.wb-toggle { display: flex; align-items: flex-start; gap: 8px; }
-.wb-toggle input { margin-top: 4px; }
-.wb-toggle label { color: var(--text-secondary); }
+.wb-file-progress-label { min-width: 64px; color: var(--text-muted); font-size: 11px; text-align: right; }
+.wb-toggle { display: flex; align-items: flex-start; gap: 6px; }
+.wb-toggle input { margin-top: 3px; }
+.wb-toggle label { color: var(--text-secondary); font-size: 13px; }
 
-.wb-estimate { margin-top: 16px; padding: 12px 14px; border: 1px dashed var(--border-light); border-radius: 8px; }
-.wb-estimate-body { color: var(--text-muted); font-size: 14px; }
-.wb-estimate-list { margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 14px; line-height: 1.7; }
-.wb-run-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-.wb-form-status { margin-top: 10px; color: #b3261e; font-size: 14px; min-height: 1em; }
+.wb-estimate { margin-top: 12px; padding: var(--space-2) var(--space-3); border: 1px dashed var(--border-light); border-radius: var(--radius-sm); }
+.wb-estimate-body { color: var(--text-muted); font-size: 13px; }
+.wb-estimate-list { margin: 0; padding-left: 16px; color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+.wb-run-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.wb-form-status { margin-top: 8px; color: #b3261e; font-size: 13px; min-height: 1em; }
 
 /* --- Прогресс --- */
-.wb-steps { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; }
-.wb-step { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+.wb-steps { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 4px; }
+.wb-step { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 12px; }
 .wb-step.is-active { color: var(--accent-gold); font-weight: 700; }
 .wb-step.is-done { color: var(--text-secondary); }
-.wb-step-mark { width: 18px; text-align: center; }
-.wb-progress { height: 10px; border-radius: 999px; background: var(--border-light); overflow: hidden; }
+.wb-step-mark { width: 14px; text-align: center; }
+.wb-progress { height: 6px; border-radius: 999px; background: var(--border-light); overflow: hidden; }
 .wb-progress-fill { display: block; height: 100%; background: var(--accent-gold); transition: width var(--motion-base, 180ms); }
-.wb-percent { margin-top: 6px; color: var(--text-muted); font-size: 13px; }
+.wb-percent { margin-top: 4px; color: var(--text-muted); font-size: 11px; }
 .wb-log {
-  margin: 14px 0 0; padding: 10px 12px; max-height: 180px; overflow: auto;
-  background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 8px;
-  color: var(--text-secondary); font-size: 12px; line-height: 1.6; white-space: pre-wrap;
+  margin: 10px 0 0; padding: 8px 10px; max-height: 150px; overflow: auto;
+  background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: var(--radius-sm);
+  color: var(--text-secondary); font-size: 11px; line-height: 1.4; white-space: pre-wrap;
 }
 
 /* --- Вьювер: оригинал ↔ перевод --- */
-.wb-viewer { margin-top: 14px; }
-.wb-viewer-meta { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 14px; color: var(--text-muted); font-size: 13px; }
+.wb-viewer { margin-top: 10px; }
+.wb-viewer-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; color: var(--text-muted); font-size: 12px; }
 .wb-bilingual-head {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-  padding: 0 2px 6px; color: var(--accent-gold);
-  font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  padding: 0 0 4px; color: var(--accent-gold);
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
 }
-.wb-bilingual { display: grid; gap: 14px; }
-.wb-pair { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 10px; padding: 14px; }
-.wb-pair-title { margin: 0 0 10px; font-size: 14px; color: var(--text-muted); }
-.wb-pair-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.wb-col-label { color: var(--text-muted); font-size: 12px; margin-bottom: 4px; }
+.wb-bilingual { display: grid; gap: 10px; }
+.wb-pair { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 10px; }
+.wb-pair-title { margin: 0 0 6px; font-size: 13px; color: var(--text-muted); }
+.wb-pair-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.wb-col-label { color: var(--text-muted); font-size: 11px; margin-bottom: 2px; }
 .wb-col-target .wb-col-text { color: var(--text-primary); }
-.wb-col-text { margin: 0; color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; }
+.wb-col-text { margin: 0; color: var(--text-secondary); line-height: 1.5; white-space: pre-wrap; }
 .wb-col-text.is-rtl { direction: rtl; text-align: right; }
 
-.wb-viewer-stub { padding: 22px; text-align: center; background: var(--bg-card); border: 1px dashed var(--border-light); border-radius: 10px; }
-.wb-viewer-stub h3 { margin: 10px 0 6px; color: var(--text-primary); }
-.wb-viewer-stub p { color: var(--text-muted); max-width: 560px; margin: 0 auto 10px; }
+.wb-viewer-stub { padding: 16px; text-align: center; background: var(--bg-card); border: 1px dashed var(--border-light); border-radius: var(--radius-sm); }
+.wb-viewer-stub h3 { margin: 6px 0 4px; color: var(--text-primary); font-size: 15px; }
+.wb-viewer-stub p { color: var(--text-muted); max-width: 560px; margin: 0 auto 8px; font-size: 13px; }
 .wb-viewer-stub .wb-estimate-list { display: inline-block; text-align: left; }
-.wb-project-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-.wb-export-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.wb-project-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.wb-export-actions { display: flex; flex-wrap: wrap; gap: 4px; }
 
 @media (max-width: 720px) {
   #workbench, .wb-hub, .wb-section, .wb-pipeline-grid, .wb-pipeline-card {
@@ -165,5 +265,5 @@
 }
 
 .wb-badge.is-error { color: #b3261e; border-color: #b3261e; }
-.wb-miniprogress { width: 90px; height: 6px; border-radius: 999px; background: var(--border-light); overflow: hidden; }
+.wb-miniprogress { width: 80px; height: 5px; border-radius: 999px; background: var(--border-light); overflow: hidden; }
 .wb-miniprogress i { display: block; height: 100%; background: var(--accent-gold); transition: width var(--motion-base, 180ms); }
