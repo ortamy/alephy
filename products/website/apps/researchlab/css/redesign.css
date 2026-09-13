@@ -639,7 +639,8 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   gap: var(--space-2);
 }
 
-.lab-header .icon-btn {
+.lab-header .icon-btn,
+.lab-header nav a.icon-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -657,20 +658,25 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   transition: background-color var(--motion-base), border-color var(--motion-base), color var(--motion-base), transform var(--motion-fast);
 }
 
-.lab-header .icon-btn svg.lucide {
+.lab-header .icon-btn svg.lucide,
+.lab-header nav a.icon-link svg.lucide {
   width: 18px;
   height: 18px;
   color: currentColor;
 }
 
-.lab-header .icon-btn:hover {
+.lab-header .icon-btn:hover,
+.lab-header nav a.icon-link:hover {
   background: color-mix(in srgb, var(--bg-dark-hover) 76%, var(--header-ink));
   border-color: var(--header-ink-muted);
+  color: var(--header-ink);
 }
 
-.lab-header .icon-btn:active { transform: scale(0.96); }
+.lab-header .icon-btn:active,
+.lab-header nav a.icon-link:active { transform: scale(0.96); }
 
-.lab-header .icon-btn:focus-visible {
+.lab-header .icon-btn:focus-visible,
+.lab-header nav a.icon-link:focus-visible {
   outline: none;
   box-shadow: var(--ring-focus);
 }
@@ -692,6 +698,7 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   }
 
   .lab-header .icon-btn,
+  .lab-header nav a.icon-link,
   .lab-header nav .theme-toggle,
   .lab-header .lab-hamburger {
     width: 36px;
@@ -700,10 +707,13 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
     padding: 0;
   }
 
-  .lab-header .icon-btn svg.lucide { width: 16px; height: 16px; }
+  .lab-header .icon-btn svg.lucide,
+  .lab-header nav a.icon-link svg.lucide { width: 16px; height: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lab-header .icon-btn { transition: none; }
-  .lab-header .icon-btn:active { transform: none; }
+  .lab-header .icon-btn,
+  .lab-header nav a.icon-link { transition: none; }
+  .lab-header .icon-btn:active,
+  .lab-header nav a.icon-link:active { transform: none; }
 }
