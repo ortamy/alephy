@@ -5,39 +5,27 @@
     <p class="subtitle">Сравнение современных языков по способности собирать Давар и выводить речь из одного состояния в другое.</p>
   </header>
 
-  <div class="language-map-search" role="search">
-    <div class="language-map-filter">
-      <label for="language-map-query">Поиск</label>
-      <input type="search" id="language-map-query" class="lab-input" placeholder="Название языка или тип…" autocomplete="off">
+  <div class="language-map-toolbar" role="search">
+    <input type="search" id="language-map-query" class="lab-input language-map-search" placeholder="Название или тип языка…" aria-label="Поиск языков" autocomplete="off">
+    <select id="language-map-type" class="lab-select language-map-select" aria-label="Тип языка">
+      <option value="all">Все типы</option>
+    </select>
+    <select id="language-map-davar" class="lab-select language-map-select" aria-label="Уровень Давара">
+      <option value="all">Любой уровень</option>
+      <option value="низкая">Низкая</option>
+      <option value="средняя">Средняя</option>
+      <option value="высокая">Высокая</option>
+    </select>
+    <select id="language-map-sort" class="lab-select language-map-select language-map-select--sort" aria-label="Сортировка">
+      <option value="asc">А → Я</option>
+      <option value="desc">Я → А</option>
+    </select>
+    <div class="language-map-view" role="group" aria-label="Вид карты">
+      <button type="button" class="language-map-view-btn" data-view="grid" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>
+      <button type="button" class="language-map-view-btn" data-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>
     </div>
+    <p class="language-map-count" id="language-map-count" role="status" aria-live="polite"></p>
   </div>
 
-  <form class="language-map-filters" id="language-map-filters">
-    <div class="language-map-filter">
-      <label for="language-map-type">Тип языка</label>
-      <select id="language-map-type" class="lab-select">
-        <option value="all">Все типы</option>
-      </select>
-    </div>
-    <div class="language-map-filter">
-      <label for="language-map-davar">Уровень Давара</label>
-      <select id="language-map-davar" class="lab-select">
-        <option value="all">Любой уровень</option>
-        <option value="низкая">Низкая</option>
-        <option value="средняя">Средняя</option>
-        <option value="высокая">Высокая</option>
-      </select>
-    </div>
-    <div class="language-map-filter">
-      <label for="language-map-sort">Сортировка</label>
-      <select id="language-map-sort" class="lab-select">
-        <option value="asc">А → Я</option>
-        <option value="desc">Я → А</option>
-      </select>
-    </div>
-  </form>
-
-  <p class="language-map-count" id="language-map-count" role="status" aria-live="polite"></p>
-  <div class="language-map-grid" id="language-map-grid" role="list" aria-live="polite"></div>
-  <p class="language-map-empty" id="language-map-empty" hidden>По выбранным фильтрам языки не найдены.</p>
+  <div class="language-map-results" id="language-map-results" aria-live="polite"></div>
 </section>

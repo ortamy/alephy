@@ -1,16 +1,14 @@
-﻿/* РЎС‚РёР»Рё РґРёР°РіРЅРѕСЃС‚РёРєРё Р¶РёРІС‹С… СЏР·С‹РєРѕРІ РІ РїР°Р»РёС‚СЂРµ ResearchLab. */
+/* Стили карты языков: тулбар §4.7, карточки §4.2, список §4.8, empty-state §4.6. */
 .language-map-shell {
   color: var(--text-primary);
-  padding: clamp(20px, 4vw, 36px);
 }
 
 .language-map-detail {
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-8);
   padding: clamp(20px, 4vw, 36px);
-  box-shadow: var(--shadow-soft);
 }
 
 .language-map-head { max-width: 800px; margin-bottom: 20px; }
@@ -25,117 +23,257 @@
 .language-map-head h1,
 .language-map-detail h1 { color: var(--text-primary); line-height: 1.15; margin-bottom: 10px; }
 .language-map-shell .subtitle,
-.language-map-context,
 .language-map-detail-type,
 .language-map-future { color: var(--text-secondary); }
-.language-map-context { font-size: 15px; margin-top: 8px; line-height: 1.55; }
 
-/* Поиск над фильтрами: компактное поле в едином стиле с фильтрами */
-#language-map .language-map-search { margin-bottom: var(--space-4); }
-#language-map .language-map-search input { min-height: 44px; }
-#language-map .language-map-search input:focus-visible {
-  outline: 3px solid var(--accent-gold);
-  outline-offset: 3px;
-}
-
-.language-map-filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  border-top: 1px solid var(--border-light);
-  border-bottom: 1px solid var(--border-light);
-  padding: 14px 0;
-  margin-bottom: 14px;
-}
-.language-map-filter { display: flex; flex-direction: column; gap: 6px; }
-.language-map-filter label { color: var(--text-primary); font-size: 15px; }
-.language-map-filter select {
-  min-height: 44px;
+/* ===== ТУЛБАР (§4.7): одна панель, search flex-1, селекты 36px, счётчик справа ===== */
+.language-map-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
   background: var(--bg-card);
-  color: var(--text-primary);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
-  font: inherit;
-  cursor: pointer;
+  border-radius: var(--radius-8);
+  padding: 10px 12px;
+  margin-bottom: var(--space-4);
 }
-.language-map-filter select:focus-visible,
-.language-map-card:focus-visible,
-.language-map-back:focus-visible { outline: 3px solid var(--accent-gold); outline-offset: 3px; }
+#language-map .language-map-search {
+  flex: 1 1 240px;
+  width: auto;
+  min-width: 0;
+  min-height: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  font-size: var(--ui-13, 13px);
+}
+#language-map .language-map-select {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 0;
+  min-height: 36px;
+  height: 36px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  font-size: var(--ui-13, 13px);
+  color: var(--text-primary);
+}
+#language-map .language-map-select--sort { padding: 0 6px; }
+#language-map .language-map-search:focus-visible,
+#language-map .language-map-select:focus-visible,
+.language-map-view-btn:focus-visible,
+.language-map-reset:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 1px;
+}
 
-.language-map-count { color: var(--text-secondary); font-size: 14px; margin-bottom: 14px; }
+/* Тумблер вида: lucide LayoutGrid/List, пара hairline-квадратов */
+.language-map-view {
+  display: inline-flex;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+.language-map-view-btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color .15s ease, background .15s ease;
+}
+.language-map-view-btn + .language-map-view-btn { border-left: 1px solid var(--border-light); }
+.language-map-view-btn svg { width: 16px; height: 16px; }
+.language-map-view-btn.is-active { background: rgb(var(--accent-gold-rgb) / 0.08); color: var(--accent-gold); }
+.language-map-view-btn:hover { color: var(--accent-gold); }
+
+.language-map-count {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--ui-12, 12px);
+  white-space: nowrap;
+}
+
+/* ===== РЕЗУЛЬТАТЫ ===== */
+.language-map-results { min-height: 120px; }
+
+/* Карточка (§4.2): ~120px, hairline, без теней, hover — золото */
 .language-map-grid {
   display: grid;
-  /* Ритм как в палео-лингвистике: единый зазор 14px по обеим осям. */
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
 }
-/* Компактная карточка-строка в стиле doc-card: флаг + название/тип + описание + стрелка. */
 .language-map-card {
   box-sizing: border-box;
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  column-gap: 10px;
-  row-gap: 3px;
-  align-items: center;
-  min-height: 0;
-  margin: 0; /* .lab-card-стили не применяются, но страховка от наследования отступов */
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-height: 118px;
   padding: 12px 14px;
-  text-align: left;
-  cursor: pointer;
   background: var(--bg-card);
   color: var(--text-primary);
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: var(--radius-8);
   box-shadow: none;
-  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  text-decoration: none;
+  transition: border-color .15s ease, background .15s ease;
 }
-.language-map-card:hover { border-color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / 0.08); box-shadow: none; }
-.language-map-card-emoji {
-  grid-column: 1;
-  grid-row: 1 / 3;
+.language-map-card:hover,
+.language-map-card:focus-visible {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+  box-shadow: none;
+}
+.language-map-card:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+.language-map-card-top {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgb(var(--accent-gold-rgb) / 0.10);
-  font-size: 18px;
-  line-height: 1;
-}
-.language-map-card-head {
-  grid-column: 2;
-  grid-row: 1;
-  display: flex;
-  align-items: baseline;
   gap: 8px;
   min-width: 0;
-  margin: 0;
 }
+/* Код-чип: hairline-квадрат 28px с текстовым ISO-кодом языка */
+.language-map-code {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--ui-10, 10px);
+  letter-spacing: .04em;
+}
+.language-map-family {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-muted);
+  font-size: var(--ui-10, 10px);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+/* Точки Давара: 5 по 4px, золото заполнено по уровню, пустые приглушены */
+.language-map-dots {
+  flex: 0 0 auto;
+  display: inline-flex;
+  gap: 3px;
+}
+.language-map-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  opacity: .35;
+}
+.language-map-dot.is-filled { background: var(--accent-gold); opacity: 1; }
+
 /* Специфичность выше .module h2:not(:last-child) из layout.css. */
-.language-map-grid .language-map-card h2 {
+.language-map-grid .language-map-card .language-map-name {
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
   color: var(--text-primary);
-  font-size: 0.85rem;
+  font-family: var(--font-heading);
+  font-size: 16px;
   font-weight: 600;
-  line-height: 1.3;
-  white-space: nowrap;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.language-map-notes {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-13, 13px);
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+/* Список-режим (§4.8): строки 48px: код | название ellipsis | family | точки */
+.language-map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.language-map-row {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+  text-decoration: none;
+  transition: border-color .15s ease, background .15s ease;
+}
+.language-map-row:hover,
+.language-map-row:focus-visible {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+  box-shadow: none;
+}
+.language-map-row:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+.language-map-row-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-.language-map-type {
-  flex: 0 0 auto;
-  color: var(--text-muted);
-  font-size: 0.65rem;
-  letter-spacing: var(--tracking-caps);
-  text-transform: uppercase;
   white-space: nowrap;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
 }
+
+/* Empty-state (§4.6): пунктир, глиф по центру, сброс фильтров */
+.language-map-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 44px 20px;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+  text-align: center;
+}
+.language-map-empty-glyph {
+  color: var(--text-primary);
+  font-size: 42px;
+  line-height: 1;
+  opacity: .35;
+}
+.language-map-empty-text { margin: 0; color: var(--text-muted); font-size: var(--text-14, 14px); }
+.language-map-reset { min-height: 36px; }
+
+/* ===== Детальный экран: метрики — полный ряд плиток ===== */
+.language-map-detail { max-width: none; }
+.language-map-detail h1 { font-size: clamp(30px, 5vw, 46px); }
 .language-map-metrics { display: grid; gap: 8px; margin: 0; }
 .language-map-metric { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-light); padding-top: 7px; }
 .language-map-metric dt { color: var(--text-secondary); font-size: 14px; }
@@ -143,36 +281,6 @@
 .language-map-level-high,
 .language-map-level-medium,
 .language-map-level-low { color: var(--text-primary); }
-.language-map-notes {
-  grid-column: 2;
-  grid-row: 2;
-  min-width: 0;
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-/* Стрелка при наведении — как в doc-card палео-механики. */
-.language-map-card::after {
-  grid-column: 3;
-  grid-row: 1 / 3;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  content: '→';
-  opacity: 0;
-  transition: opacity .15s ease, transform .15s ease;
-}
-.language-map-card:hover::after { opacity: 1; transform: translateX(2px); }
-.language-map-empty { color: var(--text-secondary); padding: 24px 0; }
-
-/* Детальный экран: на всю ширину контейнера, метрики — полный ряд плиток */
-.language-map-detail { max-width: none; }
-.language-map-back { margin-bottom: 28px; min-height: 44px; }
-.language-map-detail h1 { font-size: clamp(30px, 5vw, 46px); }
 .language-map-detail-metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -188,23 +296,60 @@
   padding: 14px 16px;
 }
 .language-map-detail-notes { max-width: 680px; font-size: 18px; line-height: 1.6; margin-bottom: 22px; }
-
+/* Мобильный стек 390: тулбар в колонку, карточки в 1 ряд, список в 2 строки */
 @media (max-width: 640px) {
-  #language-map .language-map-filters { grid-template-columns: 1fr; }
-  #language-map .language-map-grid { grid-template-columns: 1fr; }
-  .language-map-card { min-height: 0; }
+  .language-map-shell {
+    padding-inline: var(--space-3);
+    overflow-x: hidden;
+  }
+  .language-map-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+  #language-map .language-map-search {
+    grid-column: 1 / -1;
+    flex: none;
+    width: 100%;
+    min-width: 0;
+  }
+  #language-map .language-map-select {
+    width: 100%;
+    min-width: 0;
+  }
+  #language-map .language-map-select--sort { grid-column: 1 / 2; }
+  .language-map-view { justify-self: start; }
+  .language-map-count {
+    grid-column: 1 / -1;
+    margin-left: 0;
+    text-align: left;
+  }
+  .language-map-grid { grid-template-columns: 1fr; }
+  .language-map-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    min-height: 0;
+    padding: 10px 12px;
+    gap: 4px 10px;
+  }
+  .language-map-row .language-map-code { grid-row: 1 / 3; }
+  .language-map-row-name { grid-column: 2; }
+  .language-map-row .language-map-family {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .language-map-row .language-map-dots {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    align-self: center;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .language-map-card { transition: none; }
-  .language-map-card:hover { transform: none; }
+  .language-map-card,
+  .language-map-row,
+  .language-map-view-btn {
+    transition: none;
+  }
 }
-
-/* ===== Единый контейнер как на других страницах модулей ===== */
-/* Шелл не добавляет своих полей: контент совпадает с внутренними отступами пастельного контейнера */
-#language-map .language-map-shell { padding: 0; }
-
-/* Фильтры и поиск растягиваются на ширину контейнера: базовые правила выше */
-
-/* Сетка карточек сбалансирована на широком экране */
-#language-map .language-map-grid { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
