@@ -1697,11 +1697,32 @@ const PageController = (function() {
 
       case 'paleo-keyboard':
         container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-ивритская клавиатура</h1>' +
-          '<p class="subtitle">Нажимайте на буквы, чтобы вставить их. Каждая буква — с образом и значением.</p>' +
-          '<textarea id="pk-output" class="lab-card pk-output" aria-label="Поле палео-текста" placeholder="Введите палео-символы…"></textarea>' +
-          '<div class="flex gap-8 mb-16 pk-actions"><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.copy()"><i data-lucide="copy" aria-hidden="true"></i> Копировать</button><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.clear()"><i data-lucide="trash-2" aria-hidden="true"></i> Очистить</button></div>' +
-          '<div id="pk-keys" class="pk-keyboard" aria-label="Палео-клавиатура"></div>' +
-          '<div id="pk-info" class="lab-card mt-16" style="display:none;"><div class="lab-card-header" id="pk-info-title"></div><div class="lab-card-body" id="pk-info-body"></div></div>';
+          '<p class="subtitle">Набирайте палео-знаки кликом или с физической клавиатуры. Каждая буква — с образом и значением.</p>' +
+          '<div class="pk-layout">' +
+          '<section class="pk-panel pk-panel-text" aria-labelledby="pk-text-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-text-title">Строка</h2><span class="pk-count" id="pk-text-count" aria-label="Знаков в строке">0</span><span class="pk-head-note">Enter — в историю, Backspace — удалить глиф</span></header>' +
+          '<textarea id="pk-output" class="pk-output" rows="2" dir="rtl" spellcheck="false" aria-label="Поле палео-текста" placeholder="𐤀𐤁𐤂"></textarea>' +
+          '<p id="pk-translit" class="pk-translit" aria-live="polite" hidden></p>' +
+          '<div id="pk-empty" class="pk-empty"><span class="pk-empty-glyph" aria-hidden="true">𐤕</span><strong>Строка пуста</strong><span>Нажмите клавишу на панели или введите глиф с физической клавиатуры.</span></div>' +
+          '<div class="pk-actions">' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.copy()" title="Копировать строку" aria-label="Копировать строку"><i data-lucide="copy" aria-hidden="true"></i></button>' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.clear()" title="Очистить строку" aria-label="Очистить строку"><i data-lucide="trash-2" aria-hidden="true"></i></button>' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.downloadAsPng()" title="Скачать PNG" aria-label="Скачать строку как PNG"><i data-lucide="download" aria-hidden="true"></i></button>' +
+          '<label class="pk-toggle"><input type="checkbox" id="pk-physical" checked onchange="PaleoKey.setPhysical(this.checked)">Физическая клавиатура</label>' +
+          '</div>' +
+          '<button type="button" class="lab-btn lab-btn-primary pk-primary" onclick="PaleoKey.analyzeInEtymology()"><i data-lucide="search" aria-hidden="true"></i>Разобрать в этимологии</button>' +
+          '</section>' +
+          '<section class="pk-panel pk-panel-keys" aria-labelledby="pk-keys-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-keys-title">Клавиши</h2><span class="pk-count" id="pk-keys-count" aria-label="Клавиш в наборе">0</span><span class="pk-head-note">латинская клавиша вставляет глиф</span></header>' +
+          '<div id="pk-writings" class="pk-writings" role="radiogroup" aria-label="Письменность"></div>' +
+          '<div id="pk-keys" class="pk-keys" data-physical="on" aria-label="Палео-клавиатура"></div>' +
+          '<div id="pk-info" class="pk-info" hidden><div class="pk-info-head" id="pk-info-title"></div><div id="pk-info-body"></div></div>' +
+          '</section>' +
+          '<section class="pk-panel pk-panel-history" aria-labelledby="pk-history-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-history-title">История</h2><span class="pk-count" id="pk-history-count" aria-label="Строк в истории">0</span><span class="pk-head-note">5 последних строк</span></header>' +
+          '<div id="pk-history" class="pk-history"></div>' +
+          '</section>' +
+          '</div>';
         container.dataset.loaded = '1';
         break;
 

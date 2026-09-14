@@ -46,3 +46,10 @@ All in ink color. Differentiation by icon shape + label, never by color.
 - [ ] No shadows, no emojis
 - [ ] Every interactive element has hover + focus-visible states
 - [ ] Buttons rounded-lg, cards rounded-2xl, badges rounded-full
+
+## Status dots (learn hub, Research Lab)
+Хаб «Обучение» (#learn) передаёт статус компактных карточек бейджем-точкой, а не цветной верхней рамкой:
+- «новый» → контурная точка: обводка `--text-muted`, прозрачная заливка;
+- «в работе» → заливка `--accent-gold`;
+- «освоен» → заливка `--accent-green`.
+Цвет — единственное различие, поэтому точка всегда сопровождается легендой рядом и `title`/`aria-label` на самой точке. Цветные верхние рамки (`border-top: 3px`) в карточках хаба не используются. Это осознанное исключение из монохромной палитры Sift: интерфейс Research Lab живёт на токенах `css/tokens.css`.

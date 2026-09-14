@@ -135,19 +135,123 @@
 
   function coursesCount() { return (root.AlephyCourses && root.AlephyCourses.list) ? root.AlephyCourses.list.length : 0; }
 
-  function statsMarkup() {
-    var p = progress(), completed = letters.filter(function(item) { return p.letters[item.hebrew] && p.letters[item.hebrew].status === 'complete'; }).length;
-    var srs = srsStats();
-    var last = p.lastActivity ? new Date(p.lastActivity).toLocaleDateString('ru-RU') : 'Пока нет';
-    return '<div class="learn-stats"><div class="learn-stat"><span class="learn-stat-label">Прогресс по буквам</span><strong class="learn-stat-value">' + completed + '/22</strong></div><div class="learn-stat"><span class="learn-stat-label">К повторению</span><strong class="learn-stat-value">' + srs.due + '</strong></div><div class="learn-stat"><span class="learn-stat-label">Рекорд в игре</span><strong class="learn-stat-value">' + record() + ' очков</strong></div><div class="learn-stat"><span class="learn-stat-label">Последняя активность</span><strong class="learn-stat-value" style="font-size:21px">' + esc(last) + '</strong></div></div>';
+  /* ===== Хаб: строка-шапка, группы, компактные карточки ===== */
+
+  function completedLetters() {
+    var p = progress();
+    return letters.filter(function(item) { return p.letters[item.hebrew] && p.letters[item.hebrew].status === 'complete'; }).length;
+  }
+
+  function hasProgress() { return completedLetters() > 0 || srsStats().total > 0 || record() > 0; }
+
+  /* История активности за 7 дней — из существующих меток времени в localStorage. */
+  function activityDays() {
+    var days = [0,0,0,0,0,0,0], base = new Date(); base.setHours(0,0,0,0);
+    var stamps = [], p = progress(), cards = srsCards(), courses = courseProgress();
+    if (p.lastActivity) stamps.push(p.lastActivity);
+    Object.keys(p.letters).forEach(function(key) { if (p.letters[key] && p.letters[key].lastActivity) stamps.push(p.letters[key].lastActivity); });
+    Object.keys(cards).forEach(function(id) { if (cards[id] && cards[id].lastReviewedAt) stamps.push(cards[id].lastReviewedAt); });
+    Object.keys(courses.lessons).forEach(function(id) { if (courses.lessons[id] && courses.lessons[id].at) stamps.push(courses.lessons[id].at); });
+    stamps.forEach(function(value) {
+      var day = new Date(value); day.setHours(0,0,0,0); if (isNaN(day.getTime())) return;
+      var index = 6 - Math.round((base.getTime() - day.getTime()) / 86400000);
+      if (index >= 0 && index <= 6) days[index]++;
+    });
+    return days;
+  }
+
+  function sparkMarkup() {
+    var days = activityDays(), max = Math.max.apply(null, days.concat([1]));
+    return '<span class="learn-hub-spark" role="img" aria-label="Активность за 7 дней">' + days.map(function(value) {
+      return '<i style="height:' + (value ? 4 + Math.round(value / max * 10) : 4) + 'px"' + (value ? ' class="is-hot"' : '') + '></i>';
+    }).join('') + '</span>';
+  }
+
+  /* Deep-link «продолжить»: последний след активности в localStorage. */
+  function lastDestination() {
+    var best = null;
+    function offer(at, segments) { var time = new Date(at || '').getTime(); if (!time) return; if (!best || time > best.time) best = { time:time, segments:segments }; }
+    var p = progress(), cards = srsCards(), courses = courseProgress();
+    Object.keys(p.letters).forEach(function(key) { var entry = p.letters[key]; if (entry && entry.status) offer(entry.lastActivity, ['lessons', encodeURIComponent(key)]); });
+    Object.keys(cards).forEach(function(id) { if (cards[id] && cards[id].lastReviewedAt) offer(cards[id].lastReviewedAt, ['review']); });
+    Object.keys(courses.lessons).forEach(function(id) { var lesson = courses.lessons[id]; if (lesson && lesson.done) offer(lesson.at, ['courses', encodeURIComponent(lesson.course)]); });
+    return best;
+  }
+
+  function hubChip(text) { return '<span class="learn-hub-chip">' + esc(text) + '</span>'; }
+
+  function hubDot(status) {
+    var label = status === 'done' ? 'освоен' : status === 'progress' ? 'в работе' : 'новый';
+    return '<span class="learn-hub-dot is-' + status + '" title="' + label + '" aria-label="' + label + '"></span>';
+  }
+
+  function hubCard(card) {
+    var percent = card.bar == null ? 0 : Math.round(card.bar * 100);
+    var bar = card.bar == null ? '' : '<span class="learn-hub-bartrack" role="progressbar" aria-valuenow="' + percent + '" aria-valuemin="0" aria-valuemax="100" aria-label="' + esc(card.title) + ': прогресс"><span style="width:' + percent + '%"></span></span>';
+    return '<button type="button" class="learn-hub-card" onclick="' + card.onClick + '">' +
+      '<span class="learn-hub-card-top"><span class="learn-hub-glyph" lang="hbo" aria-hidden="true">' + card.glyph + '</span><span class="learn-hub-card-title">' + esc(card.title) + '</span>' + hubDot(card.status) + '</span>' +
+      '<span class="learn-hub-card-desc">' + esc(card.desc) + '</span>' +
+      '<span class="learn-hub-card-foot"><span class="learn-hub-card-meta">' + esc(card.meta) + '</span>' + bar + '</span>' +
+    '</button>';
+  }
+
+  function hubGroup(label, cards, extra) {
+    return '<section class="learn-hub-group"><header class="learn-hub-group-head"><span class="learn-hub-group-label">' + label + '</span><span class="learn-hub-group-rule" aria-hidden="true"></span><span class="learn-hub-group-badge">' + cards.length + '</span></header>' + (extra || '') + '<div class="learn-hub-cards">' + cards.join('') + '</div></section>';
+  }
+  /* Мини-превью ближайшей карточки повторения; localStorage не мутируем. */
+  function dayCardMarkup() {
+    if (!hasProgress()) return '';
+    var due = Object.keys(srsCards()).map(function(id) { return srsCards()[id]; }).filter(srsDue).sort(function(a, b) { return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime(); })[0];
+    if (!due) return '';
+    var view = reviewItem(due);
+    return '<div class="learn-hub-day"><span class="learn-hub-glyph" lang="hbo" aria-hidden="true">' + view.item.paleo + '</span><span class="learn-hub-day-body"><strong>Карточка дня</strong><span>' + esc(view.prompt) + '</span></span><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LearnLab.openReview()">Повторить</button></div>';
+  }
+
+  function emptyStateMarkup() {
+    return '<div class="learn-hub-empty"><span class="learn-hub-empty-glyph" lang="hbo" aria-hidden="true">𐤀</span><div class="learn-hub-empty-body"><h2>Поле пока пусто</h2><p>Ни одна буква ещё не начата. Алеф ждёт: первый урок вернёт глазу древнего читателя предметный образ — от знака к действию.</p></div><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.startFirst()">Начать первый урок</button></div>';
   }
 
   function renderHome() {
-    var p = progress(), completed = letters.filter(function(item) { return p.letters[item.hebrew] && p.letters[item.hebrew].status === 'complete'; }).length;
+    var p = progress();
+    var completed = completedLetters();
     var srs = srsStats();
-    return '<div class="learn-state-panel"><div><h2>Состояние Свивы</h2><p>Результаты уроков и рекорд сохраняются только в этом браузере.</p></div><button type="button" class="lab-btn lab-btn-secondary learn-danger" onclick="LearnLab.reset()">Сбросить прогресс</button></div>' +
-      '<div class="learn-hero"><div><h1>Обучение</h1><p class="subtitle">Верните глазу древнего читателя предметный образ буквы: от знака к действию.</p></div><div class="learn-hero-mark" aria-hidden="true">𐤀𐤁𐤂</div></div>' + statsMarkup() +
-      '<div class="learn-mode-grid"><button class="learn-mode-card learn-review-card" type="button" onclick="LearnLab.openReview()"><span class="learn-mode-icon" aria-hidden="true">𐤕</span><h2>Повторение</h2><p>Короткая очередь карточек, которым уже пора вернуться в поле зрения.</p><div class="learn-mode-meta"><span>' + srsStats().due + ' карточек к повторению</span></div></button><button class="learn-mode-card" type="button" onclick="LearnLab.openLessons()"><span class="learn-mode-icon" aria-hidden="true">𐤀</span><h2>Изучение иврита</h2><p>22 урока по буквам: название, образ, значение и обратное узнавание символа.</p><div class="learn-mode-meta"><span>' + completed + '/22 уроков</span></div><div class="learn-progress-bar" aria-label="Прогресс ' + completed + ' из 22"><span style="width:' + (completed / 22 * 100) + '%"></span></div></button><button class="learn-mode-card" type="button" onclick="LearnLab.openGame()"><span class="learn-mode-icon" aria-hidden="true">𐤔</span><h2>Угадай образ</h2><p>Игровой раунд на скорость: увидьте знак, выберите предметный образ и соберите серию.</p><div class="learn-mode-meta"><span>Рекорд: ' + record() + ' очков</span></div></button><button class="learn-mode-card" type="button" onclick="LearnLab.openCourses()"><span class="learn-mode-icon" aria-hidden="true">𐤅</span><h2>Курсы</h2><p>Практические курсы: палео-механика, без воды, результат после каждого модуля.</p><div class="learn-mode-meta"><span>' + coursesCount() + ' курсов</span></div></button><button class="learn-mode-card" type="button" onclick="LearnLab.openTrainer()"><span class="learn-mode-icon" aria-hidden="true">𐤏</span><h2>Палео-тренажёр</h2><p>Крупные палео-буквы: увидь образ, назови функцию, собери смысл. Пиши свой ответ или генерируй новое слово.</p><div class="learn-mode-meta"><span>Начать</span></div></button><button class="learn-mode-card learn-battle-entry" type="button" onclick="LearnLab.openBattle()"><span class="learn-mode-icon" aria-hidden="true">⚔</span><h2>Палео-битва</h2><p>Два исследователя по очереди собирают слово, функцию и объяснение.</p><div class="learn-mode-meta"><span>5 раундов · local-first</span></div></button>';
+    var fresh = !hasProgress();
+    var last = p.lastActivity ? new Date(p.lastActivity).toLocaleDateString('ru-RU') : '—';
+    var trainerCount = Object.keys(p.letters).filter(function(key) { return p.letters[key] && p.letters[key].source === 'trainer'; }).length;
+    var courseState = courseProgress(), courseDone = Object.keys(courseState.lessons).length, courseTotal = 0;
+    ((root.AlephyCourses && root.AlephyCourses.list) || []).forEach(function(course) { courseTotal += (course.lessons || []).length; });
+    var battleStored = !!(root.PaleoBattle && root.PaleoBattle.STORAGE_KEY && read(root.PaleoBattle.STORAGE_KEY, null));
+
+    var cardsPractice = [
+      hubCard({ glyph:'𐤕', title:'Повторение', desc:'Короткая очередь карточек, которым пора вернуться в поле зрения.', meta: srs.total === 0 ? 'очередь пуста' : (srs.due > 0 ? srs.due + ' к повторению' : 'всё повторено'), status: srs.total === 0 ? 'new' : (srs.due > 0 ? 'progress' : 'done'), bar: srs.total ? srs.learned / srs.total : null, onClick:'LearnLab.openReview()' }),
+      hubCard({ glyph:'𐤏', title:'Палео-тренажёр', desc:'Крупные палео-буквы: увидь образ, назови функцию, собери смысл.', meta: '6 тем · корни и смыслы', status: trainerCount > 0 ? 'progress' : 'new', bar: completed / 22, onClick:'LearnLab.openTrainer()' })
+    ];
+    var cardsGames = [
+      hubCard({ glyph:'𐤔', title:'Угадай образ', desc:'Раунд на скорость: знак — к предметному образу, серия растёт.', meta: 'рекорд ' + record() + ' очков', status: record() > 0 ? 'progress' : 'new', bar: null, onClick:'LearnLab.openGame()' }),
+      hubCard({ glyph:'⚔', title:'Палео-битва', desc:'Пошаговый матч: собери цепочку образов и защити своё чтение.', meta: battleStored ? 'матч в работе' : '5 раундов', status: battleStored ? 'progress' : 'new', bar: null, onClick:'LearnLab.openBattle()' })
+    ];
+    var cardsCourses = [
+      hubCard({ glyph:'𐤀', title:'Изучение иврита', desc:'22 урока по буквам: название, образ, значение и узнавание знака.', meta: completed + '/22 букв', status: completed === 0 ? 'new' : (completed === 22 ? 'done' : 'progress'), bar: completed / 22, onClick:'LearnLab.openLessons()' }),
+      hubCard({ glyph:'𐤅', title:'Курсы', desc:'Практические курсы: палео-механика, результат после каждого модуля.', meta: coursesCount() + ' курсов', status: courseDone === 0 ? 'new' : (courseTotal > 0 && courseDone >= courseTotal ? 'done' : 'progress'), bar: courseTotal ? courseDone / courseTotal : null, onClick:'LearnLab.openCourses()' })
+    ];
+
+    var cta = fresh
+      ? '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="LearnLab.startFirst()">Начать первый урок</button>'
+      : '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="LearnLab.continueLast()">Продолжить с последнего места</button>';
+
+    return '<header class="learn-hub-bar">' +
+        '<span class="learn-hub-label">Обучение</span>' +
+        '<span class="learn-hub-rule" aria-hidden="true"></span>' +
+        '<span class="learn-hub-chips">' + hubChip('буквы ' + completed + '/22') + hubChip('к повторению ' + srs.due) + hubChip('рекорд ' + record()) + hubChip('активность ' + last) + '</span>' +
+        sparkMarkup() +
+        '<button type="button" class="learn-hub-reset" title="Сбросить прогресс" aria-label="Сбросить прогресс" onclick="LearnLab.reset()"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>' +
+        cta +
+      '</header>' +
+      (fresh ? emptyStateMarkup() : '') +
+      '<p class="learn-hub-legend" aria-label="Легенда статусов"><span>Статус:</span><span class="learn-hub-dot"></span>новый<span class="learn-hub-dot is-progress"></span>в работе<span class="learn-hub-dot is-done"></span>освоен</p>' +
+      hubGroup('Практика', cardsPractice, dayCardMarkup()) +
+      hubGroup('Игры', cardsGames) +
+      hubGroup('Курсы', cardsCourses);
   }
 
   function courseCard(course, index) {
@@ -485,7 +589,11 @@
     routeTitle: routeTitle,
     toggleLesson: function(courseId, lessonId) { var p = courseProgress(); if (p.lessons[lessonId]) delete p.lessons[lessonId]; else p.lessons[lessonId] = { course: courseId, done: true, at: now() }; write(COURSE_KEY, p); render(); },
     gameAnswer: function(key) { var game=state.game; if (!game || game.locked) return; game.locked=true; var ok=key===game.item.hebrew, earned=0; if(ok){game.streak++; earned=10*(game.streak >= 3 ? 3 : game.streak === 2 ? 2 : 1); game.score+=earned;} else {game.streak=0; game.score=Math.max(0,game.score-5);} render(); var feedbackEl=document.getElementById('learn-game-feedback'); if(feedbackEl){feedbackEl.textContent=ok ? 'Верно! +' + earned + ' очков' : 'Неверно. Правильный образ: ' + game.item.image; feedbackEl.className='learn-game-feedback ' + (ok?'correct':'wrong');} setTimeout(function(){ if(!state.game || state.game !== game) return; if(game.round >= 10) finishGame(); else {game.round++; nextRound();} },700); },
-    reset: function() { if (!window.confirm('Сбросить весь прогресс обучения, рекорд игры и прогресс тренажёра?')) return; localStorage.removeItem(PROGRESS_KEY); localStorage.removeItem(RECORD_KEY); localStorage.removeItem(SRS_KEY); state.trainer = null; state.review = null; navigate([]); }
+    openCourse: function(id) { navigate(['courses', encodeURIComponent(id)]); },
+    reset: function() { if (!window.LabModal) return; window.LabModal.show('Сбросить прогресс?', '<p class="learn-hub-reset-text">Будут удалены уроки букв, очередь повторения и рекорд игры, сохранённые в этом браузере. Прогресс курсов останется.</p>', '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Отмена</button><button type="button" class="lab-btn lab-btn-primary lab-btn-sm learn-danger" onclick="LearnLab.resetConfirm()">Сбросить</button>'); },
+    resetConfirm: function() { localStorage.removeItem(PROGRESS_KEY); localStorage.removeItem(RECORD_KEY); localStorage.removeItem(SRS_KEY); state.trainer = null; state.review = null; if (window.LabModal) window.LabModal.close(); navigate([]); render(); },
+    startFirst: function() { navigate(['lessons', encodeURIComponent(LETTER_KEYS[0])]); },
+    continueLast: function() { var dest = lastDestination(); navigate(dest ? dest.segments : ['review']); }
   };
   function nextRound() { var item=letters[Math.floor(Math.random()*letters.length)]; state.game.item=item; state.game.choices=distractors(item); state.game.locked=false; render(); }
   function finishGame() { stopTimer(); state.game.done=true; var best=Math.max(record(),state.game.score); localStorage.setItem(RECORD_KEY,String(best)); render(); }
