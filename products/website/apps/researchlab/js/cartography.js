@@ -207,7 +207,6 @@ const Cartography = (function() {
 
   // ===== ИНИЦИАЛИЗАЦИЯ =====
   function init(el) {
-    console.log('[Cartography] init вызван, container:', el);
     var container = el || document.getElementById('cartography');
     if (container) loadData(container);
   }
@@ -226,10 +225,8 @@ const Cartography = (function() {
 
     container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка картографии...</div></div>';
 
-    console.log('[Cartography] Загружаем путь:', dataPath());
     dataPromise = Promise.all([
       fetch(dataPath()).then(function(response) {
-        console.log('[Cartography] Ответ fetch:', response.status, response.url, response.ok);
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
       }),
@@ -494,14 +491,18 @@ const Cartography = (function() {
   }
 
   function renderCard(e, index) {
-    return '<div class="cartography-card" data-id="' + escapeHtml(e.id) + '" tabindex="0" role="button" aria-label="Открыть карточку: ' + escapeHtml(e.name) + '" style="animation-delay:' + (index * 60) + 'ms">' +
-      '<div class="cartography-card-type">' + escapeHtml(TYPE_LABELS[e.type] || e.type || '') + '</div>' +
-      '<h2 class="cartography-card-title">' + escapeHtml(e.name) + '</h2>' +
-      '<div class="cartography-card-hebrew" dir="rtl" lang="he">' + escapeHtml(e.hebrew || '') + '</div>' +
+    return '<article class="cartography-card" data-id="' + escapeHtml(e.id) + '" tabindex="0" role="button" aria-label="Открыть карточку: ' + escapeHtml(e.name) + '" style="animation-delay:' + (index * 80) + 'ms">' +
+      '<header class="cartography-card-header">' +
+        '<div class="cartography-card-title-wrap">' +
+          '<div class="cartography-card-type">' + escapeHtml(TYPE_LABELS[e.type] || e.type || '') + '</div>' +
+          '<h2 class="cartography-card-title">' + escapeHtml(e.name) + '</h2>' +
+        '</div>' +
+        (e.hebrew ? '<div class="cartography-card-hebrew" dir="rtl" lang="he">' + escapeHtml(e.hebrew) + '</div>' : '') +
+      '</header>' +
       '<div class="cartography-card-paleo" dir="rtl">' + escapeHtml(e.paleo || '') + '</div>' +
-      '<div class="cartography-card-meaning">' + escapeHtml(e.meaning || '') + '</div>' +
-      '<p class="cartography-card-summary">' + escapeHtml(e.summary || '') + '</p>' +
-    '</div>';
+      '<div class="cartography-card-symbol"><span class="cartography-card-symbol-label">Значение</span> ' + escapeHtml(e.meaning || '') + '</div>' +
+      (e.summary ? '<div class="cartography-card-description">' + escapeHtml(e.summary) + '</div>' : '') +
+    '</article>';
   }
 
   // ===== ДЕТАЛЬНЫЙ ПРОСМОТР =====

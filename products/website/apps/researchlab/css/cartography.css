@@ -49,11 +49,20 @@
   flex-direction: column;
   min-width: 0;
   overflow: hidden;
-  background: var(--bg-secondary, #f7f1e5);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: 8px;
-  box-shadow: 0 7px 18px rgba(44, 24, 16, .08);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
   animation: cartographyFadeIn var(--dur-2) ease both;
+}
+.cartography-theme-card:hover,
+.cartography-theme-card:focus-visible {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
+  box-shadow: none;
+  transform: translateY(-1px);
+  outline: none;
 }
 
 .cartography-theme-preview {
@@ -293,113 +302,65 @@
   gap: 14px;
 }
 
+/* Карточка — тот же язык, что и .pl-lang-card в палео-лингвистике:
+   hairline-рамка --border-light без теней, отступы по шкале --space-*;
+   hover/focus — золотая рамка + золотая подложка rgba(gold,.08). */
 .cartography-card {
-  background: var(--bg-card, #faf3e0);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: 7px;
-  padding: 14px;
-  cursor: pointer;
-  transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-base);
-  animation: cartographyFadeIn var(--dur-2) ease both;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
   overflow: hidden;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  animation: cartographyFadeIn var(--dur-2) var(--ease-out) both;
 }
-
-.cartography-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.cartography-card:hover,
+.cartography-card:focus-visible {
   border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
+  box-shadow: none;
+  transform: translateY(-1px);
+  outline: none;
 }
 
 @keyframes cartographyFadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-   @media (prefers-reduced-motion: reduce) {
-     .cartography-card { animation: none; transition: none; }
-   }
-
-  to { opacity: 1; transform: translateY(0); }
-
-   .cartography-card-header {
-     display: flex;
-     flex-direction: column;
-     min-height: 0;
-     text-align: center;
-     min-width: 0;
-   }
-
-   .cartography-card-title-wrap {
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     gap: var(--space-1);
-     min-width: 0;
-   }
-
-   .cartography-card-hebrew {
-     font-family: 'Times New Roman', serif;
-     font-size: var(--text-lg);
-     color: var(--text-secondary, #4a3728);
-     direction: rtl;
-     margin-top: var(--space-1);
-   }
-
-   .cartography-card-paleo {
-     display: flex;
-     justify-content: center;
-     width: 100%;
-     min-height: 42px;
-     font-family: 'Times New Roman', serif;
-     font-size: 2.25rem;
-     line-height: 1;
-     color: var(--accent-gold);
-     direction: rtl;
-     margin-top: 3px;
-     white-space: nowrap;
-     overflow: hidden;
-     text-overflow: ellipsis;
-   }
-
-   .cartography-card-symbol {
-     padding: 5px var(--space-2);
-     border-inline-start: 3px solid var(--accent-gold);
-     background: var(--bg-subtle, #f5f0e8);
-     color: var(--text-primary, #2c1810);
-     font-size: var(--text-sm);
-     line-height: 1.25;
-     min-width: 0;
-     overflow-wrap: anywhere;
-   }
-
-   .cartography-card-symbol-label {
-     margin-inline-end: 4px;
-     color: var(--text-muted, #6b5b4e);
-     font-size: 11px;
-     text-transform: uppercase;
-     letter-spacing: 0.04em;
-   }
-
-   .cartography-card-description {
-     background: var(--bg-subtle, #f5f0e8);
-     border-radius: var(--radius-xs);
-     padding: var(--space-2) 9px;
-     margin: 1px 0;
-     min-height: 3.4em;
-     font-size: var(--text-sm);
-     color: var(--text-secondary, #4a3728);
-     line-height: 1.3;
-     display: -webkit-box;
-     -webkit-line-clamp: 2;
-     -webkit-box-orient: vertical;
-     overflow: hidden;
-     overflow-wrap: anywhere;
-   }
-
-   /* ===== ДЕТАЛЬНЫЙ ПРОСМОТР (МОДАЛКА) ===== */
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cartography-card,
+  .cartography-theme-card {
+    animation: none;
+    transition: none;
+  }
+}
+
+.cartography-card-header {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  text-align: center;
+  min-width: 0;
+}
+
+.cartography-card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* Мета-тип карточки: санс-капитель второго плана (как .pl-lang-role в эталоне) */
 .cartography-card-type {
   display: inline-block;
   align-self: flex-start;
@@ -407,17 +368,23 @@
   border-radius: var(--radius-md);
   background: var(--bg-subtle, #f5f0e8);
   font-size: 11px;
+  line-height: 1.3;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--text-muted, #6b5b4e);
 }
 
-.cartography-card-title {
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
+/* Заголовок карточки: сериф EB Garamond — как буквицы манускрипта.
+   Специфичность выше .module h2:not(:last-child) из layout.css. */
+.cartography-theme-grid .cartography-theme-card h2.cartography-card-title,
+.cartography-grid .cartography-card h2.cartography-card-title {
+  font-family: var(--font-serif, 'EB Garamond', Georgia, serif);
   font-size: 19px;
   font-weight: 700;
   color: var(--text-primary, #2c1810);
   margin: 0;
+  padding: 0;
+  border: 0;
   min-height: 2.3em;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -428,30 +395,66 @@
 
 .cartography-card-hebrew {
   font-family: 'Times New Roman', serif;
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: var(--text-secondary, #4a3728);
   direction: rtl;
+  margin-top: var(--space-1);
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .cartography-card-paleo {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
   font-family: 'Times New Roman', serif;
-  font-size: var(--text-base);
+  font-size: 2.25rem;
+  line-height: 1;
   color: var(--accent-gold);
   direction: rtl;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cartography-card-symbol {
+  padding: 5px var(--space-2);
+  border-inline-start: 3px solid var(--accent-gold);
+  background: var(--bg-subtle, #f5f0e8);
+  color: var(--text-primary, #2c1810);
+  font-size: var(--text-sm);
+  line-height: 1.25;
   min-width: 0;
   overflow-wrap: anywhere;
-  white-space: normal;
 }
 
-.cartography-card-meaning {
+.cartography-card-symbol-label {
+  margin-inline-end: 4px;
+  color: var(--text-muted, #6b5b4e);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cartography-card-description {
+  background: var(--bg-subtle, #f5f0e8);
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) 9px;
+  margin: 1px 0;
+  min-height: 3.4em;
   font-size: var(--text-sm);
-  font-weight: 600;
   color: var(--text-secondary, #4a3728);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   overflow-wrap: anywhere;
 }
 
+/* .cartography-card-summary — вариант тематических карточек (renderThemeCard) */
 .cartography-card-summary {
   background: var(--bg-subtle, #f5f0e8);
   border-radius: var(--radius-xs);
@@ -464,8 +467,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
-  min-height: 4.2em;
+  margin: 0;
 }
+
 
 /* ===== ДЕТАЛЬНЫЙ ПРОСМОТР (МОДАЛКА) ===== */
 .cartography-detail {

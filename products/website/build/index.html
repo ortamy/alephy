@@ -25,7 +25,7 @@
   <!-- Шрифты НЕблокирующе: при недоступной сети Google Fonts страница не зависает. -->
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap"></noscript>
-  <link rel="stylesheet" href="apps/researchlab/css/lab.css">
+  <link rel="stylesheet" href="css/landing.css">
   <meta property="og:title" content="Alephy — исследовательская платформа">
   <meta property="og:description" content="Возвращаем тексту его физику: образ, движение, состояние и переход.">
   <meta property="og:image" content="https://ortamy.github.io/alephy/favicon.svg">
@@ -50,8 +50,10 @@
       --radius-lg: 18px;
       --radius-xl: 20px;
       --bronze: #6b4a10;
-      --shadow: 0 18px 45px rgba(45, 31, 20, .10);
       --max: 1180px;
+      /* Токены чернил: шапка и футер (перебивают глобальные токены лаба). */
+      --header-ink: var(--paper);
+      --header-hover: var(--gold);
     }
     /* Пастельная бежевая тема. */
     [data-theme="beige"] {
@@ -62,7 +64,6 @@
       --chocolate-soft: #6a563a;
       --muted: #9c8766;
       --line: rgba(58, 43, 23, .16);
-      --shadow: 0 18px 45px rgba(58, 43, 23, .10);
     }
     [data-theme="brown"] {
       --paper: #3b2a18;
@@ -72,7 +73,6 @@
       --chocolate-soft: #d8c6a6;
       --muted: #b09b78;
       --line: rgba(243, 233, 214, .18);
-      --shadow: 0 18px 45px rgba(0, 0, 0, .22);
     }
     /* Legacy parchment value is kept as an alias for old bookmarks. */
     [data-theme="parchment"] {
@@ -81,7 +81,6 @@
       --paper-light: #fdf9ee;
       --line: rgba(45, 31, 20, .13);
       --muted: #7b6c59;
-      --shadow: 0 18px 45px rgba(45, 31, 20, .08);
     }
     [data-theme="dark"] {
       --paper: #2D1F14;
@@ -91,7 +90,6 @@
       --chocolate-soft: #dbc8a9;
       --line: rgba(245, 240, 230, .18);
       --muted: #c9b89d;
-      --shadow: 0 18px 45px rgba(0, 0, 0, .22);
     }
     /* Полностью белая тема: нейтральные поверхности и читаемый тёмный текст. */
     [data-theme="white"] {
@@ -102,7 +100,9 @@
       --chocolate-soft: #52606d;
       --muted: #7b8794;
       --line: rgba(31, 41, 51, .16);
-      --shadow: 0 18px 45px rgba(31, 41, 51, .08);
+      /* Тёмные чернила на белых поверхностях; золото — только при наведении. */
+      --header-ink: var(--chocolate);
+      --header-hover: #8a6420;
     }
     [data-theme="white"] body::before { opacity: 0; }
     [data-theme="white"] .lab-header,
@@ -125,16 +125,32 @@
     [data-theme="white"] .footer-bottom {
       color: var(--chocolate-soft);
     }
-    /* Цвет логотипа соответствует поверхности шапки каждой темы. */
-    .lab-header .logo img[src*="alephy-logo"] {
-      filter: brightness(0) invert(1);
+    /* Логотип — инлайн-SVG, цвет наследует чернила шапки (без PNG-растра и фильтров). */
+    .lab-header .logo { color: var(--header-ink); }
+    .lab-header .logo svg { display: block; height: 40px; width: auto; }
+    .alephy-beta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 18px;
+      margin-left: 8px;
+      padding: 0 7px;
+      border: 1px solid currentColor;
+      border-radius: 999px;
+      background: transparent;
+      color: inherit;
+      box-shadow: none;
+      font-family: var(--sans);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
-    [data-theme="white"] .lab-header .logo img[src*="alephy-logo"] {
-      filter: brightness(0);
-    }
-    [data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
-      filter: invert(29%) sepia(19%) saturate(1090%) hue-rotate(348deg) brightness(83%) contrast(88%);
-    }
+    .site-footer .footer-brand { color: var(--header-ink); transition: color .2s ease; }
+    .site-footer .footer-brand:hover { color: var(--header-hover); }
+    .site-footer .footer-brand svg { display: block; height: 30px; width: auto; }
     *, *::before, *::after { box-sizing: border-box; }
     html { min-width: 320px; scroll-behavior: smooth; }
     body {
@@ -154,48 +170,19 @@
       z-index: 25;
       height: 74px;
       background: var(--chocolate);
-      box-shadow: 0 1px 0 var(--line), 0 8px 24px rgba(45, 31, 20, .08);
+      color: var(--paper);
+      border-bottom: 1px solid var(--line);
     }
     .club-banner {
       position: relative;
       z-index: 26;
       overflow: hidden;
       min-height: 74px;
-      padding: 12px 72px;
+      padding: 8px 24px;
       background: #93491f;
       color: #fff7e8;
       isolation: isolate;
     }
-    .club-matrix-edge {
-      position: absolute;
-      top: 0;
-      z-index: -1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
-      width: 132px;
-      height: 200%;
-      padding: 0 8px;
-      overflow: hidden;
-      color: rgba(255, 224, 164, .28);
-      font-family: var(--serif);
-      font-size: 1.15rem;
-      line-height: 1.25;
-      text-shadow: 0 0 10px rgba(255, 224, 164, .28);
-      white-space: pre;
-      opacity: .85;
-      pointer-events: none;
-    }
-    .club-matrix-edge--left { left: 4px; }
-    .club-matrix-edge--right { right: 4px; }
-    .club-matrix-column { display: block; overflow: hidden; animation: club-matrix-down 7s linear infinite; }
-    .club-matrix-column:nth-child(2) { animation-name: club-matrix-up; animation-duration: 5.5s; }
-    .club-matrix-column:nth-child(3) { animation-name: club-matrix-down; animation-duration: 6.3s; }
-    .club-matrix-edge--right .club-matrix-column:nth-child(1) { animation-name: club-matrix-up; animation-duration: 6.2s; }
-    .club-matrix-edge--right .club-matrix-column:nth-child(2) { animation-name: club-matrix-down; animation-duration: 5.2s; }
-    .club-matrix-edge--right .club-matrix-column:nth-child(3) { animation-name: club-matrix-up; animation-duration: 7.2s; }
-    @keyframes club-matrix-down { from { transform: translateY(-50%); } to { transform: translateY(0); } }
-    @keyframes club-matrix-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
     .club-banner-content {
       display: flex;
       min-height: 50px;
@@ -251,7 +238,7 @@
       border-radius: 8px;
       transition: background .2s ease, color .2s ease;
     }
-    .lab-header nav a.icon-link:hover { color: var(--gold); }
+    .lab-header nav a.icon-link:hover { color: var(--header-hover); }
     .lab-header nav svg.lucide,
     .lab-header .mobile-icon-link svg.lucide { width: 20px; height: 20px; display: block; }
     .lab-header nav a.icon-link svg.lucide { width: 20px; height: 20px; }
@@ -283,18 +270,6 @@
       letter-spacing: .16em;
       text-decoration: none;
     }
-    .brand-mark {
-      display: grid;
-      width: 32px;
-      height: 32px;
-      place-items: center;
-      border: 1px solid var(--gold);
-      border-radius: 50%;
-      color: var(--gold-deep);
-      font-family: var(--serif);
-      font-size: 1.15rem;
-      letter-spacing: 0;
-    }
     .sr-only {
       position: absolute;
       width: 1px;
@@ -322,9 +297,9 @@
       letter-spacing: .02em;
       text-decoration: none;
       cursor: pointer;
-      transition: transform .2s ease, background .2s ease, box-shadow .2s ease;
+      transition: background .2s ease, border-color .2s ease;
     }
-    .button:hover { background: #d7ad56; box-shadow: 0 8px 20px rgba(155, 114, 36, .2); transform: translateY(-2px); }
+    .button:hover { background: #d7ad56; }
     .button-outline { background: transparent; color: var(--chocolate); }
     .button-outline:hover { background: rgba(200, 155, 60, .12); }
     .eyebrow {
@@ -393,10 +368,10 @@
       border-radius: var(--radius);
       background: color-mix(in srgb, var(--plate) 12%, var(--paper-light));
       color: var(--chocolate);
-      transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+      transition: transform .2s ease, background .2s ease;
     }
-    .loss-plate::before { position: absolute; top: 50%; left: -32px; width: 11px; height: 11px; border: 2px solid var(--paper-light); border-radius: 50%; background: var(--plate); box-shadow: 0 0 0 1px var(--plate); content: ''; transform: translateY(-50%); }
-    .loss-plate:hover, .loss-plate:focus-within { background: color-mix(in srgb, var(--plate) 20%, var(--paper-light)); box-shadow: 0 8px 20px rgba(45, 31, 20, .1); transform: translateX(4px); }
+    .loss-plate::before { position: absolute; top: 50%; left: -32px; width: 11px; height: 11px; border: 2px solid var(--paper-light); border-radius: 50%; background: var(--plate); content: ''; transform: translateY(-50%); }
+    .loss-plate:hover, .loss-plate:focus-within { background: color-mix(in srgb, var(--plate) 20%, var(--paper-light)); transform: translateX(4px); }
     .loss-number { color: var(--plate); font-family: var(--serif); font-size: 1.15rem; font-weight: 700; }
     .loss-name { font-weight: 600; }
     .loss-detail { color: var(--muted); font-size: .78rem; }
@@ -409,7 +384,6 @@
     .analysis-card, .audience-card, .preview-card {
       border: 1px solid var(--gold);
       border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
     }
     .analysis-stack { position: relative; min-width: 0; min-height: 510px; padding: 104px 0 30px; }
     .analysis-card { position: absolute; min-width: 0; background: var(--paper-light); }
@@ -443,55 +417,39 @@
     .audience-grid, .preview-grid { display: grid; gap: 16px; }
     .audience > .container > .section-heading, .platform > .container > .section-heading { margin-right: auto; margin-left: auto; text-align: center; }
     .audience > .container > .section-heading p:not(.eyebrow), .platform > .container > .section-heading p:not(.eyebrow) { margin-right: auto; margin-left: auto; }
-    .audience-layout { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(4, auto); gap: 14px clamp(12px, 1.8vw, 28px); align-items: center; }
-    .audience-layout > .section-heading { grid-column: 2 / 4; grid-row: 2 / 4; align-self: center; justify-self: center; max-width: 520px; margin: 0; text-align: center; }
+    .audience-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px clamp(12px, 1.8vw, 28px); align-items: stretch; }
+    .audience-layout > .section-heading { grid-column: 1 / -1; grid-row: 1; margin: 0; text-align: center; }
     .audience-layout > .section-heading p:not(.eyebrow) { margin-right: auto; margin-left: auto; }
     .audience-side { display: contents; }
-    .audience-card { display: flex; flex-direction: column; min-height: 118px; padding: 16px 14px; background: color-mix(in srgb, var(--paper-light) 68%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 72%, transparent); border-radius: var(--radius-lg); box-shadow: 0 12px 28px rgba(44, 24, 16, .1), inset 0 1px 0 rgba(255, 255, 255, .38); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); text-align: center; transform: translateY(0) rotate(0) scale(1); transition: box-shadow .3s ease, border-color .3s ease; }
-    .audience-side--left .audience-card:nth-child(1) { grid-column: 1; grid-row: 1; --from: -24px; --to: 18px; --tilt: -1.5deg; }
-    .audience-side--left .audience-card:nth-child(2) { grid-column: 2; grid-row: 1; --from: 20px; --to: -16px; --tilt: 1.2deg; }
-    .audience-side--left .audience-card:nth-child(3) { grid-column: 1; grid-row: 2; --from: -18px; --to: 24px; --tilt: -2deg; }
-    .audience-side--left .audience-card:nth-child(4) { grid-column: 1; grid-row: 3; --from: 20px; --to: -22px; --tilt: 1.8deg; }
-    .audience-side--left .audience-card:nth-child(5) { grid-column: 2; grid-row: 4; --from: -22px; --to: 16px; --tilt: -1deg; }
-    .audience-side--left .audience-card:nth-child(6) { grid-column: 1; grid-row: 4; --from: 16px; --to: -26px; --tilt: 2.2deg; }
-    .audience-side--right .audience-card:nth-child(1) { grid-column: 4; grid-row: 1; --from: 18px; --to: -24px; --tilt: 1.4deg; }
-    .audience-side--right .audience-card:nth-child(2) { grid-column: 3; grid-row: 1; --from: -20px; --to: 16px; --tilt: -1.1deg; }
-    .audience-side--right .audience-card:nth-child(3) { grid-column: 4; grid-row: 2; --from: 24px; --to: -18px; --tilt: 2deg; }
-    .audience-side--right .audience-card:nth-child(4) { grid-column: 4; grid-row: 3; --from: -18px; --to: 24px; --tilt: -1.7deg; }
-    .audience-side--right .audience-card:nth-child(5) { grid-column: 3; grid-row: 4; --from: 20px; --to: -16px; --tilt: 1deg; }
-    .audience-side--right .audience-card:nth-child(6) { grid-column: 4; grid-row: 4; --from: -16px; --to: 26px; --tilt: -2.2deg; }
-    .audience-card:hover { border-color: var(--gold-deep); box-shadow: 0 16px 34px rgba(44, 24, 16, .16); }
-    .audience-card h3 { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; font-size: clamp(.68rem, .95vw, 1rem); letter-spacing: -.025em; white-space: nowrap; }
+    .audience-side { display: contents; }
+    .audience-card { display: flex; flex-direction: column; min-height: 118px; padding: 18px 16px; background: var(--paper-light); border: 1px solid color-mix(in srgb, var(--gold) 72%, transparent); border-radius: var(--radius-lg); text-align: center; transition: border-color .3s ease; }
+    .audience-card:hover { border-color: var(--gold-deep); }
+    .audience-card h3 { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; font-size: clamp(.72rem, .95vw, 1rem); letter-spacing: -.025em; white-space: nowrap; }
     .audience-icon { width: 32px; height: 32px; flex: 0 0 32px; object-fit: contain; }
     .audience-card p { margin-bottom: 0; color: var(--muted); font-size: .9rem; }
-    @keyframes audience-drift { from { transform: translateY(var(--from)) rotate(var(--tilt)) scale(.96); } to { transform: translateY(var(--to)) rotate(calc(var(--tilt) * -1)) scale(1.04); } }
-    @supports (animation-timeline: view()) {
-      .audience-card { animation: audience-drift linear both; animation-timeline: view(block); animation-range: entry 0% exit 100%; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .audience-card { animation: none !important; transform: none; }
-    }
     .platform { background: var(--paper-deep); }
-    .preview-card { display: flex; flex-direction: column; padding: 26px; background: var(--paper-light); border: 1px solid var(--gold); border-radius: var(--radius-lg); box-shadow: var(--shadow); }
+    /* Пергамент вместо серо-голубых поверхностей в белой теме. */
+    [data-theme="white"] .platform { background: #f4efe3; }
+    [data-theme="white"] .preview-card { background: #fbf6ea; }
+    [data-theme="white"] .scale-strip { background: #f6f1e5; }
+    .preview-card { display: flex; flex-direction: column; padding: 26px; background: var(--paper-light); border: 1px solid var(--gold); border-radius: var(--radius-lg); }
     .preview-copy { display: flex; flex: 1; flex-direction: column; }
     .preview-copy h3 { margin-bottom: 8px; }
     .preview-copy p { margin-bottom: 18px; color: var(--muted); font-size: .84rem; }
     .preview-card { text-align: center; }
     .preview-copy .button { margin-top: auto; align-self: center; }
     .tools-all-link { display: block; margin-top: 22px; text-align: center; }
-    .scale-strip { overflow: hidden; padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper-light); }
-    .scale-strip .container { width: 100%; max-width: none; overflow: hidden; }
-    .scale-track { display: flex; width: max-content; gap: 10px; padding-left: 10px; animation: scale-marquee 34s linear infinite; }
-    .scale-set { display: flex; flex: 0 0 auto; gap: 10px; }
-    @keyframes scale-marquee { from { transform: translateX(0); } to { transform: translateX(calc(-50% - 5px)); } }
+    .scale-strip { padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper-light); }
+    .scale-strip .container { width: 100%; max-width: none; }
+    .scale-track { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
     .scale-chip { flex: 0 0 auto; padding: 8px 13px; border: 1px solid var(--line-gold); border-radius: 999px; color: var(--chocolate-soft); font-size: .78rem; white-space: nowrap; }
     .desktop-anchor-nav { position: sticky; top: 56px; z-index: 12; display: flex; justify-content: center; gap: 22px; padding: 8px 20px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper-light) 92%, transparent); backdrop-filter: blur(8px); }
     .lab-header .desktop-anchor-nav { position: absolute; top: 50%; left: 50%; z-index: auto; padding: 0; border: 0; background: transparent; backdrop-filter: none; transform: translate(-50%, -50%); }
-    .desktop-anchor-nav a { color: var(--gold); font-size: .74rem; font-weight: 700; text-decoration: none; }
-    .desktop-anchor-nav a:hover { color: var(--paper); }
+    .desktop-anchor-nav a { color: var(--header-ink); font-size: .74rem; font-weight: 700; text-decoration: none; }
+    .desktop-anchor-nav a:hover { color: var(--header-hover); }
     .scroll-progress { position: fixed; inset: 0 0 auto; z-index: 30; height: 3px; transform-origin: left; background: var(--gold); transform: scaleX(0); }
     .back-to-top { position: fixed; right: 18px; bottom: 18px; z-index: 15; display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--gold); border-radius: 50%; background: var(--paper-light); color: var(--chocolate); cursor: pointer; font-size: 1.2rem; }
-    .letter-popover { position: fixed; z-index: 25; width: min(230px, calc(100vw - 28px)); padding: 14px; border: 1px solid var(--gold); border-radius: var(--radius); background: var(--paper-light); box-shadow: var(--shadow); color: var(--chocolate); line-height: 1.35; }
+    .letter-popover { position: fixed; z-index: 25; width: min(230px, calc(100vw - 28px)); padding: 14px; border: 1px solid var(--gold); border-radius: var(--radius); background: var(--paper-light); color: var(--chocolate); line-height: 1.35; }
     .letter-popover strong { display: block; margin-bottom: 4px; color: var(--gold-deep); font-family: var(--serif); font-size: 1.25rem; }
     .waitlist-form { display: grid; gap: 8px; width: min(100%, 540px); margin: 4px auto 0; }
     .waitlist-row { display: flex; gap: 8px; }
@@ -509,7 +467,7 @@
     .project-callout .button-outline { border-color: var(--gold); color: var(--paper); }
     .site-footer { padding: 40px 0 18px; background: var(--chocolate); color: var(--paper); }
     .footer-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px; padding-bottom: 16px; text-align: center; }
-    .footer-brand { color: var(--gold); }
+    .footer-brand { transition: color .2s ease; }
     .footer-slogan { max-width: none; margin: 0; color: #dbcbb2; font-family: var(--serif); font-size: 1.3rem; font-style: italic; white-space: nowrap; }
     .footer-bottom { display: inline; color: #b9a58b; font-size: .72rem; }
     @media (min-width: 768px) {
@@ -550,28 +508,15 @@
       .project-callout .button { width: 100%; }
       .preview-copy .button { width: 100%; }
       .analysis-cta { width: 100%; }
-      .audience { overflow: visible; padding: 54px 0 58px; }
-      .audience-layout { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; min-height: 0; margin-inline: -8px; padding: 0; }
-      .audience-layout > .section-heading { position: relative; top: auto; left: auto; z-index: 3; grid-column: 1 / -1; grid-row: 1; width: auto; max-width: 330px; padding: 0 10px 18px; transform: none; }
+      .audience { overflow: visible; padding: 48px 0 58px; }
+      .audience-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+      .audience-layout > .section-heading { grid-column: 1 / -1; grid-row: 1; text-align: center; }
       .audience-layout > .section-heading h2 { margin-bottom: 10px; font-size: clamp(1.55rem, 7vw, 2.25rem); }
       .audience-layout > .section-heading p:not(.eyebrow) { font-size: .84rem; line-height: 1.45; }
-      .audience-side { display: contents; }
-      .audience-card, .audience-side--left .audience-card, .audience-side--right .audience-card { position: relative; z-index: 1; grid-column: auto; grid-row: auto; width: auto; min-height: 92px; padding: 12px 9px; overflow: visible; animation: none; transform: rotate(var(--tilt)) scale(.98); }
-      .audience-side--left .audience-card:nth-child(1) { grid-column: 1; grid-row: 2; --tilt: -2deg; }
-      .audience-side--left .audience-card:nth-child(2) { grid-column: 2; grid-row: 2; --tilt: 1.5deg; }
-      .audience-side--left .audience-card:nth-child(3) { grid-column: 1; grid-row: 3; --tilt: 1deg; }
-      .audience-side--left .audience-card:nth-child(4) { grid-column: 2; grid-row: 3; --tilt: -1.5deg; }
-      .audience-side--left .audience-card:nth-child(5) { grid-column: 1; grid-row: 4; --tilt: -1deg; }
-      .audience-side--left .audience-card:nth-child(6) { grid-column: 2; grid-row: 4; --tilt: 2deg; }
-      .audience-side--right .audience-card:nth-child(1) { grid-column: 1; grid-row: 5; --tilt: 1.5deg; }
-      .audience-side--right .audience-card:nth-child(2) { grid-column: 2; grid-row: 5; --tilt: -2deg; }
-      .audience-side--right .audience-card:nth-child(3) { grid-column: 1; grid-row: 6; --tilt: -1.5deg; }
-      .audience-side--right .audience-card:nth-child(4) { grid-column: 2; grid-row: 6; --tilt: 1deg; }
-      .audience-side--right .audience-card:nth-child(5) { grid-column: 1; grid-row: 7; --tilt: 2deg; }
-      .audience-side--right .audience-card:nth-child(6) { grid-column: 2; grid-row: 7; --tilt: -1deg; }
-      .audience-card h3 { gap: 5px; margin-bottom: 0; font-size: .68rem; white-space: normal; }
-      .audience-icon { width: 24px; height: 24px; flex-basis: 24px; }
-      .audience-card p { display: block; margin-top: 8px; font-size: .72rem; line-height: 1.35; }
+      .audience-card { min-height: 96px; padding: 14px 10px; }
+      .audience-card h3 { gap: 6px; margin-bottom: 0; font-size: .76rem; white-space: normal; }
+      .audience-icon { width: 26px; height: 26px; flex-basis: 26px; }
+      .audience-card p { display: block; margin-top: 8px; font-size: .74rem; line-height: 1.4; }
       .footer-top { flex-direction: column; gap: 8px; }
       .footer-slogan { white-space: normal; }
       .waitlist-row { flex-direction: column; }
@@ -582,8 +527,7 @@
       .lab-header { position: sticky !important; top: 0; right: auto; left: auto; width: 100%; height: 64px; }
       .desktop-anchor-nav { display: none; }
       .footer-slogan { white-space: normal; }
-      .club-banner { height: 64px; min-height: 64px; padding: 8px 52px; }
-      .club-matrix-edge { width: 105px; gap: 4px; padding-inline: 5px; font-size: .95rem; }
+      .club-banner { height: 64px; min-height: 64px; padding: 8px 16px; }
       .club-banner-content { min-height: 0; height: 100%; flex-direction: column; gap: 7px; }
       .club-banner-copy { font-size: 1.05rem; }
       .club-banner-close { right: 12px; }
@@ -605,18 +549,14 @@
       .analysis-card--primary .sequence small, .analysis-card--secondary .sequence small, .analysis-card--tertiary .sequence small { font-size: .72rem; line-height: normal; }
     }
     @media (max-width: 420px) {
-      .audience-layout { gap: 10px 8px; margin-inline: -4px; }
-      .audience-layout > .section-heading { max-width: 300px; padding-inline: 6px; }
-      .audience-card, .audience-side--left .audience-card, .audience-side--right .audience-card { min-height: 88px; padding: 10px 7px; }
-      .audience-card h3 { font-size: .64rem; }
-      .audience-icon { width: 22px; height: 22px; flex-basis: 22px; }
+      .audience-layout { grid-template-columns: 1fr; gap: 14px; }
+      .audience-card { min-height: 96px; padding: 16px 12px; }
+      .audience-card h3 { font-size: .84rem; }
+      .audience-icon { width: 28px; height: 28px; flex-basis: 28px; }
     }
     @media (max-width: 480px) {
       .hero-title-full { display: none; }
       .hero-title-short { display: inline; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .scale-track { animation: none; transform: none; }
     }
     /* ===== ПОРТАЛ ВХОДА ===== */
     body.portal-is-open { overflow: hidden; }
@@ -642,11 +582,11 @@
       position: relative;
       width: min(100%, 420px);
       padding: 44px 36px 36px;
+      border: 1px solid var(--line-gold);
       border-radius: var(--radius-xl);
       background: var(--paper-light);
-      box-shadow: 0 24px 60px rgba(45, 31, 20, .18);
       transform: translateY(20px) scale(.96);
-      transition: transform .35s cubic-bezier(.34,1.56,.64,1), box-shadow .35s ease;
+      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
     }
     .portal-overlay.is-open .portal-card {
       transform: translateY(0) scale(1);
@@ -715,12 +655,13 @@
       font-family: var(--sans);
       font-size: 15px;
       outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease;
+      transition: border-color .2s ease;
     }
     .portal-input::placeholder { color: var(--muted); opacity: .6; }
     .portal-input:focus {
       border-color: var(--gold);
-      box-shadow: 0 0 0 3px rgba(200, 155, 60, .15);
+      outline: 3px solid var(--gold);
+      outline-offset: 1px;
     }
     .portal-btn {
       display: inline-flex;
@@ -736,18 +677,14 @@
       font-weight: 700;
       text-align: center;
       text-decoration: none;
-      transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease, box-shadow .2s ease;
+      transition: background .2s ease, border-color .2s ease, color .2s ease;
     }
     .portal-btn-primary {
       border: none;
       background: var(--gold);
       color: #fff;
     }
-    .portal-btn-primary:hover {
-      background: #d7ad56;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(200, 155, 60, .25);
-    }
+    .portal-btn-primary:hover { background: #d7ad56; }
     .portal-btn-ghost {
       border: 1.5px solid var(--line);
       background: transparent;
@@ -756,7 +693,6 @@
     .portal-btn-ghost:hover {
       border-color: var(--gold);
       color: var(--chocolate);
-      transform: translateY(-1px);
     }
     @media (max-width: 480px) {
       .portal-card { padding: 36px 24px 28px; border-radius: 16px; }
@@ -771,7 +707,6 @@
       border-radius: var(--radius-lg);
       background: var(--chocolate);
       color: var(--paper);
-      box-shadow: var(--shadow);
       --club-text: #dbcbb2;
       --club-muted: #b9a58b;
     }
@@ -815,8 +750,8 @@
       content: '';
     }
     @keyframes club-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(200, 155, 60, 0); opacity: .78; }
-      50% { box-shadow: 0 0 0 6px rgba(200, 155, 60, .16); opacity: 1; }
+      0%, 100% { opacity: .78; }
+      50% { opacity: 1; }
     }
     .club-title {
       display: inline-flex;
@@ -901,26 +836,24 @@
 <body>
   <a class="skip-link" href="#main-content">К содержанию</a>
   <aside class="club-banner" id="clubBanner" aria-label="Новость о палео-клубе">
-    <div class="club-matrix-edge club-matrix-edge--left" aria-hidden="true"><span class="club-matrix-column">𐤀<br>𐤁<br>𐤂<br>𐤃<br>𐤄<br>𐤅<br>𐤆<br>𐤇<br>𐤈<br>𐤉<br>𐤊<br>𐤋<br>𐤀<br>𐤁<br>𐤂<br>𐤃<br>𐤄<br>𐤅<br>𐤆<br>𐤇</span><span class="club-matrix-column">𐤕<br>𐤔<br>𐤓<br>𐤒<br>𐤑<br>𐤐<br>𐤏<br>𐤎<br>𐤍<br>𐤌<br>𐤋<br>𐤊<br>𐤕<br>𐤔<br>𐤓<br>𐤒<br>𐤑<br>𐤐<br>𐤏<br>𐤎</span><span class="club-matrix-column">𐤇<br>𐤆<br>𐤅<br>𐤄<br>𐤃<br>𐤂<br>𐤁<br>𐤀<br>𐤉<br>𐤊<br>𐤋<br>𐤌<br>𐤇<br>𐤆<br>𐤅<br>𐤄<br>𐤃<br>𐤂<br>𐤁<br>𐤀</span></div>
-    <div class="club-matrix-edge club-matrix-edge--right" aria-hidden="true"><span class="club-matrix-column">𐤕<br>𐤔<br>𐤓<br>𐤒<br>𐤑<br>𐤐<br>𐤏<br>𐤎<br>𐤍<br>𐤌<br>𐤋<br>𐤊<br>𐤕<br>𐤔<br>𐤓<br>𐤒<br>𐤑<br>𐤐<br>𐤏<br>𐤎</span><span class="club-matrix-column">𐤀<br>𐤁<br>𐤂<br>𐤃<br>𐤄<br>𐤅<br>𐤆<br>𐤇<br>𐤈<br>𐤉<br>𐤊<br>𐤋<br>𐤀<br>𐤁<br>𐤂<br>𐤃<br>𐤄<br>𐤅<br>𐤆<br>𐤇</span><span class="club-matrix-column">𐤇<br>𐤆<br>𐤅<br>𐤄<br>𐤃<br>𐤂<br>𐤁<br>𐤀<br>𐤉<br>𐤊<br>𐤋<br>𐤌<br>𐤇<br>𐤆<br>𐤅<br>𐤄<br>𐤃<br>𐤂<br>𐤁<br>𐤀</span></div>
     <button class="club-banner-close" id="clubBannerClose" type="button" aria-label="Закрыть новость">×</button>
     <div class="club-banner-content">
       <p class="club-banner-copy"><strong>ПАЛЕО-КЛУБ</strong> — скоро открытие</p>
     </div>
   </aside>
   <header class="lab-header">
-<a href="./" class="logo" aria-label="Alephy — на главную"><img src="assets/images/alephy-logo.svg" alt="Alephy" style="height: 40px; width: auto;"><span class="alephy-beta" aria-label="Бета-версия">BETA</span></a>
+<a href="./" class="logo" aria-label="Alephy — на главную"><svg viewBox="0 0 660 200" aria-hidden="true" focusable="false"><text x="0" y="160" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="600">𐤀</text><text x="170" y="146" fill="currentColor" font-family="'EB Garamond', Georgia, 'Times New Roman', serif" font-size="122" font-weight="600" letter-spacing="1">alephy</text></svg><span class="alephy-beta" aria-label="Бета-версия">BETA</span></a>
 
     <nav class="desktop-anchor-nav" aria-label="Разделы лендинга"><a href="#map">Карта</a><a href="#mechanics">Механика</a><a href="#club">Клуб</a><a href="#tools">Инструменты</a></nav>
     <nav>
-      <button class="theme-toggle" type="button" title="Переключить тему" id="themeBtn" aria-label="Переключить тему"><i data-lucide="moon" aria-hidden="true"></i></button>
-      <a href="apps/researchlab/index.html" class="icon-link" title="Лаборатория" aria-label="Лаборатория"><i data-lucide="flask-conical" aria-hidden="true"></i></a>
-      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="icon-link" title="GitHub" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
+      <button class="theme-toggle" type="button" title="Переключить тему" id="themeBtn" aria-label="Переключить тему"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      <a href="apps/researchlab/index.html" class="icon-link" title="Лаборатория" aria-label="Лаборатория"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 2v7.53L4.21 20.4A2 2 0 0 0 6 23h12a2 2 0 0 0 1.79-2.6L14 9.53V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg></a>
+      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="icon-link" title="GitHub" aria-label="GitHub"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg></a>
     </nav>
     <div class="lab-header-mobile-links">
-      <button class="mobile-icon-link" type="button" title="Переключить тему" id="themeBtnMobile" aria-label="Переключить тему"><i data-lucide="moon" aria-hidden="true"></i></button>
-      <a href="apps/researchlab/index.html" class="mobile-icon-link" title="Лаборатория" aria-label="Лаборатория"><i data-lucide="flask-conical" aria-hidden="true"></i></a>
-      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="mobile-icon-link" title="GitHub" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
+      <button class="mobile-icon-link" type="button" title="Переключить тему" id="themeBtnMobile" aria-label="Переключить тему"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      <a href="apps/researchlab/index.html" class="mobile-icon-link" title="Лаборатория" aria-label="Лаборатория"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 2v7.53L4.21 20.4A2 2 0 0 0 6 23h12a2 2 0 0 0 1.79-2.6L14 9.53V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg></a>
+      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="mobile-icon-link" title="GitHub" aria-label="GitHub"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg></a>
     </div>
   </header>
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
@@ -940,7 +873,7 @@
         </div>
       </div>
     </section>
-    <section class="scale-strip" aria-label="Масштаб корпуса"><div class="container"><div class="scale-track"><div class="scale-set"><span class="scale-chip">127 корней</span><span class="scale-chip">21 словарь</span><span class="scale-chip">23 046 стихов</span><span class="scale-chip">16 состояний</span><span class="scale-chip">22 буквы</span><span class="scale-chip">1913 терминов</span><span class="scale-chip">53+ модуля лаборатории</span></div><div class="scale-set" aria-hidden="true"><span class="scale-chip">127 корней</span><span class="scale-chip">21 словарь</span><span class="scale-chip">23 046 стихов</span><span class="scale-chip">16 состояний</span><span class="scale-chip">22 буквы</span><span class="scale-chip">1913 терминов</span><span class="scale-chip">53+ модуля лаборатории</span></div></div></div></section>
+    <section class="scale-strip" aria-label="Масштаб корпуса"><div class="container"><div class="scale-track"><div class="scale-set"><span class="scale-chip">127 корней</span><span class="scale-chip">21 словарь</span><span class="scale-chip">23 046 стихов</span><span class="scale-chip">16 состояний</span><span class="scale-chip">22 буквы</span><span class="scale-chip">1913 терминов</span><span class="scale-chip">53+ модуля лаборатории</span></div></div></div></section>
 
     <section class="section loss-map" id="map" aria-labelledby="loss-title">
       <div class="container">
@@ -1018,24 +951,24 @@
       <div class="container">
         <div class="audience-layout">
           <div class="audience-side audience-side--left">
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/scribe/scroll.png" alt="" aria-hidden="true">Исследователь ТаНаХа</h3><p>Сверяйте слои текста, находите места сдвига и собирайте собственную карту улик.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/paleo/aleph.png" alt="" aria-hidden="true">Лингвист-реконструктор</h3><p>Разбирайте корни как механику: буква становится функцией, а слово — траекторией.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/archaeology/testtube.png" alt="" aria-hidden="true">Искатель первоисточника</h3><p>Отделяйте исходный образ от поздней интерпретации и проверяйте каждый переход.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/book.png" alt="" aria-hidden="true">Читатель между строк</h3><p>Замечайте, где конкретный образ превращается в абстракцию, и возвращайте ему форму.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/compass.png" alt="" aria-hidden="true">Картограф смыслов</h3><p>Собирайте маршруты между словами, корнями и состояниями в единую карту движения.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/crafts/hammer-and-chisel.png" alt="" aria-hidden="true">Редактор идей</h3><p>Проверяйте формулировки инструментами наблюдения, а не привычкой к готовым ответам.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scroll.png" alt="" aria-hidden="true">Исследователь ТаНаХа</h3><p>Сверяйте слои текста, находите места сдвига и собирайте собственную карту улик.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/paleo/aleph.png" alt="" aria-hidden="true">Лингвист-реконструктор</h3><p>Разбирайте корни как механику: буква становится функцией, а слово — траекторией.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/testtube.png" alt="" aria-hidden="true">Искатель первоисточника</h3><p>Отделяйте исходный образ от поздней интерпретации и проверяйте каждый переход.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/book.png" alt="" aria-hidden="true">Читатель между строк</h3><p>Замечайте, где конкретный образ превращается в абстракцию, и возвращайте ему форму.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/compass.png" alt="" aria-hidden="true">Картограф смыслов</h3><p>Собирайте маршруты между словами, корнями и состояниями в единую карту движения.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/crafts/hammer-and-chisel.png" alt="" aria-hidden="true">Редактор идей</h3><p>Проверяйте формулировки инструментами наблюдения, а не привычкой к готовым ответам.</p></article>
           </div>
           <div class="section-heading">
             <p class="eyebrow">Свива исследователей</p>
             <h2 id="audience-title">Для тех, кто ищет смыслы, а не философию</h2>
           </div>
           <div class="audience-side audience-side--right">
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/scribe/scrolls.png" alt="" aria-hidden="true">Учитель и наставник</h3><p>Объясняйте механику букв через живые образы, а не через набор готовых терминов.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/clock.png" alt="" aria-hidden="true">Практик осознанного чтения</h3><p>Замедляйте чтение, чтобы замечать действие, среду и направление каждого слова.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/map.png" alt="" aria-hidden="true">Создатель карт смыслов</h3><p>Связывайте корни, состояния и наблюдения в собственную исследовательскую систему.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/archaeology/lamp.png" alt="" aria-hidden="true">Охотник за контекстом</h3><p>Подсвечивайте детали, которые теряются при быстром переводе и поверхностном чтении.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/desert/footprints.svg" alt="" aria-hidden="true">Путешественник по корням</h3><p>Идите по следам слова от первого образа к его живому действию в тексте.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/group.png" alt="" aria-hidden="true">Собиратель общины</h3><p>Приносите собственные наблюдения в разговор и помогайте другим видеть глубже.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scrolls.png" alt="" aria-hidden="true">Учитель и наставник</h3><p>Объясняйте механику букв через живые образы, а не через набор готовых терминов.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/clock.png" alt="" aria-hidden="true">Практик осознанного чтения</h3><p>Замедляйте чтение, чтобы замечать действие, среду и направление каждого слова.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/map.png" alt="" aria-hidden="true">Создатель карт смыслов</h3><p>Связывайте корни, состояния и наблюдения в собственную исследовательскую систему.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/lamp.png" alt="" aria-hidden="true">Охотник за контекстом</h3><p>Подсвечивайте детали, которые теряются при быстром переводе и поверхностном чтении.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/desert/footprints.svg" alt="" aria-hidden="true">Путешественник по корням</h3><p>Идите по следам слова от первого образа к его живому действию в тексте.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/group.png" alt="" aria-hidden="true">Собиратель общины</h3><p>Приносите собственные наблюдения в разговор и помогайте другим видеть глубже.</p></article>
           </div>
         </div>
       </div>
@@ -1047,7 +980,7 @@
           <div class="club-body">
             <div class="club-copy">
               <h2 class="club-title" id="club-title">
-                <img class="club-title-icon" src="assets/icons/32/paleo/track.png" alt="" aria-hidden="true">
+                <img loading="lazy" decoding="async" class="club-title-icon" src="assets/icons/32/paleo/track.png" alt="" aria-hidden="true">
                 Палео-клуб
                 <span class="club-badge">СКОРО</span>
               </h2>
@@ -1140,7 +1073,7 @@
   <footer class="site-footer">
     <div class="container">
       <div class="footer-top">
-        <a class="brand footer-brand" href="./"><span class="brand-mark" aria-hidden="true">ג</span><span>ALEPHY</span></a>
+        <a class="brand footer-brand" href="./" aria-label="Alephy — на главную"><svg viewBox="0 0 660 200" aria-hidden="true" focusable="false"><text x="0" y="160" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="600">𐤀</text><text x="170" y="146" fill="currentColor" font-family="'EB Garamond', Georgia, 'Times New Roman', serif" font-size="122" font-weight="600" letter-spacing="1">alephy</text></svg></a>
         <p class="footer-slogan">Путь из тесноты в открытое пространство</p>
         <div class="footer-bottom"><span>© Alephy Research Lab</span></div>
       </div>
@@ -1163,15 +1096,21 @@
       dark: { icon: 'sun', alt: 'Белая тема', title: 'Переключить на белую тему' }
     };
 
+    // Иконки тем рисуются инлайн-SVG (lucide-библиотека на лендинге не грузится):
+    // в шапке только 5 глифов — moon/contrast/sun/flask-conical/github.
+    const themeIconPaths = {
+      contrast: '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20Z"/>',
+      moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+      sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'
+    };
     function updateThemeControls(theme) {
       const view = themeViews[theme] || themeViews.white;
       themeButtons.forEach((button) => {
-        const icon = button.querySelector('i[data-lucide]');
-        if (icon) icon.setAttribute('data-lucide', view.icon);
+        const icon = button.querySelector('svg.lucide');
+        if (icon) icon.innerHTML = themeIconPaths[view.icon] || themeIconPaths.contrast;
         button.title = view.title;
         button.setAttribute('aria-label', view.title);
       });
-      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
     }
 
     themeButtons.forEach((button) => {
@@ -1365,14 +1304,7 @@
       }
     });
   </script>
-<script src="apps/researchlab/js/vendor/lucide.min.js"></script>
-<script>
-  // Рендер иконок Lucide в шапке (текущие + после смены темы).
-  function __alephyRenderIcons() {
-    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
-  }
-  window.addEventListener('DOMContentLoaded', __alephyRenderIcons);
-  window.addEventListener('load', __alephyRenderIcons);
-</script>
+<!-- Icons are inline SVG; lucide.min.js is not loaded on the landing (saves ~357 KB). -->
 </body>
 </html>
+

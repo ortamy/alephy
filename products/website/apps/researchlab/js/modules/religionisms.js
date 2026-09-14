@@ -86,8 +86,6 @@ const Religionisms = (function() {
     grid.style.display = '';
 
     var list = getFiltered();
-    var foundEl = document.getElementById('rel-found');
-    if (foundEl) foundEl.textContent = list.length;
 
     if (list.length === 0) {
       grid.innerHTML = '';
@@ -99,20 +97,40 @@ const Religionisms = (function() {
     grid.innerHTML = list.map(function(s, idx) {
       var iconPath = 'assets/icons/32/' + (s.icon || 'ui/question.png');
       var description = getShortDescription(s);
+      var roleText = getRoleText(s);
 
-      return '<button type="button" class="rel-card" style="animation-delay:' + (idx * 40) + 'ms" onclick="Religionisms.open(\'' + s.id + '\')">' +
-        '<div class="rel-card-header">' +
-        '<img src="' + iconPath + '" class="rel-card-icon" alt="">' +
-        '<div class="rel-card-name">' + escapeHtml(s.name) + '</div>' +
-        '</div>' +
-        '<p class="rel-card-description">' + escapeHtml(description) + '</p>' +
-        '</button>';
+      return '<div class="lab-card rel-card" data-id="' + escapeHtml(s.id) + '" role="button" tabindex="0" aria-label="Сфера: ' + escapeHtml(s.name) + '" style="animation-delay:' + (idx * 40) + 'ms">' +
+        '<div class="rel-card-icon"><img src="' + iconPath + '" alt="" onerror="this.style.display=\'none\'"></div>' +
+        '<h2 class="rel-card-title">' + escapeHtml(s.name) + '</h2>' +
+        '<div class="rel-card-role">' + escapeHtml(roleText) + '</div>' +
+      '</div>';
     }).join('');
+
+    grid.querySelectorAll('.rel-card').forEach(function(card) {
+      function openCard() {
+        var id = card.getAttribute('data-id');
+        if (id) open(id);
+      }
+      card.addEventListener('click', openCard);
+      card.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openCard();
+        }
+      });
+    });
   }
 
   function getShortDescription(sphere) {
     var description = sphere.description || (sphere.keyRoot && sphere.keyRoot.note) || sphere.promise || '';
     return truncate(description.replace(/\s+/g, ' ').trim(), 150);
+  }
+
+  function getRoleText(sphere) {
+    // Роль/подзаголовок — короткая метка для карточки в стиле pl-lang-role
+    if (sphere.role) return sphere.role;
+    if (sphere.keyRoot) return (sphere.keyRoot.translit || '') + ' — ' + (sphere.keyRoot.meaning || '');
+    return '';
   }
 
   function truncate(text, len) {

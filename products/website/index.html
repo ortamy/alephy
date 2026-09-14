@@ -25,7 +25,7 @@
   <!-- Шрифты НЕблокирующе: при недоступной сети Google Fonts страница не зависает. -->
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap"></noscript>
-  <link rel="stylesheet" href="apps/researchlab/css/lab.css">
+  <link rel="stylesheet" href="css/landing.css">
   <meta property="og:title" content="Alephy — исследовательская платформа">
   <meta property="og:description" content="Возвращаем тексту его физику: образ, движение, состояние и переход.">
   <meta property="og:image" content="https://ortamy.github.io/alephy/favicon.svg">
@@ -846,14 +846,14 @@
 
     <nav class="desktop-anchor-nav" aria-label="Разделы лендинга"><a href="#map">Карта</a><a href="#mechanics">Механика</a><a href="#club">Клуб</a><a href="#tools">Инструменты</a></nav>
     <nav>
-      <button class="theme-toggle" type="button" title="Переключить тему" id="themeBtn" aria-label="Переключить тему"><i data-lucide="moon" aria-hidden="true"></i></button>
-      <a href="apps/researchlab/index.html" class="icon-link" title="Лаборатория" aria-label="Лаборатория"><i data-lucide="flask-conical" aria-hidden="true"></i></a>
-      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="icon-link" title="GitHub" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
+      <button class="theme-toggle" type="button" title="Переключить тему" id="themeBtn" aria-label="Переключить тему"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      <a href="apps/researchlab/index.html" class="icon-link" title="Лаборатория" aria-label="Лаборатория"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 2v7.53L4.21 20.4A2 2 0 0 0 6 23h12a2 2 0 0 0 1.79-2.6L14 9.53V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg></a>
+      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="icon-link" title="GitHub" aria-label="GitHub"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg></a>
     </nav>
     <div class="lab-header-mobile-links">
-      <button class="mobile-icon-link" type="button" title="Переключить тему" id="themeBtnMobile" aria-label="Переключить тему"><i data-lucide="moon" aria-hidden="true"></i></button>
-      <a href="apps/researchlab/index.html" class="mobile-icon-link" title="Лаборатория" aria-label="Лаборатория"><i data-lucide="flask-conical" aria-hidden="true"></i></a>
-      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="mobile-icon-link" title="GitHub" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
+      <button class="mobile-icon-link" type="button" title="Переключить тему" id="themeBtnMobile" aria-label="Переключить тему"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg></button>
+      <a href="apps/researchlab/index.html" class="mobile-icon-link" title="Лаборатория" aria-label="Лаборатория"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M10 2v7.53L4.21 20.4A2 2 0 0 0 6 23h12a2 2 0 0 0 1.79-2.6L14 9.53V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/></svg></a>
+      <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="mobile-icon-link" title="GitHub" aria-label="GitHub"><svg class="lucide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.5 2-5-2-7-2"/></svg></a>
     </div>
   </header>
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
@@ -951,24 +951,24 @@
       <div class="container">
         <div class="audience-layout">
           <div class="audience-side audience-side--left">
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/scribe/scroll.png" alt="" aria-hidden="true">Исследователь ТаНаХа</h3><p>Сверяйте слои текста, находите места сдвига и собирайте собственную карту улик.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/paleo/aleph.png" alt="" aria-hidden="true">Лингвист-реконструктор</h3><p>Разбирайте корни как механику: буква становится функцией, а слово — траекторией.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/archaeology/testtube.png" alt="" aria-hidden="true">Искатель первоисточника</h3><p>Отделяйте исходный образ от поздней интерпретации и проверяйте каждый переход.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/book.png" alt="" aria-hidden="true">Читатель между строк</h3><p>Замечайте, где конкретный образ превращается в абстракцию, и возвращайте ему форму.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/compass.png" alt="" aria-hidden="true">Картограф смыслов</h3><p>Собирайте маршруты между словами, корнями и состояниями в единую карту движения.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/crafts/hammer-and-chisel.png" alt="" aria-hidden="true">Редактор идей</h3><p>Проверяйте формулировки инструментами наблюдения, а не привычкой к готовым ответам.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scroll.png" alt="" aria-hidden="true">Исследователь ТаНаХа</h3><p>Сверяйте слои текста, находите места сдвига и собирайте собственную карту улик.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/paleo/aleph.png" alt="" aria-hidden="true">Лингвист-реконструктор</h3><p>Разбирайте корни как механику: буква становится функцией, а слово — траекторией.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/testtube.png" alt="" aria-hidden="true">Искатель первоисточника</h3><p>Отделяйте исходный образ от поздней интерпретации и проверяйте каждый переход.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/book.png" alt="" aria-hidden="true">Читатель между строк</h3><p>Замечайте, где конкретный образ превращается в абстракцию, и возвращайте ему форму.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/compass.png" alt="" aria-hidden="true">Картограф смыслов</h3><p>Собирайте маршруты между словами, корнями и состояниями в единую карту движения.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/crafts/hammer-and-chisel.png" alt="" aria-hidden="true">Редактор идей</h3><p>Проверяйте формулировки инструментами наблюдения, а не привычкой к готовым ответам.</p></article>
           </div>
           <div class="section-heading">
             <p class="eyebrow">Свива исследователей</p>
             <h2 id="audience-title">Для тех, кто ищет смыслы, а не философию</h2>
           </div>
           <div class="audience-side audience-side--right">
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/scribe/scrolls.png" alt="" aria-hidden="true">Учитель и наставник</h3><p>Объясняйте механику букв через живые образы, а не через набор готовых терминов.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/clock.png" alt="" aria-hidden="true">Практик осознанного чтения</h3><p>Замедляйте чтение, чтобы замечать действие, среду и направление каждого слова.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/map.png" alt="" aria-hidden="true">Создатель карт смыслов</h3><p>Связывайте корни, состояния и наблюдения в собственную исследовательскую систему.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/archaeology/lamp.png" alt="" aria-hidden="true">Охотник за контекстом</h3><p>Подсвечивайте детали, которые теряются при быстром переводе и поверхностном чтении.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/desert/footprints.svg" alt="" aria-hidden="true">Путешественник по корням</h3><p>Идите по следам слова от первого образа к его живому действию в тексте.</p></article>
-            <article class="audience-card"><h3><img class="audience-icon" src="assets/icons/32/ui/group.png" alt="" aria-hidden="true">Собиратель общины</h3><p>Приносите собственные наблюдения в разговор и помогайте другим видеть глубже.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scrolls.png" alt="" aria-hidden="true">Учитель и наставник</h3><p>Объясняйте механику букв через живые образы, а не через набор готовых терминов.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/clock.png" alt="" aria-hidden="true">Практик осознанного чтения</h3><p>Замедляйте чтение, чтобы замечать действие, среду и направление каждого слова.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/map.png" alt="" aria-hidden="true">Создатель карт смыслов</h3><p>Связывайте корни, состояния и наблюдения в собственную исследовательскую систему.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/lamp.png" alt="" aria-hidden="true">Охотник за контекстом</h3><p>Подсвечивайте детали, которые теряются при быстром переводе и поверхностном чтении.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/desert/footprints.svg" alt="" aria-hidden="true">Путешественник по корням</h3><p>Идите по следам слова от первого образа к его живому действию в тексте.</p></article>
+            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/group.png" alt="" aria-hidden="true">Собиратель общины</h3><p>Приносите собственные наблюдения в разговор и помогайте другим видеть глубже.</p></article>
           </div>
         </div>
       </div>
@@ -980,7 +980,7 @@
           <div class="club-body">
             <div class="club-copy">
               <h2 class="club-title" id="club-title">
-                <img class="club-title-icon" src="assets/icons/32/paleo/track.png" alt="" aria-hidden="true">
+                <img loading="lazy" decoding="async" class="club-title-icon" src="assets/icons/32/paleo/track.png" alt="" aria-hidden="true">
                 Палео-клуб
                 <span class="club-badge">СКОРО</span>
               </h2>
@@ -1096,15 +1096,21 @@
       dark: { icon: 'sun', alt: 'Белая тема', title: 'Переключить на белую тему' }
     };
 
+    // Иконки тем рисуются инлайн-SVG (lucide-библиотека на лендинге не грузится):
+    // в шапке только 5 глифов — moon/contrast/sun/flask-conical/github.
+    const themeIconPaths = {
+      contrast: '<circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 0 0 20Z"/>',
+      moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+      sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>'
+    };
     function updateThemeControls(theme) {
       const view = themeViews[theme] || themeViews.white;
       themeButtons.forEach((button) => {
-        const icon = button.querySelector('i[data-lucide]');
-        if (icon) icon.setAttribute('data-lucide', view.icon);
+        const icon = button.querySelector('svg.lucide');
+        if (icon) icon.innerHTML = themeIconPaths[view.icon] || themeIconPaths.contrast;
         button.title = view.title;
         button.setAttribute('aria-label', view.title);
       });
-      if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
     }
 
     themeButtons.forEach((button) => {
@@ -1298,14 +1304,7 @@
       }
     });
   </script>
-<script src="apps/researchlab/js/vendor/lucide.min.js"></script>
-<script>
-  // Рендер иконок Lucide в шапке (текущие + после смены темы).
-  function __alephyRenderIcons() {
-    if (window.lucide && window.lucide.createIcons) window.lucide.createIcons();
-  }
-  window.addEventListener('DOMContentLoaded', __alephyRenderIcons);
-  window.addEventListener('load', __alephyRenderIcons);
-</script>
+<!-- Icons are inline SVG; lucide.min.js is not loaded on the landing (saves ~357 KB). -->
 </body>
 </html>
+
