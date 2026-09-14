@@ -1,127 +1,290 @@
 /* dashboard.css — Рабочий стол исследователя: виджеты со статистикой */
 
-.dashboard-widgets { margin-bottom: 40px; }
+.dashboard-widgets {
+  margin-bottom: 40px;
+  max-width: var(--shell-page);
+  min-width: 0;
+  margin-inline: auto;
+  overflow-x: hidden;
+}
 
-.dw-summary { margin-bottom: var(--space-5); padding: 14px 16px 0; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow-card); }
-.dw-summary-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding-bottom: 10px; }
-.dw-summary-kicker { display: block; color: var(--accent-gold); font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase; }
-.dw-summary-heading h2 { margin: 2px 0 0; color: var(--text-primary); font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; }
-.dw-summary-date { flex-shrink: 0; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.7rem; }
-.dw-summary-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.dw-summary-item { min-width: 0; padding: 12px 10px; text-align: center; text-decoration: none; color: var(--text-primary); background: var(--bg-tertiary, #f7f1e5); border-radius: 6px; box-shadow: var(--shadow-card); transition: transform var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-standard); }
-.dw-summary-item--link:hover, .dw-summary-item--link:focus-visible { transform: translateY(-2px); box-shadow: var(--shadow-hover); outline: none; }
-.dw-summary-value { display: block; color: var(--text-primary); font-family: var(--font-heading); font-size: clamp(1.4rem, 2.5vw, 2rem); font-weight: 800; line-height: 1; letter-spacing: -0.02em; }
-.dw-summary-label { display: block; margin-top: 6px; color: var(--text-muted); font-size: 0.65rem; letter-spacing: 0.05em; line-height: 1.25; text-transform: uppercase; }
-.dw-counter-delta { display: block; min-height: 14px; margin-top: 4px; color: var(--text-muted); font-size: 0.7rem; line-height: 1.2; }
-.dw-counter-delta--up { color: #5e7d3a; }
+/* Быстрые вкладки разделов — зеркало сайдбара под шапкой модуля.
+   Минимализм: типографика вместо плашек, активная — золотое подчёркивание. */
+.dashboard-tabs {
+  max-width: var(--shell-page);
+  min-width: 0;
+  margin: 0 auto var(--space-5);
+}
+.dashboard-tabs-strip {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  border-bottom: 1px solid var(--border-light);
+}
+.dashboard-tabs-strip::-webkit-scrollbar { display: none; }
+.dashboard-tab {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding: var(--space-2) 2px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--motion-base);
+}
+.dashboard-tab .lab-icon { width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; }
+.dashboard-tab:hover,
+.dashboard-tab:focus-visible { color: var(--text-primary); outline: none; }
+.dashboard-tab:focus-visible { border-bottom-color: var(--accent-gold); }
+.dashboard-tab[aria-current="page"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-gold);
+}
+.dashboard-tabs-group {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding-left: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.dw-summary {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-4) 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.dw-summary-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--space-3);
+}
+.dw-summary-kicker { display: block; color: var(--accent-gold); font-size: var(--text-xs); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
+.dw-summary-heading h2 { margin: 2px 0 0; color: var(--text-primary); font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 600; }
+.dw-summary-date { flex-shrink: 0; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); }
+.dw-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  max-width: 100%;
+}
+.dw-summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  text-decoration: none;
+  color: var(--text-primary);
+  position: relative;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.dw-summary-item + .dw-summary-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 1px;
+  background: var(--border-light);
+}
+.dw-summary-item--link { transition: color var(--motion-base); }
+.dw-summary-item--link:hover, .dw-summary-item--link:focus-visible { color: var(--accent-gold); outline: none; transform: none; box-shadow: none; }
+.dw-summary-value {
+  display: block;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+/* Цифры сводки не зависят от .reveal: IO мог оставить opacity:0 до пересечения. */
+.dw-summary-item,
+.dw-summary-value { opacity: 1; visibility: visible; }
+.dw-summary-label {
+  display: block;
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.dw-counter-delta { display: block; min-height: 14px; margin-top: 2px; color: var(--text-muted); font-size: var(--text-xs); line-height: 1.2; overflow-wrap: anywhere; word-break: break-word; }
+.dw-counter-delta--up { color: var(--accent-green); }
+
+@media (max-width: 390px) {
+  .dw-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dw-summary { padding: var(--space-3) var(--space-3) 0; }
+  .dw-summary-item { padding: var(--space-3) var(--space-2); }
+  .dw-summary-value { font-size: 1.5rem; }
+  .dw-summary-item:nth-child(2n)::before { display: none; }
+}
+@media (min-width: 391px) and (max-width: 560px) {
+  .dw-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dw-summary-item:nth-child(3n+1)::before { display: none; }
+}
 
 .dw-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
   gap: var(--space-5);
+  max-width: 100%;
+  min-width: 0;
 }
 .dw-widget {
-  background: var(--bg-card); border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm); padding: 20px; box-shadow: var(--shadow-soft);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-soft);
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-wrap: anywhere;
 }
 .dw-widget h3 {
-  font-family: var(--font-heading); font-size: 20px; font-weight: 600;
-  font-style: normal; color: var(--text-primary); margin-bottom: 14px;
-  padding-bottom: var(--space-2); border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-heading);
+  font-size: 19px;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
 }
-.dw-widget-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--border-light); }
+.dw-widget-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--border-light); }
 .dw-widget-heading h3 { margin-bottom: 0; border-bottom: 0; }
-.dw-completeness-average { flex-shrink: 0; color: var(--accent-gold); font-family: var(--font-heading); font-size: 20px; }
+.dw-completeness-average { flex-shrink: 0; color: var(--accent-gold); font-family: var(--font-heading); font-size: 19px; }
 .dw-completeness-average span { color: var(--text-muted); font-family: var(--font-body); font-size: var(--text-xs); font-weight: 400; }
 .dw-widget-wide { grid-column: 1 / -1; }
 
 /* Метрики движения материалов и контура надёжности. */
 .dw-metric-grid {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;
+  max-width: 100%;
 }
 .dw-metric {
   display: flex; flex-direction: column; gap: 4px; min-width: 0;
-  padding: 12px 14px; border-left: 3px solid var(--border-light); background: var(--bg-tertiary);
+  padding: 10px 12px; border-left: 3px solid var(--border-light); background: var(--bg-tertiary);
   border-radius: var(--radius-sm); box-shadow: var(--shadow-card);
   transition: transform var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-standard);
+  overflow-wrap: anywhere;
 }
 .dw-metric:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
-.dw-metric-value { color: var(--text-primary); font-family: var(--font-heading); font-size: 25px; font-weight: 700; line-height: 1; }
-.dw-metric-label { color: var(--text-muted); font-size: var(--text-xs); line-height: 1.25; }
+.dw-metric-value { color: var(--text-primary); font-family: var(--font-heading); font-size: 22px; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.dw-metric-label { color: var(--text-muted); font-size: var(--text-xs); letter-spacing: 0.04em; text-transform: uppercase; }
 .dw-metric--new, .dw-metric--verified { border-left-color: var(--accent-gold); }
 .dw-metric--updated, .dw-metric--published { border-left-color: var(--text-secondary); }
 .dw-metric--review { border-left-color: #b8860b; }
 .dw-metric--hypothesis { border-left-color: #7a6b9e; }
-.dw-widget-note { margin: 12px 0 0; color: var(--text-muted); font-size: var(--text-xs); }
+.dw-widget-note { margin: 10px 0 0; color: var(--text-muted); font-size: var(--text-xs); line-height: 1.5; }
 
-/* Карта полноты опор каждого материала. */
-.dw-completeness-list { display: flex; flex-direction: column; }
-.dw-completeness-item { display: block; padding: 12px 0; border-bottom: 1px solid var(--border-light); color: var(--text-primary); text-decoration: none; }
+/* Полнота данных: список книг/разделов. */
+.dw-completeness-list { display: flex; flex-direction: column; max-width: 100%; }
+.dw-completeness-item { padding: 10px 0; border-bottom: 1px solid var(--border-light); color: var(--text-primary); text-decoration: none; }
 .dw-completeness-item:hover, .dw-completeness-item:focus-visible { color: var(--text-primary); background: rgb(var(--accent-gold-rgb) / 0.10); outline: none; }
-.dw-completeness-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; }
-.dw-completeness-title { min-width: 0; overflow: hidden; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
-.dw-completeness-value { flex-shrink: 0; color: var(--text-secondary); font-family: var(--font-mono); font-size: var(--text-xs); }
-.dw-completeness-track { display: block; height: 7px; margin-top: 7px; overflow: hidden; background: var(--bg-tertiary); border-radius: 4px; }
-.dw-completeness-fill { display: block; height: 100%; background: var(--accent-gold); border-radius: 4px; }
-.dw-completeness-missing { display: block; margin-top: 5px; color: var(--text-muted); font-size: 11px; line-height: 1.3; }
+.dw-completeness-title { min-width: 0; font-weight: 600; }
+.dw-completeness-meta { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); white-space: nowrap; }
+.dw-completeness-missing { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.dw-completeness-missing span { padding: 2px 6px; border-left: 2px solid #b8860b; background: var(--bg-tertiary); color: var(--text-secondary); font-size: 11px; }
 
 /* Гистограмма механизмов подмены */
-.dw-bars { display: flex; flex-direction: column; gap: 10px; }
+.dw-bars { display: flex; flex-direction: column; gap: 8px; max-width: 100%; }
 .dw-bar-row {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: var(--space-2) 0; border-bottom: 1px solid var(--border-light);
+  max-width: 100%; box-sizing: border-box;
 }
 .dw-bar-label {
-  width: 130px; flex-shrink: 0; font-size: 13px; color: var(--text-secondary);
+  width: 116px; flex-shrink: 0; font-size: 13px; color: var(--text-secondary);
   text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .dw-bar-track {
-  flex: 1; background: var(--bg-tertiary); border-radius: 3px; height: 18px; overflow: hidden;
+  flex: 1 1 120px; min-width: 0; max-width: 100%;
+  background: var(--bg-tertiary); border-radius: 3px; height: 16px; overflow: hidden;
 }
 .dw-bar-fill {
   height: 100%; background: var(--accent-gold); border-radius: 3px;
   transition: width 0.6s ease;
 }
-.dw-bar-value { width: 48px; flex-shrink: 0; font-size: 13px; color: var(--text-muted); font-family: var(--font-mono); }
+.dw-bar-value { width: 44px; flex-shrink: 0; font-size: 12px; color: var(--text-muted); font-family: var(--font-mono); }
 
 /* Последние разборы */
-.dw-list { display: flex; flex-direction: column; gap: 10px; }
+.dw-list { display: flex; flex-direction: column; gap: 8px; max-width: 100%; }
 .dw-list-item {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
   padding: var(--space-2) 0; border-bottom: 1px solid var(--border-light);
   background: var(--bg-tertiary); text-decoration: none; color: var(--text-primary);
   transition: background var(--motion-base), color var(--motion-base);
+  max-width: 100%; box-sizing: border-box;
 }
 .dw-list-item:hover { background: rgb(var(--accent-gold-rgb) / 0.10); color: var(--accent-gold); }
-.dw-list-title { min-width: 0; flex: 1; font-weight: 600; font-size: 15px; }
-.dw-list-meta { flex-shrink: 0; font-size: 12px; color: var(--text-muted); margin-top: 0; text-align: right; }
+.dw-list-title { min-width: 0; flex: 1; font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dw-list-meta { flex-shrink: 0; font-size: 11px; color: var(--text-muted); margin-top: 0; text-align: right; }
 
 /* Живая лента: хроника последних изменений материалов. */
-.dw-ticker { overflow: hidden; border: 1px solid var(--border-light); background: var(--bg-tertiary); }
+.dw-ticker { overflow: hidden; border: 1px solid var(--border-light); background: var(--bg-tertiary); max-width: 100%; }
 .dw-ticker-track { display: flex; width: max-content; animation: dw-ticker-scroll 75s linear infinite; }
 .dw-ticker:hover .dw-ticker-track, .dw-ticker:focus-within .dw-ticker-track { animation-play-state: paused; }
-.dw-ticker-item { display: flex; align-items: center; gap: 8px; width: min(580px, 78vw); min-height: 52px; padding: 10px 14px; border-right: 1px solid var(--border-light); color: var(--text-primary); text-decoration: none; }
+.dw-ticker-item {
+  display: flex; align-items: center; gap: 8px;
+  width: min(540px, 78vw); min-height: 46px; padding: 8px 12px;
+  border-right: 1px solid var(--border-light); color: var(--text-primary); text-decoration: none;
+  flex: 0 0 auto; box-sizing: border-box;
+}
 a.dw-ticker-item:hover, a.dw-ticker-item:focus-visible { background: rgb(var(--accent-gold-rgb) / 0.12); color: var(--text-primary); outline: none; }
 .dw-ticker-date { flex: 0 0 auto; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); }
-.dw-ticker-type { flex: 0 0 auto; padding: 2px 5px; border-left: 2px solid var(--text-secondary); color: var(--text-secondary); font-size: 10px; line-height: 1.1; text-transform: uppercase; }
+.dw-ticker-type { flex: 0 0 auto; padding: 2px 5px; border-left: 2px solid var(--text-secondary); color: var(--text-secondary); font-size: 9px; line-height: 1.1; text-transform: uppercase; }
 .dw-ticker-type--new { border-left-color: var(--accent-gold); color: var(--text-gold); }
 .dw-ticker-type--updated { border-left-color: #b8860b; }
 .dw-ticker-text { min-width: 0; overflow: hidden; font-size: var(--text-xs); text-overflow: ellipsis; white-space: nowrap; }
 @keyframes dw-ticker-scroll { to { transform: translateX(-50%); } }
 
 /* Очередь проверки: разрывы опор в материалах needs-review. */
-.dw-review-list { display: flex; flex-direction: column; }
-.dw-review-item { display: grid; grid-template-columns: minmax(180px, 1fr) auto; gap: 5px 16px; padding: 12px 0; border-bottom: 1px solid var(--border-light); color: var(--text-primary); text-decoration: none; }
+.dw-review-list { display: flex; flex-direction: column; max-width: 100%; }
+.dw-review-item {
+  display: grid; grid-template-columns: minmax(160px, 1fr) auto; gap: 5px 14px;
+  padding: 10px 0; border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary); text-decoration: none;
+  max-width: 100%; box-sizing: border-box;
+}
 .dw-review-item:hover, .dw-review-item:focus-visible { color: var(--text-primary); background: rgb(var(--accent-gold-rgb) / 0.10); outline: none; }
 .dw-review-title { min-width: 0; font-weight: 600; }
 .dw-review-meta { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); white-space: nowrap; }
-.dw-review-missing { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; }
+.dw-review-missing { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 5px; max-width: 100%; }
 .dw-review-missing span { padding: 2px 6px; border-left: 2px solid #b8860b; background: var(--bg-tertiary); color: var(--text-secondary); font-size: 11px; }
 
 /* Древо Книг: сетка 3 колонки, компактные карточки */
 .book-grid {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 10px; max-width: 100%;
 }
 .book-card {
   display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
@@ -133,6 +296,7 @@ a.dw-ticker-item:hover, a.dw-ticker-item:focus-visible { background: rgb(var(--a
   border: 1px solid var(--border-light); border-radius: 8px;
   box-shadow: var(--shadow-soft); color: var(--text-primary); text-align: left;
   cursor: pointer; transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-base);
+  box-sizing: border-box; max-width: 100%;
 }
 .book-card:hover, .book-card:focus-visible {
   transform: translateY(-2px); border-color: var(--accent-gold);
@@ -166,42 +330,83 @@ a.dw-ticker-item:hover, a.dw-ticker-item:focus-visible { background: rgb(var(--a
 
 @media (max-width: 720px) {
   .dw-grid { grid-template-columns: 1fr; }
-  .dw-summary-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .dw-summary-item:nth-child(4) { border-left: 0; }
   .dw-bar-label { width: 96px; font-size: 12px; }
   .book-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .book-card { padding: 10px 12px; }
 }
-@media (max-width: 520px) {
+@media (max-width: 390px) {
+  /* Ширина блоков = ширина шапки: без горизонтального паддинга контейнера. */
   .dashboard-widgets,
   .dw-summary,
   .dw-widget,
   .dw-grid {
     min-width: 0;
     max-width: 100%;
+    overflow-x: hidden;
+    align-self: start;
+    justify-self: stretch;
   }
 
-  .dw-summary { padding: 15px 14px 0; }
+  .dw-summary { padding: var(--space-3) var(--space-3) 0; max-width: 100%; margin-inline: auto; }
   .dw-summary-heading { display: block; }
-  .dw-summary-date { display: block; margin-top: 8px; }
-  .dw-summary-grid { grid-template-columns: 1fr; }
-  .dw-summary-item + .dw-summary-item { border-left: 0; border-top: 1px solid var(--border-light); }
+  .dw-summary-date { display: block; margin-top: var(--space-2); }
+  .dw-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 100%; margin-inline: auto; }
+  .dw-summary-item:nth-child(2n)::before { display: none; }
   .dw-summary-value { font-size: 29px; }
-  .dw-widget { padding: 16px; }
-  .dw-widget-heading { align-items: center; flex-direction: column; gap: 6px; text-align: center; }
+  .dw-widget { padding: var(--space-3); max-width: 100%; margin-inline: auto; }
+  .dw-widget h3 { font-size: 18px; margin-bottom: 10px; padding-bottom: var(--space-2); }
+  .dw-widget-heading { align-items: center; flex-direction: column; gap: var(--space-2); text-align: center; }
+  .dw-completeness-average { font-size: 18px; }
   .dw-bar-row,
   .dw-list-item { align-items: center; flex-wrap: wrap; justify-content: center; text-align: center; }
   .dw-bar-label,
   .dw-list-title { width: 100%; text-align: center; white-space: normal; overflow-wrap: anywhere; }
-  .dw-bar-track { flex: 1 1 120px; min-width: 0; }
+  .dw-bar-track { flex: 1 1 120px; min-width: 0; max-width: 100%; }
   .dw-list-meta { width: 100%; text-align: center; }
-  .book-grid { grid-template-columns: 1fr; }
-  .dw-metric-grid { grid-template-columns: 1fr; }
-  .dw-review-item { grid-template-columns: 1fr; gap: 5px; }
+  .book-grid { grid-template-columns: 1fr; max-width: 100%; margin-inline: auto; }
+  .dw-metric-grid { grid-template-columns: 1fr; max-width: 100%; margin-inline: auto; }
+  .dw-review-item { grid-template-columns: 1fr; gap: var(--space-2); max-width: 100%; margin-inline: auto; }
   .dw-review-meta { overflow-wrap: anywhere; text-align: center; white-space: normal; }
+
+  .dw-bars,
+  .dw-ticker {
+    width: 100%;
+    max-width: 100%;
+  }
+  .dw-ticker-track { width: max-content; }
+  .dw-ticker-item {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: var(--space-2) var(--space-3);
+    word-break: break-word;
+  }
+  .dw-bar-row,
+  .dw-list-item {
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  .dw-bar-track {
+    flex: 1 1 120px;
+    min-width: 0;
+    max-width: 100%;
+  }
+  .dw-summary-item,
+  .dw-summary-value,
+  .dw-counter-delta {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .dw-ticker { overflow-x: auto; }
   .dw-ticker-track { animation: none; }
+  .dashboard-tab { transition: none; }
 }

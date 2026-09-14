@@ -8,6 +8,54 @@
   overflow-x: hidden;
 }
 
+/* Быстрые вкладки разделов — зеркало сайдбара под шапкой модуля.
+   Минимализм: типографика вместо плашек, активная — золотое подчёркивание. */
+.dashboard-tabs {
+  max-width: var(--shell-page);
+  min-width: 0;
+  margin: 0 auto var(--space-5);
+}
+.dashboard-tabs-strip {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  border-bottom: 1px solid var(--border-light);
+}
+.dashboard-tabs-strip::-webkit-scrollbar { display: none; }
+.dashboard-tab {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding: var(--space-2) 2px;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--motion-base);
+}
+.dashboard-tab .lab-icon { width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; }
+.dashboard-tab:hover,
+.dashboard-tab:focus-visible { color: var(--text-primary); outline: none; }
+.dashboard-tab:focus-visible { border-bottom-color: var(--accent-gold); }
+.dashboard-tab[aria-current="page"] {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent-gold);
+}
+.dashboard-tabs-group {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  padding-left: var(--space-2);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
 .dw-summary {
   margin-bottom: var(--space-5);
   padding: var(--space-4) var(--space-4) 0;
@@ -287,13 +335,13 @@ a.dw-ticker-item:hover, a.dw-ticker-item:focus-visible { background: rgb(var(--a
   .book-card { padding: 10px 12px; }
 }
 @media (max-width: 390px) {
+  /* Ширина блоков = ширина шапки: без горизонтального паддинга контейнера. */
   .dashboard-widgets,
   .dw-summary,
   .dw-widget,
   .dw-grid {
     min-width: 0;
     max-width: 100%;
-    padding-inline: var(--space-3);
     overflow-x: hidden;
     align-self: start;
     justify-self: stretch;
@@ -360,6 +408,5 @@ a.dw-ticker-item:hover, a.dw-ticker-item:focus-visible { background: rgb(var(--a
 @media (prefers-reduced-motion: reduce) {
   .dw-ticker { overflow-x: auto; }
   .dw-ticker-track { animation: none; }
+  .dashboard-tab { transition: none; }
 }
-
-print("OK dashboard.css written")

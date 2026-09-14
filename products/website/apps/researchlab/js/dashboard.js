@@ -85,9 +85,94 @@ const Dashboard = (function() {
     });
   }
 
+  /* ─── Быстрые вкладки разделов (зеркало сайдбара под шапкой) ───
+     Источник — отрендеренный #labSidebar: порядок и подписи наследуются,
+     role-гейтинг повторяет applyLabConfig (hiddenSectionsForGuests + админ-секция).
+     Фильтр сайдбара (nav-enhance) сознательно игнорируем: он транзиентный. */
+  function tabLabel(item) {
+    return String(item.textContent || '').replace(/\s+/g, ' ').trim();
+  }
+
+  /* Иконка вкладки: в живом сайдбаре lucide уже заменил <i> на svg и снял
+     data-lucide (защита от цикла), поэтому имя добываем из класса lucide-<name>. */
+  function tabIconName(item) {
+    var raw = item.querySelector('i[data-lucide]');
+    if (raw) return raw.getAttribute('data-lucide');
+    var svg = item.querySelector('svg.lucide');
+    if (!svg) return null;
+    var m = String(svg.getAttribute('class') || '').match(/lucide-([a-z0-9-]+)/);
+    return m ? m[1] : null;
+  }
+
+  function makeTab(item, withIcon) {
+    var tab = document.createElement('a');
+    tab.className = 'dashboard-tab';
+    tab.href = item.getAttribute('href');
+    var iconName = withIcon ? tabIconName(item) : null;
+    if (iconName) {
+      var i = document.createElement('i');
+      i.setAttribute('data-lucide', iconName);
+      i.className = 'lab-icon';
+      i.setAttribute('aria-hidden', 'true');
+      tab.appendChild(i);
+    }
+    tab.appendChild(document.createTextNode(tabLabel(item)));
+    return tab;
+  }
+
+  function renderTabs(widgets) {
+    var module = widgets.parentNode;
+    var sidebar = document.getElementById('labSidebar');
+    if (!module || !sidebar || module.querySelector('.dashboard-tabs')) return;
+
+    var role = (window.AccessGate && window.AccessGate.getRole) ? window.AccessGate.getRole() : 'guest';
+    var config = (window.AccessGate && window.AccessGate.getConfig) ? (window.AccessGate.getConfig() || {}) : {};
+    var hiddenKeys = config.hiddenSectionsForGuests || [];
+
+    function available(item) {
+      var key = item.getAttribute('data-module');
+      return !(role !== 'admin' && key && hiddenKeys.indexOf(key) > -1);
+    }
+
+    var nav = document.createElement('nav');
+    nav.className = 'dashboard-tabs';
+    nav.setAttribute('aria-label', 'Разделы лаборатории');
+    var strip = document.createElement('div');
+    strip.className = 'dashboard-tabs-strip';
+
+    Array.prototype.forEach.call(
+      sidebar.querySelectorAll('.sidebar-items > a.sidebar-item'),
+      function(item) {
+        if (!available(item)) return;
+        var tab = makeTab(item, true);
+        if (tab.getAttribute('href') === '#dashboard') tab.setAttribute('aria-current', 'page');
+        strip.appendChild(tab);
+      }
+    );
+
+    Array.prototype.forEach.call(sidebar.querySelectorAll('.sidebar-section'), function(section) {
+      if (section.id === 'sidebar-admin-section' && role !== 'admin') return;
+      var label = section.querySelector('.sidebar-section-header span');
+      var items = section.querySelectorAll('.sidebar-section-content > a.sidebar-item');
+      if (!label || !items.length) return;
+      var kicker = document.createElement('span');
+      kicker.className = 'dashboard-tabs-group';
+      kicker.textContent = label.textContent.trim();
+      strip.appendChild(kicker);
+      Array.prototype.forEach.call(items, function(item) {
+        if (!available(item)) return;
+        strip.appendChild(makeTab(item, false));
+      });
+    });
+
+    nav.appendChild(strip);
+    module.insertBefore(nav, widgets);
+  }
+
   function init() {
     var container = document.getElementById('dashboard-widgets');
     if (!container) return;
+    renderTabs(container);
     if (container.querySelector('.dw-summary-value')) {
       loaded = true;
       return;
