@@ -195,13 +195,8 @@
   outline: none;
   box-shadow: var(--ring-focus);
 }
-/* Каскад: redesign.css (.lab-select → --surface) и theme-white.css
-   (html[data-theme="white"] .lab-select → белые фоны) побеждают базовый
-   класс; ID-скоуп возвращает золотое стекло селекту модели в #neurochat. */
-#ed-chat select.glass-btn-gold {
-  background: var(--grad-gold-cta);
-  border-color: rgb(var(--accent-gold-rgb) / 0.55);
-}
+/* Селект модели в #ed-chat заменён кастомным триггером
+   (.ec-model-trigger), поэтому ID-скоуп золотого стекла больше не нужен. */
 
 /* Возвышенная стеклянная карточка (toast, будущие поповеры) */
 .glass-card-elevated {
