@@ -1,55 +1,179 @@
+# ALEPHY · Дизайн-система «Современный манускрипт»
+
+Версия: 2.0 · Статус: канон · Источник токенов: `css/tokens.css`
+Продукты: Research Lab (`apps/researchlab/`), Лендинг (`products/website/`)
+
 ---
-name: sift-design
-description: Enforces the Sift monochrome rounded design system.
-  Use when creating or modifying any UI component, page, or visual style.
+
+## 0. Принципы
+
+### 0.1 Доктрина трёх голосов
+Каждый слой дизайна имеет одного хозяина:
+
+| Голос | Владеет | Средства |
+|---|---|---|
+| **Артефакт (палео)** | содержание | глифы, золотые акценты, пергаментные фактуры, сериф в display-заголовках |
+| **Зал (минимализм)** | структура | 8px-сетка, воздух, hairline-рамки 1px, нейтральные поверхности |
+| **Свет (футуризм)** | поведение | easing 120–200ms, backdrop-blur в моменты взаимодействия, микро-взаимодействия |
+
+### 0.2 Правила-законы
+- Палео — только в контенте, **никогда в хроме** (кнопки, инпуты, сайдбар, тулбары).
+- **Тени = ноль в новом UI.** Состояние показывают hairline-рамки 1px и фоны. Тени живут только в glass-слое и legacy-композитах до их миграции.
+- 90/10: 90% экрана — тихий минимализм, ≤10% — палео-акценты.
+- Стекло (liquid glass) = **витрина**: только оверлеи (модалки, тосты, палитры, sticky-шапка при скролле, search-панель). Постоянный UI — матовый.
+- Различение эмет/шекер распространяется на UI: статусы и уверенность всегда видимы (раздел 6).
+- reduced-motion respected всегда.
+
 ---
 
-# Sift Design System
+## 1. Токены
 
-## Palette — only these colors
-- ink #0a0a0a (text, primary buttons)
-- paper #ffffff (backgrounds)
-- mist #f5f5f5 (secondary surfaces, hover)
-- line #e5e5e5 (borders)
-- mute #737373 (secondary text)
-No other colors. No gradients. No shadows. No emojis — ever.
+### 1.1 Цветовые роли
+Роли (не имена цветов!) переопределяются каждой темой:
 
-## Rounding
-- Buttons, inputs: rounded-lg (10px)
-- Cards, panels: rounded-2xl (16px)
-- Badges, chips, avatars: rounded-full
-- Focus: ring-2 ring-ink ring-offset-2 ring-offset-paper
+| Роль | Light (пергамент) | Назначение |
+|---|---|---|
+| `--bg-primary` | `#ede0c8` | фон страницы |
+| `--bg-secondary` | `#faf3e0` | поверхности карточек |
+| `--bg-tertiary` | `#f5edd5` | вложенные поверхности |
+| `--bg-dark` | `#2c1810` | ink-поверхности, тёмные ячейки |
+| `--text-primary` | `#2c1810` | основной текст |
+| `--text-muted` | `#8a7a6a` | мета, подписи |
+| `--text-on-accent` | `#fffaf0` | текст на золоте |
+| `--border-light` | `#d4c4a8` | hairline-рамки |
+| `--accent-gold` | `#b8860b` | единственный акцент |
+| `--accent-red` | `#c0392b` | ошибка/разрушение (дозированно) |
 
-## Typography
-- UI: Inter. Code, data, verdict labels: JetBrains Mono.
-- Headings: font-semibold, tracking-tight.
-- Uppercase labels: font-mono text-xs uppercase tracking-widest.
+Запрещено: новые hex в компонентах; «семейные» оттенки вне ролей; чужие палитры (admin-синий и т.п.) — мигрируются в роли.
 
-## Verdicts (icons, not emojis)
-- adopt   -> lucide CircleCheck   + label ADOPT
-- caution -> lucide TriangleAlert + label CAUTION
-- avoid   -> lucide CircleX       + label AVOID
-All in ink color. Differentiation by icon shape + label, never by color.
+### 1.2 Типографика
+Шрифты: **EB Garamond** (сериф: display, заголовки, цитаты) + **DM Sans** (UI: мета, лейблы, кнопки).
 
-## Component recipes
-- Button primary:  bg-ink text-paper rounded-lg h-10 px-5 text-sm hover:bg-ink/90
-- Button secondary: border border-line bg-paper rounded-lg h-10 px-5 hover:bg-mist
-- Card:  border border-line bg-paper rounded-2xl p-6
-- Badge: border border-line rounded-full px-3 py-1 font-mono text-xs uppercase
+| Токен | px | Применение |
+|---|---|---|
+| `--ui-10/11/12/13` | 10/11/12/13 | плотный UI: бейджи, лейблы, мета |
+| `--text-14` | 14 | компактный UI-текст |
+| `--text-xs/sm/md/base` | 12/13/15/16 | основной текст |
+| `--text-lg/xl/2xl/3xl` | 18/22/28/38 | заголовки |
+| `--text-hero/--text-section` | clamp | hero и секции (лендинг) |
 
-## Motion
-- 150–200ms, ease-out, only for state changes (hover, mount, skeleton).
-- Framer Motion: no springs with bounce, no animations longer than 200ms.
+Uppercase-лейблы секций: `--ui-11`, letter-spacing .08em, цвет `--text-muted`.
 
-## Pre-completion checklist
-- [ ] Only palette colors used
-- [ ] No shadows, no emojis
-- [ ] Every interactive element has hover + focus-visible states
-- [ ] Buttons rounded-lg, cards rounded-2xl, badges rounded-full
+### 1.3 Spacing
+`--space-1..8` = **4 / 8 / 12 / 16 / 20 / 24 / 32 / 48**. Другие значения запрещены; микроступени чипов (2/6px) — только по явной записи здесь.
 
-## Status dots (learn hub, Research Lab)
-Хаб «Обучение» (#learn) передаёт статус компактных карточек бейджем-точкой, а не цветной верхней рамкой:
-- «новый» → контурная точка: обводка `--text-muted`, прозрачная заливка;
-- «в работе» → заливка `--accent-gold`;
-- «освоен» → заливка `--accent-green`.
-Цвет — единственное различие, поэтому точка всегда сопровождается легендой рядом и `title`/`aria-label` на самой точке. Цветные верхние рамки (`border-top: 3px`) в карточках хаба не используются. Это осознанное исключение из монохромной палитры Sift: интерфейс Research Lab живёт на токенах `css/tokens.css`.
+### 1.4 Радиусы
+`--radius-xs 4 / sm 6 / -8 8 / md 10 / lg 14 / xl 20 / pill 999`.
+Карточки и панели: `-8` или `md`. Чипы/бейджи: `pill`. Квадратные глиф-чипы: `sm`.
+
+### 1.5 Тени и стекло
+- Новый UI: **без теней** (hairline-рамки).
+- Legacy-канон до миграции: `--shadow-soft / -card / -hover / -modal / -floating`, `--ring-focus`.
+- Glass-токены: `--glass-bg`, `--glass-blur`, `--glass-shadow`, `--header-glass-mix`.
+- Реестр стекла: модалки, тосты, палитры-оверлеи, `.glass-topbar.is-scrolled`, `.glass-search-panel`. Новое стекло — только через правку этого реестра.
+
+### 1.6 Z-шкала
+`--z-behind -1 · --z-content 1 · --z-topbar 1000 · --z-search 999 · --z-modal 9998 · --z-toast 10000`. Литеральные z-index запрещены.
+
+### 1.7 Контейнеры
+`--shell-frame 1400` (каркас) · `--shell-page 1120` (страница) · `--shell-read` (читалка, ch-меры) · `--shell-wide` (полотна карт).
+`.lab-container { max-width: var(--shell-page); margin-inline:auto; padding-inline: var(--space-5); }` (mobile: `--space-3`).
+**Закон краёв:** каждый блок страницы краями совпадает с контейнером шапки.
+
+### 1.8 Motion
+120–200ms, `cubic-bezier(.2,.7,.2,1)`; метафоры: чернила (проявление), свиток (раскрытие). Stagger ≤ 40ms/элемент, серии ≤ 6. Никаких animation-timeline-разлётов.
+
+---
+
+## 2. Темы
+Четыре темы через `[data-theme]`: **light** (пергамент), **dark** (ink), **brown** (шоколад), **white** (чистая бумага). Каждая определяет полный набор ролей + `--header-ink`, `--header-ink-muted`, `--header-glass-mix`. Контраст текст/фон ≥ 4.5:1, иконки ≥ 3:1 в каждой теме. Новая пара «цвет+фон» = 4 переопределения и запись здесь.
+
+---
+
+## 3. Логотип и иконки
+- Знак: SVG monochrome — штриховой глиф алефа + wordmark «alephy» (EB Garamond semibold); цвет `currentColor` → `--header-ink`; инлайн в шапке/футере.
+- Иконки UI: **lucide**, stroke 2, размеры 16/20/24; цвет `currentColor`. Эмодзи и растровые иконки в хроме запрещены.
+
+---
+
+## 4. Компоненты
+
+### 4.1 Заголовок секции
+Uppercase `--ui-11` + волосяная линия 1px `--border-light` под ним + опциональный бейдж-счётчик (круг 20px, hairline) справа. Это маркер границ панели (эталон: палео-конструктор).
+
+### 4.2 Карточка
+Компактная (~140px): мета-строка (статус-точка + категория-чип + дата справа) → сериф-заголовок ≤2 строк → описание 1 строка ellipsis → до 3 мини-чипов терминов (нет — строки нет). Рамка 1px, radius `-8`, без теней; hover: рамка → `--accent-gold` + подложка rgba(gold,.06).
+
+### 4.3 Чипы и бейджи
+Чип: pill, hairline, `--ui-12`, padding 2px 10px. Бейдж статуса/уверенности — раздел 6. Категории — uppercase `--ui-10`.
+
+### 4.4 Кнопки
+- Primary: `--accent-gold`, текст `--text-on-accent`, radius `-8`; в панелях — во всю ширину панели.
+- Secondary: hairline-рамка, текст `--text-primary`.
+- Icon: 32–36px квадрат, hairline; ряд без переносов (mobile ≤2 ровных рядов).
+- Compact: icon 16px + текст, для тулбаров.
+
+### 4.5 Инпуты и селекты
+Hairline-рамка, radius `-8`, фон `--bg-secondary`; focus: `--ring-focus` или outline 2px (не glow). Лейблы над полями в тулбарах запрещены — placeholder несёт смысл.
+
+### 4.6 Empty-state
+Пунктирная рамка 1px, глиф по центру (opacity .35), подсказка `--text-muted`. Язык: «Поле ждёт первый знак», «Начните диалог».
+
+### 4.7 Тулбар
+Панель в 1–2 строки: search flex-1 + select + compact-кнопка; строка 2: чипы-фильтры + счётчик «N из M» справа + sort-select. Три визуальных этажа запрещены.
+
+### 4.8 Список-режим
+Строки 48px: статус-точка | заголовок ellipsis | категория | дата. Mobile: 2 линии. Переключатель вид: lucide LayoutGrid/List, выбор в localStorage.
+
+### 4.9 Модалки и оверлеи
+Glass-витрина (раздел 1.5): blur + полупрозрачный фон темы, radius `lg`, `--z-modal`. Закрытие: Escape, клик вне, крестик.
+
+### 4.10 Тосты
+Glass, `--z-toast`, 4s, reduced-motion — без анимации.
+
+---
+
+## 5. Layout-паттерны
+
+### 5.1 Модуль лаба
+Hero-карточка (лейбл «АЛЕФИ · МОДУЛЬ», сериф-заголовок, подзаголовок, бледный глиф 4%) → контент панелями по 4.1. Две колонки desktop → одна mobile (стек по приоритету).
+
+### 5.2 Лендинг (bento-манускрипт)
+12-col grid, gap 12–16; ячейки hairline, radius 12, без теней; фоны paper/parchment + 1–2 ink-ячейки; золото только акцент; hover: рамка→золото + оживление мини-визуализации.
+
+### 5.3 Мобильный закон
+390px: одна колонка; каждый блок = ширина контейнера шапки; overflow-x = 0; тап-таргеты ≥40px; композеры в одну строку (flex-1, min-width 0).
+
+---
+
+## 6. Статусы и уверенность (эмет/шекер в UI)
+
+| Метка | Визуал | Значение |
+|---|---|---|
+| факт / проверено / эмет | точка-бейдж золота | подтверждено источником |
+| интерпретация / в работе | нейтральный (hairline, muted) | рабочая версия |
+| гипотеза / спорно | приглушённый (opacity .6) | требует проверки |
+| разрушение / ошибка | `--accent-red` | дозированно |
+
+Легенда едина для всех модулей (обучение, исследования, реконструкция НЗ). Новая метка = правка этой таблицы.
+
+Каталог «Исследования» (#researches) кодирует эти же метки точками `.res-dot-*` (css/research-library.css), цвета наследуются от палитры бейджей `.exposure-badge-*` (ExposureCase.CONFIDENCE_META): проверено `#2f6b1f`/dark `#7bc47b` · требует проверки `#93620a`/dark `--accent-gold` · гипотеза `#2455a4`/dark `#8fb4ea` · спорно `#a3392c`/dark `#e08a8a`. Точка всегда несёт `title`/`aria-label`.
+
+---
+
+## 7. Доступность
+Контраст ≥4.5:1 текст, ≥3:1 иконки/рамки-состояния; focus-visible всегда видим (ring/outline); reduced-motion отключает stagger, blur-переходы и автоскроллы; клавиатура: `/` — поиск, Escape — оверлеи; aria-лейблы у icon-кнопок.
+
+---
+
+## 8. Правила расширения
+1. Новый токен/компонент — сначала запись в этот файл, потом код.
+2. Зависимость >20KB gzipped или новый подход — ADR (`docs/decisions.md`).
+3. Stylelint-гарды: литералы запрещены для color/box-shadow/border-radius/z-index (только var()).
+4. Скрин-доказательство для верстки: after-скрин в `tasks/<task>/`.
+5. Boy Scout: тронул файл — оставь чище (один мелкий рефакторинг в задачу).
+
+---
+
+## 9. Карта файлов
+`css/tokens.css` (токены, темы) · `css/lab.css` (база лаба) · `css/layout.css` (каркас, шапка) · `css/redesign.css` (редизайн-слой) · `products/website/site.css` (лендинг) · `css/components/*` (glass, lucide, toast…) · данный файл = канон; ссылки «DESIGN-SYSTEM §N» в коде указывают на разделы этого файла.
