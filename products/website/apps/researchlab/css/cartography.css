@@ -70,12 +70,13 @@
 .cartography-theme-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; }
 .cartography-theme-body .cartography-card-summary { flex: 1; width: 100%; min-height: 0; margin: 0; background: transparent; padding: 0; }
 .cartography-open-map { margin-top: 5px; }
- .cartography-world-launch { display: flex; align-items: center; gap: 14px; width: 100%; margin: 0 0 24px; padding: 14px 18px; border: 1px solid var(--accent-gold); border-radius: 8px; background: var(--bg-secondary, #f7f1e5); color: var(--text-primary, #2c1810); cursor: pointer; text-align: left; box-shadow: 0 4px 12px rgba(44, 24, 16, .06); }
+.cartography-world-launch { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--accent-gold); border-radius: 8px; background: var(--bg-secondary, #f7f1e5); color: var(--text-primary, #2c1810); cursor: pointer; text-align: left; box-shadow: 0 4px 12px rgba(44, 24, 16, .06); }
 .cartography-world-launch:hover { background: #f7efd9; }
-.cartography-world-launch > span:first-child { color: var(--accent-gold); font: 28px 'Times New Roman', serif; }
-.cartography-world-launch > span:last-child { margin-left: auto; color: var(--accent-gold); font-size: 22px; }
+.cartography-world-launch > span:first-child { flex: 0 0 auto; color: var(--accent-gold); font: 22px/1 'Times New Roman', serif; }
+.cartography-world-launch > span:last-child { min-width: 0; color: var(--accent-gold); }
 .cartography-world-launch strong, .cartography-world-launch small { display: block; }
-.cartography-world-launch small { margin-top: 2px; color: var(--text-muted, #6b5b4e); }
+.cartography-world-launch strong { font-size: 15px; font-weight: 600; line-height: 1.3; }
+.cartography-world-launch small { margin-top: 2px; color: var(--text-muted, #6b5b4e); font-size: 12px; }
 .cartography-map-shell { min-height: calc(100vh - 100px); padding: 0; background: transparent; }
 .cartography-world-fullscreen { width: 100%; max-width: none; margin: 0; }
 .lab-content:has(.cartography-map-shell) { padding: 0; }
