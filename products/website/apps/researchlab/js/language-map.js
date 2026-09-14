@@ -89,21 +89,39 @@
       '</div>';
   }
 
+  /* Временные заглушки вместо паков иконок: флаги основных стран языка.
+     Языки без общепризнанного флага получают глобус (fallback). */
+  var LANGUAGE_EMOJI = {
+    russian: '🇷🇺', english: '🇬🇧', german: '🇩🇪', arabic: '🇸🇦', hebrew: '🇮🇱',
+    'modern-hebrew': '🇮🇱', turkish: '🇹🇷', kazakh: '🇰🇿', spanish: '🇪🇸', french: '🇫🇷',
+    chinese: '🇨🇳', japanese: '🇯🇵', korean: '🇰🇷', persian: '🇮🇷', ukrainian: '🇺🇦',
+    polish: '🇵🇱', indonesian: '🇮🇩', finnish: '🇫🇮', hungarian: '🇭🇺', georgian: '🇬🇪',
+    hindi: '🇮🇳', bengali: '🇧🇩', swahili: '🇰🇪', vietnamese: '🇻🇳', thai: '🇹🇭',
+    italian: '🇮🇹', portuguese: '🇵🇹', dutch: '🇳🇱', swedish: '🇸🇪', czech: '🇨🇿',
+    bulgarian: '🇧🇬', lithuanian: '🇱🇹', armenian: '🇦🇲', estonian: '🇪🇪', azerbaijani: '🇦🇿',
+    amharic: '🇪🇹', yoruba: '🇳🇬', tamil: '🇮🇳', burmese: '🇲🇲', maori: '🇳🇿',
+    greek: '🇬🇷', norwegian: '🇳🇴', danish: '🇩🇰', icelandic: '🇮🇸', serbian: '🇷🇸',
+    croatian: '🇭🇷', slovak: '🇸🇰', romanian: '🇷🇴', latvian: '🇱🇻', uzbek: '🇺🇿',
+    kyrgyz: '🇰🇬', malay: '🇲🇾', khmer: '🇰🇭', lao: '🇱🇦', telugu: '🇮🇳',
+    mongolian: '🇲🇳', zulu: '🇿🇦', hausa: '🇳🇬', quechua: '🇵🇪', maltese: '🇲🇹',
+    irish: '🇮🇪', cantonese: '🇭🇰', filipino: '🇵🇭', somali: '🇸🇴', tajik: '🇹🇯',
+    nepali: '🇳🇵', igbo: '🇳🇬', albanian: '🇦🇱', urdu: '🇵🇰', kannada: '🇮🇳',
+    sinhala: '🇱🇰', javanese: '🇮🇩', lingala: '🇨🇩', aymara: '🇧🇴', guarani: '🇵🇾'
+  };
+  function cardEmoji(id) {
+    return LANGUAGE_EMOJI[id] || '🌐';
+  }
+
   function renderCard(language) {
     var id = escapeHtml(language.id);
     return '<article class="language-map-card" role="button" tabindex="0" data-language-id="' + id + '" ' +
       'aria-label="Открыть анализ языка ' + escapeHtml(language.name) + '">' +
+      '<span class="language-map-card-emoji" aria-hidden="true">' + cardEmoji(language.id) + '</span>' +
       '<div class="language-map-card-head">' +
       '<h2>' + escapeHtml(language.name) + '</h2>' +
       '<span class="language-map-type">' + escapeHtml(language.type) + '</span>' +
       '</div>' +
-      '<dl class="language-map-metrics">' +
-      renderMetric('Давар', language.has_davar) +
-      renderMetric('Переходы', language.has_transitions) +
-      renderMetric('Близость к реальности', language.proximity_to_reality) +
-      '</dl>' +
       '<p class="language-map-notes">' + escapeHtml(language.notes) + '</p>' +
-      '<span class="language-map-card-action" aria-hidden="true">Открыть анализ</span>' +
       '</article>';
   }
 
