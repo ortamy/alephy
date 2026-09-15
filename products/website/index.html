@@ -345,7 +345,114 @@
     .hero-lead { max-width: 670px; margin: 0 auto 30px; color: var(--chocolate-soft); font-family: var(--serif); font-size: clamp(1.35rem, 3vw, 1.95rem); line-height: 1.25; }
     .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
     .hero-actions .button { width: 250px; }
+    /* ===== WAVE 1: bento-манускрипт (DESIGN-SYSTEM §5.2) ===== */
+    .landing-bento-wrap { padding: var(--space-6, 24px) 0 var(--space-5, 20px); overflow-x: clip; background: var(--paper); }
+    .landing-bento {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: var(--space-3, 12px);
+      width: min(calc(100% - 40px), var(--shell-page, 1120px));
+      margin-inline: auto;
+    }
+    .bento-cell {
+      min-width: 0;
+      overflow: visible;
+      padding: var(--space-4, 16px);
+      border: 1px solid var(--border-light, var(--line));
+      border-radius: var(--radius-lg);
+      background: var(--paper-light);
+    }
+    .bento-cell--ink {
+      background: var(--bg-dark, var(--chocolate));
+      color: var(--text-on-dark, var(--paper));
+      border-color: color-mix(in srgb, var(--gold) 38%, transparent);
+    }
+    .bento-hero { grid-column: 1 / 8; grid-row: 1 / 3; display: flex; flex-direction: column; }
+    .bento-glyph { grid-column: 8 / 13; grid-row: 1; display: flex; flex-direction: column; min-height: 220px; }
+    .bento-loss { grid-column: 8 / 13; grid-row: 2; }
+    .bento-products { grid-column: 1 / 13; grid-row: 3; }
+    .bento-kicker {
+      display: flex; align-items: center; gap: var(--space-3, 12px);
+      margin: 0 0 var(--space-3, 12px); color: var(--bronze, var(--gold-deep));
+      font-size: var(--ui-11, 11px); font-weight: 700;
+      letter-spacing: var(--tracking-caps, .08em); text-transform: uppercase;
+    }
+    .bento-kicker::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--border-light, var(--line)); }
+    .bento-kicker--on-ink { color: var(--gold); }
+    .bento-kicker--on-ink::after { background: color-mix(in srgb, var(--gold) 45%, transparent); }
+    .bento-hero h1 { max-width: 22ch; margin: 0 0 var(--space-3, 12px); overflow: visible; color: var(--chocolate); font-size: var(--text-hero, clamp(2.25rem, 5vw, 3.5rem)); line-height: 1.15; letter-spacing: -.02em; }
+    .bento-hero .hero-lead { max-width: 38ch; margin: 0 0 var(--space-4, 16px); color: var(--chocolate-soft); font-family: var(--serif); font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.3; text-align: left; }
+    .bento-proof { display: flex; flex-wrap: wrap; gap: var(--space-2, 8px); margin: 0 0 var(--space-5, 20px); }
+    .bento-proof .scale-chip { padding: 2px 10px; border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-pill, 999px); color: var(--chocolate-soft); font-size: var(--ui-12, 12px); }
+    .bento-hero .hero-actions { justify-content: flex-start; }
+    .bento-hero .hero-actions .button { width: auto; min-width: 200px; }
+    .bento-hero .hero-note { justify-content: flex-start; max-width: 42ch; margin: auto 0 0; text-align: left; }
     .hero-note { display: flex; align-items: center; justify-content: center; gap: 12px; max-width: 380px; margin: 54px auto 0; color: var(--muted); font-size: .78rem; text-align: center; }
+    .glyph-stage {
+      display: grid; place-items: center; flex: 1 1 auto; width: 100%; min-height: 140px;
+      padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer;
+    }
+    .glyph-stage:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
+    .glyph-letter, .glyph-ox { grid-area: 1 / 1; transition: opacity 150ms ease; }
+    .glyph-letter { color: var(--text-on-dark, var(--paper)); font-family: var(--serif); font-size: clamp(4.5rem, 8vw, 6.5rem); line-height: 1; }
+    .glyph-ox { display: grid; width: 88px; height: 88px; place-items: center; opacity: 0; color: var(--gold); }
+    .glyph-ox svg { display: block; width: 72px; height: 72px; }
+    .glyph-stage.is-ox .glyph-letter { opacity: 0; }
+    .glyph-stage.is-ox .glyph-ox { opacity: 1; }
+    .glyph-caption { margin: var(--space-2, 8px) 0 0; color: var(--gold); font-size: var(--ui-12, 12px); letter-spacing: var(--tracking-caps, .08em); text-align: center; text-transform: uppercase; }
+    .bento-loss h2 { margin-bottom: 12px; font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
+    .loss-compact { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .loss-compact li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
+    .loss-compact .loss-name { font-size: .82rem; font-weight: 600; }
+    .loss-compact .loss-percent { color: var(--gold-deep, var(--gold)); font-family: var(--serif); font-size: 1rem; font-weight: 700; }
+    .loss-compact .loss-bar { grid-column: 1 / -1; height: 3px; overflow: hidden; border-radius: 99px; background: var(--border-light, var(--line)); }
+    .loss-compact .loss-bar > span { display: block; height: 100%; background: var(--gold); }
+    .bento-cell--interactive:hover { border-color: var(--gold); }
+    .product-tabs { display: flex; gap: var(--space-2, 8px); margin-bottom: var(--space-3, 12px); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .product-tab {
+      flex: 0 0 auto; min-height: 40px; padding: 8px 14px;
+      border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-pill, 999px);
+      background: transparent; color: var(--chocolate); font-family: var(--sans);
+      font-size: var(--ui-12, 12px); font-weight: 700; letter-spacing: .04em; cursor: pointer;
+    }
+    .product-tab[aria-selected="true"], .product-tab:hover { border-color: var(--gold); color: var(--gold-deep, var(--gold)); }
+    .product-screen { display: none; }
+    .product-screen[hidden] { display: none !important; }
+    .product-screen.is-active { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, .8fr); gap: var(--space-4, 16px); align-items: center; }
+    .product-copy h3 { margin-bottom: 8px; font-size: 1.25rem; }
+    .product-copy p { margin-bottom: 14px; color: var(--muted); font-size: .9rem; }
+    .mini-frame { min-height: 132px; padding: 14px; border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-lg); background: var(--paper); }
+    .mini-analyzer { display: grid; gap: 8px; }
+    .mini-letters { display: flex; justify-content: space-between; color: var(--chocolate); font-family: var(--serif); font-size: 1.6rem; }
+    .mini-line { height: 6px; border-radius: 99px; background: var(--border-light, var(--line)); }
+    .mini-line:nth-child(3) { width: 72%; }
+    .mini-line:nth-child(4) { width: 48%; }
+    .mini-map { position: relative; overflow: hidden; }
+    .mini-map i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); opacity: .7; }
+    .mini-timeline { display: grid; align-content: center; gap: 10px; }
+    .mini-rail { position: relative; height: 2px; background: var(--gold); }
+    .mini-rail span { position: absolute; top: -4px; width: 10px; height: 10px; border: 2px solid var(--gold); border-radius: 50%; background: var(--paper); }
+    @media (max-width: 979px) {
+      .landing-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .bento-hero { grid-column: 1 / -1; grid-row: auto; }
+      .bento-glyph, .bento-loss { grid-column: auto; grid-row: auto; }
+      .bento-products { grid-column: 1 / -1; grid-row: auto; }
+    }
+    @media (max-width: 639px) {
+      .landing-bento { grid-template-columns: 1fr; gap: var(--space-2, 8px); width: min(calc(100% - 32px), var(--shell-page, 1120px)); }
+      .bento-glyph, .bento-loss, .bento-hero, .bento-products { grid-column: 1; }
+      .bento-hero h1, .bento-hero .hero-lead { max-width: none; }
+      .bento-hero .hero-actions { width: 100%; flex-direction: column; align-items: stretch; }
+      .bento-hero .hero-actions .button { width: 100%; min-width: 0; min-height: 48px; }
+      .product-screen.is-active { grid-template-columns: 1fr; }
+      .product-tabs { scrollbar-width: none; }
+      .product-tabs::-webkit-scrollbar { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .glyph-letter, .glyph-ox { transition: none; }
+    }
+
+
     .hero-note::before { width: 34px; height: 1px; flex: 0 0 auto; background: var(--gold); content: ''; }
     .loss-map { background: var(--paper-light); }
     .loss-layout { display: grid; grid-template-columns: minmax(250px, .75fr) minmax(420px, 1.25fr); gap: clamp(42px, 8vw, 120px); align-items: start; }
@@ -859,43 +966,78 @@
   <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 
   <main id="main-content">
-    <section class="section hero" id="hero" aria-labelledby="hero-title">
-      <div class="container hero-content">
-        <div class="hero-copy">
-          <p class="eyebrow">Шаар / вход в исследование</p>
-          <h1 id="hero-title"><span class="hero-title-full">Реконструкция палео-образного мышления</span><span class="hero-title-short">Реконструкция палео-образного мышления</span></h1>
+    <section class="landing-bento-wrap" id="hero" aria-labelledby="hero-title">
+      <div class="landing-bento">
+        <article class="bento-cell bento-hero">
+          <p class="bento-kicker">Шаар / вход в исследование</p>
+          <h1 id="hero-title">Реконструкция палео-образного мышления</h1>
           <p class="hero-lead">Возвращаем тексту его физику: образ, движение, состояние и переход.</p>
+          <p class="bento-proof" id="bentoProof" aria-label="Масштаб корпуса">
+            <span class="scale-chip" data-proof="roots">300 корней</span>
+            <span class="scale-chip" data-proof="verses">23 046 стихов</span>
+            <span class="scale-chip" data-proof="modules">67 модулей</span>
+          </p>
           <div class="hero-actions">
             <a class="button" href="apps/researchlab/index.html#dashboard" data-portal-trigger>Начать исследование</a>
             <a class="button button-outline" href="apps/researchlab/index.html#manifest">Читать манифест</a>
           </div>
           <p class="hero-note">Не переводим — восстанавливаем последовательность действий, из которой рождается смысл.</p>
-        </div>
-      </div>
-    </section>
-    <section class="scale-strip" aria-label="Масштаб корпуса"><div class="container"><div class="scale-track"><div class="scale-set"><span class="scale-chip">127 корней</span><span class="scale-chip">21 словарь</span><span class="scale-chip">23 046 стихов</span><span class="scale-chip">16 состояний</span><span class="scale-chip">22 буквы</span><span class="scale-chip">1913 терминов</span><span class="scale-chip">53+ модуля лаборатории</span></div></div></div></section>
+        </article>
+        <article class="bento-cell bento-cell--ink bento-glyph bento-cell--interactive">
+          <p class="bento-kicker bento-kicker--on-ink">Живой глиф</p>
+          <button type="button" class="glyph-stage" id="glyphMorph" aria-pressed="false" aria-label="Показать образ алефа: бык">
+            <span class="glyph-letter" aria-hidden="true">𐤀</span>
+            <span class="glyph-ox" aria-hidden="true"><svg viewBox="0 0 72 72" fill="currentColor"><rect x="16" y="16" width="40" height="40" rx="4"/></svg></span>
+          </button>
+          <p class="glyph-caption" id="glyphCaption">алеф</p>
+        </article>
 
-    <section class="section loss-map" id="map" aria-labelledby="loss-title">
-      <div class="container">
-        <div class="loss-layout">
-          <div class="loss-intro">
-            <div class="section-heading">
-              <p class="eyebrow">Карта утрат</p>
-              <h2 id="loss-title">Как образ сжимается до понятия</h2>
-              <p>Каждый слой передачи оставляет след. Карта показывает, сколько физики текста ещё можно вернуть.</p>
-            </div>
-            <div class="loss-summary" aria-label="Индекс утраты образной физики">85%<span>утрачено</span></div>
-          </div>
-          <ol class="loss-list" aria-label="Хронология передачи текста">
-          <li class="loss-plate" style="--plate: #C89B3C"><span class="loss-number">01</span><span class="loss-name">Палео-образы <span class="loss-detail">— исходное движение</span></span><span class="loss-percent">100%</span><p class="loss-explanation">Исходный слой удерживал образ, движение и физическую последовательность.</p></li>
-          <li class="loss-plate" style="--plate: #b58a37"><span class="loss-number">02</span><span class="loss-name">Масоретский слой <span class="loss-detail">— огласовка поверх каркаса</span></span><span class="loss-percent">70%</span><p class="loss-explanation">Огласовка зафиксировала один вариант чтения.</p></li>
-          <li class="loss-plate" style="--plate: #8d6b37"><span class="loss-number">03</span><span class="loss-name">Греческая передача <span class="loss-detail">— смена оптики</span></span><span class="loss-percent">40%</span><p class="loss-explanation">Душа вместо жизни, дух вместо дыхания.</p></li>
-          <li class="loss-plate" style="--plate: #674a2d"><span class="loss-number">04</span><span class="loss-name">Латинская передача <span class="loss-detail">— закрепление подмены</span></span><span class="loss-percent">25%</span><p class="loss-explanation">Закон вместо наставления, церковь вместо собрания.</p></li>
-          <li class="loss-plate" style="--plate: #2D1F14"><span class="loss-number">05</span><span class="loss-name">Синодальный слой <span class="loss-detail">— готовое понятие</span></span><span class="loss-percent">15%</span><p class="loss-explanation">Готовое понятие: Бог вместо Элоhим.</p></li>
+        <article class="bento-cell bento-loss" id="map" aria-labelledby="loss-title">
+          <p class="bento-kicker">Карта утрат</p>
+          <h2 id="loss-title">Как образ сжимается до понятия</h2>
+          <ol class="loss-compact" aria-label="Хронология передачи текста">
+            <li><span class="loss-name">Палео-образы</span><span class="loss-percent">100%</span><span class="loss-bar" aria-hidden="true"><span style="width:100%"></span></span></li>
+            <li><span class="loss-name">Масоретский слой</span><span class="loss-percent">70%</span><span class="loss-bar" aria-hidden="true"><span style="width:70%"></span></span></li>
+            <li><span class="loss-name">Греческая передача</span><span class="loss-percent">40%</span><span class="loss-bar" aria-hidden="true"><span style="width:40%"></span></span></li>
+            <li><span class="loss-name">Латинская передача</span><span class="loss-percent">25%</span><span class="loss-bar" aria-hidden="true"><span style="width:25%"></span></span></li>
+            <li><span class="loss-name">Синодальный слой</span><span class="loss-percent">15%</span><span class="loss-bar" aria-hidden="true"><span style="width:15%"></span></span></li>
           </ol>
-        </div>
+        </article>
+        <article class="bento-cell bento-products">
+          <p class="bento-kicker">Лаборатория</p>
+          <div class="product-tabs" role="tablist" aria-label="Модули лаборатории">
+            <button type="button" class="product-tab" role="tab" id="tab-analyzers" aria-selected="true" aria-controls="screen-analyzers" data-product="analyzers">Анализатор</button>
+            <button type="button" class="product-tab" role="tab" id="tab-cartography" aria-selected="false" aria-controls="screen-cartography" data-product="cartography">Картография</button>
+            <button type="button" class="product-tab" role="tab" id="tab-timeline" aria-selected="false" aria-controls="screen-timeline" data-product="timeline">Лента времени</button>
+          </div>
+          <div class="product-screen is-active" role="tabpanel" id="screen-analyzers" aria-labelledby="tab-analyzers">
+            <div class="mini-frame mini-analyzer" aria-hidden="true"><div class="mini-letters">𐤀 𐤁 𐤂 𐤃</div><div class="mini-line"></div><div class="mini-line"></div><div class="mini-line"></div></div>
+            <div class="product-copy">
+              <h3>Анализатор</h3>
+              <p>Разбор слоёв, диалектов и смысла — три входа в одну диагностику текста.</p>
+              <a class="button button-outline" href="apps/researchlab/index.html#analyzers">Открыть модуль</a>
+            </div>
+          </div>
+          <div class="product-screen" role="tabpanel" id="screen-cartography" aria-labelledby="tab-cartography" hidden>
+            <div class="mini-frame mini-map" aria-hidden="true"><i style="left:18%;top:42%"></i><i style="left:44%;top:28%"></i><i style="left:62%;top:58%"></i><i style="left:78%;top:36%"></i></div>
+            <div class="product-copy">
+              <h3>Картография</h3>
+              <p>Слои свидетельств на карте: места, маршруты передачи, плотность находок.</p>
+              <a class="button button-outline" href="apps/researchlab/index.html#cartography">Открыть модуль</a>
+            </div>
+          </div>
+          <div class="product-screen" role="tabpanel" id="screen-timeline" aria-labelledby="tab-timeline" hidden>
+            <div class="mini-frame mini-timeline" aria-hidden="true"><div class="mini-rail"><span style="left:8%"></span><span style="left:32%"></span><span style="left:58%"></span><span style="left:82%"></span></div></div>
+            <div class="product-copy">
+              <h3>Лента времени</h3>
+              <p>События, языковые слои и свидетельства на одной шкале.</p>
+              <a class="button button-outline" href="apps/researchlab/index.html#timeline">Открыть модуль</a>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
+
 
     <section class="section mechanics" id="mechanics" aria-labelledby="davar-title">
       <div class="container mechanics-grid">
@@ -1133,6 +1275,50 @@
     if (themeOrder.indexOf(savedTheme) < 0) savedTheme = 'white';
     document.documentElement.dataset.theme = savedTheme;
     updateThemeControls(savedTheme);
+
+    // ===== BENTO: live proof, glyph morph, product tabs =====
+    (function initLandingBento() {
+      const fmt = (n) => Number(n).toLocaleString('ru-RU');
+      const setChip = (key, text) => {
+        const el = document.querySelector('#bentoProof [data-proof="' + key + '"]');
+        if (el) el.textContent = text;
+      };
+      fetch('apps/researchlab/data/roots/roots.json')
+        .then((r) => (r.ok ? r.json() : []))
+        .then((roots) => {
+          const count = Array.isArray(roots) ? new Set(roots.map((x) => x.root)).size : 300;
+          setChip('roots', fmt(count) + ' корней');
+        })
+        .catch(() => {});
+      setChip('verses', fmt(23046) + ' стихов');
+      setChip('modules', '67 модулей');
+
+      const glyph = document.querySelector('#glyphMorph');
+      const caption = document.querySelector('#glyphCaption');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      glyph?.addEventListener('click', () => {
+        if (reduceMotion) return;
+        const ox = glyph.classList.toggle('is-ox');
+        glyph.setAttribute('aria-pressed', ox ? 'true' : 'false');
+        glyph.setAttribute('aria-label', ox ? 'Вернуть букву алеф' : 'Показать образ алефа: бык');
+        if (caption) caption.textContent = ox ? 'алеф = бык' : 'алеф';
+      });
+
+      const tabs = Array.from(document.querySelectorAll('.product-tab'));
+      const screens = Array.from(document.querySelectorAll('.product-screen'));
+      tabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+          const id = tab.getAttribute('data-product');
+          tabs.forEach((t) => t.setAttribute('aria-selected', t === tab ? 'true' : 'false'));
+          screens.forEach((screen) => {
+            const on = screen.id === 'screen-' + id;
+            screen.classList.toggle('is-active', on);
+            screen.hidden = !on;
+          });
+        });
+      });
+    })();
+
 
     // ===== БАННЕР ПАЛЕО-КЛУБА =====
     const clubBanner = document.querySelector('#clubBanner');
