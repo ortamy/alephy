@@ -26,8 +26,7 @@ cp "$ROOT_DIR/sitemap.xml" "$BUILD_DIR/"
 cp "$ROOT_DIR/files.json" "$BUILD_DIR/" 2>/dev/null || true
 cp "$ROOT_DIR/site.css" "$BUILD_DIR/"
 
-# 2.1. Копирование css/ (lean-CSS лендинга)
-cp -r "$ROOT_DIR/css" "$BUILD_DIR/css"
+# 2.1. Стили лендинга живут в site.css; каталог css/ больше не копируем.
 
 # 3. Копирование src/js/
 echo "[2/8] Copying js/..."

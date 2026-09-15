@@ -1,3 +1,101 @@
+/* Chrome шапки (бывший lean landing.css). .button остаётся в inline index.html. */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --radius-sm: 6px;
+  --radius-8: 8px;
+  --radius-pill: 999px;
+  --shell-page: 1120px;
+  --ui-11: 11px;
+  --ui-12: 12px;
+  --text-xl: 22px;
+  --border-light: var(--line);
+  --bg-dark: #2c1810;
+  --text-on-dark: #fffaf0;
+  --text-muted-on-dark: #d8c8b0;
+}
+html { scroll-padding-top: 88px; }
+.lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+  padding: 0 var(--space-6, 24px);
+}
+.lab-header .logo {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  text-decoration: none;
+}
+.lab-header nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  flex: 0 0 auto;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--header-ink) 40%, transparent);
+  border-radius: var(--radius-sm, 6px);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background .2s ease, border-color .2s ease, color .2s ease;
+}
+.theme-toggle:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--header-ink);
+}
+.lab-header-mobile-links { display: none; }
+#hero, #map, #mechanics, #club, #tools, #methodology { scroll-margin-top: 88px; }
+@media (max-width: 768px) {
+  .lab-header {
+    flex-wrap: wrap;
+    padding: var(--space-2, 8px) var(--space-3, 12px);
+    gap: var(--space-2, 8px);
+    justify-content: flex-start;
+  }
+  .lab-header nav { display: none; }
+  .lab-header-mobile-links {
+    display: flex;
+    order: 2;
+    margin-left: auto;
+    gap: var(--space-2, 8px);
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .lab-header-mobile-links .mobile-icon-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
+    border: 1px solid color-mix(in srgb, var(--header-ink) 40%, transparent);
+    border-radius: var(--radius-sm, 6px);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease;
+  }
+  .lab-header-mobile-links .mobile-icon-link:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+  }
+}
+
 /* Лендинг: bento-манускрипт. Канон: DESIGN-SYSTEM §4–§5. Волна 1+2. */
 .landing-bento-wrap { padding: var(--space-6, 24px) 0 var(--space-5, 20px); overflow-x: clip; background: var(--paper); }
 .landing-bento {
@@ -18,19 +116,60 @@
 .bento-cell--ink {
   background: var(--bg-dark, var(--chocolate));
   color: var(--text-on-dark, var(--paper));
-  border-color: color-mix(in srgb, var(--gold) 38%, transparent);
+  border: 0;
 }
 .bento-cell--interactive { transition: border-color 150ms ease; }
 .bento-cell--interactive:hover { border-color: var(--gold); }
 .bento-hero { grid-column: 1 / 8; grid-row: 1 / 3; display: flex; flex-direction: column; }
 .bento-glyph { grid-column: 8 / 13; grid-row: 1; display: flex; flex-direction: column; min-height: 220px; }
 .bento-loss { grid-column: 8 / 13; grid-row: 2; }
-.bento-products { grid-column: 1 / 13; grid-row: 3; }
+.bento-products {
+  grid-column: 1 / 13;
+  grid-row: 3;
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  padding: var(--space-5, 20px) max(20px, calc((100vw - 1120px) / 2));
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--border-light, var(--line));
+  border-bottom: 1px solid var(--border-light, var(--line));
+}
 .bento-mech { grid-column: 1 / 9; }
-.bento-quote { grid-column: 9 / 13; }
+.bento-quote {
+  grid-column: 9 / 13;
+  border: 0;
+  background: transparent;
+}
 .bento-loss-full { grid-column: 1 / 13; }
 .bento-persona { grid-column: span 3; display: flex; flex-direction: column; gap: var(--space-2, 8px); }
-.bento-corpus { grid-column: 1 / 13; }
+.bento-corpus {
+  grid-column: 1 / 13;
+  border: 0;
+  background: transparent;
+}
+.bento-hero,
+.bento-club,
+.bento-method { position: relative; isolation: isolate; overflow: hidden; }
+.bento-hero::after,
+.bento-club::after,
+.bento-method::after {
+  position: absolute;
+  right: 6%;
+  bottom: 2%;
+  z-index: 0;
+  pointer-events: none;
+  content: "𐤀";
+  color: currentColor;
+  font-family: var(--serif);
+  font-size: clamp(4.5rem, 10vw, 7rem);
+  line-height: 1;
+  opacity: .08;
+}
+.bento-hero > *,
+.bento-club > *,
+.bento-method > * { position: relative; z-index: 1; }
 .bento-tool-flag { grid-column: 1 / 7; grid-row: span 2; display: flex; flex-direction: column; }
 .bento-tool { grid-column: span 3; }
 .bento-club { grid-column: 1 / 9; }
@@ -176,6 +315,12 @@
   .landing-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento-hero { grid-column: 1 / -1; grid-row: auto; }
   .bento-glyph, .bento-loss { grid-column: auto; grid-row: auto; }
+  .bento-products {
+    width: auto;
+    max-width: none;
+    margin-left: 0;
+    padding: var(--space-4, 16px);
+  }
   .bento-products, .bento-mech, .bento-quote, .bento-loss-full, .bento-corpus,
   .bento-tool-flag, .bento-club, .bento-roadmap, .bento-method { grid-column: 1 / -1; grid-row: auto; }
   .bento-persona, .bento-tool { grid-column: auto; }
@@ -212,7 +357,7 @@
 [data-theme="white"] .bento-cell--ink {
   background: #2c1810;
   color: #fffaf0;
-  border-color: color-mix(in srgb, var(--gold) 38%, transparent);
+  border: 0;
 }
 [data-theme="white"] .bento-cell--ink .club-lead,
 [data-theme="white"] .bento-cell--ink .club-note,
