@@ -198,3 +198,13 @@ test.describe('checkers module cards', () => {
     await context.close();
   });
 });
+
+test.describe('paleo-keyboard keys', () => {
+  test('reload on #paleo-keyboard keeps keys visible', async ({ page }) => {
+    await page.goto('/#paleo-keyboard', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#pk-keys .pk-key')).toHaveCount(22, { timeout: 10_000 });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#pk-keys .pk-key')).toHaveCount(22, { timeout: 10_000 });
+    await expect(page.locator('#pk-keys-count')).toHaveText('22');
+  });
+});

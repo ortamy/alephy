@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Свиток / палео-ивритская буква Алеф как favicon -->
-  <rect width="32" height="32" rx="4" fill="#2c1810"/>
-  <!-- Масляная лампа / свиток -->
-  <path d="M6 26 L6 10 Q16 4 26 10 L26 26 Z" fill="#b8860b" stroke="#faf3e0" stroke-width="0.5"/>
-  <rect x="8" y="8" width="16" height="18" rx="1" fill="#faf3e0" opacity="0.9"/>
-  <!-- Текст на свитке — палео-א -->
-  <text x="16" y="22" font-family="serif" font-size="18" text-anchor="middle" fill="#2c1810" font-weight="bold">א</text>
-  <!-- Пламя -->
-  <path d="M14 4 Q16 0 18 4" fill="#b8860b" opacity="0.8"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85 85" role="img" aria-labelledby="title">
+  <title id="title">Alephy — финикийский алеф 𐤀</title>
+  <style>
+    .glyph { fill: #2c1810; }
+    @media (prefers-color-scheme: dark) {
+      .glyph { fill: #faf3e0; }
+    }
+  </style>
+  <!-- U+10900 𐤀 — линейный финикийский алеф, без фона -->
+  <path class="glyph" fill="#2c1810" d="M 41.03125,8.5625 L 41.03125,24.5 L 5.8125,41.40625 L 41.03125,59.125 L 41.03125,76.4375 L 48.96875,76.4375 L 48.96875,63.125 L 75.09375,76.25 L 79.1875,69.28125 L 48.96875,54.21875 L 48.96875,29.875 L 77.9375,16.0625 L 74.1875,8.5625 L 48.96875,20.6875 L 48.96875,8.5625 L 41.03125,8.5625 z M 41.03125,33.65625 L 41.03125,50.25 L 24.03125,41.78125 L 41.03125,33.65625 z"/>
 </svg>

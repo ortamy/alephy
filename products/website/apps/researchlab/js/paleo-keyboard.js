@@ -1,15 +1,15 @@
-﻿/**
- * paleo-keyboard.js вЂ” В«РџР°Р»РµРѕ-РєР»Р°РІРёР°С‚СѓСЂР°В» v4 (РґРёР·Р°Р№РЅ-СЏР·С‹Рє В«РџР°Р»РµРѕ-РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂР°В»)
+/**
+ * paleo-keyboard.js — «Палео-клавиатура» v4 (дизайн-язык «Палео-конструктора»)
  *
- * РџРёСЃСЊРјРµРЅРЅРѕСЃС‚Рё Р±РµСЂСѓС‚СЃСЏ РёР· data/paleo-linguistics/evolution.json:
- *   paleo_hebrew, phoenician, imperial_aramaic вЂ” 22 РіР»РёС„Р° РЅР° РЅР°Р±РѕСЂ;
- *   proto_canaanite вЂ” РІ РґР°РЅРЅС‹С… С‚РѕР»СЊРєРѕ РѕРїРёСЃР°РЅРёСЏ (glyph: null) в†’ С‡РёРї disabled В«РіРѕС‚РѕРІРёС‚СЃСЏВ»;
- *   square вЂ” РЅР°Р±РѕСЂР° РІ РґР°РЅРЅС‹С… РЅРµС‚ в†’ С‡РёРї disabled В«РіРѕС‚РѕРІРёС‚СЃСЏВ».
- * Р’СЃС‚Р°РІРєР° РёРґС‘С‚ РІ РїРѕР·РёС†РёСЋ РєСѓСЂСЃРѕСЂР°, РїРѕРґ СЃС‚СЂРѕРєРѕР№ СЃС‡РёС‚Р°РµС‚СЃСЏ С‚СЂР°РЅСЃР»РёС‚РµСЂР°С†РёСЏ,
- * С‚СѓРјР±Р»РµСЂ В«Р¤РёР·РёС‡РµСЃРєР°СЏ РєР»Р°РІРёР°С‚СѓСЂР°В» РјР°РїРїРёС‚ Р»Р°С‚РёРЅСЃРєРёРµ РєР»Р°РІРёС€Рё РЅР° РіР»РёС„С‹ Р°РєС‚РёРІРЅРѕР№ РїРёСЃСЊРјРµРЅРЅРѕСЃС‚Рё,
- * Backspace/Delete СѓРґР°Р»СЏСЋС‚ РіР»РёС„ РєР°Рє РµРґРёРЅРёС†Сѓ (РіР»РёС„С‹ РёРјРїРµСЂСЃРєРѕРіРѕ Р°СЂР°РјРµР№СЃРєРѕРіРѕ вЂ” СЃСѓСЂСЂРѕРіР°С‚РЅР°СЏ РїР°СЂР°),
- * РёСЃС‚РѕСЂРёСЏ С…СЂР°РЅРёС‚ 5 РїРѕСЃР»РµРґРЅРёС… СЃС‚СЂРѕРє.
- * РћС„Р»Р°Р№РЅ-fallback: СЃРЅРёРјРѕРє РЅР°Р±РѕСЂРѕРІ РІ localStorage, РїСЂРё РµРіРѕ РѕС‚СЃСѓС‚СЃС‚РІРёРё вЂ” degraded-state СЃ В«РџРѕРІС‚РѕСЂРёС‚СЊВ».
+ * Письменности берутся из data/paleo-linguistics/evolution.json:
+ *   paleo_hebrew, phoenician, imperial_aramaic — 22 глифа на набор;
+ *   proto_canaanite — в данных только описания (glyph: null) → чип disabled «готовится»;
+ *   square — набора в данных нет → чип disabled «готовится».
+ * Вставка идёт в позицию курсора, под строкой считается транслитерация,
+ * тумблер «Физическая клавиатура» маппит латинские клавиши на глифы активной письменности,
+ * Backspace/Delete удаляют глиф как единицу (глифы имперского арамейского — суррогатная пара),
+ * история хранит 5 последних строк.
+ * Офлайн-fallback: снимок наборов в localStorage, при его отсутствии — degraded-state с «Повторить».
  */
 
 const PaleoKey = (function() {
@@ -19,77 +19,127 @@ const PaleoKey = (function() {
   var CACHE_KEY = 'alephy_pk_letters';
   var WRITING_KEY = 'alephy_pk_writing';
   var PHYSICAL_KEY = 'alephy_pk_physical';
-  var HISTORY_KEY = 'alephy_pk_history';
+  var HISTORY_KEY = 'alephy_pk_history_v2';
+  var HISTORY_KEY_LEGACY = 'alephy_pk_history';
   var HISTORY_LIMIT = 5;
 
-  /* РќР°Р±РѕСЂС‹ РїРёСЃСЊРјРµРЅРЅРѕСЃС‚РµР№ РІ РїРѕСЂСЏРґРєРµ РґР°РЅРЅС‹С…. */
+  /* Наборы письменностей в порядке данных. */
   var WRITINGS = [
-    { key: 'proto_canaanite', label: 'РџСЂРѕС‚Рѕ-С…Р°РЅР°Р°РЅ' },
-    { key: 'paleo_hebrew', label: 'РџР°Р»РµРѕ-РёРІСЂРёС‚' },
-    { key: 'phoenician', label: 'Р¤РёРЅРёРєРёР№СЃРєРёР№' },
-    { key: 'imperial_aramaic', label: 'РРјРїРµСЂСЃРєРёР№ Р°СЂР°РјРµР№СЃРєРёР№' },
-    { key: 'square', label: 'РљРІР°РґСЂР°С‚РЅС‹Р№' }
+    { key: 'proto_canaanite', label: 'Прото-ханаанейское' },
+    { key: 'paleo_hebrew', label: 'Палео-еврейское' },
+    { key: 'phoenician', label: 'Финикийское' },
+    { key: 'imperial_aramaic', label: 'Имперское арамейское' },
+    { key: 'square', label: 'Квадратное' }
   ];
   var DEFAULT_WRITING = 'paleo_hebrew';
 
-  /* Р›Р°С‚РёРЅСЃРєРёРµ РєР»Р°РІРёС€Рё С„РёР·РёС‡РµСЃРєРѕР№ РєР»Р°РІРёР°С‚СѓСЂС‹: РѕРґРЅР° РєР»Р°РІРёС€Р° РЅР° Р±СѓРєРІСѓ (Р°Р»РµС„ в†’ С‚Р°РІ). */
+  /* Латинские клавиши физической клавиатуры: одна клавиша на букву (алеф → тав). */
   var PHYSICAL_KEYS = ['A', 'B', 'G', 'D', 'H', 'V', 'Z', 'X', 'T', 'Y', 'K',
     'L', 'M', 'N', 'S', 'E', 'P', 'C', 'Q', 'R', 'W', 'J'];
   var KEY_INDEX = {};
   PHYSICAL_KEYS.forEach(function(key, idx) { KEY_INDEX[key] = idx; });
 
   var letters = [];        // [{ id, name, sound, meaning, glyphs: { writing: glyph } }]
-  var glyphIndex = {};     // glyph в†’ letter (РґР»СЏ С‚СЂР°РЅСЃР»РёС‚РµСЂР°С†РёРё РІСЃРµР№ СЃС‚СЂРѕРєРё)
+  var glyphIndex = {};     // glyph → letter (для транслитерации всей строки)
   var writing = DEFAULT_WRITING;
   var physical = true;
   var activeIdx = -1;
   var activeField = null;
   var keyboardListenerAttached = false;
+  var loadState = 'idle';  // idle | loading | ready | error
+  var loadToken = 0;
+  var initToken = 0;
 
-  /* ===== РРќРР¦РРђР›РР—РђР¦РРЇ ===== */
+  /* ===== ИНИЦИАЛИЗАЦИЯ ===== */
 
+  /* Вызывается page-controller'ом после рендера #paleo-keyboard.
+     Идемпотентно: повторный вход перепривязывает DOM, не дублирует клавиши. */
   function init() {
-    var output = document.getElementById('pk-output');
-    if (!output) return;
+    var token = ++initToken;
+    ensureReady(token, 0);
+  }
 
+  function ensureReady(token, attempt) {
+    if (token !== initToken) return;
+    var output = document.getElementById('pk-output');
+    if (output) {
+      bindShell();
+      if (loadState === 'ready' && letters.length) {
+        renderWritings();
+        renderKeys();
+        afterTextChange();
+        return;
+      }
+      loadLetters();
+      return;
+    }
+    if (attempt >= 20) return;
+    window.setTimeout(function() { ensureReady(token, attempt + 1); }, 50);
+  }
+
+  function bindShell() {
     writing = readValue(WRITING_KEY) || DEFAULT_WRITING;
     physical = readValue(PHYSICAL_KEY) !== 'off';
+    migrateHistory();
     syncPhysical();
-
     attachListeners();
     renderHistory();
+    afterTextChange();
+  }
+
+  /* ===== ДАННЫЕ ПИСЬМЕННОСТЕЙ ===== */
+
+  function loadLetters() {
+    var token = ++loadToken;
+    loadState = 'loading';
     renderWritings();
     renderKeys();
-    afterTextChange();
 
-    loadLetters().then(function() {
+    return fetch(DATA_URL, { cache: 'no-cache' }).then(function(response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    }).then(function(rows) {
+      if (token !== loadToken) return;
+      var next = normalize(rows);
+      if (!next.length) throw new Error('Пустой набор письменностей');
+      letters = next;
+      indexGlyphs();
+      writeValue(CACHE_KEY, JSON.stringify(letters));
+      loadState = 'ready';
       writing = pickWriting(writing);
+      renderWritings();
+      renderKeys();
+      afterTextChange();
+    }).catch(function() {
+      if (token !== loadToken) return;
+      var cached = readCachedLetters();
+      if (cached.length) {
+        letters = cached;
+        indexGlyphs();
+        loadState = 'ready';
+        writing = pickWriting(writing);
+      } else {
+        letters = [];
+        glyphIndex = {};
+        loadState = 'error';
+      }
       renderWritings();
       renderKeys();
       afterTextChange();
     });
   }
 
-  /* ===== Р”РђРќРќР«Р• РџРРЎР¬РњР•РќРќРћРЎРўР•Р™ ===== */
-
-  function loadLetters() {
-    return fetch(DATA_URL, { cache: 'no-cache' }).then(function(response) {
-      if (!response.ok) throw new Error('HTTP ' + response.status);
-      return response.json();
-    }).then(function(rows) {
-      letters = normalize(rows);
-      if (!letters.length) throw new Error('РџСѓСЃС‚РѕР№ РЅР°Р±РѕСЂ РїРёСЃСЊРјРµРЅРЅРѕСЃС‚РµР№');
-      indexGlyphs();
-      writeValue(CACHE_KEY, JSON.stringify(letters));
-    }).catch(function() {
-      /* РћС„Р»Р°Р№РЅ: СЂР°Р±РѕС‚Р°РµРј РЅР° СЃРЅРёРјРєРµ РёР· localStorage, РёРЅР°С‡Рµ РїРѕРєР°Р·С‹РІР°РµРј degraded-state. */
-      var cached = readValue(CACHE_KEY);
-      letters = [];
-      if (cached) {
-        try { letters = JSON.parse(cached) || []; } catch (error) { letters = []; }
-      }
-      indexGlyphs();
-    });
+  function readCachedLetters() {
+    var cached = readValue(CACHE_KEY);
+    if (!cached) return [];
+    try {
+      var parsed = JSON.parse(cached);
+      return Array.isArray(parsed) ? parsed.filter(function(row) {
+        return row && row.id && row.glyphs && typeof row.glyphs === 'object';
+      }) : [];
+    } catch (error) {
+      return [];
+    }
   }
 
   function normalize(rows) {
@@ -139,7 +189,7 @@ const PaleoKey = (function() {
     return item ? item.label : key;
   }
 
-  /* ===== Р Р•РќР”Р•Р : Р§РРџР« РџРРЎР¬РњР•РќРќРћРЎРўР•Р™ ===== */
+  /* ===== РЕНДЕР: ЧИПЫ ПИСЬМЕННОСТЕЙ ===== */
 
   function renderWritings() {
     var box = document.getElementById('pk-writings');
@@ -151,9 +201,9 @@ const PaleoKey = (function() {
         ' role="radio" data-writing="' + item.key + '"' +
         ' aria-checked="' + (item.key === writing ? 'true' : 'false') + '"' +
         (available ? '' : ' disabled') +
-        ' aria-label="РџРёСЃСЊРјРµРЅРЅРѕСЃС‚СЊ: ' + item.label + (available ? '' : ', РЅР°Р±РѕСЂ РіРѕС‚РѕРІРёС‚СЃСЏ') + '">' +
+        ' aria-label="Письменность: ' + item.label + (available ? '' : ', набор готовится') + '">' +
         '<span class="pk-writing-label">' + item.label + '</span>' +
-        (available ? '' : '<span class="pk-writing-note">РіРѕС‚РѕРІРёС‚СЃСЏ</span>') +
+        (available ? '' : '<span class="pk-writing-note">готовится</span>') +
         '</button>';
     });
     box.innerHTML = html;
@@ -173,7 +223,7 @@ const PaleoKey = (function() {
     hideInfo();
   }
 
-  /* ===== Р Р•РќР”Р•Р : РЎР•РўРљРђ РљР›РђР’РРЁ ===== */
+  /* ===== РЕНДЕР: СЕТКА КЛАВИШ ===== */
 
   function activeEntries() {
     var entries = [];
@@ -187,14 +237,21 @@ const PaleoKey = (function() {
   function renderKeys() {
     var container = document.getElementById('pk-keys');
     if (!container) return;
-    var entries = activeEntries();
-    setBadge('pk-keys-count', entries.length);
+    var entries = loadState === 'ready' ? activeEntries() : [];
+    setBadge('pk-keys-count', loadState === 'error' ? '—' : entries.length);
 
-    if (!entries.length) {
-      container.innerHTML = '<div class="pk-keys-empty"><span class="pk-empty-glyph" aria-hidden="true">рђ¤•</span>' +
-        '<strong>РќР°Р±РѕСЂ РїРёСЃСЊРјРµРЅРЅРѕСЃС‚РµР№ РЅРµРґРѕСЃС‚СѓРїРµРЅ</strong>' +
-        '<span>РџСЂРѕРІРµСЂСЊС‚Рµ СЃРѕРµРґРёРЅРµРЅРёРµ Рё РїРѕРІС‚РѕСЂРёС‚Рµ Р·Р°РіСЂСѓР·РєСѓ.</span>' +
-        '<button type="button" class="lab-btn lab-btn-secondary pk-retry" onclick="PaleoKey.reload()">РџРѕРІС‚РѕСЂРёС‚СЊ</button></div>';
+    if (loadState === 'loading') {
+      container.innerHTML = '<div class="pk-keys-empty"><span class="pk-empty-glyph" aria-hidden="true">𐤕</span>' +
+        '<strong>Загрузка наборов…</strong></div>';
+      activeIdx = -1;
+      return;
+    }
+
+    if (loadState === 'error' || !entries.length) {
+      container.innerHTML = '<div class="pk-keys-empty"><span class="pk-empty-glyph" aria-hidden="true">𐤕</span>' +
+        '<strong>Данные не загрузились</strong>' +
+        '<span>Проверьте соединение и повторите загрузку.</span>' +
+        '<button type="button" class="lab-btn lab-btn-secondary pk-retry" onclick="PaleoKey.reload()">Повторить</button></div>';
       activeIdx = -1;
       return;
     }
@@ -204,7 +261,7 @@ const PaleoKey = (function() {
       var key = PHYSICAL_KEYS[entry.idx] || '';
       html += '<button type="button" class="pk-key" id="pk-key-' + entry.idx + '"' +
         ' data-index="' + entry.idx + '"' +
-        ' aria-label="Р’СЃС‚Р°РІРёС‚СЊ ' + entry.letter.name + ' (' + entry.glyph + ')">' +
+        ' aria-label="Вставить ' + entry.letter.name + ' (' + entry.glyph + ')">' +
         '<span class="pk-key-symbol" data-fallback="' + key + '">' + entry.glyph + '</span>' +
         (key ? '<span class="pk-key-hint">' + key + '</span>' : '') +
         '</button>';
@@ -221,7 +278,7 @@ const PaleoKey = (function() {
     if (activeIdx >= 0 && !document.getElementById('pk-key-' + activeIdx)) activeIdx = -1;
   }
 
-  /* ===== РљРђР РўРћР§РљРђ Р‘РЈРљР’Р« ===== */
+  /* ===== КАРТОЧКА БУКВЫ ===== */
 
   function showInfo(idx) {
     var letter = letters[idx];
@@ -237,8 +294,8 @@ const PaleoKey = (function() {
     }
     if (bodyEl) {
       bodyEl.innerHTML =
-        '<p class="pk-info-row"><strong>РћР±СЂР°Р· Рё Р·РЅР°С‡РµРЅРёРµ:</strong> ' + letter.meaning + '</p>' +
-        '<p class="pk-info-row"><strong>РџРёСЃСЊРјРµРЅРЅРѕСЃС‚СЊ:</strong> ' + writingLabel(writing) + '</p>';
+        '<p class="pk-info-row"><strong>Образ и значение:</strong> ' + letter.meaning + '</p>' +
+        '<p class="pk-info-row"><strong>Письменность:</strong> ' + writingLabel(writing) + '</p>';
     }
     if (infoEl) infoEl.hidden = false;
   }
@@ -248,7 +305,7 @@ const PaleoKey = (function() {
     if (infoEl) infoEl.hidden = true;
   }
 
-  /* ===== РўРЈРњР‘Р›Р•Р  Р¤РР—РР§Р•РЎРљРћР™ РљР›РђР’РРђРўРЈР Р« ===== */
+  /* ===== ТУМБЛЕР ФИЗИЧЕСКОЙ КЛАВИАТУРЫ ===== */
 
   function setPhysical(on) {
     physical = Boolean(on);
@@ -263,7 +320,7 @@ const PaleoKey = (function() {
     if (keys) keys.setAttribute('data-physical', physical ? 'on' : 'off');
   }
 
-  /* ===== РџРћР›Р• РЎРўР РћРљР Р РЎР§РЃРўР§РРљР ===== */
+  /* ===== ПОЛЕ СТРОКИ И СЧЁТЧИКИ ===== */
 
   function isTextField(element) {
     if (!element || element.disabled || element.readOnly) return false;
@@ -295,7 +352,7 @@ const PaleoKey = (function() {
     return Array.from ? Array.from(text).length : text.length;
   }
 
-  /* РЎС‡С‘С‚С‡РёРє Р·РЅР°РєРѕРІ, empty-state СЃС‚СЂРѕРєРё Рё С‚СЂР°РЅСЃР»РёС‚РµСЂР°С†РёСЏ вЂ” РїРѕСЃР»Рµ Р»СЋР±РѕРіРѕ РёР·РјРµРЅРµРЅРёСЏ С‚РµРєСЃС‚Р°. */
+  /* Счётчик знаков, empty-state строки и транслитерация — после любого изменения текста. */
   function afterTextChange() {
     var output = getOutput();
     var text = output ? getText(output) : '';
@@ -305,7 +362,7 @@ const PaleoKey = (function() {
     renderTranslit(text);
   }
 
-  /* РўСЂР°РЅСЃР»РёС‚РµСЂР°С†РёСЏ: РіР»РёС„ в†’ В«РРјСЏ [Р·РІСѓРє]В», С‡РµСЂРµР· В« В· В», Р»Р°С‚РёРЅРёС†Р° СЃР»РµРІР° РЅР°РїСЂР°РІРѕ. */
+  /* Транслитерация: глиф → «Имя [звук]», через « · », латиница слева направо. */
   function renderTranslit(text) {
     var el = document.getElementById('pk-translit');
     var chars = Array.from ? Array.from(text) : text.split('');
@@ -321,18 +378,18 @@ const PaleoKey = (function() {
       el.hidden = true;
       return;
     }
-    el.textContent = parts.join(' В· ');
+    el.textContent = parts.join(' · ');
     el.hidden = false;
   }
 
-  /* ===== Р’РЎРўРђР’РљРђ Р“Р›РР¤Рђ Р’ РџРћР—РР¦РР® РљРЈР РЎРћР Рђ ===== */
+  /* ===== ВСТАВКА ГЛИФА В ПОЗИЦИЮ КУРСОРА ===== */
 
   function selectLetter(idx) {
     if (idx < 0 || idx >= letters.length) return;
     var letter = letters[idx];
     var glyph = letter.glyphs[writing];
     if (!glyph) {
-      showToast('РќР°Р±РѕСЂ В«' + writingLabel(writing) + 'В» РіРѕС‚РѕРІРёС‚СЃСЏ');
+      showToast('Набор «' + writingLabel(writing) + '» готовится');
       return;
     }
     var output = getOutput();
@@ -344,7 +401,7 @@ const PaleoKey = (function() {
       if (output.selectionStart != null) {
         try {
           output.selectionStart = output.selectionEnd = start + glyph.length;
-        } catch (error) { /* РїРѕР»Рµ Р±РµР· РїРѕРґРґРµСЂР¶РєРё РІС‹РґРµР»РµРЅРёСЏ */ }
+        } catch (error) { /* поле без поддержки выделения */ }
       }
       output.focus();
     }
@@ -382,7 +439,7 @@ const PaleoKey = (function() {
     var output = getOutput();
     var text = getText(output);
     if (!text) {
-      showToast('РќРµС‡РµРіРѕ РєРѕРїРёСЂРѕРІР°С‚СЊ');
+      showToast('Нечего копировать');
       return;
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -401,27 +458,58 @@ const PaleoKey = (function() {
 
     function onCopied(value) {
       pushHistory(value);
-      showToast('РЎРєРѕРїРёСЂРѕРІР°РЅРѕ');
+      showToast('Скопировано');
     }
   }
 
-  /* ===== РРЎРўРћР РРЇ: 5 РџРћРЎР›Р•Р”РќРРҐ РЎРўР РћРљ ===== */
+  /* ===== ИСТОРИЯ: 5 ПОСЛЕДНИХ СТРОК ===== */
 
-  function readHistory() {
-    var raw = readValue(HISTORY_KEY);
+  /* UTF-8, прочитанный как CP1251: «П»→«Рџ», «Н»→«Рќ», «т»→«С‚». */
+  var MOJIBAKE_RE = /Рџ|Рќ|С‚|вЂ|В«|В»|\u0098/;
+
+  function isMojibake(value) {
+    return MOJIBAKE_RE.test(String(value));
+  }
+
+  function parseHistory(raw) {
     if (!raw) return [];
     try {
       var list = JSON.parse(raw);
       if (!Array.isArray(list)) return [];
-      return list.filter(function(item) { return typeof item === 'string'; }).slice(0, HISTORY_LIMIT);
+      return list.filter(function(item) { return typeof item === 'string' && item; });
     } catch (error) {
       return [];
     }
   }
 
+  function migrateHistory() {
+    var current = parseHistory(readValue(HISTORY_KEY)).filter(function(item) {
+      return !isMojibake(item);
+    });
+    var legacy = parseHistory(readValue(HISTORY_KEY_LEGACY)).filter(function(item) {
+      return !isMojibake(item);
+    });
+    var merged = current.slice();
+    legacy.forEach(function(item) {
+      if (merged.indexOf(item) === -1) merged.push(item);
+    });
+    merged = merged.slice(0, HISTORY_LIMIT);
+    if (merged.length) writeValue(HISTORY_KEY, JSON.stringify(merged));
+    else {
+      try { window.localStorage.removeItem(HISTORY_KEY); } catch (error) { /* нет доступа */ }
+    }
+    try { window.localStorage.removeItem(HISTORY_KEY_LEGACY); } catch (error) { /* нет доступа */ }
+  }
+
+  function readHistory() {
+    return parseHistory(readValue(HISTORY_KEY))
+      .filter(function(item) { return !isMojibake(item); })
+      .slice(0, HISTORY_LIMIT);
+  }
+
   function pushHistory(text) {
     var value = String(text || '').trim();
-    if (!value) return;
+    if (!value || isMojibake(value)) return;
     var list = readHistory().filter(function(item) { return item !== value; });
     list.unshift(value);
     writeValue(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_LIMIT)));
@@ -432,11 +520,11 @@ const PaleoKey = (function() {
     var output = getOutput();
     var text = output ? getText(output).trim() : '';
     if (!text) {
-      showToast('РЎС‚СЂРѕРєР° РїСѓСЃС‚Р°');
+      showToast('Строка пуста');
       return;
     }
     pushHistory(text);
-    showToast('РЎС‚СЂРѕРєР° СЃРѕС…СЂР°РЅРµРЅР° РІ РёСЃС‚РѕСЂРёРё');
+    showToast('Строка сохранена в истории');
   }
 
   function renderHistory() {
@@ -445,13 +533,13 @@ const PaleoKey = (function() {
     var list = readHistory();
     setBadge('pk-history-count', list.length);
     if (!list.length) {
-      box.innerHTML = '<p class="pk-history-empty">РќР°Р±РµСЂРёС‚Рµ СЃС‚СЂРѕРєСѓ Рё РЅР°Р¶РјРёС‚Рµ Enter вЂ” РѕРЅР° РѕСЃС‚Р°РЅРµС‚СЃСЏ Р·РґРµСЃСЊ.</p>';
+      box.innerHTML = '<p class="pk-history-empty">Наберите строку и нажмите Enter — она останется здесь.</p>';
       return;
     }
     var html = '';
     list.forEach(function(item, idx) {
       html += '<button type="button" class="pk-history-chip" data-history="' + idx + '" dir="rtl"' +
-        ' title="' + escapeHtml(item) + '" aria-label="Р’РµСЂРЅСѓС‚СЊ СЃС‚СЂРѕРєСѓ РІ РІРІРѕРґ">' +
+        ' title="' + escapeHtml(item) + '" aria-label="Вернуть строку в ввод">' +
         '<span class="pk-history-chip-text" data-fallback="' + escapeHtml(item) + '">' +
         escapeHtml(item) + '</span></button>';
     });
@@ -471,7 +559,7 @@ const PaleoKey = (function() {
     setText(output, value);
     try {
       output.selectionStart = output.selectionEnd = value.length;
-    } catch (error) { /* РїРѕР»Рµ Р±РµР· РїРѕРґРґРµСЂР¶РєРё РІС‹РґРµР»РµРЅРёСЏ */ }
+    } catch (error) { /* поле без поддержки выделения */ }
     output.focus();
     afterTextChange();
   }
@@ -485,7 +573,7 @@ const PaleoKey = (function() {
       .replace(/'/g, '&#39;');
   }
 
-  /* ===== РЎРћР‘Р«РўРРЇ ===== */
+  /* ===== СОБЫТИЯ ===== */
 
   function attachListeners() {
     var output = document.getElementById('pk-output');
@@ -506,7 +594,7 @@ const PaleoKey = (function() {
     document.addEventListener('keydown', onDocumentKeydown);
   }
 
-  /* Р¤РёР·РёС‡РµСЃРєР°СЏ РєР»Р°РІРёР°С‚СѓСЂР°: Р»Р°С‚РёРЅСЃРєР°СЏ РєР»Р°РІРёС€Р° РІСЃС‚Р°РІР»СЏРµС‚ РіР»РёС„ Р°РєС‚РёРІРЅРѕР№ РїРёСЃСЊРјРµРЅРЅРѕСЃС‚Рё. */
+  /* Физическая клавиатура: латинская клавиша вставляет глиф активной письменности. */
   function onDocumentKeydown(event) {
     if (!physical || event.ctrlKey || event.metaKey || event.altKey) return;
     var module = document.getElementById('paleo-keyboard');
@@ -520,7 +608,7 @@ const PaleoKey = (function() {
     selectLetter(idx);
   }
 
-  /* Enter СЃРѕС…СЂР°РЅСЏРµС‚ СЃС‚СЂРѕРєСѓ РІ РёСЃС‚РѕСЂРёСЋ; Backspace/Delete СѓРґР°Р»СЏСЋС‚ РіР»РёС„ РєР°Рє РµРґРёРЅРёС†Сѓ (SMP = 2 РєРѕРґР° UTF-16). */
+  /* Enter сохраняет строку в историю; Backspace/Delete удаляют глиф как единицу (SMP = 2 кода UTF-16). */
   function onFieldKeydown(event) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
@@ -532,14 +620,14 @@ const PaleoKey = (function() {
     if (field.value == null || field.selectionStart == null) return;
     var start = field.selectionStart;
     var end = field.selectionEnd;
-    if (start !== end) return; /* РІС‹РґРµР»РµРЅРёРµ СѓРґР°Р»СЏРµС‚ Р±СЂР°СѓР·РµСЂ СЃР°Рј */
+    if (start !== end) return; /* выделение удаляет браузер сам */
     var text = field.value;
     var caret = start;
 
     if (event.key === 'Backspace') {
       if (start === 0) return;
       event.preventDefault();
-      /* Р РµР¶РµРј РїРѕ РєРѕРґРѕРІС‹Рј С‚РѕС‡РєР°Рј: РіР»РёС„С‹ РёРјРїРµСЂСЃРєРѕРіРѕ Р°СЂР°РјРµР№СЃРєРѕРіРѕ вЂ” СЃСѓСЂСЂРѕРіР°С‚РЅР°СЏ РїР°СЂР°. */
+      /* Режем по кодовым точкам: глифы имперского арамейского — суррогатная пара. */
       var head = Array.from(text.slice(0, start));
       head.pop();
       var headText = head.join('');
@@ -558,13 +646,13 @@ const PaleoKey = (function() {
     field.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  /* ===== Р’РќР•РЁРќРР• Р”Р•Р™РЎРўР’РРЇ РњРћР”РЈР›РЇ ===== */
+  /* ===== ВНЕШНИЕ ДЕЙСТВИЯ МОДУЛЯ ===== */
 
   function analyzeInEtymology() {
     var output = getOutput();
     var text = getText(output).trim();
     if (!text) {
-      showToast('Р’РІРµРґРё СЃР»РѕРІРѕ РґР»СЏ СЂР°Р·Р±РѕСЂР°');
+      showToast('Введи слово для разбора');
       return;
     }
     pushHistory(text);
@@ -580,7 +668,7 @@ const PaleoKey = (function() {
     var output = getOutput();
     var text = getText(output).trim();
     if (!text) {
-      showToast('Р’РІРµРґРё СЃР»РѕРІРѕ РґР»СЏ СЃРєР°С‡РёРІР°РЅРёСЏ');
+      showToast('Введи слово для скачивания');
       return;
     }
     var fontSize = 80;
@@ -604,7 +692,7 @@ const PaleoKey = (function() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast('PNG СЃРєР°С‡Р°РЅ');
+    showToast('PNG скачан');
   }
 
   function showToast(message) {
@@ -625,7 +713,7 @@ const PaleoKey = (function() {
     }, 2000);
   }
 
-  /* ===== РҐР РђРќРР›РР©Р• Р РЎР§РЃРўР§РРљР ===== */
+  /* ===== ХРАНИЛИЩЕ И СЧЁТЧИКИ ===== */
 
   function readValue(key) {
     try {
@@ -638,7 +726,7 @@ const PaleoKey = (function() {
   function writeValue(key, value) {
     try {
       window.localStorage.setItem(key, value);
-    } catch (error) { /* РїСЂРёРІР°С‚РЅС‹Р№ СЂРµР¶РёРј вЂ” СЂР°Р±РѕС‚Р°РµРј Р±РµР· СЃРѕС…СЂР°РЅРµРЅРёСЏ */ }
+    } catch (error) { /* приватный режим — работаем без сохранения */ }
   }
 
   function setBadge(id, value) {
@@ -646,18 +734,9 @@ const PaleoKey = (function() {
     if (el) el.textContent = String(value);
   }
 
-  /* РџРѕРІС‚РѕСЂРЅР°СЏ Р·Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂРѕРІ РїРѕСЃР»Рµ СЃРµС‚РµРІРѕР№ РѕС€РёР±РєРё. */
+  /* Повторная загрузка наборов после сетевой ошибки. */
   function reload() {
-    var container = document.getElementById('pk-keys');
-    if (container) {
-      container.innerHTML = '<div class="pk-keys-empty"><strong>Р—Р°РіСЂСѓР·РєР° РЅР°Р±РѕСЂРѕРІвЂ¦</strong></div>';
-    }
-    loadLetters().then(function() {
-      writing = pickWriting(writing);
-      renderWritings();
-      renderKeys();
-      afterTextChange();
-    });
+    loadLetters();
   }
 
   return {

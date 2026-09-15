@@ -1689,7 +1689,7 @@ const PageController = (function() {
         break;
 
       case 'paleo-keyboard':
-        container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-ивритская клавиатура</h1>' +
+        container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-клавиатура</h1>' +
           '<p class="subtitle">Нажимайте на буквы, чтобы вставить их. Каждая буква — с образом и значением.</p>' +
           '<textarea id="pk-output" class="lab-card pk-output" aria-label="Поле палео-текста" placeholder="Введите палео-символы…"></textarea>' +
           '<div class="flex gap-8 mb-16 pk-actions"><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.copy()"><i data-lucide="copy" aria-hidden="true"></i> Копировать</button><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.clear()"><i data-lucide="trash-2" aria-hidden="true"></i> Очистить</button></div>' +

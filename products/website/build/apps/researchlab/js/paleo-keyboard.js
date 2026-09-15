@@ -1,5 +1,5 @@
 /**
- * paleo-keyboard.js — Палео-ивритская клавиатура v3
+ * paleo-keyboard.js — Палео-клавиатура v3
  * Features: keyboard shortcuts, click=info+insert, etymology link, textarea, PNG export
  */
 

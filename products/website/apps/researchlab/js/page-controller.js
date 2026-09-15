@@ -1310,6 +1310,7 @@ const PageController = (function() {
         window.ClubModule._setCardId(parsed && parsed.segments && parsed.segments[1] && parsed.segments[1] !== 'discussions' && parsed.segments[1] !== 'create' && parsed.segments[1] !== 'sessions' ? parsed.segments[1] : null);
         window.ClubModule.render(container.querySelector('#club-app') || container, parsed);
       }
+      if (moduleId === 'paleo-keyboard' && window.PaleoKey) PaleoKey.init();
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -1696,7 +1697,7 @@ const PageController = (function() {
         break;
 
       case 'paleo-keyboard':
-        container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-ивритская клавиатура</h1>' +
+        container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-клавиатура</h1>' +
           '<p class="subtitle">Набирайте палео-знаки кликом или с физической клавиатуры. Каждая буква — с образом и значением.</p>' +
           '<div class="pk-layout">' +
           '<section class="pk-panel pk-panel-text" aria-labelledby="pk-text-title">' +
@@ -1724,6 +1725,7 @@ const PageController = (function() {
           '</section>' +
           '</div>';
         container.dataset.loaded = '1';
+        if (window.PaleoKey) PaleoKey.init();
         break;
 
       case 'admin-settings':
@@ -2154,7 +2156,6 @@ const PageController = (function() {
     if (window.BoardLib) BoardLib.init();
     if (window.VisionUI) VisionUI.init();
     if (window.EdChat) EdChat.init();
-    if (window.PaleoKey) PaleoKey.init();
     if (window.LabIcons) window.LabIcons.sync();
     if (window.Investigation) Investigation.init();
     if (window.ScriptureReader) ScriptureReader.init();

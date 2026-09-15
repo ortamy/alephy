@@ -342,6 +342,10 @@
   line-height: 1;
 }
 
+#paleo-keyboard .pk-retry {
+  margin-top: var(--space-2);
+}
+
 /* ===== ИСТОРИЯ: 5 последних строк чипами; клик возвращает строку в ввод ===== */
 #paleo-keyboard .pk-history {
   display: flex;
