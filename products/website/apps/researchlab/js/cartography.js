@@ -41,14 +41,14 @@ const Cartography = (function() {
   let genderMapMarkup = '';
 
   const MAP_THEMES = [
-    { id: 'near-east', title: 'Ближний Восток', description: 'Узлы Леванта, Египта и Месопотамии: среда ранних потоков и сдвигов.', mark: '𐤀' },
-    { id: 'europe', title: 'Европа', description: 'Континентальная карта состояний, границ и исторических переходов.', mark: '𐤄' },
-    { id: 'empires', title: 'Империи', description: 'Крупные державы как пространственные конструкции и зоны влияния.', mark: '𐤌' },
-    { id: 'ancient-routes', title: 'Древние маршруты', description: 'Регионы, города и коридоры, через которые двигался Давар.', mark: '𐤃' },
-    { id: 'modern-states', title: 'Современные государства', description: 'Глобальный слой диагностики по матрице состояний стран.', mark: '𐤔' },
-    { id: 'state-matrix', title: 'Матрица состояний', description: 'Поле Хошех и Ор: сравнение доминирующих состояний на одной карте.', mark: '𐤏' },
-    { id: 'gender-images', title: 'Эшет хаиль и Иш хаиль', topic: 'Карта сохранённых образов', description: 'В каких культурах женщина-строитель (эшет хаиль) и мужчина-созидатель (иш хаиль) сохранили свою палео-функцию? Греко-римский слой vs естественная среда', mark: '𐤀' },
-    { id: 'obelisks', title: 'Обелиски', topic: 'Карта городских доминант', description: 'Страны и города, где стоят крупные обелиски — вертикальные знаки, собранные в один исследовательский слой.', mark: '𐤋' }
+    { id: 'near-east', kind: 'theme', visual: 'silhouette-east', title: 'Ближний Восток', description: 'Узлы Леванта, Египта и Месопотамии: среда ранних потоков и сдвигов.', mark: '𐤀' },
+    { id: 'europe', kind: 'theme', visual: 'silhouette-europe', title: 'Европа', description: 'Континентальная карта состояний, границ и исторических переходов.', mark: '𐤄' },
+    { id: 'empires', kind: 'theme', visual: 'blobs', title: 'Империи', description: 'Крупные державы как пространственные конструкции и зоны влияния.', mark: '𐤌' },
+    { id: 'ancient-routes', kind: 'theme', visual: 'route', title: 'Древние маршруты', description: 'Регионы, города и коридоры, через которые двигался Давар.', mark: '𐤃' },
+    { id: 'modern-states', kind: 'theme', visual: 'scatter', title: 'Современные государства', description: 'Глобальный слой диагностики по матрице состояний стран.', mark: '𐤔' },
+    { id: 'state-matrix', kind: 'theme', visual: 'matrix', title: 'Матрица состояний', description: 'Поле Хошех и Ор: сравнение доминирующих состояний на одной карте.', mark: '𐤏' },
+    { id: 'gender-images', kind: 'research', visual: 'chips', title: 'Эшет хаиль и Иш хаиль', topic: 'Карта сохранённых образов', description: 'В каких культурах женщина-строитель (эшет хаиль) и мужчина-созидатель (иш хаиль) сохранили свою палео-функцию? Греко-римский слой vs естественная среда', mark: '𐤀' },
+    { id: 'obelisks', kind: 'research', visual: 'needles', title: 'Обелиски', topic: 'Карта городских доминант', description: 'Страны и города, где стоят крупные обелиски — вертикальные знаки, собранные в один исследовательский слой.', mark: '𐤋' }
   ];
 
   // Рабочий реестр: обелиски от 18 м и крупные городские доминанты той же формы.
@@ -205,6 +205,126 @@ const Cartography = (function() {
     return d.innerHTML;
   }
 
+  function themeObjectCount(theme) {
+    var zones;
+    switch (theme.id) {
+      case 'near-east':
+        return entries.filter(function(e) { return e.region === 'Levant' || e.region === 'Egypt' || e.region === 'Mesopotamia'; }).length;
+      case 'europe':
+        return entries.filter(function(e) { return e.region === 'Europe'; }).length;
+      case 'empires':
+        return entries.filter(function(e) { return e.type === 'empire'; }).length;
+      case 'ancient-routes':
+        return entries.filter(function(e) { return e.era === 'ancient'; }).length;
+      case 'modern-states':
+        return entries.filter(function(e) { return e.type === 'modern-state' || e.era === 'modern'; }).length;
+      case 'state-matrix':
+        return stateMatrixCountries.length;
+      case 'gender-images':
+        zones = (genderMatrix && genderMatrix.zones) || {};
+        return ['direct', 'indirect', 'lost'].reduce(function(n, key) {
+          return n + ((zones[key] && zones[key].countries) || []).length;
+        }, 0);
+      case 'obelisks':
+        return OBELISKS.length;
+      default:
+        return 0;
+    }
+  }
+
+  function openThemeMap(themeId, openMap) {
+    if (openMap) {
+      mapView = 'states';
+      return;
+    }
+    mapView = themeId === 'gender-images' ? 'gender' : (themeId === 'obelisks' ? 'obelisks' : true);
+  }
+
+  function miniVisualSvg(kind) {
+    var svg = {
+      'silhouette-east':
+        '<path fill="currentColor" opacity=".88" d="M8 26c3-9 11-16 22-17 8-.8 14 2 18 7 3 4 4 9 2 13-2 5-7 8-14 9H18c-6 0-10-4-10-12z"/>' +
+        '<circle cx="22" cy="24" r="1.6" fill="currentColor"/>' +
+        '<circle cx="30" cy="21" r="1.4" fill="currentColor"/>' +
+        '<circle cx="36" cy="27" r="1.3" fill="currentColor"/>',
+      'silhouette-europe':
+        '<path fill="currentColor" opacity=".88" d="M16 14c6-6 16-7 24-2 5 3 8 8 7 13-1 6-6 9-12 11l-8 3c-6 1-11-2-13-8-2-5 0-11 2-17z"/>' +
+        '<path fill="none" stroke="currentColor" stroke-width="1.2" d="M20 32c4 2 9 3 14 1"/>',
+      blobs:
+        '<circle cx="16" cy="22" r="8" fill="currentColor" opacity=".28"/>' +
+        '<circle cx="30" cy="18" r="10" fill="currentColor" opacity=".42"/>' +
+        '<circle cx="34" cy="30" r="7" fill="currentColor" opacity=".22"/>' +
+        '<circle cx="22" cy="30" r="5" fill="currentColor" opacity=".55"/>',
+      route:
+        '<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2.5" d="M6 34 C14 28, 18 18, 28 16 S42 12, 44 8"/>' +
+        '<circle cx="6" cy="34" r="2.2" fill="currentColor"/>' +
+        '<circle cx="20" cy="20" r="2" fill="currentColor"/>' +
+        '<circle cx="32" cy="15" r="2" fill="currentColor"/>' +
+        '<circle cx="44" cy="8" r="2.2" fill="currentColor"/>'
+    };
+    return miniVisualSvgRest(kind, svg);
+  }
+
+  function miniVisualSvgRest(kind, svg) {
+    svg.scatter =
+      '<circle cx="10" cy="14" r="1.6" fill="currentColor" opacity=".9"/>' +
+      '<circle cx="18" cy="10" r="1.2" fill="currentColor" opacity=".55"/>' +
+      '<circle cx="28" cy="16" r="1.8" fill="currentColor"/>' +
+      '<circle cx="38" cy="12" r="1.3" fill="currentColor" opacity=".7"/>' +
+      '<circle cx="8" cy="26" r="1.4" fill="currentColor" opacity=".6"/>' +
+      '<circle cx="16" cy="22" r="1.1" fill="currentColor" opacity=".4"/>' +
+      '<circle cx="24" cy="28" r="1.7" fill="currentColor"/>' +
+      '<circle cx="34" cy="24" r="1.2" fill="currentColor" opacity=".75"/>' +
+      '<circle cx="42" cy="28" r="1.5" fill="currentColor"/>' +
+      '<circle cx="14" cy="36" r="1.3" fill="currentColor" opacity=".5"/>' +
+      '<circle cx="26" cy="38" r="1.6" fill="currentColor" opacity=".85"/>' +
+      '<circle cx="36" cy="36" r="1.2" fill="currentColor" opacity=".45"/>';
+    svg.matrix =
+      '<g fill="currentColor">' +
+        '<rect x="6" y="8" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="16" y="8" width="7" height="7" opacity=".85" rx="1"/>' +
+        '<rect x="26" y="8" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="36" y="8" width="7" height="7" opacity=".85" rx="1"/>' +
+        '<rect x="6" y="18" width="7" height="7" opacity=".85" rx="1"/>' +
+        '<rect x="16" y="18" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="26" y="18" width="7" height="7" opacity=".85" rx="1"/>' +
+        '<rect x="36" y="18" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="6" y="28" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="16" y="28" width="7" height="7" opacity=".85" rx="1"/>' +
+        '<rect x="26" y="28" width="7" height="7" opacity=".22" rx="1"/>' +
+        '<rect x="36" y="28" width="7" height="7" opacity=".85" rx="1"/>' +
+      '</g>';
+    svg.chips =
+      '<rect x="4" y="16" width="12" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+      '<rect x="18" y="16" width="12" height="16" rx="3" fill="currentColor" opacity=".28"/>' +
+      '<rect x="32" y="16" width="12" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
+      '<circle cx="10" cy="22" r="2" fill="currentColor"/>' +
+      '<circle cx="24" cy="22" r="2" fill="currentColor"/>' +
+      '<circle cx="38" cy="22" r="2" fill="currentColor"/>';
+    svg.needles =
+      '<path fill="currentColor" d="M10 38 L13 10 L16 38 Z" opacity=".85"/>' +
+      '<path fill="currentColor" d="M22 38 L24.5 8 L27 38 Z"/>' +
+      '<path fill="currentColor" d="M33 38 L36 14 L39 38 Z" opacity=".7"/>';
+    svg.feature =
+      '<g fill="currentColor">' +
+        '<circle cx="10" cy="12" r="2.2" opacity=".28"/>' +
+        '<circle cx="20" cy="12" r="2.2"/>' +
+        '<circle cx="30" cy="12" r="2.2" opacity=".28"/>' +
+        '<circle cx="40" cy="12" r="2.2"/>' +
+        '<circle cx="10" cy="24" r="2.2"/>' +
+        '<circle cx="20" cy="24" r="2.2" opacity=".28"/>' +
+        '<circle cx="30" cy="24" r="2.2"/>' +
+        '<circle cx="40" cy="24" r="2.2" opacity=".28"/>' +
+        '<circle cx="10" cy="36" r="2.2" opacity=".28"/>' +
+        '<circle cx="20" cy="36" r="2.2"/>' +
+        '<circle cx="30" cy="36" r="2.2" opacity=".28"/>' +
+        '<circle cx="40" cy="36" r="2.2"/>' +
+      '</g>';
+    return '<svg class="cartography-mini-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false">' +
+      (svg[kind] || svg.scatter) +
+      '</svg>';
+  }
+
   // ===== ИНИЦИАЛИЗАЦИЯ =====
   function init(el) {
     var container = el || document.getElementById('cartography');
@@ -359,10 +479,40 @@ const Cartography = (function() {
   }
 
   function renderThemeCard(theme, index) {
-    return '<article class="cartography-theme-card" style="animation-delay:' + (index * 70) + 'ms">' +
-      '<div class="cartography-theme-preview" aria-hidden="true"><svg viewBox="0 0 950 620" focusable="false"><rect class="world-sea" x="0" y="0" width="950" height="620"></rect><g class="world-countries">' + worldMapMarkup + '</g></svg><span class="cartography-theme-mark">' + theme.mark + '</span></div>' +
-      '<div class="cartography-theme-body"><span class="cartography-card-type">' + escapeHtml(theme.topic || 'Тема карты') + '</span><h2 class="cartography-card-title">' + escapeHtml(theme.title) + '</h2><p class="cartography-card-summary">' + escapeHtml(theme.description) + '</p>' +
-      '<button type="button" class="lab-btn lab-btn-primary cartography-open-map" data-theme-id="' + escapeHtml(theme.id) + '">Открыть карту</button></div></article>';
+    var count = themeObjectCount(theme);
+    var kindLabel = theme.kind === 'research' ? 'исследование' : 'тема';
+    var spanClass = theme.kind === 'research' ? ' cartography-theme-card--wide' : '';
+    return '<article class="cartography-theme-card' + spanClass + '" tabindex="0" role="button" data-theme-id="' + escapeHtml(theme.id) + '" aria-label="Открыть карту: ' + escapeHtml(theme.title) + '" style="animation-delay:' + (index * 40) + 'ms">' +
+      '<div class="cartography-theme-preview" aria-hidden="true">' + miniVisualSvg(theme.visual) + '</div>' +
+      '<div class="cartography-theme-body">' +
+        '<div class="cartography-theme-meta">' +
+          '<span class="cartography-card-type">' + kindLabel + '</span>' +
+          '<span class="cartography-theme-count" aria-label="' + count + ' объектов">' + count + '</span>' +
+        '</div>' +
+        '<h2 class="cartography-card-title">' + escapeHtml(theme.title) + '</h2>' +
+        '<p class="cartography-card-summary">' + escapeHtml(theme.description) + '</p>' +
+        '<span class="cartography-theme-arrow" aria-hidden="true">→</span>' +
+      '</div></article>';
+  }
+
+  function renderCatalogGroup(label, items, startIndex) {
+    return '<section class="cartography-catalog-group">' +
+      '<header class="cartography-section-head">' +
+        '<h2 class="cartography-section-label">' + escapeHtml(label) + '</h2>' +
+        '<span class="cartography-section-count">' + items.length + '</span>' +
+      '</header>' +
+      '<div class="cartography-theme-grid">' + items.map(function(theme, i) { return renderThemeCard(theme, startIndex + i); }).join('') + '</div>' +
+    '</section>';
+  }
+
+  function renderFeatureCell() {
+    return '<article class="cartography-feature" data-open-map="1" tabindex="0" role="button" aria-label="Открыть глобальную карту состояний">' +
+      '<div class="cartography-feature-visual" aria-hidden="true">' + miniVisualSvg('feature') + '</div>' +
+      '<div class="cartography-feature-body">' +
+        '<h2 class="cartography-feature-title">Глобальная карта состояний</h2>' +
+        '<p class="cartography-feature-lead">Поле Хошех и Ор: диагностика стран на одной карте мира.</p>' +
+        '<span class="lab-btn lab-btn-primary cartography-world-launch" aria-hidden="true">Открыть карту</span>' +
+      '</div></article>';
   }
 
   function renderStateCard(country, index) {
@@ -417,19 +567,42 @@ const Cartography = (function() {
       return;
     }
 
-    container.innerHTML = '<header class="section-hero">' +
-        '<div class="section-hero-watermark" aria-hidden="true">𐤀 𐤁 𐤂 𐤃 𐤄 𐤅</div>' +
-        '<div class="section-hero-kicker">АЛЕФИ · КАРТОГРАФИЯ</div>' +
-        '<h1><img src="assets/icons/32/ui/web.png" class="lab-icon" alt="">Картография</h1>' +
-        '<p class="section-hero-lead">Смысловая карта: страны, города и регионы как пространственные конструкции.</p>' +
-      '</header>' +
-      '<button type="button" class="cartography-world-launch" data-open-map="1"><span aria-hidden="true">𐤌</span><span><strong>Глобальная карта состояний</strong><small>Открыть полный слой диагностики</small></span></button>' +
-      '<div class="cartography-theme-grid">' + MAP_THEMES.map(renderThemeCard).join('') + '</div>';
+    var themeMaps = MAP_THEMES.filter(function(t) { return t.kind !== 'research'; });
+    var researchMaps = MAP_THEMES.filter(function(t) { return t.kind === 'research'; });
 
-    container.querySelectorAll('.cartography-open-map, .cartography-world-launch').forEach(function(button) {
-      button.addEventListener('click', function() { var themeId = this.getAttribute('data-theme-id'); mapView = this.hasAttribute('data-open-map') ? 'states' : (themeId === 'gender-images' ? 'gender' : (themeId === 'obelisks' ? 'obelisks' : true)); renderPage(container); });
+    container.innerHTML = '<div class="cartography-page">' +
+      renderFeatureCell() +
+      renderCatalogGroup('Темы карт', themeMaps, 0) +
+      renderCatalogGroup('Сохранённые исследования', researchMaps, themeMaps.length) +
+    '</div>';
+
+    bindCatalog(container);
+  }
+
+  function bindCatalog(container) {
+    if (container.dataset.cartographyBound === '1') return;
+    container.dataset.cartographyBound = '1';
+    container.addEventListener('click', function(event) {
+      var el = event.target && event.target.closest ? event.target : (event.target && event.target.parentElement);
+      if (!el || !el.closest) return;
+      var launch = el.closest('[data-open-map]');
+      var card = el.closest('.cartography-theme-card');
+      if (!launch && !card) return;
+      event.preventDefault();
+      openThemeMap(card ? card.getAttribute('data-theme-id') : null, !card && !!launch);
+      renderPage(container);
     });
-    bindMapInteractions(container);
+    container.addEventListener('keydown', function(event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      var el = event.target && event.target.closest ? event.target : null;
+      if (!el) return;
+      var launch = el.closest('[data-open-map]');
+      var card = el.closest('.cartography-theme-card');
+      if (!launch && !card) return;
+      event.preventDefault();
+      openThemeMap(card ? card.getAttribute('data-theme-id') : null, !card && !!launch);
+      renderPage(container);
+    });
   }
 
   function bindMapInteractions(container) {
