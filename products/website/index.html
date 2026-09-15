@@ -26,6 +26,7 @@
   <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&display=swap"></noscript>
   <link rel="stylesheet" href="css/landing.css">
+  <link rel="stylesheet" href="site.css">
   <meta property="og:title" content="Alephy — исследовательская платформа">
   <meta property="og:description" content="Возвращаем тексту его физику: образ, движение, состояние и переход.">
   <meta property="og:image" content="https://ortamy.github.io/alephy/favicon.svg">
@@ -107,20 +108,14 @@
     [data-theme="white"] body::before { opacity: 0; }
     [data-theme="white"] .lab-header,
     [data-theme="white"] .skip-link,
-    [data-theme="white"] .project-callout,
-    [data-theme="white"] .site-footer,
-    [data-theme="white"] .club-card {
+    [data-theme="white"] .site-footer {
       background: #fff;
       color: var(--chocolate);
       border-color: var(--line-gold);
     }
-    [data-theme="white"] .project-callout h2,
-    [data-theme="white"] .project-callout .button-outline,
-    [data-theme="white"] .site-footer,
-    [data-theme="white"] .club-card {
+    [data-theme="white"] .site-footer {
       color: var(--chocolate);
     }
-    [data-theme="white"] .project-callout p,
     [data-theme="white"] .footer-slogan,
     [data-theme="white"] .footer-bottom {
       color: var(--chocolate-soft);
@@ -302,332 +297,23 @@
     .button:hover { background: #d7ad56; }
     .button-outline { background: transparent; color: var(--chocolate); }
     .button-outline:hover { background: rgba(200, 155, 60, .12); }
-    .eyebrow {
-      margin: 0 0 12px;
-      color: var(--bronze);
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-    }
     h1, h2, h3, p { margin-top: 0; }
     h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.08; }
     h1 { max-width: 820px; margin-bottom: 22px; font-size: clamp(2.7rem, 7vw, 5.8rem); letter-spacing: -.025em; }
-    .hero-title-short { display: none; }
     h2 { margin-bottom: 18px; font-size: clamp(2rem, 4.4vw, 3.25rem); letter-spacing: -.015em; }
     h3 { margin-bottom: 10px; font-size: clamp(1.35rem, 2.2vw, 1.5rem); }
-    .section { position: relative; padding: 86px 0; }
-    .section + .section { border-top: 1px solid var(--line); }
-    .section-heading { max-width: 640px; margin-bottom: 34px; }
-    .section-heading p:not(.eyebrow) { max-width: 600px; margin-bottom: 0; color: var(--muted); }
-    .hero {
-      min-height: min(800px, calc(100vh - 72px));
-      overflow: hidden;
-      background: linear-gradient(125deg, var(--paper) 0%, var(--paper-deep) 100%);
-    }
-    .hero::after {
-      position: absolute;
-      top: 8%;
-      right: -5%;
-      z-index: 0;
-      color: var(--gold);
-      content: '𐤀 𐤁 𐤂 𐤃 𐤄 𐤅';
-      font-family: var(--serif);
-      font-size: clamp(5rem, 18vw, 15rem);
-      letter-spacing: .08em;
-      opacity: .09;
-      transform: rotate(-8deg);
-      white-space: nowrap;
-    }
-    .hero-content { position: relative; z-index: 1; display: grid; align-items: center; justify-items: center; min-height: 620px; }
-    .hero-copy { max-width: 900px; text-align: center; }
-    .hero h1 { color: var(--chocolate); }
-    .hero-lead { max-width: 670px; margin: 0 auto 30px; color: var(--chocolate-soft); font-family: var(--serif); font-size: clamp(1.35rem, 3vw, 1.95rem); line-height: 1.25; }
     .hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; }
-    .hero-actions .button { width: 250px; }
-    /* ===== WAVE 1: bento-манускрипт (DESIGN-SYSTEM §5.2) ===== */
-    .landing-bento-wrap { padding: var(--space-6, 24px) 0 var(--space-5, 20px); overflow-x: clip; background: var(--paper); }
-    .landing-bento {
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: var(--space-3, 12px);
-      width: min(calc(100% - 40px), var(--shell-page, 1120px));
-      margin-inline: auto;
-    }
-    .bento-cell {
-      min-width: 0;
-      overflow: visible;
-      padding: var(--space-4, 16px);
-      border: 1px solid var(--border-light, var(--line));
-      border-radius: var(--radius-lg);
-      background: var(--paper-light);
-    }
-    .bento-cell--ink {
-      background: var(--bg-dark, var(--chocolate));
-      color: var(--text-on-dark, var(--paper));
-      border-color: color-mix(in srgb, var(--gold) 38%, transparent);
-    }
-    .bento-hero { grid-column: 1 / 8; grid-row: 1 / 3; display: flex; flex-direction: column; }
-    .bento-glyph { grid-column: 8 / 13; grid-row: 1; display: flex; flex-direction: column; min-height: 220px; }
-    .bento-loss { grid-column: 8 / 13; grid-row: 2; }
-    .bento-products { grid-column: 1 / 13; grid-row: 3; }
-    .bento-kicker {
-      display: flex; align-items: center; gap: var(--space-3, 12px);
-      margin: 0 0 var(--space-3, 12px); color: var(--bronze, var(--gold-deep));
-      font-size: var(--ui-11, 11px); font-weight: 700;
-      letter-spacing: var(--tracking-caps, .08em); text-transform: uppercase;
-    }
-    .bento-kicker::after { content: ''; flex: 1 1 auto; height: 1px; background: var(--border-light, var(--line)); }
-    .bento-kicker--on-ink { color: var(--gold); }
-    .bento-kicker--on-ink::after { background: color-mix(in srgb, var(--gold) 45%, transparent); }
-    .bento-hero h1 { max-width: 22ch; margin: 0 0 var(--space-3, 12px); overflow: visible; color: var(--chocolate); font-size: var(--text-hero, clamp(2.25rem, 5vw, 3.5rem)); line-height: 1.15; letter-spacing: -.02em; }
-    .bento-hero .hero-lead { max-width: 38ch; margin: 0 0 var(--space-4, 16px); color: var(--chocolate-soft); font-family: var(--serif); font-size: clamp(1.15rem, 2vw, 1.45rem); line-height: 1.3; text-align: left; }
-    .bento-proof { display: flex; flex-wrap: wrap; gap: var(--space-2, 8px); margin: 0 0 var(--space-5, 20px); }
-    .bento-proof .scale-chip { padding: 2px 10px; border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-pill, 999px); color: var(--chocolate-soft); font-size: var(--ui-12, 12px); }
-    .bento-hero .hero-actions { justify-content: flex-start; }
-    .bento-hero .hero-actions .button { width: auto; min-width: 200px; }
-    .bento-hero .hero-note { justify-content: flex-start; max-width: 42ch; margin: auto 0 0; text-align: left; }
-    .hero-note { display: flex; align-items: center; justify-content: center; gap: 12px; max-width: 380px; margin: 54px auto 0; color: var(--muted); font-size: .78rem; text-align: center; }
-    .glyph-stage {
-      display: grid; place-items: center; flex: 1 1 auto; width: 100%; min-height: 140px;
-      padding: 0; border: 0; background: transparent; color: inherit; cursor: pointer;
-    }
-    .glyph-stage:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
-    .glyph-letter, .glyph-ox { grid-area: 1 / 1; transition: opacity 150ms ease; }
-    .glyph-letter { color: var(--text-on-dark, var(--paper)); font-family: var(--serif); font-size: clamp(4.5rem, 8vw, 6.5rem); line-height: 1; }
-    .glyph-ox { display: grid; width: 88px; height: 88px; place-items: center; opacity: 0; color: var(--gold); }
-    .glyph-ox svg { display: block; width: 72px; height: 72px; }
-    .glyph-stage.is-ox .glyph-letter { opacity: 0; }
-    .glyph-stage.is-ox .glyph-ox { opacity: 1; }
-    .glyph-caption { margin: var(--space-2, 8px) 0 0; color: var(--gold); font-size: var(--ui-12, 12px); letter-spacing: var(--tracking-caps, .08em); text-align: center; text-transform: uppercase; }
-    .bento-loss h2 { margin-bottom: 12px; font-size: clamp(1.15rem, 1.8vw, 1.4rem); }
-    .loss-compact { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .loss-compact li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: baseline; }
-    .loss-compact .loss-name { font-size: .82rem; font-weight: 600; }
-    .loss-compact .loss-percent { color: var(--gold-deep, var(--gold)); font-family: var(--serif); font-size: 1rem; font-weight: 700; }
-    .loss-compact .loss-bar { grid-column: 1 / -1; height: 3px; overflow: hidden; border-radius: 99px; background: var(--border-light, var(--line)); }
-    .loss-compact .loss-bar > span { display: block; height: 100%; background: var(--gold); }
-    .bento-cell--interactive:hover { border-color: var(--gold); }
-    .product-tabs { display: flex; gap: var(--space-2, 8px); margin-bottom: var(--space-3, 12px); overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .product-tab {
-      flex: 0 0 auto; min-height: 40px; padding: 8px 14px;
-      border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-pill, 999px);
-      background: transparent; color: var(--chocolate); font-family: var(--sans);
-      font-size: var(--ui-12, 12px); font-weight: 700; letter-spacing: .04em; cursor: pointer;
-    }
-    .product-tab[aria-selected="true"], .product-tab:hover { border-color: var(--gold); color: var(--gold-deep, var(--gold)); }
-    .product-screen { display: none; }
-    .product-screen[hidden] { display: none !important; }
-    .product-screen.is-active { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, .8fr); gap: var(--space-4, 16px); align-items: center; }
-    .product-copy h3 { margin-bottom: 8px; font-size: 1.25rem; }
-    .product-copy p { margin-bottom: 14px; color: var(--muted); font-size: .9rem; }
-    .mini-frame { min-height: 132px; padding: 14px; border: 1px solid var(--border-light, var(--line)); border-radius: var(--radius-lg); background: var(--paper); }
-    .mini-analyzer { display: grid; gap: 8px; }
-    .mini-letters { display: flex; justify-content: space-between; color: var(--chocolate); font-family: var(--serif); font-size: 1.6rem; }
-    .mini-line { height: 6px; border-radius: 99px; background: var(--border-light, var(--line)); }
-    .mini-line:nth-child(3) { width: 72%; }
-    .mini-line:nth-child(4) { width: 48%; }
-    .mini-map { position: relative; overflow: hidden; }
-    .mini-map i { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: var(--gold); opacity: .7; }
-    .mini-timeline { display: grid; align-content: center; gap: 10px; }
-    .mini-rail { position: relative; height: 2px; background: var(--gold); }
-    .mini-rail span { position: absolute; top: -4px; width: 10px; height: 10px; border: 2px solid var(--gold); border-radius: 50%; background: var(--paper); }
-    @media (max-width: 979px) {
-      .landing-bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .bento-hero { grid-column: 1 / -1; grid-row: auto; }
-      .bento-glyph, .bento-loss { grid-column: auto; grid-row: auto; }
-      .bento-products { grid-column: 1 / -1; grid-row: auto; }
-    }
-    @media (max-width: 639px) {
-      .landing-bento { grid-template-columns: 1fr; gap: var(--space-2, 8px); width: min(calc(100% - 32px), var(--shell-page, 1120px)); }
-      .bento-glyph, .bento-loss, .bento-hero, .bento-products { grid-column: 1; }
-      .bento-hero h1, .bento-hero .hero-lead { max-width: none; }
-      .bento-hero .hero-actions { width: 100%; flex-direction: column; align-items: stretch; }
-      .bento-hero .hero-actions .button { width: 100%; min-width: 0; min-height: 48px; }
-      .product-screen.is-active { grid-template-columns: 1fr; }
-      .product-tabs { scrollbar-width: none; }
-      .product-tabs::-webkit-scrollbar { display: none; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .glyph-letter, .glyph-ox { transition: none; }
-    }
-
-
-    .hero-note::before { width: 34px; height: 1px; flex: 0 0 auto; background: var(--gold); content: ''; }
-    .loss-map { background: var(--paper-light); }
-    .loss-layout { display: grid; grid-template-columns: minmax(250px, .75fr) minmax(420px, 1.25fr); gap: clamp(42px, 8vw, 120px); align-items: start; }
-    .loss-intro { position: sticky; top: 110px; }
-    .loss-intro .section-heading { margin-bottom: 28px; }
-    .loss-summary { display: grid; width: 150px; height: 150px; place-items: center; border: 1px solid var(--gold); border-radius: 50%; background: color-mix(in srgb, var(--gold) 10%, transparent); color: var(--gold-deep); font-family: var(--serif); font-size: 3.5rem; font-weight: 600; line-height: 1; }
-    .loss-summary span { display: block; margin-top: -34px; font-family: var(--sans); font-size: .65rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-    .loss-list { position: relative; display: grid; gap: 14px; margin: 0; padding: 8px 0 8px 42px; list-style: none; }
-    .loss-list::before { position: absolute; top: 20px; bottom: 20px; left: 17px; width: 1px; background: linear-gradient(to bottom, var(--gold), var(--bronze), var(--chocolate)); content: ''; }
-    .loss-plate {
-      position: relative;
-      display: grid;
-      grid-template-columns: 42px minmax(0, 1fr) auto;
-      align-items: center;
-      gap: 10px;
-      min-height: 62px;
-      padding: 10px 14px;
-      border: 1px solid var(--gold);
-      border-left: 3px solid var(--plate);
-      border-radius: var(--radius);
-      background: color-mix(in srgb, var(--plate) 12%, var(--paper-light));
-      color: var(--chocolate);
-      transition: transform .2s ease, background .2s ease;
-    }
-    .loss-plate::before { position: absolute; top: 50%; left: -32px; width: 11px; height: 11px; border: 2px solid var(--paper-light); border-radius: 50%; background: var(--plate); content: ''; transform: translateY(-50%); }
-    .loss-plate:hover, .loss-plate:focus-within { background: color-mix(in srgb, var(--plate) 20%, var(--paper-light)); transform: translateX(4px); }
-    .loss-number { color: var(--plate); font-family: var(--serif); font-size: 1.15rem; font-weight: 700; }
-    .loss-name { font-weight: 600; }
-    .loss-detail { color: var(--muted); font-size: .78rem; }
-    .loss-explanation { grid-column: 2 / -1; display: block; margin: -2px 0 2px; color: var(--muted); font-size: .78rem; line-height: 1.4; }
-    .loss-percent { color: var(--plate); font-family: var(--serif); font-size: 1.35rem; font-weight: 700; }
-    .loss-caption { grid-column: 1 / -1; margin: 30px 0 0; color: var(--chocolate-soft); font-family: var(--serif); font-size: 1.5rem; font-style: italic; }
-    .mechanics { background: var(--paper); }
-    .mechanics-grid { display: grid; gap: 28px; }
-    .mechanics-intro { color: var(--muted); font-size: 1rem; }
-    .analysis-card, .audience-card, .preview-card {
-      border: 1px solid var(--gold);
-      border-radius: var(--radius-lg);
-    }
-    .analysis-stack { position: relative; min-width: 0; min-height: 510px; padding: 104px 0 30px; }
-    .analysis-card { position: absolute; min-width: 0; background: var(--paper-light); }
-    .analysis-inner { position: relative; z-index: 1; min-width: 0; padding: 18px 0 8px; }
-    .mechanics h2 { max-width: 19ch; font-size: clamp(1.7rem, 3vw, 2.35rem); line-height: 1.08; }
-    .mechanics-intro { max-width: 34rem; }
-    .mechanics-intro + .analysis-cta { margin-top: 16px; }
-    .analysis-card--primary { top: 28px; left: 25%; z-index: 4; width: 48%; padding: 11px 10px; transform: rotate(0deg); }
-    .analysis-card--secondary, .analysis-card--tertiary { padding: 9px 10px; }
-    .analysis-card--secondary { top: 86px; left: 0; z-index: 3; width: 46%; transform: rotate(-8deg); }
-    .analysis-card--tertiary { top: 88px; left: 54%; z-index: 2; width: 42%; transform: rotate(8deg); }
-    .analysis-card--primary .analysis-inner { padding: 7px 0 2px; }
-    .analysis-card--secondary .analysis-inner, .analysis-card--tertiary .analysis-inner { padding: 6px 0 2px; }
-    .analysis-card--primary .word { gap: 3px 6px; margin-bottom: 8px; font-size: 1.35rem; }
-    .analysis-card--secondary .word, .analysis-card--tertiary .word { gap: 3px 6px; margin-bottom: 7px; font-size: 1.15rem; }
-    .analysis-card--primary .sequence, .analysis-card--secondary .sequence, .analysis-card--tertiary .sequence { gap: 2px; }
-    .analysis-card--primary .sequence li, .analysis-card--secondary .sequence li, .analysis-card--tertiary .sequence li { grid-template-columns: 22px 1fr; gap: 4px; padding: 3px 0; }
-    .analysis-card--primary .sequence-letter, .analysis-card--secondary .sequence-letter, .analysis-card--tertiary .sequence-letter { font-size: .95rem; }
-    .analysis-card--primary .sequence strong, .analysis-card--secondary .sequence strong, .analysis-card--tertiary .sequence strong { font-size: .62rem; }
-    .analysis-card--primary .sequence small, .analysis-card--secondary .sequence small, .analysis-card--tertiary .sequence small { font-size: .5rem; line-height: 1.15; }
-    .word-label { margin-bottom: 4px; color: var(--muted); font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
-    .word { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 20px; color: var(--gold-deep); font-family: var(--serif); font-size: 2.7rem; line-height: 1; }
-    .word span { color: var(--chocolate); }
-    .sequence { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-    .sequence li { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line); }
-    .sequence li:last-child { border-bottom: 0; }
-    .sequence-letter { border: 0; background: transparent; color: var(--gold-deep); font-family: var(--serif); font-size: 1.7rem; text-align: center; }
-    .sequence small { display: block; color: var(--muted); font-size: .72rem; }
-    .sequence strong { font-size: .9rem; }
-    .analysis-cta { margin-top: 18px; }
-    .audience-grid, .preview-grid { display: grid; gap: 16px; }
-    .audience > .container > .section-heading, .platform > .container > .section-heading { margin-right: auto; margin-left: auto; text-align: center; }
-    .audience > .container > .section-heading p:not(.eyebrow), .platform > .container > .section-heading p:not(.eyebrow) { margin-right: auto; margin-left: auto; }
-    .audience-layout { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px clamp(12px, 1.8vw, 28px); align-items: stretch; }
-    .audience-layout > .section-heading { grid-column: 1 / -1; grid-row: 1; margin: 0; text-align: center; }
-    .audience-layout > .section-heading p:not(.eyebrow) { margin-right: auto; margin-left: auto; }
-    .audience-side { display: contents; }
-    .audience-side { display: contents; }
-    .audience-card { display: flex; flex-direction: column; min-height: 118px; padding: 18px 16px; background: var(--paper-light); border: 1px solid color-mix(in srgb, var(--gold) 72%, transparent); border-radius: var(--radius-lg); text-align: center; transition: border-color .3s ease; }
-    .audience-card:hover { border-color: var(--gold-deep); }
-    .audience-card h3 { display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 8px; font-size: clamp(.72rem, .95vw, 1rem); letter-spacing: -.025em; white-space: nowrap; }
-    .audience-icon { width: 32px; height: 32px; flex: 0 0 32px; object-fit: contain; }
-    .audience-card p { margin-bottom: 0; color: var(--muted); font-size: .9rem; }
-    .platform { background: var(--paper-deep); }
-    /* Пергамент вместо серо-голубых поверхностей в белой теме. */
-    [data-theme="white"] .platform { background: #f4efe3; }
-    [data-theme="white"] .preview-card { background: #fbf6ea; }
-    [data-theme="white"] .scale-strip { background: #f6f1e5; }
-    .preview-card { display: flex; flex-direction: column; padding: 26px; background: var(--paper-light); border: 1px solid var(--gold); border-radius: var(--radius-lg); }
-    .preview-copy { display: flex; flex: 1; flex-direction: column; }
-    .preview-copy h3 { margin-bottom: 8px; }
-    .preview-copy p { margin-bottom: 18px; color: var(--muted); font-size: .84rem; }
-    .preview-card { text-align: center; }
-    .preview-copy .button { margin-top: auto; align-self: center; }
-    .tools-all-link { display: block; margin-top: 22px; text-align: center; }
-    .scale-strip { padding: 18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); background: var(--paper-light); }
-    .scale-strip .container { width: 100%; max-width: none; }
-    .scale-track { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-    .scale-chip { flex: 0 0 auto; padding: 8px 13px; border: 1px solid var(--line-gold); border-radius: 999px; color: var(--chocolate-soft); font-size: .78rem; white-space: nowrap; }
     .desktop-anchor-nav { position: sticky; top: 56px; z-index: 12; display: flex; justify-content: center; gap: 22px; padding: 8px 20px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--paper-light) 92%, transparent); backdrop-filter: blur(8px); }
     .lab-header .desktop-anchor-nav { position: absolute; top: 50%; left: 50%; z-index: auto; padding: 0; border: 0; background: transparent; backdrop-filter: none; transform: translate(-50%, -50%); }
     .desktop-anchor-nav a { color: var(--header-ink); font-size: .74rem; font-weight: 700; text-decoration: none; }
     .desktop-anchor-nav a:hover { color: var(--header-hover); }
     .scroll-progress { position: fixed; inset: 0 0 auto; z-index: 30; height: 3px; transform-origin: left; background: var(--gold); transform: scaleX(0); }
     .back-to-top { position: fixed; right: 18px; bottom: 18px; z-index: 15; display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border: 1px solid var(--gold); border-radius: 50%; background: var(--paper-light); color: var(--chocolate); cursor: pointer; font-size: 1.2rem; }
-    .letter-popover { position: fixed; z-index: 25; width: min(230px, calc(100vw - 28px)); padding: 14px; border: 1px solid var(--gold); border-radius: var(--radius); background: var(--paper-light); color: var(--chocolate); line-height: 1.35; }
-    .letter-popover strong { display: block; margin-bottom: 4px; color: var(--gold-deep); font-family: var(--serif); font-size: 1.25rem; }
-    .waitlist-form { display: grid; gap: 8px; width: min(100%, 540px); margin: 4px auto 0; }
-    .waitlist-row { display: flex; gap: 8px; }
-    .waitlist-input, .waitlist-form .button { min-width: 0; flex: 1 1 0; box-sizing: border-box; }
-    .waitlist-input { min-height: 48px; padding: 10px 14px; border: 1px solid #8c765d; border-radius: var(--radius); background: var(--paper); color: var(--chocolate); }
-    .waitlist-form .button { min-width: 0; }
-    .waitlist-status { min-height: 1.2em; margin: 0; color: var(--club-text); font-size: .8rem; }
-    .text-link { color: var(--bronze); font-size: .8rem; font-weight: 700; text-decoration: none; }
-    .text-link:hover { text-decoration: underline; }
-    .project-callout { display: flex; flex-direction: column; align-items: center; gap: 28px; padding: 42px 34px; border: 1px solid var(--gold); border-radius: var(--radius-lg); background: var(--chocolate); color: var(--paper); text-align: center; }
-    .project-callout > div { display: flex; flex-direction: column; align-items: center; }
-    .project-callout .eyebrow { margin-bottom: 18px; }
-    .project-callout h2 { margin-bottom: 24px; color: var(--paper); }
-    .project-callout p { max-width: 580px; margin-bottom: 0; color: #dbcbb2; line-height: 1.7; }
-    .project-callout .button-outline { border-color: var(--gold); color: var(--paper); }
-    .site-footer { padding: 40px 0 18px; background: var(--chocolate); color: var(--paper); }
-    .footer-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px; padding-bottom: 16px; text-align: center; }
-    .footer-brand { transition: color .2s ease; }
-    .footer-slogan { max-width: none; margin: 0; color: #dbcbb2; font-family: var(--serif); font-size: 1.3rem; font-style: italic; white-space: nowrap; }
-    .footer-bottom { display: inline; color: #b9a58b; font-size: .72rem; }
     @media (min-width: 768px) {
       .container { width: min(calc(100% - 72px), var(--max)); }
-      .loss-plate { grid-template-columns: 70px 1fr 100px auto; }
-      .loss-detail { display: block; }
-      .mechanics-grid { grid-template-columns: .85fr 1.15fr; align-items: center; }
-      .preview-grid { grid-template-columns: repeat(3, 1fr); }
-      .project-callout { max-width: 860px; margin-inline: auto; }
-    }
-    @media (min-width: 641px) and (max-width: 979px) {
-      .preview-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (min-width: 980px) {
-      .section { padding: 118px 0; }
-      .hero-content { min-height: 680px; }
-      .hero-note { margin-top: 70px; }
-    }
-    @media (min-width: 1024px) {
-      .hero h1 { margin-bottom: 24px; font-size: 52px; }
     }
     @media (max-width: 767px) {
-      .hero { min-height: auto; padding: 30px 0 42px; }
-      .hero-content { min-height: 0; padding-inline: 16px; align-items: start; }
-      .hero-copy { width: 100%; text-align: center; }
-      .hero h1 { max-width: none; }
-      .hero-lead { max-width: none; }
-      .hero-actions { width: 100%; flex-direction: column; align-items: stretch; gap: 12px; }
-      .hero-actions .button { width: 100%; padding-block: 16px; text-align: center; }
-      .hero-note { justify-content: center; margin-right: auto; margin-left: auto; text-align: center; }
-      .loss-detail { display: none; }
-      .loss-plate { grid-template-columns: 42px 1fr auto; gap: 10px; }
-      .analysis-card { padding: 16px; }
-      .analysis-inner { padding: 14px 0 6px; }
-      .word { font-size: 2.1rem; }
-      .sequence li { grid-template-columns: 36px 1fr; gap: 8px; }
-      .sequence-letter { font-size: 1.4rem; }
-      .project-callout .button { width: 100%; }
-      .preview-copy .button { width: 100%; }
-      .analysis-cta { width: 100%; }
-      .audience { overflow: visible; padding: 48px 0 58px; }
-      .audience-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-      .audience-layout > .section-heading { grid-column: 1 / -1; grid-row: 1; text-align: center; }
-      .audience-layout > .section-heading h2 { margin-bottom: 10px; font-size: clamp(1.55rem, 7vw, 2.25rem); }
-      .audience-layout > .section-heading p:not(.eyebrow) { font-size: .84rem; line-height: 1.45; }
-      .audience-card { min-height: 96px; padding: 14px 10px; }
-      .audience-card h3 { gap: 6px; margin-bottom: 0; font-size: .76rem; white-space: normal; }
-      .audience-icon { width: 26px; height: 26px; flex-basis: 26px; }
-      .audience-card p { display: block; margin-top: 8px; font-size: .74rem; line-height: 1.4; }
-      .footer-top { flex-direction: column; gap: 8px; }
       .footer-slogan { white-space: normal; }
-      .waitlist-row { flex-direction: column; }
-      .waitlist-row .button { width: 100%; }
     }
     @media (max-width: 720px) {
       body { padding-top: 0; }
@@ -638,32 +324,6 @@
       .club-banner-content { min-height: 0; height: 100%; flex-direction: column; gap: 7px; }
       .club-banner-copy { font-size: 1.05rem; }
       .club-banner-close { right: 12px; }
-      .loss-plate { grid-template-columns: 42px 1fr auto; }
-      .loss-explanation { grid-column: 2 / -1; }
-      .scale-strip .container { width: 100%; padding-inline: 0; }
-      .analysis-stack { min-height: 470px; margin-top: 20px; padding: 0 0 16px; overflow: visible; }
-      .mechanics h2 { max-width: none; font-size: 2.1rem; }
-      .analysis-card--primary, .analysis-card--secondary, .analysis-card--tertiary { position: absolute; top: 0; right: auto; left: 9%; width: 82%; margin: 0; padding: 16px; transform-origin: 50% 8%; }
-      .analysis-card--primary { z-index: 4; transform: rotate(0deg); }
-      .analysis-card--secondary { top: 46px; left: 0; z-index: 3; transform: rotate(-5deg); }
-      .analysis-card--tertiary { top: 58px; left: 18%; z-index: 2; transform: rotate(5deg); }
-      .analysis-card--primary .analysis-inner, .analysis-card--secondary .analysis-inner, .analysis-card--tertiary .analysis-inner { padding: 14px 0 6px; }
-      .analysis-card--primary .word, .analysis-card--secondary .word, .analysis-card--tertiary .word { font-size: 2.1rem; }
-      .analysis-card--primary .sequence, .analysis-card--secondary .sequence, .analysis-card--tertiary .sequence { gap: 8px; }
-      .analysis-card--primary .sequence li, .analysis-card--secondary .sequence li, .analysis-card--tertiary .sequence li { grid-template-columns: 36px 1fr; gap: 8px; padding: 9px 0; }
-      .analysis-card--primary .sequence-letter, .analysis-card--secondary .sequence-letter, .analysis-card--tertiary .sequence-letter { font-size: 1.4rem; }
-      .analysis-card--primary .sequence strong, .analysis-card--secondary .sequence strong, .analysis-card--tertiary .sequence strong { font-size: .9rem; }
-      .analysis-card--primary .sequence small, .analysis-card--secondary .sequence small, .analysis-card--tertiary .sequence small { font-size: .72rem; line-height: normal; }
-    }
-    @media (max-width: 420px) {
-      .audience-layout { grid-template-columns: 1fr; gap: 14px; }
-      .audience-card { min-height: 96px; padding: 16px 12px; }
-      .audience-card h3 { font-size: .84rem; }
-      .audience-icon { width: 28px; height: 28px; flex-basis: 28px; }
-    }
-    @media (max-width: 480px) {
-      .hero-title-full { display: none; }
-      .hero-title-short { display: inline; }
     }
     /* ===== ПОРТАЛ ВХОДА ===== */
     body.portal-is-open { overflow: hidden; }
@@ -804,102 +464,17 @@
     @media (max-width: 480px) {
       .portal-card { padding: 36px 24px 28px; border-radius: 16px; }
     }
-    /* ===== ПАЛЕО-КЛУБ ===== */
-    .club-body { position: relative; z-index: 1; display: grid; gap: 26px; justify-items: center; text-align: center; }
-    .club-card {
-      position: relative;
-      overflow: hidden;
-      padding: 38px 34px;
-      border: 1px solid var(--gold);
-      border-radius: var(--radius-lg);
-      background: var(--chocolate);
-      color: var(--paper);
-      --club-text: #dbcbb2;
-      --club-muted: #b9a58b;
-    }
-    [data-theme="dark"] .club-card { --club-text: #5a4330; --club-muted: #8a7660; }
-    [data-theme="white"] .club-card { --club-text: var(--chocolate-soft); --club-muted: var(--muted); }
-    .club-card::after {
-      position: absolute;
-      top: -24px;
-      right: -10px;
-      z-index: 0;
-      color: var(--gold);
-      content: '𐤒𐤋 𐤀';
-      font-family: var(--serif);
-      font-size: clamp(6rem, 14vw, 11rem);
-      line-height: 1;
-      opacity: .08;
-      pointer-events: none;
-      transform: rotate(-8deg);
-      white-space: nowrap;
-    }
+    /* ===== ПАЛЕО-КЛУБ (тизер) ===== */
     .club-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border: 1px solid var(--gold);
-      border-radius: var(--radius-pill);
-      color: var(--gold);
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      animation: club-pulse 2.6s ease-in-out infinite;
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px;
+      border: 1px solid var(--gold); border-radius: var(--radius-pill); color: var(--gold);
+      font-size: .7rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase;
+      white-space: nowrap; animation: club-pulse 2.6s ease-in-out infinite;
     }
-    .club-badge::before {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--gold);
-      content: '';
-    }
-    @keyframes club-pulse {
-      0%, 100% { opacity: .78; }
-      50% { opacity: 1; }
-    }
-    .club-title {
-      display: inline-flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: 14px 18px;
-      margin: 0 0 14px;
-      line-height: 1.1;
-    }
-    .club-title-icon { width: clamp(40px, 6vw, 56px); height: auto; flex: 0 0 auto; }
-    .club-lead { max-width: 640px; margin: 0 auto; color: var(--club-text); font-family: var(--serif); font-size: clamp(1.1rem, 2.4vw, 1.45rem); line-height: 1.55; }
-    .club-list {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px 26px;
-      max-width: 640px;
-      margin: 26px auto 0;
-      padding: 0;
-      list-style: none;
-    }
-    .club-list li { display: flex; align-items: baseline; justify-content: center; gap: 10px; color: var(--club-text); font-size: .98rem; }
-    .club-list li::before { flex: 0 0 auto; color: var(--gold); font-family: var(--serif); font-size: 1.15rem; }
-    .club-list li:nth-child(1)::before { content: '𐤀'; }
-    .club-list li:nth-child(2)::before { content: '𐤁'; }
-    .club-list li:nth-child(3)::before { content: '𐤂'; }
-    .club-list li:nth-child(4)::before { content: '𐤃'; }
-    .club-action { display: grid; gap: 12px; justify-items: center; align-content: center; }
-    .club-action .button { min-width: 240px; }
-    .club-action .waitlist-form .button { min-width: 0; }
-    .club-note { margin: 0; color: var(--club-muted); font-size: .8rem; }
-    /* Тизер клуба — на базе .portal-overlay */
+    .club-badge::before { width: 7px; height: 7px; border-radius: 50%; background: var(--gold); content: ''; }
+    @keyframes club-pulse { 0%, 100% { opacity: .78; } 50% { opacity: 1; } }
     .club-modal-badge { display: flex; justify-content: center; margin-bottom: 14px; }
-    .club-teaser-list {
-      display: grid;
-      gap: 9px;
-      margin: 0 0 18px;
-      padding: 0;
-      list-style: none;
-      text-align: left;
-    }
+    .club-teaser-list { display: grid; gap: 9px; margin: 0 0 18px; padding: 0; list-style: none; text-align: left; }
     .club-teaser-list li { display: flex; align-items: baseline; gap: 10px; color: var(--chocolate-soft); font-size: .88rem; }
     .club-teaser-list li::before { flex: 0 0 auto; color: var(--gold-deep); font-family: var(--serif); }
     .club-teaser-list li:nth-child(1)::before { content: '𐤀'; }
@@ -907,30 +482,6 @@
     .club-teaser-list li:nth-child(3)::before { content: '𐤂'; }
     .club-teaser-list li:nth-child(4)::before { content: '𐤃'; }
     .club-teaser-note { margin: 0; color: var(--muted); font-size: .78rem; text-align: center; }
-    @media (max-width: 767px) {
-      .loss-layout { grid-template-columns: 1fr; gap: 30px; }
-      .loss-intro { position: static; }
-      .loss-intro .section-heading { text-align: center; }
-      .loss-intro .section-heading p:not(.eyebrow) { margin-right: auto; margin-left: auto; }
-      .loss-summary { width: 112px; height: 112px; margin: 22px auto 0; font-size: 2.7rem; }
-      .loss-summary span { margin-top: -25px; font-size: .58rem; }
-      .loss-list { gap: 10px; padding-left: 34px; }
-      .loss-list::before { left: 13px; }
-      .loss-plate { grid-template-columns: minmax(0, 1fr) auto; min-height: 58px; padding: 14px 16px; overflow: hidden; text-align: center; }
-      .loss-plate::before { left: -27px; width: 9px; height: 9px; }
-      .loss-number { position: absolute; top: 50%; left: -16px; z-index: 0; color: color-mix(in srgb, var(--plate) 34%, transparent); font-size: 4.8rem; line-height: 1; pointer-events: none; transform: translateY(-50%); }
-      .loss-name, .loss-percent, .loss-explanation { position: relative; z-index: 1; }
-      .loss-name { justify-self: center; }
-      .loss-percent { justify-self: end; }
-      .loss-explanation { grid-column: 1 / -1; text-align: center; }
-      .loss-detail, .loss-explanation { font-size: .7rem; }
-      .loss-percent { font-size: 1.15rem; }
-      .loss-caption { margin-top: 20px; font-size: 1.2rem; }
-      .club-card { padding: 30px 22px; }
-      .club-list { grid-template-columns: 1fr; }
-      .club-action { justify-items: center; }
-      .club-action .button { width: 100%; min-width: 0; }
-    }
     @media (prefers-reduced-motion: reduce) {
       .club-badge { animation: none; opacity: 1; }
       .club-banner::before, .club-banner::after { animation: none; transform: none; }
@@ -992,7 +543,7 @@
           <p class="glyph-caption" id="glyphCaption">алеф</p>
         </article>
 
-        <article class="bento-cell bento-loss" id="map" aria-labelledby="loss-title">
+        <article class="bento-cell bento-loss" aria-labelledby="loss-title">
           <p class="bento-kicker">Карта утрат</p>
           <h2 id="loss-title">Как образ сжимается до понятия</h2>
           <ol class="loss-compact" aria-label="Хронология передачи текста">
@@ -1035,146 +586,188 @@
             </div>
           </div>
         </article>
-      </div>
-    </section>
 
+        <article class="bento-cell bento-mech" id="mechanics" aria-labelledby="mech-title">
+          <p class="bento-kicker">Механика / Давар</p>
+          <h2 id="mech-title">Слово — цепь действий</h2>
+          <div class="mech-chain" role="group" aria-label="Цепочка метода">
+            <button type="button" class="mech-chip is-on" data-mech="davar">Давар</button>
+            <span class="mech-arrow" aria-hidden="true"></span>
+            <button type="button" class="mech-chip" data-mech="or">Ор</button>
+            <span class="mech-arrow" aria-hidden="true"></span>
+            <button type="button" class="mech-chip" data-mech="hoshekh">Хошех</button>
+            <span class="mech-arrow" aria-hidden="true"></span>
+            <button type="button" class="mech-chip" data-mech="sviva">Свива</button>
+            <span class="mech-arrow" aria-hidden="true"></span>
+            <button type="button" class="mech-chip" data-mech="huk">Хук</button>
+          </div>
+          <p class="mech-note" id="mechNote">Давар — слово как последовательность действий, а не готовый ярлык.</p>
+          <a class="text-link" href="apps/researchlab/index.html#paleo-builder">Разобрать в лаборатории →</a>
+        </article>
 
-    <section class="section mechanics" id="mechanics" aria-labelledby="davar-title">
-      <div class="container mechanics-grid">
-        <div>
-          <p class="eyebrow">Механика / Давар</p>
-          <h2 id="davar-title">Каждое слово — это<br>последовательность действий</h2>
-          <p class="mechanics-intro">Мы смотрим не на готовый перевод, а на сами буквы в палео-иврите: какую функцию выполняет каждый знак и как меняется состояние между шагами.</p>
-          <a class="button button-outline analysis-cta" href="apps/researchlab/index.html#paleo-builder">Разобрать в лаборатории <span aria-hidden="true">↗</span></a>
-        </div>
-        <div class="analysis-stack" aria-label="Палео-механические разборы слов">
-        <article class="analysis-card analysis-card--primary" aria-label="Пример палео-механического разбора слова Мицраим">
-          <div class="analysis-inner">
-            <p class="word-label">Пример последовательности</p>
-            <div class="word"><span>Мицраим</span> 𐤌𐤑𐤓𐤉𐤌</div>
-            <ol class="sequence">
-              <li><button class="sequence-letter" type="button" data-letter="𐤌" data-image="Вода и поток" data-function="Среда, в которой движение продолжается" aria-label="Мем: вода и поток">𐤌</button><span><strong>Поток</strong><small>среда, в которой движение продолжается</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤑" data-image="Крюк и захват" data-function="Захват и изменение направления" aria-label="Цади: крюк и захват">𐤑</button><span><strong>Крюк</strong><small>захват и изменение направления</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤓" data-image="Вершина" data-function="Точка подъёма и обзора" aria-label="Реш: вершина">𐤓</button><span><strong>Вершина</strong><small>точка подъёма и обзора</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤉" data-image="Рука и действие" data-function="Действующий инструмент" aria-label="Йод: рука и действие">𐤉</button><span><strong>Рука</strong><small>действующий инструмент</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤌" data-image="Вода и поток" data-function="Возвращение в среду уже изменённым" aria-label="Мем: вода и поток">𐤌</button><span><strong>Поток</strong><small>возвращение в среду, но уже изменённым</small></span></li>
-            </ol>
+        <article class="bento-cell bento-quote" aria-labelledby="quote-title">
+          <p class="bento-kicker" id="quote-title">Манифест</p>
+          <blockquote class="bento-pull">Проект «Алефи» — попытка вернуться от понятия к образу. От философии — к действию.</blockquote>
+          <a class="text-link" href="apps/researchlab/index.html#manifest">Читать манифест →</a>
+        </article>
+
+        <article class="bento-cell bento-loss-full" id="map" aria-labelledby="loss-full-title">
+          <p class="bento-kicker">Карта утрат</p>
+          <h2 id="loss-full-title">Как образ сжимается до понятия</h2>
+          <ol class="loss-full-grid">
+            <li class="loss-full-card loss-full-card--lead">
+              <div class="loss-ring" aria-hidden="true">
+                <svg viewBox="0 0 72 72"><circle class="loss-ring-track" cx="36" cy="36" r="31"/><circle class="loss-ring-value" cx="36" cy="36" r="31" stroke-dasharray="194.8" stroke-dashoffset="0"/></svg>
+                <b>100</b>
+              </div>
+              <div>
+                <h3>Палео-образы</h3>
+                <p>Конкретное действие: дом, вода, рука, огонь.</p>
+                <span class="loss-full-bar" aria-hidden="true"><span style="width:100%"></span></span>
+              </div>
+            </li>
+            <li class="loss-full-card">
+              <h3>Масоретский слой <span class="loss-percent">70%</span></h3>
+              <p>Огласовки и пробелы фиксируют одно чтение.</p>
+              <span class="loss-full-bar" aria-hidden="true"><span style="width:70%"></span></span>
+            </li>
+            <li class="loss-full-card">
+              <h3>Греческая передача <span class="loss-percent">40%</span></h3>
+              <p>Образ становится сущностью и понятием.</p>
+              <span class="loss-full-bar" aria-hidden="true"><span style="width:40%"></span></span>
+            </li>
+            <li class="loss-full-card">
+              <h3>Латинская передача <span class="loss-percent">25%</span></h3>
+              <p>Действие переносится на язык права.</p>
+              <span class="loss-full-bar" aria-hidden="true"><span style="width:25%"></span></span>
+            </li>
+            <li class="loss-full-card">
+              <h3>Синодальный слой <span class="loss-percent">15%</span></h3>
+              <p>Остаётся моральная формула без физики слова.</p>
+              <span class="loss-full-bar" aria-hidden="true"><span style="width:15%"></span></span>
+            </li>
+          </ol>
+          <p class="loss-footnote"><a class="text-link" href="apps/researchlab/index.html#methodology">Как считаем слои →</a></p>
+        </article>
+        <article class="bento-cell bento-persona bento-cell--interactive">
+          <span class="persona-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5Z"/><path d="M8 7h8M8 11h6"/></svg></span>
+          <h3>Исследователь ТаНаХа</h3>
+          <p class="persona-pain">Слои текста сдвинуты, а сверка размазана по книгам.</p>
+          <div class="persona-chips">
+            <a href="apps/researchlab/index.html#scripture-reader">Читалка</a>
+            <a href="apps/researchlab/index.html#analyzers">Анализаторы</a>
+            <a href="apps/researchlab/index.html#translation-comparator">Сравнение</a>
           </div>
         </article>
-        <article class="analysis-card analysis-card--secondary" aria-label="Палео-механический разбор слова Берешит">
-          <div class="analysis-inner">
-            <p class="word-label">Другой маршрут</p>
-            <div class="word"><span>Берешит</span> 𐤁𐤓𐤀𐤔𐤉𐤕</div>
-            <ol class="sequence">
-              <li><button class="sequence-letter" type="button" data-letter="𐤁" data-image="Дом" data-function="Место опоры" aria-label="Бет: дом и опора">𐤁</button><span><strong>Дом</strong><small>место опоры</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤓" data-image="Вершина" data-function="Точка подъёма" aria-label="Реш: вершина">𐤓</button><span><strong>Вершина</strong><small>точка подъёма</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤀" data-image="Сила" data-function="Источник силы" aria-label="Алеф: сила">𐤀</button><span><strong>Сила</strong><small>источник движения</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤔" data-image="Огонь" data-function="Преобразование" aria-label="Шин: огонь">𐤔</button><span><strong>Огонь</strong><small>преобразование</small></span></li>
-            </ol>
+        <article class="bento-cell bento-persona bento-cell--interactive">
+          <span class="persona-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+          <h3>Лингвист-реконструктор</h3>
+          <p class="persona-pain">Корень виден как ярлык, а не как траектория букв.</p>
+          <div class="persona-chips">
+            <a href="apps/researchlab/index.html#paleo-builder">Конструктор</a>
+            <a href="apps/researchlab/index.html#root-dictionary">Словарь</a>
+            <a href="apps/researchlab/index.html#paleo-keyboard">Клавиатура</a>
           </div>
         </article>
-        <article class="analysis-card analysis-card--tertiary" aria-label="Палео-механический разбор слова Шмот">
-          <div class="analysis-inner">
-            <p class="word-label">Ещё один маршрут</p>
-            <div class="word"><span>Шмот</span> 𐤔𐤌𐤅𐤕</div>
-            <ol class="sequence">
-              <li><button class="sequence-letter" type="button" data-letter="𐤔" data-image="Огонь" data-function="Импульс преобразования" aria-label="Шин: огонь">𐤔</button><span><strong>Огонь</strong><small>импульс преобразования</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤌" data-image="Поток" data-function="Среда движения" aria-label="Мем: поток">𐤌</button><span><strong>Поток</strong><small>среда движения</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤅" data-image="Связка" data-function="Соединение" aria-label="Вав: связка">𐤅</button><span><strong>Связка</strong><small>соединение</small></span></li>
-              <li><button class="sequence-letter" type="button" data-letter="𐤕" data-image="Знак" data-function="Запечатывание результата" aria-label="Тав: знак">𐤕</button><span><strong>Знак</strong><small>запечатывание результата</small></span></li>
-            </ol>
+        <article class="bento-cell bento-persona bento-cell--interactive">
+          <span class="persona-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></span>
+          <h3>Картограф смыслов</h3>
+          <p class="persona-pain">Маршруты между словами, местами и состояниями не собраны.</p>
+          <div class="persona-chips">
+            <a href="apps/researchlab/index.html#cartography">Карта</a>
+            <a href="apps/researchlab/index.html#timeline">Лента</a>
+            <a href="apps/researchlab/index.html#states">Состояния</a>
           </div>
         </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="section audience" id="sviva" aria-labelledby="audience-title">
-      <div class="container">
-        <div class="audience-layout">
-          <div class="audience-side audience-side--left">
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scroll.png" alt="" aria-hidden="true">Исследователь ТаНаХа</h3><p>Сверяйте слои текста, находите места сдвига и собирайте собственную карту улик.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/paleo/aleph.png" alt="" aria-hidden="true">Лингвист-реконструктор</h3><p>Разбирайте корни как механику: буква становится функцией, а слово — траекторией.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/testtube.png" alt="" aria-hidden="true">Искатель первоисточника</h3><p>Отделяйте исходный образ от поздней интерпретации и проверяйте каждый переход.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/book.png" alt="" aria-hidden="true">Читатель между строк</h3><p>Замечайте, где конкретный образ превращается в абстракцию, и возвращайте ему форму.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/compass.png" alt="" aria-hidden="true">Картограф смыслов</h3><p>Собирайте маршруты между словами, корнями и состояниями в единую карту движения.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/crafts/hammer-and-chisel.png" alt="" aria-hidden="true">Редактор идей</h3><p>Проверяйте формулировки инструментами наблюдения, а не привычкой к готовым ответам.</p></article>
+        <article class="bento-cell bento-persona bento-cell--interactive">
+          <span class="persona-glyph" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <h3>Собиратель общины</h3>
+          <p class="persona-pain">Наблюдения остаются личными и не входят в общий круг.</p>
+          <div class="persona-chips">
+            <a href="apps/researchlab/index.html#club">Клуб</a>
+            <a href="apps/researchlab/index.html#researches">Исследования</a>
+            <a href="apps/researchlab/index.html#board">Доска</a>
           </div>
-          <div class="section-heading">
-            <p class="eyebrow">Свива исследователей</p>
-            <h2 id="audience-title">Для тех, кто ищет смыслы, а не философию</h2>
-          </div>
-          <div class="audience-side audience-side--right">
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/scribe/scrolls.png" alt="" aria-hidden="true">Учитель и наставник</h3><p>Объясняйте механику букв через живые образы, а не через набор готовых терминов.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/clock.png" alt="" aria-hidden="true">Практик осознанного чтения</h3><p>Замедляйте чтение, чтобы замечать действие, среду и направление каждого слова.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/map.png" alt="" aria-hidden="true">Создатель карт смыслов</h3><p>Связывайте корни, состояния и наблюдения в собственную исследовательскую систему.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/archaeology/lamp.png" alt="" aria-hidden="true">Охотник за контекстом</h3><p>Подсвечивайте детали, которые теряются при быстром переводе и поверхностном чтении.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/desert/footprints.svg" alt="" aria-hidden="true">Путешественник по корням</h3><p>Идите по следам слова от первого образа к его живому действию в тексте.</p></article>
-            <article class="audience-card"><h3><img loading="lazy" decoding="async" class="audience-icon" src="assets/icons/32/ui/group.png" alt="" aria-hidden="true">Собиратель общины</h3><p>Приносите собственные наблюдения в разговор и помогайте другим видеть глубже.</p></article>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section club" id="club" aria-labelledby="club-title">
-      <div class="container">
-        <div class="club-card">
-          <div class="club-body">
-            <div class="club-copy">
-              <h2 class="club-title" id="club-title">
-                <img loading="lazy" decoding="async" class="club-title-icon" src="assets/icons/32/paleo/track.png" alt="" aria-hidden="true">
-                Палео-клуб
-                <span class="club-badge">СКОРО</span>
-              </h2>
-              <p class="club-lead">Живая община: вместе читаем палео-поток, учимся собирать слова и проходим карту состояний.</p>
-              <ul class="club-list">
-                <li>Буква и корень дня</li>
-                <li>Живые сессии и разбор-часы</li>
-                <li>Круги по ~10 человек</li>
-                <li>Практика палео-инженера (Акт IV)</li>
-              </ul>
+        </article>
+        <article class="bento-cell bento-corpus" aria-labelledby="corpus-title">
+          <p class="bento-kicker">Корпус</p>
+          <h2 id="corpus-title">Слои свидетельств, не чужой перевод</h2>
+          <div class="corpus-row">
+            <p class="corpus-label">Источники</p>
+            <div class="corpus-chips">
+              <a href="apps/researchlab/index.html#scripture-reader">МТ</a>
+              <a href="apps/researchlab/index.html#translation-comparator">LXX</a>
+              <a href="apps/researchlab/index.html#cartography">Кумран</a>
+              <a href="apps/researchlab/index.html#dictionaries">Пешитта</a>
+              <a href="apps/researchlab/index.html#exposure-masoretic">Масора</a>
+              <a href="apps/researchlab/index.html#translation-comparator">Синодал</a>
             </div>
-            <div class="club-action">
-              <form class="waitlist-form" id="waitlistForm" novalidate><div class="waitlist-row"><input class="waitlist-input" id="waitlistEmail" type="email" autocomplete="email" placeholder="Ваш email" aria-label="Email для уведомления"><button class="button" type="submit">Сообщить об открытии</button></div><p class="waitlist-status" id="waitlistStatus" role="status" aria-live="polite"></p></form>
-              <p class="club-note">Анонс открытия — на сайте и в Threads.</p>
-            </div>
           </div>
-        </div>
-      </div>
-      
-    </section>
+        </article>
 
-    <section class="section platform" id="tools" aria-labelledby="platform-title">
-      <div class="container">
-        <div class="section-heading">
-          <p class="eyebrow">Инструменты лаборатории</p>
-          <h2 id="platform-title">Рабочая зона для исследований</h2>
-          <p>Ниже — модули канонической SPA-лаборатории. Откройте любой инструмент и продолжите исследование внутри.</p>
-        </div>
-        <div class="preview-grid">
-          <article class="preview-card">
-            <div class="preview-copy"><h3>Карта пространств</h3><p>Собирайте переходы, границы и состояния в одной картографической поверхности.</p><a class="button button-outline" href="apps/researchlab/index.html#cartography">Открыть карту <span aria-hidden="true">↗</span></a></div>
-          </article>
-          <article class="preview-card">
-            <div class="preview-copy"><h3>Палео-клавиатура</h3><p>Работайте с буквами как с функциями и составляйте последовательности образов.</p><a class="button button-outline" href="apps/researchlab/index.html#paleo-keyboard">Открыть клавиатуру <span aria-hidden="true">↗</span></a></div>
-          </article>
-          <article class="preview-card">
-            <div class="preview-copy"><h3>Генератор улик</h3><p>Фиксируйте наблюдения, связывайте источники и удерживайте ход проверки.</p><a class="button button-outline" href="apps/researchlab/index.html#generators">Открыть генератор <span aria-hidden="true">↗</span></a></div>
-          </article>
-          <article class="preview-card"><div class="preview-copy"><h3>Палео-тренажёр</h3><p>Собирай смысл из крупных палео-букв и проверяй последовательность действий.</p><a class="button button-outline" href="apps/researchlab/index.html#learn/paleo-trainer">Открыть тренажёр <span aria-hidden="true">↗</span></a></div></article>
-          <article class="preview-card"><div class="preview-copy"><h3>Корневой словарь</h3><p>Ищите корни, слова и значения иврита в едином исследовательском корпусе.</p><a class="button button-outline" href="apps/researchlab/index.html#root-dictionary">Открыть словарь <span aria-hidden="true">↗</span></a></div></article>
-          <article class="preview-card"><div class="preview-copy"><h3>Мастерская конвейеров</h3><p>Собирайте последовательность исследовательских шагов и сохраняйте результаты проверки.</p><a class="button button-outline" href="apps/researchlab/index.html#workbench">Открыть мастерскую <span aria-hidden="true">↗</span></a></div></article>
-        </div>
-        <a class="text-link tools-all-link" href="apps/researchlab/index.html#dashboard">Все инструменты лаборатории →</a>
-      </div>
-    </section>
+        <article class="bento-cell bento-tool-flag bento-cell--interactive" id="tools" aria-labelledby="tool-flag-title">
+          <p class="bento-kicker">Витрина инструментов</p>
+          <div class="mini-frame mini-keys" aria-hidden="true"><span>𐤀</span><span>𐤁</span><span>𐤂</span><span>𐤃</span><span>𐤄</span><span>𐤅</span></div>
+          <div class="product-copy">
+            <h3 id="tool-flag-title">Палео-конструктор</h3>
+            <p>Буква как функция: собирайте последовательность образов и проверяйте переход.</p>
+            <a class="button button-outline" href="apps/researchlab/index.html#paleo-builder">Открыть конструктор</a>
+          </div>
+        </article>
+        <article class="bento-cell bento-tool bento-cell--interactive">
+          <div class="mini-frame mini-map" aria-hidden="true"><i style="left:18%;top:42%"></i><i style="left:44%;top:28%"></i><i style="left:62%;top:58%"></i><i style="left:78%;top:36%"></i></div>
+          <h3>Картография</h3>
+          <a class="text-link" href="apps/researchlab/index.html#cartography">Открыть →</a>
+        </article>
+        <article class="bento-cell bento-tool bento-cell--interactive">
+          <div class="mini-frame mini-keys" aria-hidden="true"><span>𐤊</span><span>𐤋</span><span>𐤌</span><span>𐤍</span><span>𐤎</span><span>𐤏</span></div>
+          <h3>Клавиатура</h3>
+          <a class="text-link" href="apps/researchlab/index.html#paleo-keyboard">Открыть →</a>
+        </article>
+        <article class="bento-cell bento-tool bento-cell--interactive">
+          <div class="mini-frame mini-chips" aria-hidden="true"><span>שרש</span><span>דבר</span><span>אור</span></div>
+          <h3>Корневой словарь</h3>
+          <a class="text-link" href="apps/researchlab/index.html#root-dictionary">Открыть →</a>
+        </article>
+        <article class="bento-cell bento-tool bento-cell--interactive">
+          <div class="mini-frame mini-timeline" aria-hidden="true"><div class="mini-rail"><span style="left:8%"></span><span style="left:32%"></span><span style="left:58%"></span><span style="left:82%"></span></div></div>
+          <h3>Лента времени</h3>
+          <a class="text-link" href="apps/researchlab/index.html#timeline">Открыть →</a>
+        </article>
+        <article class="bento-cell bento-cell--ink bento-club" id="club" aria-labelledby="club-title">
+          <p class="bento-kicker bento-kicker--on-ink">Палео-клуб</p>
+          <span class="club-mark" aria-hidden="true">𐤒</span>
+          <h2 id="club-title">Круг живого чтения</h2>
+          <p class="club-lead">Вместе читаем палео-поток, собираем слова и держим карту состояний. Круги по ~10 человек.</p>
+          <form class="waitlist-form" id="waitlistForm" novalidate>
+            <div class="waitlist-row">
+              <input class="waitlist-input" id="waitlistEmail" type="email" autocomplete="email" placeholder="Ваш email" aria-label="Email для уведомления">
+              <button class="button" type="submit">Сообщить об открытии</button>
+            </div>
+            <p class="waitlist-status" id="waitlistStatus" role="status" aria-live="polite"></p>
+          </form>
+          <p class="club-note">Анонс открытия — на сайте и в Threads.</p>
+        </article>
 
-    <section class="section" id="methodology" aria-labelledby="project-title">
-      <div class="container">
-        <div class="project-callout">
-          <div><p class="eyebrow">О проекте Alephy</p><h2 id="project-title">Сначала увидеть. Затем проверить.</h2><p>Alephy соединяет методологию, корпус источников и инструменты так, чтобы исследование не зависело от чужого перевода.</p></div>
-          <a class="button button-outline" href="apps/researchlab/index.html#methodology">Смотреть методологию ↗</a>
-        </div>
+        <article class="bento-cell bento-roadmap" aria-labelledby="roadmap-title">
+          <p class="bento-kicker">Дорожная карта</p>
+          <h2 id="roadmap-title">Что уже открыто</h2>
+          <ol class="roadmap-list">
+            <li><time datetime="2026-09">Сейчас</time><span>Лаборатория, корпус, анализаторы и конструктор.</span></li>
+            <li><time datetime="2026-12">Ближний круг</time><span>Палео-клуб: сессии, круги, разбор-часы.</span></li>
+            <li><time datetime="2027">Дальше</time><span>Совместные реконструкции и открытый корпус.</span></li>
+          </ol>
+        </article>
+
+        <article class="bento-cell bento-cell--ink bento-method" id="methodology" aria-labelledby="method-title">
+          <p class="bento-kicker bento-kicker--on-ink">Метод</p>
+          <h2 id="method-title">Сначала увидеть. Затем проверить.</h2>
+          <p class="method-lead">Методология, корпус и инструменты — чтобы исследование не зависело от чужого перевода.</p>
+          <div class="method-chips" aria-hidden="true">
+            <span>Давар</span><span>Свива</span><span>Хук</span><span>эмет / шекер</span>
+          </div>
+          <a class="button button-outline" href="apps/researchlab/index.html#methodology">Смотреть методологию</a>
+        </article>
       </div>
     </section>
 
@@ -1213,12 +806,17 @@
   </div>
 
   <footer class="site-footer">
-    <div class="container">
-      <div class="footer-top">
-        <a class="brand footer-brand" href="./" aria-label="Alephy — на главную"><svg viewBox="0 0 660 200" aria-hidden="true" focusable="false"><text x="0" y="160" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="600">𐤀</text><text x="170" y="146" fill="currentColor" font-family="'EB Garamond', Georgia, 'Times New Roman', serif" font-size="122" font-weight="600" letter-spacing="1">alephy</text></svg></a>
-        <p class="footer-slogan">Путь из тесноты в открытое пространство</p>
-        <div class="footer-bottom"><span>© Alephy Research Lab</span></div>
-      </div>
+    <div class="container footer-grid">
+      <a class="brand footer-brand" href="./" aria-label="Alephy — на главную"><svg viewBox="0 0 660 200" aria-hidden="true" focusable="false"><text x="0" y="160" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="600">𐤀</text><text x="170" y="146" fill="currentColor" font-family="'EB Garamond', Georgia, 'Times New Roman', serif" font-size="122" font-weight="600" letter-spacing="1">alephy</text></svg></a>
+      <nav class="footer-anchors" aria-label="Якоря лендинга">
+        <a href="#hero">Вход</a>
+        <a href="#map">Карта</a>
+        <a href="#mechanics">Механика</a>
+        <a href="#club">Клуб</a>
+        <a href="#tools">Инструменты</a>
+      </nav>
+      <p class="footer-slogan">Путь из тесноты в открытое пространство</p>
+      <div class="footer-bottom"><span>© Alephy Research Lab</span></div>
     </div>
   </footer>
   <button class="back-to-top" id="backToTop" type="button" aria-label="Наверх">↑</button>
@@ -1421,7 +1019,7 @@
     const backToTop = document.querySelector('#backToTop');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scrollOptions = reduceMotion ? { behavior: 'auto' } : { behavior: 'smooth' };
-    document.querySelectorAll('.desktop-anchor-nav a').forEach((link) => {
+    document.querySelectorAll('.desktop-anchor-nav a, .footer-anchors a').forEach((link) => {
       link.addEventListener('click', (event) => {
         const target = document.querySelector(link.getAttribute('href'));
         if (!target) return;
@@ -1441,26 +1039,20 @@
     updateLandingScroll();
     backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, ...scrollOptions }));
 
-    let letterPopover = null;
-    function closeLetterPopover() { letterPopover?.remove(); letterPopover = null; }
-    function openLetterPopover(letter) {
-      closeLetterPopover();
-      letterPopover = document.createElement('aside');
-      letterPopover.className = 'letter-popover';
-      letterPopover.setAttribute('role', 'dialog');
-      letterPopover.innerHTML = `<strong>${letter.dataset.letter}</strong><div>${letter.dataset.image}</div><small>${letter.dataset.function}</small>`;
-      document.body.appendChild(letterPopover);
-      const box = letter.getBoundingClientRect();
-      const pop = letterPopover.getBoundingClientRect();
-      letterPopover.style.left = `${Math.min(Math.max(14, box.left + box.width / 2 - pop.width / 2), window.innerWidth - pop.width - 14)}px`;
-      letterPopover.style.top = `${box.bottom + 10 + pop.height > window.innerHeight ? Math.max(14, box.top - pop.height - 10) : box.bottom + 10}px`;
-    }
-    document.querySelectorAll('[data-letter]').forEach((letter) => {
-      letter.addEventListener('click', (event) => { event.stopPropagation(); openLetterPopover(letter); });
-      letter.addEventListener('mouseenter', () => { if (window.matchMedia('(hover: hover)').matches) openLetterPopover(letter); });
+    const mechNotes = {
+      davar: 'Давар — слово как последовательность действий, а не готовый ярлык.',
+      or: 'Ор — прояснение: образ становится видим.',
+      hoshekh: 'Хошех — теснота, где движение ещё не раскрыто.',
+      sviva: 'Свива — среда, в которой действие удерживается.',
+      huk: 'Хук — сцепление звеньев; проверка, что цепь не рвётся.'
+    };
+    const mechNote = document.querySelector('#mechNote');
+    document.querySelectorAll('.mech-chip').forEach((chip) => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.mech-chip').forEach((c) => c.classList.toggle('is-on', c === chip));
+        if (mechNote) mechNote.textContent = mechNotes[chip.dataset.mech] || mechNotes.davar;
+      });
     });
-    document.addEventListener('click', (event) => { if (letterPopover && !letterPopover.contains(event.target) && !event.target.closest('[data-letter]')) closeLetterPopover(); });
-    document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeLetterPopover(); });
 
     // Адаптер: подключённый Supabase используется напрямую, иначе очередь остаётся локальной.
     const waitlistForm = document.querySelector('#waitlistForm');

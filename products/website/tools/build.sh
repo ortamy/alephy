@@ -24,6 +24,7 @@ cp "$ROOT_DIR/favicon.svg" "$BUILD_DIR/"
 cp "$ROOT_DIR/robots.txt" "$BUILD_DIR/"
 cp "$ROOT_DIR/sitemap.xml" "$BUILD_DIR/"
 cp "$ROOT_DIR/files.json" "$BUILD_DIR/" 2>/dev/null || true
+cp "$ROOT_DIR/site.css" "$BUILD_DIR/"
 
 # 2.1. Копирование css/ (lean-CSS лендинга)
 cp -r "$ROOT_DIR/css" "$BUILD_DIR/css"
