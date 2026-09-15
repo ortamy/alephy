@@ -80,27 +80,24 @@
     }
   };
 
-  function hero(kicker, title, description, meta) {
-    if (window.LabHero && window.LabHero.render) {
-      return window.LabHero.render({
-        kicker: kicker,
-        title: title,
-        subtitle: description,
-        icon: 'archaeology/testtube.png',
-        meta: meta || ['8 слоёв', 'локальный mock', 'эмет / шекер']
-      });
-    }
-    return '<div class="analyzers-hero">' + esc(kicker) + '</div><div><h1>' + esc(title) + '</h1><p>' + esc(description) + '</p></div>';
-  }
-  function pageHead(icon, title, description) { return '<div class="analyzer-page-head"><img class="analyzer-page-head__icon" src="' + icon + '" alt=""><div><h1>' + esc(title) + '</h1><p>' + esc(description) + '</p></div></div>'; }
   function card(icon, title, description, route) { return '<a class="gc-card" href="#' + route + '"><span class="gc-card-icon"><img src="' + icon + '" width="20" height="20" alt=""></span><span class="gc-card-body"><span class="gc-card-title">' + esc(title) + '</span><span class="gc-card-desc">' + esc(description) + '</span></span><span class="gc-card-arrow" aria-hidden="true">→</span></a>'; }
+  function emptyState(text) {
+    return '<div class="analyzer-empty"><span class="analyzer-empty-glyph" aria-hidden="true">𐤀</span><strong>Нет прохода</strong><p>' + esc(text) + '</p></div>';
+  }
+  function iconBtn(id, icon, label, hidden) {
+    return '<button class="analyzer-icon-btn" type="button" id="' + id + '" aria-label="' + esc(label) + '" title="' + esc(label) + '"' + (hidden ? ' hidden' : '') + '><i data-lucide="' + icon + '"></i></button>';
+  }
+  function syncIcons() {
+    if (window.LabIcons && typeof window.LabIcons.sync === 'function') window.LabIcons.sync();
+  }
 
   function renderOverview(container) {
     container.innerHTML = '<div class="analyzers-shell"><div class="analyzers-grid">' + card(ICONS.layer, 'Слой-анализ', 'Показывает процентное соотношение восьми слоёв подмен и формирует краткую диагностику доминирующего слоя.', 'layer-analyzer') + card(ICONS.ai, 'ИИ-анализ', 'Даёт смысловую интерпретацию и рекомендации. Сейчас работает автономный mock; API подключается через единый адаптер.', 'ai-analyzer') + card(ICONS.dialect, 'Диалект-анализ', 'Находит грецизмы и латинизмы и предлагает ивритские или палео-аналоги для дальнейшей проверки.', 'dialect-analyzer') + card(ICONS.state, 'Анализатор состояний', 'Выберите состояние и получите соответствующий псалом с краткой диагностикой перехода.', 'state-analyzer') + card(ICONS.tensor, 'Лингвистический тензор', 'Точечное сравнение двух языков по шести осям: где поток удерживает действие, корень и физику образа.', 'linguistic-tensor') + card(ICONS.word, 'Разбор слов', 'Разбирает слово по палео-механике: показывает палео-образы, корень, значение и цепочку подмен.', 'word-analyzer') + '</div></div>';
+    syncIcons();
   }
 
-  function copyText(text, status) {
-    function done() { status.textContent = 'Текст псалма скопирован.'; }
+  function copyText(text, status, message) {
+    function done() { status.textContent = message || 'Скопировано.'; }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(done).catch(function() { fallback(); });
       return;
@@ -119,7 +116,8 @@
   }
 
   function renderStateAnalyzer(container) {
-    container.innerHTML = '<div class="analyzers-shell">' + pageHead(ICONS.state, 'Анализатор состояний', 'Выберите состояние потока и получите связанный псалом с краткой диагностикой.') + '<div class="state-analyzer-workspace"><section class="analyzer-panel"><label class="analyzer-label" for="state-analyzer-select">Состояние</label><select class="analyzer-select" id="state-analyzer-select"><option value="">Выберите состояние</option></select><p class="analyzer-helper">Псалом и диагностика загружаются из локального набора данных Research Lab.</p></section><section class="analyzer-panel state-analyzer-result" id="state-analyzer-result" aria-live="polite"><div class="analyzer-empty">Выберите состояние, чтобы открыть псалом.</div></section></div></div>';
+    container.innerHTML = '<div class="analyzers-shell"><div class="state-analyzer-workspace"><section class="analyzer-panel"><div class="analyzer-head"><h2 class="analyzer-head-title">Состояние</h2></div><label class="analyzer-label" for="state-analyzer-select">Состояние потока</label><select class="analyzer-select" id="state-analyzer-select"><option value="">Выберите состояние</option></select><p class="analyzer-helper">Псалом и диагностика загружаются из локального набора данных Research Lab.</p></section><section class="analyzer-panel"><div class="analyzer-head"><h2 class="analyzer-head-title">Результат прохода</h2></div><div class="analyzer-result" id="state-analyzer-result" aria-live="polite">' + emptyState('Выберите состояние, чтобы открыть псалом.') + '</div></section></div></div>';
+    syncIcons();
     var select = container.querySelector('#state-analyzer-select');
     var result = container.querySelector('#state-analyzer-result');
     fetch('data/tehillim.json').then(function(response) {
@@ -134,19 +132,51 @@
       });
       select.addEventListener('change', function() {
         var item = items.find(function(entry) { return entry.state === select.value; });
-        if (!item) { result.innerHTML = '<div class="analyzer-empty">Выберите состояние, чтобы открыть псалом.</div>'; return; }
+        if (!item) { result.innerHTML = emptyState('Выберите состояние, чтобы открыть псалом.'); return; }
         var copyPayload = 'Теhилим ' + item.psalm + '\n\n' + item.text;
-        result.innerHTML = '<div class="state-analyzer-heading"><span class="analyzers-chip">' + esc(item.label || item.state) + '</span><strong>Псалом ' + esc(item.psalm) + '</strong></div><div class="state-analyzer-psalm" dir="auto">' + esc(item.text) + '</div><div class="analyzer-diagnosis"><strong>Диагностика состояния</strong>' + esc(item.diagnosis) + '</div><div class="analyzer-controls"><button class="lab-btn lab-btn-secondary" type="button" id="state-analyzer-copy">Скопировать текст</button><span class="analyzer-status" id="state-analyzer-status" role="status" aria-live="polite"></span></div>';
-        container.querySelector('#state-analyzer-copy').addEventListener('click', function() { copyText(copyPayload, container.querySelector('#state-analyzer-status')); });
+        result.innerHTML = '<div class="state-analyzer-heading"><span class="analyzer-chip">' + esc(item.label || item.state) + '</span><strong>Псалом ' + esc(item.psalm) + '</strong></div><div class="state-analyzer-psalm" dir="auto">' + esc(item.text) + '</div><div class="analyzer-diagnosis"><strong>Диагностика состояния</strong>' + esc(item.diagnosis) + '</div><div class="analyzer-controls"><button class="lab-btn lab-btn-secondary" type="button" id="state-analyzer-copy">Скопировать текст</button><span class="analyzer-status" id="state-analyzer-status" role="status" aria-live="polite"></span></div>';
+        syncIcons();
+        container.querySelector('#state-analyzer-copy').addEventListener('click', function() { copyText(copyPayload, container.querySelector('#state-analyzer-status'), 'Текст псалма скопирован.'); });
       });
     }).catch(function(error) { result.innerHTML = '<div class="lab-alert lab-alert-error">' + esc(error.message) + '</div>'; });
   }
 
-  function resultShell(container, body) { var result = container.querySelector('.analyzer-result'); if (result) result.innerHTML = body; }
+  function resultShell(container, body, copyPayload, dominantName) {
+    var result = container.querySelector('.analyzer-result');
+    if (result) result.innerHTML = body;
+    var copyBtn = container.querySelector('#analyzer-copy');
+    if (copyBtn) {
+      copyBtn.hidden = !copyPayload;
+      copyBtn.setAttribute('data-copy', copyPayload || '');
+    }
+    var chip = container.querySelector('#analyzer-dominant');
+    if (chip) {
+      if (dominantName) {
+        chip.hidden = false;
+        chip.textContent = dominantName;
+      } else {
+        chip.hidden = true;
+        chip.textContent = '';
+      }
+    }
+    syncIcons();
+  }
+  function layerCopyText(result) {
+    var lines = ['Слой-анализ', result.words + ' слов · ' + result.sentences + ' предложений'];
+    result.layers.forEach(function(item) {
+      lines.push(item.name + ': ' + item.percentage.toFixed(2) + '% · ' + item.count);
+    });
+    if (result.dominant) lines.push('Доминанта: ' + result.dominant.name + '. ' + result.dominant.diagnosis);
+    return lines.join('\n');
+  }
   function layerResult(result) {
-    var rows = result.layers.map(function(item) { return '<div class="analyzer-layer-row"><div class="analyzer-layer-row__head"><span>' + esc(item.name) + '</span><span class="analyzer-layer-row__value">' + item.percentage.toFixed(2) + '% · ' + item.count + '</span></div><div class="analyzer-bar"><span style="width:' + item.percentage + '%"></span></div></div>'; }).join('');
-    var table = result.layers.map(function(item) { var markers = Object.keys(item.markers).map(function(key) { return esc(key) + ' × ' + item.markers[key]; }).join(', ') || '—'; return '<tr><td>' + esc(item.name) + '</td><td>' + markers + '</td><td>' + item.percentage.toFixed(2) + '%</td></tr>'; }).join('');
-    return '<div class="analyzer-result__summary"><div class="analyzer-stat"><strong>' + result.words + '</strong><span>слов</span></div><div class="analyzer-stat"><strong>' + result.sentences + '</strong><span>предложений</span></div><div class="analyzer-stat"><strong>' + (result.dominant ? esc(result.dominant.name) : '—') + '</strong><span>доминанта</span></div></div><div aria-label="Проценты слоёв">' + rows + '</div><div class="analyzer-table-wrap"><table class="analyzer-table"><thead><tr><th>Слой</th><th>Маркеры</th><th>Доля</th></tr></thead><tbody>' + table + '</tbody></table></div>' + (result.dominant ? '<div class="analyzer-diagnosis"><strong>Диагностика: ' + esc(result.dominant.name) + '</strong>' + esc(result.dominant.diagnosis) + '</div>' : '<div class="analyzer-empty">Маркеры слоёв не выявлены. Проверьте текст через физический образ и Свиву.</div>');
+    var rows = result.layers.map(function(item) {
+      return '<div class="analyzer-layer-row"><div class="analyzer-layer-row__head"><span>' + esc(item.name) + '</span><span class="analyzer-layer-row__value">' + item.percentage.toFixed(2) + '%</span></div><div class="analyzer-bar" role="presentation"><span style="width:' + item.percentage + '%"></span></div></div>';
+    }).join('');
+    var diagnosis = result.dominant
+      ? '<p class="analyzer-diagnosis-text">' + esc(result.dominant.diagnosis) + '</p>'
+      : emptyState('Маркеры слоёв не выявлены. Проверьте текст через физический образ и Свиву.');
+    return '<div class="analyzer-layers" aria-label="Проценты слоёв">' + rows + '</div>' + diagnosis;
   }
   function dialectResult(result) {
     function group(key) { var items = result.dialect[key]; return '<div class="analyzer-dialect-card"><h3>' + esc(DIALECTS[key].title) + ' <small>(' + items.length + ')</small></h3>' + (items.length ? items.map(function(item) { return '<div class="analyzer-dialect-item"><span class="analyzer-mark">' + esc(item.term) + '</span><span>→ ' + esc(item.replacement) + '</span></div>'; }).join('') : '<p class="analyzer-helper">Не найдены</p>') + '</div>'; }
@@ -156,13 +186,45 @@
 
   function renderAnalyzerPage(container, kind) {
     var isLayer = kind === 'layer', isAI = kind === 'ai';
-    var title = isLayer ? 'Слой-анализ' : isAI ? 'ИИ-анализ' : 'Диалект-анализ';
-    var desc = isLayer ? 'Измерьте присутствие восьми слоёв и найдите доминирующий сдвиг.' : isAI ? 'Получите смысловую интерпретацию с прозрачным выбором режима и модели.' : 'Найдите грецизмы и латинизмы и соберите карту возможных замен.';
-    var settings = isAI ? '<div class="analyzer-settings"><label class="analyzer-label">Модель<select class="analyzer-select" id="analyzer-model"><option value="alephy-local">Alephy Local</option><option value="paleo-reasoner">Paleo Reasoner</option><option value="api-default">API Default</option></select></label><label class="analyzer-label">Режим<select class="analyzer-select" id="analyzer-mode"><option value="local">Локально</option><option value="api">API</option></select></label></div>' : '';
-    container.innerHTML = '<div class="analyzers-shell">' + pageHead(isLayer ? ICONS.layer : isAI ? ICONS.ai : ICONS.dialect, title, desc) + '<div class="analyzer-workspace"><form class="analyzer-panel" id="analyzer-form"><h2>Входной Давар</h2>' + settings + '<label class="analyzer-label" for="analyzer-input">Текст для анализа</label><textarea class="analyzer-textarea" id="analyzer-input" required placeholder="Вставьте текст для вертикального прохода…"></textarea><div class="analyzer-controls"><button class="lab-btn lab-btn-primary" type="submit">Запустить анализ</button><button class="lab-btn lab-btn-secondary" type="button" id="analyzer-clear">Очистить</button></div><p class="analyzer-helper">Результат — диагностический сигнал, а не автоматический приговор. Сверяйте его с методологией MANIFEST.</p><div class="analyzer-status" id="analyzer-status" role="status" aria-live="polite"></div></form><section class="analyzer-panel" aria-live="polite"><h2>Результат прохода</h2><div class="analyzer-result"><div class="analyzer-empty">Заполните поле и запустите анализ.</div></div></section></div></div>';
-    var form = container.querySelector('#analyzer-form'), input = container.querySelector('#analyzer-input'), status = container.querySelector('#analyzer-status');
-    form.addEventListener('submit', function(event) { event.preventDefault(); status.textContent = 'Проход выполняется…'; var settingsValue = { model: container.querySelector('#analyzer-model') ? container.querySelector('#analyzer-model').value : 'alephy-local', mode: container.querySelector('#analyzer-mode') ? container.querySelector('#analyzer-mode').value : 'local' }; AnalyzerAdapter.analyze(input.value, kind, settingsValue).then(function(result) { status.textContent = result.source === 'mock' ? 'Готово · автономный mock' : 'Готово · API'; resultShell(container, isLayer ? layerResult(result.layer) : kind === 'dialect' ? dialectResult(result) : aiResult(result)); }).catch(function(error) { status.textContent = error.message; }); });
-    container.querySelector('#analyzer-clear').addEventListener('click', function() { input.value = ''; status.textContent = ''; resultShell(container, '<div class="analyzer-empty">Заполните поле и запустите анализ.</div>'); input.focus(); });
+    var settings = isAI ? '<div class="analyzer-settings"><label class="analyzer-label" for="analyzer-model">Модель<select class="analyzer-select" id="analyzer-model"><option value="alephy-local">Alephy Local</option><option value="paleo-reasoner">Paleo Reasoner</option><option value="api-default">API Default</option></select></label><label class="analyzer-label" for="analyzer-mode">Режим<select class="analyzer-select" id="analyzer-mode"><option value="local">Локально</option><option value="api">API</option></select></label></div>' : '';
+    var resultTools = isLayer
+      ? '<span class="analyzer-chip" id="analyzer-dominant" hidden></span>' + iconBtn('analyzer-copy', 'copy', 'Копировать', true)
+      : '';
+    container.innerHTML = '<div class="analyzers-shell"><div class="analyzer-workspace"><form class="analyzer-panel" id="analyzer-form"><div class="analyzer-head"><h2 class="analyzer-head-title">Входной Давар</h2></div>' + settings + '<label class="analyzer-label analyzer-sr" for="analyzer-input">Текст для анализа</label><textarea class="analyzer-textarea" id="analyzer-input" required placeholder="Вставьте текст для вертикального прохода…"></textarea><div class="analyzer-controls"><button class="lab-btn lab-btn-primary" type="submit">Запустить анализ</button>' + iconBtn('analyzer-clear', 'eraser', 'Очистить') + '</div><p class="analyzer-helper">Результат — диагностический сигнал, а не автоматический приговор. Сверяйте его с методологией MANIFEST.</p><div class="analyzer-status" id="analyzer-status" role="status" aria-live="polite"></div></form><section class="analyzer-panel" aria-live="polite"><div class="analyzer-head"><h2 class="analyzer-head-title">Результат прохода</h2>' + resultTools + '</div><div class="analyzer-result">' + emptyState('Заполните поле и запустите анализ.') + '</div></section></div></div>';
+    syncIcons();
+    var form = container.querySelector('#analyzer-form');
+    var input = container.querySelector('#analyzer-input');
+    var status = container.querySelector('#analyzer-status');
+    var copyBtn = container.querySelector('#analyzer-copy');
+    form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      status.textContent = 'Проход выполняется…';
+      var settingsValue = {
+        model: container.querySelector('#analyzer-model') ? container.querySelector('#analyzer-model').value : 'alephy-local',
+        mode: container.querySelector('#analyzer-mode') ? container.querySelector('#analyzer-mode').value : 'local'
+      };
+      AnalyzerAdapter.analyze(input.value, kind, settingsValue).then(function(result) {
+        status.textContent = result.source === 'mock' ? 'Готово · автономный mock' : 'Готово · API';
+        if (isLayer) {
+          resultShell(container, layerResult(result.layer), layerCopyText(result.layer), result.layer.dominant && result.layer.dominant.name);
+        } else if (kind === 'dialect') {
+          resultShell(container, dialectResult(result));
+        } else {
+          resultShell(container, aiResult(result));
+        }
+      }).catch(function(error) { status.textContent = error.message; });
+    });
+    container.querySelector('#analyzer-clear').addEventListener('click', function() {
+      input.value = '';
+      status.textContent = '';
+      resultShell(container, emptyState('Заполните поле и запустите анализ.'));
+      input.focus();
+    });
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function() {
+        copyText(copyBtn.getAttribute('data-copy') || '', status);
+      });
+    }
   }
 
   window.AlephyAnalyzers = { render: function(container, moduleId) { if (moduleId === 'analyzers') renderOverview(container); else if (moduleId === 'state-analyzer') renderStateAnalyzer(container); else renderAnalyzerPage(container, moduleId === 'layer-analyzer' ? 'layer' : moduleId === 'ai-analyzer' ? 'ai' : 'dialect'); }, adapter: AnalyzerAdapter, layers: LAYERS };

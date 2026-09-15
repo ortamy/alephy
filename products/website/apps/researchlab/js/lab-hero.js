@@ -172,7 +172,7 @@
       icon: 'ui/link.png'
     },
     'word-analyzer': {
-      kicker: 'АЛЕФИ · РАЗБОР СЛОВ',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Разбор слов',
       subtitle: 'Переход от формы слова к корню, образу и карте смысловых сдвигов.',
       icon: 'archaeology/testtube.png'
@@ -268,7 +268,7 @@
       icon: 'paleo/track.png'
     },
     'linguistic-tensor': {
-      kicker: 'АЛЕФИ · ЛИНГВИСТИЧЕСКИЙ ТЕНЗОР',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Лингвистический тензор',
       subtitle: 'Сопоставьте два языка и посмотрите, где их поток удерживает действие, корень и физику образа.',
       icon: 'archaeology/testtube.png'
@@ -298,10 +298,34 @@
       icon: 'paleo/track.png'
     },
     'analyzers': {
-      kicker: 'ALEPHY · RESEARCH LAB',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Анализаторы',
       subtitle: 'Вертикальные инструменты для диагностики текста: увидеть слой, проверить смысловой сдвиг и найти слова, которые требуют палео-восстановления.',
       icon: 'archaeology/testtube.png'
+    },
+    'layer-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Слой-анализ',
+      subtitle: 'Измерьте присутствие восьми слоёв и найдите доминирующий сдвиг.',
+      icon: 'ui/map.png'
+    },
+    'ai-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'ИИ-анализ',
+      subtitle: 'Получите смысловую интерпретацию с прозрачным выбором режима и модели.',
+      icon: 'crafts/hammer-and-chisel.png'
+    },
+    'dialect-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Диалект-анализ',
+      subtitle: 'Найдите грецизмы и латинизмы и соберите карту возможных замен.',
+      icon: 'scribe/scroll.png'
+    },
+    'state-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Анализатор состояний',
+      subtitle: 'Выберите состояние потока и получите связанный псалом с краткой диагностикой.',
+      icon: 'paleo/track.png'
     }
   };
     /* Внутренние экраны модулей: '<moduleId>/<view>' → шапка экрана.
@@ -411,14 +435,15 @@
     return element;
   }
 
-  // Для модулей без статической записи шапка собирается по подписи сайдбара.
+  // Для модулей без статической записи шапка не маскируется под route-id.
   function fallbackConfig(moduleId) {
-    var navItem = document.querySelector('.sidebar-item[data-module="' + moduleId + '"]');
-    var title = navItem ? navItem.textContent.trim().replace(/\s+/g, ' ') : moduleId.replace(/[-_]+/g, ' ');
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('[LabHero] нет TARGETS для маршрута «' + moduleId + '»');
+    }
     return {
-      kicker: 'АЛЕФИ',
-      title: title,
-      subtitle: ''
+      kicker: 'АЛЕФИ · ОШИБКА ШАПКИ',
+      title: 'Нет записи шапки',
+      subtitle: 'Маршрут «' + moduleId + '» не зарегистрирован в LabHero.TARGETS.'
     };
   }
 
