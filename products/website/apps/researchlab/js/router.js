@@ -116,10 +116,6 @@ const LabRouter = (function() {
 
     // Слушаем hashchange
     window.addEventListener('hashchange', handleHash);
-    window.addEventListener('load', function() {
-      // Если есть хеш при загрузке — переходим
-      setTimeout(handleHash, 100);
-    });
 
     // Обработка кликов по sidebar-item
     document.querySelectorAll('.sidebar-item').forEach(function(item) {
@@ -177,7 +173,7 @@ const LabRouter = (function() {
       'methodology', 'paleo-mechanics', 'paleo-linguistics',
       'language-map', 'religionisms', 'root-dictionary', 'paleo-glossary', 'paleo-builder',
       'word-analyzer', 'scripture-reader', 'generators',
-      'checkers', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
+      'checkers', 'religionism-checker', 'etymology-checker', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
       'cartography', 'states', 'timeline', 'ai-agents', 'pipelines', 'agent-server', 'ed-chat', 'vision',
       'paleo-keyboard', 'admin-settings', 'analyzers', 'layer-analyzer', 'ai-analyzer', 'dialect-analyzer', 'state-analyzer', 'exposure-editor', 'clue-generator',
       'video-lab', 'prompt-generator', 'davar-checker', 'tree-checker', 'board', 'name-decoder', 'linguistic-tensor',
@@ -351,12 +347,7 @@ const LabRouter = (function() {
       onModuleChange(moduleId, parsed);
     }
     renderBreadcrumbs(moduleId, parsed);
-    // PageController и LabHero могут обновить шапку асинхронно.
-    window.setTimeout(function() { renderBreadcrumbs(moduleId, parseHash()); }, 0);
-    window.setTimeout(function() { renderBreadcrumbs(moduleId, parseHash()); }, 80);
-    window.setTimeout(function() {
-      if (window.RevealObserver) window.RevealObserver.scan(modules[moduleId]);
-    }, 120);
+    if (window.RevealObserver) window.RevealObserver.scan(modules[moduleId]);
 
     // Прокрутка вверх
     window.scrollTo({ top: 0, behavior: 'smooth' });

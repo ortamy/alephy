@@ -18,10 +18,16 @@ const PageController = (function() {
     return d.innerHTML;
   }
 
+  var htmlCache = {};
+
   function fetchPage(path) {
+    if (htmlCache[path]) return Promise.resolve(htmlCache[path]);
     return fetch(path).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + path);
       return r.text();
+    }).then(function(html) {
+      htmlCache[path] = html;
+      return html;
     });
   }
 
@@ -1270,6 +1276,12 @@ const PageController = (function() {
     console.log('[PC] Рендерим модуль:', moduleId, container);
     if (!container) return;
 
+    if (container.dataset.loading === '1') {
+      applyModuleHero(moduleId, container, parsed);
+      if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
+      return;
+    }
+
     if (container.dataset.loaded && container.innerHTML.trim() !== '') {
       if (moduleId === 'scripture-reader' && window.ScriptureReader) {
         window.ScriptureReader.init(parsed);
@@ -1427,6 +1439,7 @@ const PageController = (function() {
           '<div class="search-wrap"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите..." onkeydown="if(event.key===\'Enter\')EtymologyLab.analyze()"><button class="lab-btn lab-btn-primary" onclick="EtymologyLab.analyze()">Разобрать</button></div>' +
           '<div id="el-results"></div>';
         container.dataset.loaded = '1';
+        if (window.EtyLab || window.EtymologyLab) (window.EtyLab || window.EtymologyLab).init();
         break;
 
       case 'scripture-reader':
@@ -1599,6 +1612,7 @@ const PageController = (function() {
           '<div id="rc-result" class="lab-card" style="display:none;"><div class="lab-card-header"><img src="assets/icons/32/scribe/scroll.png" width="32" height="32" alt="Результат" style="vertical-align: middle; margin-right: 6px;"> Результат проверки</div><div class="lab-card-body" id="rc-body"></div></div>' +
           '<div class="lab-card"><div class="lab-card-header"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt="Словарь" style="vertical-align: middle; margin-right: 6px;"> Словарь подмен</div><div class="lab-card-body" id="rc-dict"></div></div>';
         container.dataset.loaded = '1';
+        if (window.RelChecker) window.RelChecker.init();
         break;
 
       case 'religionisms':
@@ -1737,10 +1751,20 @@ const PageController = (function() {
       case 'generators':
       case 'checkers':
       case 'translation-comparator':
+        if (container.dataset.loading === '1') return;
+        if (container.dataset.loaded === '1' && container.innerHTML.trim() !== '') {
+          if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
+          if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
+          if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
+          if (window.RevealObserver) window.RevealObserver.scan(container);
+          break;
+        }
         showSpinner(container, 'Загрузка модуля…');
         fetchPage('pages/' + moduleId + '.html').then(function(html) {
+          if (container.dataset.loading !== '1') return;
           container.innerHTML = html;
           container.dataset.loaded = '1';
+          delete container.dataset.loading;
           if (moduleId === 'paleo-builder' && window.PaleoBuilder) {
             window.PaleoBuilder.init(container);
           }
@@ -1750,7 +1774,10 @@ const PageController = (function() {
           if (moduleId === 'translation-comparator' && window.TransComp) {
             window.TransComp.init();
           }
+          if (window.RevealObserver) window.RevealObserver.scan(container);
         }).catch(function(err) {
+          if (container.dataset.loading !== '1') return;
+          delete container.dataset.loading;
           showError(container, 'Ошибка загрузки модуля: ' + err.message);
         });
         break;
@@ -1765,7 +1792,6 @@ const PageController = (function() {
         break;
 
       case 'davar-checker':
-        showSpinner(container, 'Загрузка…');
         if (window.DavarChecker) {
           window.DavarChecker.init(container);
         } else {
@@ -2148,8 +2174,6 @@ const PageController = (function() {
     setTimeout(function() {
       if (window.RootDict) RootDict.init();
     }, 500);
-    if (window.EtyLab) EtyLab.init();
-    if (window.RelChecker) RelChecker.init();
     if (window.Religionisms) Religionisms.init();
     if (window.BoardLib) BoardLib.init();
     if (window.VisionUI) VisionUI.init();

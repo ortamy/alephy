@@ -292,3 +292,5 @@ const RelChecker = (function() {
     clear: clearInput
   };
 })();
+
+window.RelChecker = RelChecker;

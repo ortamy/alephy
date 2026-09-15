@@ -133,8 +133,6 @@
     });
   }
 
-  function coursesCount() { return (root.AlephyCourses && root.AlephyCourses.list) ? root.AlephyCourses.list.length : 0; }
-
   /* ===== Хаб: строка-шапка, группы, компактные карточки ===== */
 
   function completedLetters() {
@@ -207,8 +205,94 @@
     return '<div class="learn-hub-day"><span class="learn-hub-glyph" lang="hbo" aria-hidden="true">' + view.item.paleo + '</span><span class="learn-hub-day-body"><strong>Карточка дня</strong><span>' + esc(view.prompt) + '</span></span><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LearnLab.openReview()">Повторить</button></div>';
   }
 
+
+  function courseNumber(num) {
+    return String(num).padStart(2, '0');
+  }
+  function courseProgress() { var value = read(COURSE_KEY, { lessons: {} }); if (!value.lessons) value.lessons = {}; return value; }
+
+  function courseProgressFrac(course) {
+    var p = courseProgress();
+    var lessons = course.lessons || [];
+    var done = 0, total = lessons.length;
+    for (var i = 0; i < lessons.length; i++) {
+      if (p.lessons[lessons[i].id]) done++;
+    }
+    return total === 0 ? null : done / total;
+  }
+  function courseHubCategory(course) {
+    var frac = courseProgressFrac(course);
+    if (frac === null) return 'new';
+    if (frac >= 1) return 'done';
+    if (frac > 0) return 'in-progress';
+    return 'started';
+  }
+  function courseHubStatus(course) {
+    var frac = courseProgressFrac(course);
+    if (frac === null) return 'new';
+    if (frac >= 1) return 'done';
+    if (frac > 0) return 'progress';
+    return 'new';
+  }
+  function courseHubCard(course, index) {
+    var number = courseNumber(index + 1);
+    var frac = courseProgressFrac(course);
+    var status = courseHubStatus(course);
+    var statusDotClass = status === 'done' ? 'is-done' : status === 'progress' ? 'is-progress' : 'is-new';
+    var levelLabel = course.levelKey === 'from-zero' ? 'с нуля' : course.levelKey === 'advanced' ? 'продвинутый' : 'базовый';
+    var modulesLabel = course.modules + ' ' + (course.modules === 1 ? 'модуль' : course.modules < 5 ? 'модуля' : 'модулей');
+    var progressHtml = (frac !== null && frac > 0) ? '<div class="course-hub-progress"><span style="width:' + (frac * 100) + '%"></span></div>' : '';
+    var title = esc(course.title);
+    var desc = esc(course.description);
+    var ariaLabel = title + ', ' + levelLabel + ', ' + modulesLabel + ', статус: ' + (status === 'done' ? 'освоен' : status === 'progress' ? 'в работе' : 'новый');
+    return '<div class="course-hub-card" data-course-id="' + esc(course.id) + '" style="animation-delay:' + (index * 60) + 'ms" role="button" tabindex="0" aria-label="' + ariaLabel + '" onclick="LearnLab.openCourse(\'' + esc(course.id) + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();LearnLab.openCourse(\'' + esc(course.id) + '\');}">' +
+      '<div class="course-hub-head">' +
+        '<span class="course-hub-chip">' + number + '</span>' +
+        '<div class="course-hub-meta">' +
+          '<span class="course-hub-level">' + esc(levelLabel) + '</span>' +
+          '<span class="course-hub-modules">' + modulesLabel + '</span>' +
+          '<span class="learn-hub-dot ' + statusDotClass + '"></span>' +
+        '</div>' +
+      '</div>' +
+      '<h3 class="course-hub-title">' + title + '</h3>' +
+      '<p class="course-hub-desc">' + desc + '</p>' +
+      progressHtml +
+    '</div>';
+  }
+  function sortedCourses() {
+    var list = (root.AlephyCourses && root.AlephyCourses.list) || [];
+    return list.slice().sort(function(a, b) {
+      var aCat = courseHubCategory(a);
+      var bCat = courseHubCategory(b);
+      var order = { 'in-progress': 1, 'done': 2, 'started': 3, 'new': 4 };
+      if (order[aCat] !== order[bCat]) return order[aCat] - order[bCat];
+      return (a.title || '').localeCompare(b.title || '');
+    });
+  }
+  function courseHubGroup() {
+    var list = sortedCourses();
+    var cards = [];
+    for (var i = 0; i < list.length; i++) cards.push(courseHubCard(list[i], i));
+    var total = list.length;
+    return '<div class="learn-hub-group course-hub-group">' +
+      '<div class="learn-hub-group-head">' +
+        '<span class="learn-hub-group-label">КУРСЫ</span>' +
+        '<span class="learn-hub-group-rule" aria-hidden="true"></span>' +
+        '<span class="learn-hub-group-badge">' + total + '</span>' +
+      '</div>' +
+      '<div class="course-hub-cards">' + cards.join('') + '</div>' +
+    '</div>';
+  }
+
   function emptyStateMarkup() {
     return '<div class="learn-hub-empty"><span class="learn-hub-empty-glyph" lang="hbo" aria-hidden="true">𐤀</span><div class="learn-hub-empty-body"><h2>Поле пока пусто</h2><p>Ни одна буква ещё не начата. Алеф ждёт: первый урок вернёт глазу древнего читателя предметный образ — от знака к действию.</p></div><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.startFirst()">Начать первый урок</button></div>';
+  }
+
+  function renderCourses() {
+    var list = sortedCourses();
+    var cards = [];
+    for (var i = 0; i < list.length; i++) cards.push(courseHubCard(list[i], i));
+    return '<div class="course-hub-cards course-page-grid">' + cards.join('') + '</div>';
   }
 
   function renderHome() {
@@ -218,21 +302,16 @@
     var fresh = !hasProgress();
     var last = p.lastActivity ? new Date(p.lastActivity).toLocaleDateString('ru-RU') : '—';
     var trainerCount = Object.keys(p.letters).filter(function(key) { return p.letters[key] && p.letters[key].source === 'trainer'; }).length;
-    var courseState = courseProgress(), courseDone = Object.keys(courseState.lessons).length, courseTotal = 0;
-    ((root.AlephyCourses && root.AlephyCourses.list) || []).forEach(function(course) { courseTotal += (course.lessons || []).length; });
     var battleStored = !!(root.PaleoBattle && root.PaleoBattle.STORAGE_KEY && read(root.PaleoBattle.STORAGE_KEY, null));
 
     var cardsPractice = [
+      hubCard({ glyph:'𐤀', title:'Изучение иврита', desc:'22 урока по буквам: название, образ, значение и узнавание знака.', meta: completed + '/22 букв', status: completed === 0 ? 'new' : (completed === 22 ? 'done' : 'progress'), bar: completed / 22, onClick:'LearnLab.openLessons()' }),
       hubCard({ glyph:'𐤕', title:'Повторение', desc:'Короткая очередь карточек, которым пора вернуться в поле зрения.', meta: srs.total === 0 ? 'очередь пуста' : (srs.due > 0 ? srs.due + ' к повторению' : 'всё повторено'), status: srs.total === 0 ? 'new' : (srs.due > 0 ? 'progress' : 'done'), bar: srs.total ? srs.learned / srs.total : null, onClick:'LearnLab.openReview()' }),
       hubCard({ glyph:'𐤏', title:'Палео-тренажёр', desc:'Крупные палео-буквы: увидь образ, назови функцию, собери смысл.', meta: '6 тем · корни и смыслы', status: trainerCount > 0 ? 'progress' : 'new', bar: completed / 22, onClick:'LearnLab.openTrainer()' })
     ];
     var cardsGames = [
       hubCard({ glyph:'𐤔', title:'Угадай образ', desc:'Раунд на скорость: знак — к предметному образу, серия растёт.', meta: 'рекорд ' + record() + ' очков', status: record() > 0 ? 'progress' : 'new', bar: null, onClick:'LearnLab.openGame()' }),
       hubCard({ glyph:'⚔', title:'Палео-битва', desc:'Пошаговый матч: собери цепочку образов и защити своё чтение.', meta: battleStored ? 'матч в работе' : '5 раундов', status: battleStored ? 'progress' : 'new', bar: null, onClick:'LearnLab.openBattle()' })
-    ];
-    var cardsCourses = [
-      hubCard({ glyph:'𐤀', title:'Изучение иврита', desc:'22 урока по буквам: название, образ, значение и узнавание знака.', meta: completed + '/22 букв', status: completed === 0 ? 'new' : (completed === 22 ? 'done' : 'progress'), bar: completed / 22, onClick:'LearnLab.openLessons()' }),
-      hubCard({ glyph:'𐤅', title:'Курсы', desc:'Практические курсы: палео-механика, результат после каждого модуля.', meta: coursesCount() + ' курсов', status: courseDone === 0 ? 'new' : (courseTotal > 0 && courseDone >= courseTotal ? 'done' : 'progress'), bar: courseTotal ? courseDone / courseTotal : null, onClick:'LearnLab.openCourses()' })
     ];
 
     var cta = fresh
@@ -251,33 +330,8 @@
       '<p class="learn-hub-legend" aria-label="Легенда статусов"><span>Статус:</span><span class="learn-hub-dot"></span>новый<span class="learn-hub-dot is-progress"></span>в работе<span class="learn-hub-dot is-done"></span>освоен</p>' +
       hubGroup('Практика', cardsPractice, dayCardMarkup()) +
       hubGroup('Игры', cardsGames) +
-      hubGroup('Курсы', cardsCourses);
+      courseHubGroup();
   }
-
-  function courseCard(course, index) {
-    var levelLabel = course.levelKey === 'from-zero' ? 'с нуля' : course.levelKey === 'advanced' ? 'продвинутый' : 'базовый';
-    var statusClass = course.status === 'скоро' ? 'soon' : course.status === 'открыт' ? 'open' : 'draft';
-    var hasLessons = !!(course.lessons && course.lessons.length);
-    var click = hasLessons ? ' onclick="LearnLab.openCourse(\'' + course.id + '\')"' : '';
-    var tagOpen = hasLessons ? '<button type="button"' : '<article';
-    var tagClose = hasLessons ? '</button>' : '</article>';
-    return tagOpen + ' class="course-card' + (hasLessons ? ' is-open' : '') + '" style="animation-delay:' + index * 60 + 'ms"' + click + '>' +
-      '<div class="course-card-head"><span class="course-status is-' + statusClass + '">' + esc(course.status) + '</span>' +
-      '<h2>' + esc(course.title) + '</h2></div>' +
-      '<p class="course-desc">' + esc(course.description) + '</p>' +
-      '<div class="course-card-meta">' +
-        '<span class="course-tag level">' + esc(levelLabel) + '</span>' +
-        '<span class="course-tag">' + course.modules + ' ' + (course.modules === 1 ? 'модуль' : course.modules < 5 ? 'модуля' : 'модулей') + '</span>' +
-      '</div>' +
-      (hasLessons ? '<span class="course-card-action">Пройти курс</span>' : '') +
-    tagClose;
-  }
-  function renderCourses() {
-    var courses = (root.AlephyCourses && root.AlephyCourses.list) || [];
-    return '<div class="course-grid">' + courses.map(courseCard).join('') + '</div>';
-  }
-
-  function courseProgress() { var value = read(COURSE_KEY, { lessons: {} }); if (!value.lessons) value.lessons = {}; return value; }
 
   function renderCourse() {
     var course = state.course;

@@ -45,10 +45,17 @@
     return 'Неизвестно. Проверь через палео-сборку';
   }
 
+  var cachedMarkup = null;
+
   function bind(container) {
     var form = container.querySelector('#davar-checker-form');
     var input = container.querySelector('#davar-checker-input');
     if (!form || !input) return;
+    if (form.dataset.bound === '1') {
+      input.focus();
+      return;
+    }
+    form.dataset.bound = '1';
 
     form.addEventListener('submit', function(event) {
       event.preventDefault();
@@ -57,10 +64,29 @@
     input.focus();
   }
 
+  function applyMarkup(container, markup) {
+    container.innerHTML = markup;
+    container.dataset.loaded = '1';
+    delete container.dataset.loading;
+    bind(container);
+  }
+
   function init(container) {
     if (!container) return;
-    if (container.dataset.loaded === '1' || container.dataset.loading === '1') return;
+    if (container.querySelector('#davar-checker-form')) {
+      container.dataset.loaded = '1';
+      delete container.dataset.loading;
+      bind(container);
+      return;
+    }
+    if (container.dataset.loading === '1') return;
     container.dataset.loading = '1';
+    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка…</div></div>';
+
+    if (cachedMarkup) {
+      applyMarkup(container, cachedMarkup);
+      return;
+    }
 
     fetch(PAGE_PATH)
       .then(function(response) {
@@ -68,10 +94,8 @@
         return response.text();
       })
       .then(function(markup) {
-        container.innerHTML = markup;
-        container.dataset.loaded = '1';
-        delete container.dataset.loading;
-        bind(container);
+        cachedMarkup = markup;
+        applyMarkup(container, markup);
       })
       .catch(function(error) {
         delete container.dataset.loading;
