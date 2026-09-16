@@ -283,7 +283,7 @@ const AlephyStates = (function() {
     }).join('');
 
     return '<div class="states-page">' +
-      '<button type="button" class="cartography-world-launch states-map-launch" onclick="AlephyStates.openLandscape()">' +
+      '<button type="button" class="states-map-launch" onclick="AlephyStates.openLandscape()">' +
         '<span aria-hidden="true">𐤌</span>' +
         '<span><strong>Карта состояний</strong><small>Открыть полный слой состояний</small></span>' +
       '</button>' +

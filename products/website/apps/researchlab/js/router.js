@@ -41,6 +41,10 @@ const LabRouter = (function() {
       var workbenchTitle = window.Workbench.routeTitle(route);
       if (workbenchTitle) return workbenchTitle;
     }
+    if (route.indexOf('timeline') === 0 && window.Timeline && window.Timeline.routeTitle) {
+      var timelineTitle = window.Timeline.routeTitle(route);
+      if (timelineTitle) return timelineTitle;
+    }
     if (route === 'root-dictionary') return 'Корневой словарь';
     if (route === 'root-dictionary/search') return 'Поиск';
     if (route.indexOf('root-dictionary/search/') === 0) {
@@ -82,6 +86,11 @@ const LabRouter = (function() {
     // Battle — самостоятельный режим обучения, а не дочерний экран тренажёра.
     if (segments.join('/') === 'learn/paleo-trainer/battle') {
       routes.push('learn', 'learn/paleo-trainer/battle');
+    } else if (segments[0] === 'timeline' && segments[1] === 'compare') {
+      // Сравнение: каталог → лента A → сводная хронология (без сырых id в крошках).
+      routes.push('timeline');
+      if (segments[2]) routes.push('timeline/' + segments[2]);
+      routes.push(segments.join('/'));
     } else {
       for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
     }

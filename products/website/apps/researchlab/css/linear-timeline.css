@@ -169,9 +169,13 @@
   flex-shrink: 0;
 }
 
-.tl-status-dot--done { background: var(--status-green, #34c759); }
-.tl-status-dot--active { background: var(--status-amber, #ff9f0a); }
-.tl-status-dot--pending { background: var(--status-gray, #8e8e93); }
+.tl-status-dot--event { background: var(--status-green, #34c759); }
+.tl-status-dot--text { background: var(--accent-gold, #b8860b); }
+.tl-status-dot--artifact { background: var(--status-violet, #af7bec); }
+.tl-status-dot--distortion { background: var(--status-red, #ff453a); }
+.tl-status-dot--concept { background: var(--status-blue, #0a84ff); }
+.tl-status-dot--glyph { background: var(--status-teal, #64d2ff); }
+.tl-status-dot--person { background: var(--status-amber, #ff9f0a); }
 
 /* ===== META LINE: единый паттерн дата · счётчик ===== */
 .tl-meta-line {

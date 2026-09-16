@@ -41,6 +41,10 @@ const LabRouter = (function() {
       var workbenchTitle = window.Workbench.routeTitle(route);
       if (workbenchTitle) return workbenchTitle;
     }
+    if (route.indexOf('timeline') === 0 && window.Timeline && window.Timeline.routeTitle) {
+      var timelineTitle = window.Timeline.routeTitle(route);
+      if (timelineTitle) return timelineTitle;
+    }
     if (route === 'root-dictionary') return 'Корневой словарь';
     if (route === 'root-dictionary/search') return 'Поиск';
     if (route.indexOf('root-dictionary/search/') === 0) {
@@ -82,6 +86,11 @@ const LabRouter = (function() {
     // Battle — самостоятельный режим обучения, а не дочерний экран тренажёра.
     if (segments.join('/') === 'learn/paleo-trainer/battle') {
       routes.push('learn', 'learn/paleo-trainer/battle');
+    } else if (segments[0] === 'timeline' && segments[1] === 'compare') {
+      // Сравнение: каталог → лента A → сводная хронология (без сырых id в крошках).
+      routes.push('timeline');
+      if (segments[2]) routes.push('timeline/' + segments[2]);
+      routes.push(segments.join('/'));
     } else {
       for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
     }
@@ -116,10 +125,6 @@ const LabRouter = (function() {
 
     // Слушаем hashchange
     window.addEventListener('hashchange', handleHash);
-    window.addEventListener('load', function() {
-      // Если есть хеш при загрузке — переходим
-      setTimeout(handleHash, 100);
-    });
 
     // Обработка кликов по sidebar-item
     document.querySelectorAll('.sidebar-item').forEach(function(item) {
@@ -177,7 +182,7 @@ const LabRouter = (function() {
       'methodology', 'paleo-mechanics', 'paleo-linguistics',
       'language-map', 'religionisms', 'root-dictionary', 'paleo-glossary', 'paleo-builder',
       'word-analyzer', 'scripture-reader', 'generators',
-      'checkers', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
+      'checkers', 'religionism-checker', 'etymology-checker', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
       'cartography', 'states', 'timeline', 'ai-agents', 'pipelines', 'agent-server', 'ed-chat', 'vision',
       'paleo-keyboard', 'admin-settings', 'analyzers', 'layer-analyzer', 'ai-analyzer', 'dialect-analyzer', 'state-analyzer', 'exposure-editor', 'clue-generator',
       'video-lab', 'prompt-generator', 'davar-checker', 'tree-checker', 'board', 'name-decoder', 'linguistic-tensor',
@@ -351,12 +356,7 @@ const LabRouter = (function() {
       onModuleChange(moduleId, parsed);
     }
     renderBreadcrumbs(moduleId, parsed);
-    // PageController и LabHero могут обновить шапку асинхронно.
-    window.setTimeout(function() { renderBreadcrumbs(moduleId, parseHash()); }, 0);
-    window.setTimeout(function() { renderBreadcrumbs(moduleId, parseHash()); }, 80);
-    window.setTimeout(function() {
-      if (window.RevealObserver) window.RevealObserver.scan(modules[moduleId]);
-    }, 120);
+    if (window.RevealObserver) window.RevealObserver.scan(modules[moduleId]);
 
     // Прокрутка вверх
     window.scrollTo({ top: 0, behavior: 'smooth' });

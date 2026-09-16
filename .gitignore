@@ -62,3 +62,6 @@ reports/STATS_*.md
 # VS Code
 .vscode/settings.json
 .vscode/launch.json
+# Playwright / test artifacts
+.playwright-mcp/
+**/test-results/

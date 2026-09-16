@@ -1,24 +1,907 @@
 [
   {
+    "id": "tanakh-chronology",
+    "title": "Хронология ТаНаХа",
+    "paleoIcon": "𐤕",
+    "era": "tanakh",
+    "description": "Сквозная лента ТаНаХа: от Творения до Хануки. Даты — принятая в проекте школа (Исход ~1400 до н.э.); академические школы дают иные диапазоны — сверяй бейдж уверенности у каждого события.",
+    "events": [
+      {
+        "date": "Начало времён",
+        "sortKey": -9900,
+        "title": "Бриат hаОлам",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Творение неба и земли: Давар Яхве как действие, из которого выходит всё сущее. Начальная точка всех лент.",
+        "source": "content/tanakh/events/briat-haolam.md"
+      },
+      {
+        "date": "~2300 до н.э.",
+        "sortKey": -2300,
+        "title": "Мабуль",
+        "kind": "event",
+        "confidence": "hypothesis",
+        "description": "Потоп как переход между состояниями: старый мир перестаёт удерживать поток, сохраняется один ковчег.",
+        "source": "content/tanakh/events/mabul.md"
+      },
+      {
+        "date": "~1980 до н.э.",
+        "sortKey": -1980,
+        "title": "Брит бейн hаБетарим",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Завет между частями: Яхве единолично проходит между расечёнными частями — безусловный союз с Авраhамом.",
+        "source": "content/tanakh/events/brit-bein-habetarim.md"
+      },
+      {
+        "date": "~1850 до н.э.",
+        "sortKey": -1850,
+        "title": "Акейдат Ицхак",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Испытание Авраhама на горе Мориа: повязанный Ицхак замещён овном — послушание проверено действием.",
+        "source": "content/tanakh/events/akedat-itzchak.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Йециат Мицраим",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Выход из Мицраима — дома рабства: народ выводится из сжатого состояния в открытое пространство перехода.",
+        "source": "content/tanakh/events/yetziat-mitzraim.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Криат Ям Суф",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Переход через море: вода расступается, старая опора закрывается за спиной вышедших.",
+        "source": "content/tanakh/events/kriat-yam-suf.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Матан Тора",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Дарование Торы у Синая: слово как договор действия для собранного народа.",
+        "source": "content/tanakh/events/matan-torah.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Хет hаЭгель",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Золотой телец: попытка удержать видимого посредника вместо невидимого Яхве.",
+        "source": "content/tanakh/events/chet-haegel.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Мераглим",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Разведчики Эрец: страх десяти останавливает вход — переход затягивается на сорок лет.",
+        "source": "content/tanakh/events/meraglim.md"
+      },
+      {
+        "date": "~1400 до н.э.",
+        "sortKey": -1400,
+        "title": "Мей Мерива",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Воды прений: Моше ударяет в скалу вместо слова — вход в Эрец ему закрывается.",
+        "source": "content/tanakh/events/mey-merivah.md"
+      },
+      {
+        "date": "~1390 до н.э.",
+        "sortKey": -1390,
+        "title": "Нехаш Нехоше́т",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Медный змей: смотрящий на образ узнаёт причину укуса — лечение через осознание.",
+        "source": "content/tanakh/events/nechash-nechoshet.md"
+      },
+      {
+        "date": "~1380 до н.э.",
+        "sortKey": -1380,
+        "title": "Петах hаЯрден",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Переход через Ярден: вход в Эрец после сорока лет Мидбара.",
+        "source": "content/tanakh/events/petach-hayarden.md"
+      },
+      {
+        "date": "~1380 до н.э.",
+        "sortKey": -1380,
+        "title": "Криат Йерихо",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Падение стен Йерихо: обход и крик как действие, разрушающее запертость города.",
+        "source": "content/tanakh/events/kriat-yericho.md"
+      },
+      {
+        "date": "~1380 до н.э.",
+        "sortKey": -1380,
+        "title": "Брит беГивон",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Союз с Гивоном: хитрость жителей — завет заключён без вопроса к Яхве.",
+        "source": "content/tanakh/events/brit-begivon.md"
+      },
+      {
+        "date": "~1380 до н.э.",
+        "sortKey": -1380,
+        "title": "Милхемет Ай",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Взятие Ай: после поражения из-за Ахана город берут засадой по слову Яхве.",
+        "source": "content/tanakh/events/milchemet-ai.md"
+      },
+      {
+        "date": "~1380 до н.э.",
+        "sortKey": -1380,
+        "title": "Хет Ахан",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Присвоение запретного Аханом: один нарушитель останавливает весь стан.",
+        "source": "content/tanakh/events/chet-achan.md"
+      },
+      {
+        "date": "~1150 до н.э.",
+        "sortKey": -1150,
+        "title": "Милхемет Двора",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Двора и Барак против Явина: пророчица ведёт собранный Израиль на войну.",
+        "source": "content/tanakh/events/milchemet-dvorah.md"
+      },
+      {
+        "date": "~1150 до н.э.",
+        "sortKey": -1150,
+        "title": "Милхемет Гидон",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Триста воинов Гидона: сжатие силы до минимума, чтобы победа была от Яхве.",
+        "source": "content/tanakh/events/milchemet-gidon.md"
+      },
+      {
+        "date": "~1150 до н.э.",
+        "sortKey": -1150,
+        "title": "Песель Миха",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Домашний идол Михи: культ, собранный своими руками вместо Торы.",
+        "source": "content/tanakh/events/pesel-michah.md"
+      },
+      {
+        "date": "~1150 до н.э.",
+        "sortKey": -1150,
+        "title": "Пилегеш беГива",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Наложница в Гиве: распад собрания, когда каждый делает то, что ему кажется правильным.",
+        "source": "content/tanakh/events/pilegesh-bagivah.md"
+      },
+      {
+        "date": "~1100 до н.э.",
+        "sortKey": -1100,
+        "title": "Нефилат Шимшон",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Падение Шимшона: сила, отданная в чужие руки, теряет направление — финал в плену у филистимлян.",
+        "source": "content/tanakh/events/nefilat-shimshon.md"
+      },
+      {
+        "date": "~1015 до н.э.",
+        "sortKey": -1015,
+        "title": "Машиах Давид",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Помазание Давида: Шмуэль видит сердце, а не рост — машиах помазан в Бейт-Лехеме.",
+        "source": "content/tanakh/events/mashiach-david.md"
+      },
+      {
+        "date": "~980 до н.э.",
+        "sortKey": -980,
+        "title": "Хет Давид",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Давид и Бат-Шева: власть берёт чужое — пророк Натан возвращает слову вес.",
+        "source": "content/tanakh/events/chet-david.md"
+      },
+      {
+        "date": "~972 до н.э.",
+        "sortKey": -972,
+        "title": "Меред Авшалом",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Мятеж Авшалома: сын поднимается на отца, царь на время оставляет Йерушалаим.",
+        "source": "content/tanakh/events/mered-avshalom.md"
+      },
+      {
+        "date": "~967–959 до н.э.",
+        "sortKey": -963,
+        "title": "Биньян hаБайт",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Строительство Первого Дома при Шломо: собранное место для имени Яхве.",
+        "source": "content/tanakh/events/binyan-habayit.md"
+      },
+      {
+        "date": "605–536 до н.э.",
+        "sortKey": -605,
+        "title": "Галут Бавель",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Выселение в Бавель волной за волной (605, 597, 586): текст и народ собираются в галуте.",
+        "source": "content/tanakh/events/galut-bavel.md"
+      },
+      {
+        "date": "586 до н.э.",
+        "sortKey": -586,
+        "title": "Хурбан Байт Ришон",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Разрушение Первого Дома Навуходоносором: осада ~18 месяцев, народ уведён (Млахим Бет 25).",
+        "source": "content/tanakh/events/churban-bayit-rishon.md"
+      },
+      {
+        "date": "536–516 до н.э.",
+        "sortKey": -536,
+        "title": "Шиват Цион",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Возвращение по декрету Кореша: жертвенник и основания Дома восстановлены.",
+        "source": "content/tanakh/events/shivat-tzion.md"
+      },
+      {
+        "date": "~516 до н.э.",
+        "sortKey": -516,
+        "title": "Биньян Байит Шени",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Завершение Второго Дома: меньшая слава, восстановленное служение (Хагай 2).",
+        "source": "content/tanakh/events/binyan-bayit-sheni.md"
+      },
+      {
+        "date": "~473 до н.э.",
+        "sortKey": -473,
+        "title": "Пурим",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Спасение общины в Персии: свиток Эстер, день страха обращён в радость.",
+        "source": "content/tanakh/events/purim.md"
+      },
+      {
+        "date": "164 до н.э.",
+        "sortKey": -164,
+        "title": "Ханука",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Очищение жертвенника Хасмонеями: освящение Второго Дома после восстания против эллинизации.",
+        "source": "content/tanakh/events/chanukah.md"
+      }
+    ]
+  },
+  {
+    "id": "bashah-chronology",
+    "title": "Хронология БаШаХа",
+    "paleoIcon": "𐤋",
+    "era": "bashah",
+    "description": "От твилы Йешуа до Бар-Кохбы: события БаШаХа в проектной хронологии (распятие — 33 г. н.э.); соседние школы датируют 30–33 гг.",
+    "events": [
+      {
+        "date": "~28 н.э.",
+        "sortKey": 28,
+        "title": "Твила Йешуа",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Погружение в Ярдене у Йоханана: посвящение в статус Эвед Яхве, начало открытого служения (все четыре бсоры).",
+        "source": "content/bashah/events/tvilat-yeshua.md"
+      },
+      {
+        "date": "33 н.э., 14 нисана",
+        "sortKey": 33,
+        "title": "Сеудат Агарон",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Последняя пасхальная трапеза: учреждение новой памяти в хлебе и вине, вечер перед распятием.",
+        "source": "content/bashah/events/seudat-aharon.md"
+      },
+      {
+        "date": "33 н.э., 14 нисана",
+        "sortKey": 33,
+        "title": "Распятие Йешуа",
+        "kind": "event",
+        "confidence": "interpretation",
+        "description": "Заклание Песаха в Йерушалаиме: год распятия в разных школах — 30–33 гг. н.э.",
+        "source": "content/bashah/events/seudat-aharon.md"
+      },
+      {
+        "date": "33 н.э., 6 сивана",
+        "sortKey": 33,
+        "title": "Шавуот Руах",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Излитие Руах ХаКодеша на 120 верных в Йерушалаиме (Деяния 2:1–13).",
+        "source": "content/bashah/events/shavuot-ruach.md"
+      },
+      {
+        "date": "33 н.э.",
+        "sortKey": 33,
+        "title": "Петах Кефа",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Первая проповедь Кефы после излития: около 3000 обращённых, рождение кехиллы (Деяния 2:14–41).",
+        "source": "content/bashah/events/petach-kefas.md"
+      },
+      {
+        "date": "~35 н.э.",
+        "sortKey": 35,
+        "title": "Бейт Ханания",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Дамаск, улица Прямая: Анания возвращает зрение Шаулю — преследователь становится посланником (Деяния 9:11–12).",
+        "source": "content/bashah/events/beit-chananyah.md"
+      },
+      {
+        "date": "70 н.э.",
+        "sortKey": 70,
+        "title": "Хурбан Байит Шени",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Легионы Тита разрушают Второй Дом: кехилла уходит в рассеяние, храмовое служение останавливается.",
+        "source": "content/researches/systems/vatican.md"
+      },
+      {
+        "date": "132–135 н.э.",
+        "sortKey": 132,
+        "title": "Восстание Бар-Кохбы",
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Последний суверенный эпизод Иудеи до XX века; письма восстания записаны палео-ивритом и арамейским.",
+        "source": "content/researches/archive/religion-war-machine.md"
+      }
+    ]
+  },
+  {
+    "id": "text-witnesses",
+    "title": "Свидетели текста",
+    "paleoIcon": "𐤎",
+    "era": "text",
+    "description": "Цепочка свидетелей текста: от палео-ивритских надписей до Синодального перевода. Каждое звено — опора (Самех), на которой держится чтение ТаНаХа.",
+    "events": [
+      {
+        "date": "~1000 до н.э.",
+        "sortKey": -1000,
+        "title": "Палео-ивритская запись",
+        "kind": "text",
+        "confidence": "interpretation",
+        "description": "ТаНаХ записывается палео-ивритским письмом: каждая буква — образ с физическим смыслом.",
+        "source": "docs/04-STANDARD/PALEO-STANDARD.md"
+      },
+      {
+        "date": "~300–200 до н.э.",
+        "sortKey": -250,
+        "title": "Септуагинта (LXX)",
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Перевод семидесяти в Александрии: Тора на греческом — слой, через который ТаНаХ читает античный мир.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md",
+        "links": [
+          {
+            "href": "#timeline/substitution-chronology/event/0",
+            "label": "Подмена: 𐤉𐤄𐤅𐤄 → κύριος"
+          }
+        ]
+      },
+      {
+        "date": "~250–100 до н.э.",
+        "sortKey": -175,
+        "title": "Кумранские списки",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Свитки Мёртвого моря списываются в Иудейской пустыне: древнейшие рукописные свидетели текста.",
+        "source": "data/qumran-books.json"
+      },
+      {
+        "date": "132–135 н.э.",
+        "sortKey": 134,
+        "title": "Письма Бар-Кохбы",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Документы восстания записаны палео-ивритом и арамейским: последний всплеск старого письма.",
+        "source": "data/witnesses.json"
+      },
+      {
+        "date": "~150–250 н.э.",
+        "sortKey": 200,
+        "title": "Пешитта",
+        "kind": "text",
+        "confidence": "interpretation",
+        "description": "Сирийский перевод Писания: свидетель восточной ветви семитских чтений.",
+        "source": "data/witnesses.json"
+      },
+      {
+        "date": "382–405 н.э.",
+        "sortKey": 393,
+        "title": "Вульгата Иеронима",
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Латинский перевод: термин входит в имперскую юридическую рамку.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      },
+      {
+        "date": "~600–900 н.э.",
+        "sortKey": 750,
+        "title": "Масора Тивериады",
+        "kind": "text",
+        "confidence": "interpretation",
+        "description": "Масореты фиксируют огласовки и кантилляцию: чтение закрепляется в системе знаков.",
+        "source": "content/tanakh/archive/masoretic-text.md"
+      },
+      {
+        "date": "~930 н.э.",
+        "sortKey": 930,
+        "title": "Кодекс Алеппо",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Эталонная рукопись школы бен-Ашер; часть рукописи утрачена при пожаре 1947 года.",
+        "source": "content/tanakh/archive/masoretic-text.md"
+      },
+      {
+        "date": "1008 н.э.",
+        "sortKey": 1008,
+        "title": "Ленинградский кодекс",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Старейшая полная датированная рукопись ТаНаХа; база современных научных изданий (BHS/BHQ).",
+        "source": "content/tanakh/archive/masoretic-text.md"
+      },
+      {
+        "date": "1524–1525 н.э.",
+        "sortKey": 1524,
+        "title": "Микраот Гедолот",
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Издание Бомберга в Венеции: текст, Раши, Ибн-Эзра и Таргумы на одной странице.",
+        "source": "docs/06-METHODOLOGY/TRANSLATION.md"
+      },
+      {
+        "date": "1611 н.э.",
+        "sortKey": 1611,
+        "title": "Библия короля Якова",
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Английский перевод: текст входит в литературный канон нового времени.",
+        "source": "content/researches/history/erasmus-textus-receptus.md"
+      },
+      {
+        "date": "1876 н.э.",
+        "sortKey": 1876,
+        "title": "Синодальный перевод",
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Русский перевод, закрепивший привычную лексику чтения — предмет разбора в словарях лаба.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      },
+      {
+        "date": "1947 н.э.",
+        "sortKey": 1947,
+        "title": "Открытие свитков Мёртвого моря",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Пещеры Кумрана: тысячелетний скачок свидетелей назад, подтверждение стабильности масоретской базы.",
+        "source": "data/qumran-books.json",
+        "links": [
+          {
+            "href": "#timeline/inscriptions/event/4",
+            "label": "Находка: пещеры Кумрана"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "language-layers",
+    "title": "Слои языков",
+    "paleoIcon": "𐤌",
+    "era": "language",
+    "description": "Семитская река времени: как корень проходит через ветви до иврита. Опирается на карту языков лаба.",
+    "events": [
+      {
+        "date": "~3000 до н.э.",
+        "sortKey": -3000,
+        "title": "Прасемитский",
+        "kind": "concept",
+        "confidence": "hypothesis",
+        "description": "Реконструируемый каркас согласных и корней до разделения семитских ветвей.",
+        "source": "data/paleo-linguistics/languages.json"
+      },
+      {
+        "date": "~2500–2300 до н.э.",
+        "sortKey": -2500,
+        "title": "Эблаитский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Древнейшие письменные семитские тексты (Эбла, таблички клинописью): ранний свидетель корней.",
+        "source": "data/paleo-linguistics/eblaite.json"
+      },
+      {
+        "date": "~2300–600 до н.э.",
+        "sortKey": -2300,
+        "title": "Аккадский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Язык Месопотамии: административные, хозяйственные и литературные каналы семитской лексики.",
+        "source": "data/paleo-linguistics/akkadian.json"
+      },
+      {
+        "date": "~1400–1200 до н.э.",
+        "sortKey": -1400,
+        "title": "Угаритский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Северо-западная ветвь: алфавитная клинопись сохраняет древний согласный каркас.",
+        "source": "data/paleo-linguistics/ugaritic.json"
+      },
+      {
+        "date": "~1100 до н.э.",
+        "sortKey": -1100,
+        "title": "Арамейский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Торговые и имперские каналы: язык становится lingua franca региона и позже — книжным слоем.",
+        "source": "data/paleo-linguistics/aramaic.json"
+      },
+      {
+        "date": "~1050–150 до н.э.",
+        "sortKey": -1050,
+        "title": "Финикийский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Морская торговля разносит линейный алфавит по Средиземноморью.",
+        "source": "data/paleo-linguistics/phoenician.json"
+      },
+      {
+        "date": "~1000 до н.э.",
+        "sortKey": -1000,
+        "title": "Иврит",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Трёхбуквенная форма собирается в систему корней, слов и палео-образов ТаНаХа.",
+        "source": "data/paleo-linguistics/paleo-hebrew.json"
+      }
+    ]
+  },
+  {
+    "id": "substitution-chronology",
+    "title": "Хронология подмен",
+    "paleoIcon": "𐤑",
+    "era": "substitutions",
+    "description": "Календарь искажений: ключевые даты, через которые образы ТаНаХа проходили через греческий, латинский и имперский фильтры.",
+    "events": [
+      {
+        "date": "III–II вв. до н.э.",
+        "sortKey": -250,
+        "title": "Септуагинта: 𐤉𐤄𐤅𐤄 → κύριος",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Имя Яхве заменено на «Господь» в греческом переводе: образ имени уходит за ширму титула.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md",
+        "links": [
+          {
+            "href": "#timeline/text-witnesses/event/1",
+            "label": "Свидетель текста: Септуагинта"
+          }
+        ]
+      },
+      {
+        "date": "IV–V вв. н.э.",
+        "sortKey": 430,
+        "title": "Вульгата: 𐤕𐤅𐤓𐤄 → lex",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "«Наставление» (Тора) переведено как «закон»: термин входит в юридическую рамку Рима.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      },
+      {
+        "date": "313 н.э.",
+        "sortKey": 313,
+        "title": "Миланский эдикт",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Начало сращивания кехиллы с империей: власть становится посредником веры.",
+        "source": "researches/history/byzantine-pietas"
+      },
+      {
+        "date": "321 н.э.",
+        "sortKey": 321,
+        "title": "dies Solis",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Указ Константина о дне Солнца: день покоя сдвигается с шаббата на воскресенье.",
+        "source": "content/teachings/catholicism.md"
+      },
+      {
+        "date": "325 н.э.",
+        "sortKey": 325,
+        "title": "Никея",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "«Машиах» закреплён как божественный титул «Христос» в тринитарной формуле под председательством императора.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      },
+      {
+        "date": "363–364 н.э.",
+        "sortKey": 364,
+        "title": "Лаодикия, канон 29",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Запрет отдыхать в шаббат и предписание работать: второй шаг переноса дня покоя.",
+        "source": "content/teachings/catholicism.md"
+      },
+      {
+        "date": "380 н.э.",
+        "sortKey": 380,
+        "title": "Эдикт Феодосия",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Нацрут объявлен единственной разрешённой религией империи: институционализация слоя.",
+        "source": "content/tanakh/archive/catholic-church.md"
+      },
+      {
+        "date": "787 н.э.",
+        "sortKey": 787,
+        "title": "II Никея: иконопочитание",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Целм придан догматический статус — запрет ТаНаХа на образы переосмыслен.",
+        "source": "content/teachings/iconoclasm.md"
+      },
+      {
+        "date": "1054 н.э.",
+        "sortKey": 1054,
+        "title": "Великий раскол",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Раздел имперской религии на западную и восточную ветви: одна подмена — два управления.",
+        "source": "researches/history/byzantine-pietas"
+      },
+      {
+        "date": "1098 н.э.",
+        "sortKey": 1098,
+        "title": "Ансельм «Cur Deus Homo»",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Искупление оформлено как юридическая сатисфакция: долг и платёж вместо возвращения (тшува).",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      },
+      {
+        "date": "1517 н.э.",
+        "sortKey": 1517,
+        "title": "Реформация",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Протест против Рима не возвращает палео-поток: меняется канал, слой сохраняется.",
+        "source": "content/teachings/lutheranism.md"
+      },
+      {
+        "date": "1582 н.э.",
+        "sortKey": 1582,
+        "title": "Григорианский календарь",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Линейное время зафиксировано в международном стандарте: счёт лет привязан не к Торе.",
+        "source": "content/researches/practices/shavuot-practice.md"
+      },
+      {
+        "date": "1876 н.э.",
+        "sortKey": 1876,
+        "title": "Синодальный перевод",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Финальная фиксация привычной лексики в русском чтении — точка входа для словарей лаба.",
+        "source": "docs/06-METHODOLOGY/PRINCIPLES.md"
+      }
+    ]
+  },
+  {
+    "id": "cultural-matrix-time",
+    "title": "Матрицы как слои времени",
+    "paleoIcon": "𐤏",
+    "era": "concept",
+    "description": "Пирамида культурных фильтров в датах: Вавилон → Египет → Ханаан → Греция → Рим → Славянский слой. Каждый слой переупаковывает предыдущий.",
+    "events": [
+      {
+        "date": "~3000–1200 до н.э.",
+        "sortKey": -3000,
+        "title": "Египетская матрица",
+        "kind": "concept",
+        "confidence": "interpretation",
+        "description": "Матрица рабства: фараон-божество, иерархия как норма, Мицраим как искусственный канал, где поток захвачен.",
+        "source": "data/methodology/cultural-matrices.json"
+      },
+      {
+        "date": "~1700–539 до н.э.",
+        "sortKey": -1700,
+        "title": "Вавилонская матрица",
+        "kind": "concept",
+        "confidence": "interpretation",
+        "description": "«Энума Элиш» (~XVII–XVI вв. до н.э.): творение как расчленение хаоса силой, отношение как торг, человек — рабочая сила богов.",
+        "source": "docs/06-METHODOLOGY/CULTURAL-MATRICES.md"
+      },
+      {
+        "date": "~1500–586 до н.э.",
+        "sortKey": -1500,
+        "title": "Ханаанская матрица",
+        "kind": "concept",
+        "confidence": "interpretation",
+        "description": "Культы Молоха и Баала в долине Еннома: то, что ТаНаХ прямо запрещает (Йирмеяhу 7:31), живёт рядом с Заветом.",
+        "source": "docs/06-METHODOLOGY/CULTURAL-MATRICES.md"
+      },
+      {
+        "date": "~800–146 до н.э.",
+        "sortKey": -800,
+        "title": "Греческая матрица",
+        "kind": "concept",
+        "confidence": "interpretation",
+        "description": "Философский фильтр Септуагинты: дуализм души и тела, мир идей, абстракция вместо действия, логос как безличный разум.",
+        "source": "data/methodology/cultural-matrices.json"
+      },
+      {
+        "date": "27 до н.э. – 400 н.э.",
+        "sortKey": -27,
+        "title": "Римская матрица",
+        "kind": "concept",
+        "confidence": "interpretation",
+        "description": "Юридический фильтр Вульгаты: контракт вместо союза (брит), долг и сатисфакция вместо прощения.",
+        "source": "data/methodology/cultural-matrices.json"
+      },
+      {
+        "date": "325–380 н.э.",
+        "sortKey": 325,
+        "title": "Имперская упаковка",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Никея и эдикт Феодосия: греческая и римская матрицы закрепляются государственным статусом.",
+        "links": [
+          {
+            "href": "#timeline/substitution-chronology/event/3",
+            "label": "Подмена: Никея (325)"
+          }
+        ],
+        "source": "content/tanakh/archive/catholic-church.md"
+      },
+      {
+        "date": "863 н.э.",
+        "sortKey": 863,
+        "title": "Славянская матрица",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Кирилл и Мефодий: языковой слой — калька с греческого, а не с иврита («душа» от ψυχή, «Господь» вместо Яхве).",
+        "source": "data/methodology/cultural-matrices.json"
+      },
+      {
+        "date": "988 н.э.",
+        "sortKey": 988,
+        "title": "Крещение Руси",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Славянский слой становится базовым для восточноевропейского чтения ТаНаХа.",
+        "source": "content/researches/language/russian-syncretism.md"
+      },
+      {
+        "date": "1876 н.э.",
+        "sortKey": 1876,
+        "title": "Синодальный закрепляет слои",
+        "kind": "distortion",
+        "confidence": "fact",
+        "description": "Русский перевод фиксирует весь стек слоёв: читатель стоит на вершине пирамиды, часто не зная её основания.",
+        "source": "docs/06-METHODOLOGY/CULTURAL-MATRICES.md"
+      }
+    ]
+  },
+  {
+    "id": "inscriptions",
+    "title": "Надписи и печати",
+    "paleoIcon": "𐤒",
+    "era": "archaeology",
+    "description": "Материальные свидетели: стелы, остраконы и находки, датирующие палео-ивритскую письменную традицию.",
+    "events": [
+      {
+        "date": "~841 до н.э.",
+        "sortKey": -841,
+        "title": "Стела из Телль-Дана",
+        "kind": "artifact",
+        "confidence": "interpretation",
+        "description": "Арамейская надпись с упоминанием «Дома Давида» — вне-библейский свидетель династии.",
+        "source": "data/witnesses.json"
+      },
+      {
+        "date": "~840 до н.э.",
+        "sortKey": -840,
+        "title": "Стела Меши",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Моавитский камень: одна из древнейших крупных надписей региона, упоминает Омри и Яхве.",
+        "source": "docs/04-STANDARD/TERMINOLOGY.md"
+      },
+      {
+        "date": "~700 до н.э.",
+        "sortKey": -700,
+        "title": "Силоамская надпись",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Надпись строителей туннеля Хизкияу в Йерушалаиме — палео-иврит позднего царства.",
+        "source": "docs/04-STANDARD/TERMINOLOGY.md"
+      },
+      {
+        "date": "~588 до н.э.",
+        "sortKey": -588,
+        "title": "Остраконы Лахиша",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Письма последних дней перед Хурбаном: военная переписка на черепках.",
+        "source": "content/tanakh/archive/paleo-hebrew.md"
+      },
+      {
+        "date": "1947 н.э.",
+        "sortKey": 1947,
+        "title": "Пещеры Кумрана",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Свитки Мёртвого моря: палео-ивритские рукописи II в. до н.э. – I в. н.э.",
+        "source": "data/qumran-books.json"
+      },
+      {
+        "date": "1963–1965 н.э.",
+        "sortKey": 1963,
+        "title": "Раскопки Масады",
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Остраконы и фрагменты свитков: документация последнего очага восстания.",
+        "source": "content/researches/history/missing-hebrew-scrolls.md"
+      }
+    ]
+  },
+  {
     "id": "timeline-writing",
     "title": "Письмо и рукописи",
     "paleoIcon": "𐤀",
+    "era": "text",
     "description": "От палео-ивритского алфавита до открытия кумранских свитков — рождение письменной традиции.",
     "events": [
       {
         "date": "~1000 до н.э.",
+        "sortKey": -1000,
         "title": "Палео-ивритское письмо",
-        "description": "Палео-ивритский алфавит используется для записи текстов Танаха. Каждая буква — образ, несущий физический смысл."
+        "kind": "text",
+        "confidence": "interpretation",
+        "description": "Палео-ивритский алфавит используется для записи текстов Танаха. Каждая буква — образ, несущий физический смысл.",
+        "source": "docs/04-STANDARD/PALEO-STANDARD.md"
       },
       {
         "date": "1947",
+        "sortKey": 1947,
         "title": "Кумранские свитки",
-        "description": "Обнаружение свитков Мёртвого моря в пещерах Кумрана. Древнейшие рукописи Танаха с палео-ивритскими фрагментами."
+        "kind": "artifact",
+        "confidence": "fact",
+        "description": "Обнаружение свитков Мёртвого моря в пещерах Кумрана. Древнейшие рукописи Танаха с палео-ивритскими фрагментами.",
+        "source": "data/qumran-books.json"
       },
       {
         "date": "1950-е",
+        "sortKey": 1955,
         "title": "Публикация свитков",
-        "description": "Начало научной публикации кумранских рукописей. Открытие палео-ивритских свитков Левита и Иова."
+        "kind": "text",
+        "confidence": "fact",
+        "description": "Начало научной публикации кумранских рукописей. Открытие палео-ивритских свитков Левита и Иова.",
+        "source": "data/qumran-books.json"
       }
     ]
   },
@@ -26,22 +909,35 @@
     "id": "timeline-digital",
     "title": "Цифровая эпоха",
     "paleoIcon": "𐤉",
+    "era": "modern",
     "description": "Цифровая реконструкция палео-шрифтов, баз данных и инструментов для исследования.",
     "events": [
       {
         "date": "1990-е",
+        "sortKey": 1995,
         "title": "Цифровая реконструкция",
-        "description": "Применение цифровых методов для реконструкции палео-ивритского письма. Создание первых цифровых шрифтов."
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Применение цифровых методов для реконструкции палео-ивритского письма. Создание первых цифровых шрифтов.",
+        "source": "content/tanakh/archive/digital-bavel.md"
       },
       {
         "date": "2000-е",
+        "sortKey": 2005,
         "title": "Базы данных рукописей",
-        "description": "Оцифровка кумранских свитков и создание доступных баз данных для исследователей по всему миру."
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Оцифровка кумранских свитков и создание доступных баз данных для исследователей по всему миру.",
+        "source": "data/qumran-books.json"
       },
       {
         "date": "2010-е",
+        "sortKey": 2015,
         "title": "Палео-шрифты",
-        "description": "Разработка современных цифровых палео-ивритских шрифтов, поддерживающих Unicode и веб-стандарты."
+        "kind": "event",
+        "confidence": "fact",
+        "description": "Разработка современных цифровых палео-ивритских шрифтов, поддерживающих Unicode и веб-стандарты.",
+        "source": "tasks/GOL-001-PALEO-FONT.md"
       }
     ]
   },
@@ -49,67 +945,258 @@
     "id": "shin-history",
     "title": "История буквы Шин",
     "paleoIcon": "𐤔",
+    "era": "language",
     "description": "Эволюция одной буквы через корни и слова ТаНаХа.",
     "events": [
-      { "date": "𐤔", "title": "Шин — зуб и давление", "description": "Образ зуба: действие, которое входит в материал и изменяет его форму." },
-      { "date": "𐤔𐤓", "title": "Шар — движение наружу", "description": "Связка Шин–Реш показывает выход силы из внутреннего состояния к направленному движению." },
-      { "date": "𐤔𐤌", "title": "Шем — обозначение", "description": "Шин–Мем: образ, который получает имя и становится различимым в пространстве." },
-      { "date": "𐤔𐤋", "title": "Шал — движение к целому", "description": "Шин–Ламед: движение, направленное к сборке и удержанию целостности." },
-      { "date": "𐤔𐤋𐤄", "title": "Шала — посланное действие", "description": "Шин–Ламед–Хе: действие выходит наружу и открывает следующий переход." }
+      {
+        "date": "𐤔",
+        "title": "Шин — зуб и давление",
+        "kind": "glyph",
+        "description": "Образ зуба: действие, которое входит в материал и изменяет его форму.",
+        "source": "docs/07-MECHANICS/SHIN-TOOTH.md"
+      },
+      {
+        "date": "𐤔𐤓",
+        "title": "Шар — движение наружу",
+        "kind": "glyph",
+        "description": "Связка Шин–Реш показывает выход силы из внутреннего состояния к направленному движению.",
+        "source": "docs/07-MECHANICS/SHIN-TOOTH.md"
+      },
+      {
+        "date": "𐤔𐤌",
+        "title": "Шем — обозначение",
+        "kind": "glyph",
+        "description": "Шин–Мем: образ, который получает имя и становится различимым в пространстве.",
+        "source": "docs/07-MECHANICS/SHIN-TOOTH.md"
+      },
+      {
+        "date": "𐤔𐤋",
+        "title": "Шал — движение к целому",
+        "kind": "glyph",
+        "description": "Шин–Ламед: движение, направленное к сборке и удержанию целостности.",
+        "source": "docs/07-MECHANICS/SHIN-TOOTH.md"
+      },
+      {
+        "date": "𐤔𐤋𐤄",
+        "title": "Шала — посланное действие",
+        "kind": "glyph",
+        "description": "Шин–Ламед–Хе: действие выходит наружу и открывает следующий переход.",
+        "source": "docs/07-MECHANICS/SHIN-TOOTH.md"
+      }
     ]
   },
   {
     "id": "seven-states",
     "title": "Семь состояний пространства",
     "paleoIcon": "𐤇",
+    "era": "concept",
     "description": "Путь от запертости (Тоху) до завершённости (Эден).",
     "events": [
-      { "date": "01", "title": "Тоху", "description": "Сжатое пространство без различимых связей и направлений." },
-      { "date": "02", "title": "Хошех", "description": "Плотная темнота, в которой форма ещё не открыта для наблюдения." },
-      { "date": "03", "title": "Мицраим", "description": "Двойная граница и давление стен, удерживающих движение." },
-      { "date": "04", "title": "Шамаим", "description": "Разделённое пространство, где появляется верхний просвет и направление." },
-      { "date": "05", "title": "Мидбар", "description": "Открытая среда перехода, где старые опоры больше не удерживают поток." },
-      { "date": "06", "title": "Эрец", "description": "Собранная поверхность, на которой движение получает место и форму." },
-      { "date": "07", "title": "Эден", "description": "Завершённая среда, где связи работают без дополнительного сжатия." }
+      {
+        "date": "01",
+        "title": "Тоху",
+        "kind": "concept",
+        "description": "Сжатое пространство без различимых связей и направлений.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "02",
+        "title": "Хошех",
+        "kind": "concept",
+        "description": "Плотная темнота, в которой форма ещё не открыта для наблюдения.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "03",
+        "title": "Мицраим",
+        "kind": "concept",
+        "description": "Двойная граница и давление стен, удерживающих движение.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "04",
+        "title": "Шамаим",
+        "kind": "concept",
+        "description": "Разделённое пространство, где появляется верхний просвет и направление.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "05",
+        "title": "Мидбар",
+        "kind": "concept",
+        "description": "Открытая среда перехода, где старые опоры больше не удерживают поток.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "06",
+        "title": "Эрец",
+        "kind": "concept",
+        "description": "Собранная поверхность, на которой движение получает место и форму.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      },
+      {
+        "date": "07",
+        "title": "Эден",
+        "kind": "concept",
+        "description": "Завершённая среда, где связи работают без дополнительного сжатия.",
+        "source": "docs/06-METHODOLOGY/STATES.md"
+      }
     ]
   },
   {
     "id": "word-history",
     "title": "История слова",
     "paleoIcon": "𐤃",
+    "era": "concept",
     "description": "Как одно слово проходит через все слои перевода: от палео до Синодального.",
     "events": [
-      { "date": "I", "title": "Палео-поток", "description": "Слово читается через образ букв, действие и физическую связь." },
-      { "date": "II", "title": "Масоретский", "description": "Графика и огласовки фиксируют чтение в редакторской системе текста." },
-      { "date": "III", "title": "Греческий", "description": "Образ переносится в другую языковую карту и получает новый набор соответствий." },
-      { "date": "IV", "title": "Латынь", "description": "Термин входит в административную и понятийную рамку латинского слоя." },
-      { "date": "V", "title": "Славянский", "description": "Перевод закрепляет лексику в церковно-книжной форме и сужает диапазон образа." },
-      { "date": "VI", "title": "Синодальный", "description": "Финальная формулировка становится привычным понятием современного чтения." }
+      {
+        "date": "I",
+        "title": "Палео-поток",
+        "kind": "concept",
+        "description": "Слово читается через образ букв, действие и физическую связь.",
+        "source": "docs/04-STANDARD/PALEO-STANDARD.md"
+      },
+      {
+        "date": "II",
+        "title": "Масоретский",
+        "kind": "concept",
+        "description": "Графика и огласовки фиксируют чтение в редакторской системе текста.",
+        "source": "content/tanakh/archive/masoretic-text.md"
+      },
+      {
+        "date": "III",
+        "title": "Греческий",
+        "kind": "concept",
+        "description": "Образ переносится в другую языковую карту и получает новый набор соответствий.",
+        "source": "docs/06-METHODOLOGY/TRANSLATION.md"
+      },
+      {
+        "date": "IV",
+        "title": "Латынь",
+        "kind": "concept",
+        "description": "Термин входит в административную и понятийную рамку латинского слоя.",
+        "source": "docs/06-METHODOLOGY/TRANSLATION.md"
+      },
+      {
+        "date": "V",
+        "title": "Славянский",
+        "kind": "concept",
+        "description": "Перевод закрепляет лексику в церковно-книжной форме и сужает диапазон образа.",
+        "source": "content/researches/language/slavic-distortion.md"
+      },
+      {
+        "date": "VI",
+        "title": "Синодальный",
+        "kind": "concept",
+        "description": "Финальная формулировка становится привычным понятием современного чтения.",
+        "source": "content/researches/language/russian-syncretism.md"
+      }
     ]
   },
   {
     "id": "root-path",
     "title": "Путь корня",
     "paleoIcon": "𐤓",
+    "era": "language",
     "description": "Как трёхбуквенный корень путешествует через семитские языки.",
     "events": [
-      { "date": "01", "title": "Прасемитский", "description": "Исходный звуковой каркас и физический образ корня до разделения языковых ветвей." },
-      { "date": "02", "title": "Аккадский", "description": "Корень входит в клинописную административную и хозяйственную среду Месопотамии." },
-      { "date": "03", "title": "Угаритский", "description": "Алфавитная запись сохраняет древний согласный каркас в северо-западной ветви." },
-      { "date": "04", "title": "Арамейский", "description": "Корень распространяется через торговые, имперские и книжные каналы региона." },
-      { "date": "05", "title": "Иврит", "description": "Трёхбуквенная форма собирается в систему корней, слов и палео-образов." }
+      {
+        "date": "~3000 до н.э.",
+        "sortKey": -3000,
+        "title": "Прасемитский",
+        "kind": "concept",
+        "confidence": "hypothesis",
+        "description": "Исходный звуковой каркас и физический образ корня до разделения языковых ветвей.",
+        "source": "data/paleo-linguistics/languages.json"
+      },
+      {
+        "date": "~2500 до н.э.",
+        "sortKey": -2500,
+        "title": "Аккадский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Корень входит в клинописную административную и хозяйственную среду Месопотамии.",
+        "source": "data/paleo-linguistics/akkadian.json"
+      },
+      {
+        "date": "~1400–1200 до н.э.",
+        "sortKey": -1400,
+        "title": "Угаритский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Алфавитная запись сохраняет древний согласный каркас в северо-западной ветви.",
+        "source": "data/paleo-linguistics/ugaritic.json"
+      },
+      {
+        "date": "~1100 до н.э.",
+        "sortKey": -1100,
+        "title": "Арамейский",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Корень распространяется через торговые, имперские и книжные каналы региона.",
+        "source": "data/paleo-linguistics/aramaic.json"
+      },
+      {
+        "date": "~1000 до н.э.",
+        "sortKey": -1000,
+        "title": "Иврит",
+        "kind": "concept",
+        "confidence": "fact",
+        "description": "Трёхбуквенная форма собирается в систему корней, слов и палео-образов.",
+        "links": [
+          {
+            "href": "#timeline/language-layers/event/6",
+            "label": "Слой языков: иврит"
+          }
+        ],
+        "source": "data/paleo-linguistics/paleo-hebrew.json"
+      }
     ]
   },
   {
     "id": "alphabet-history",
     "title": "История алфавита",
     "paleoIcon": "𐤀",
+    "era": "language",
     "description": "Визуальная эволюция письма: от пиктограмм до квадратного иврита.",
     "events": [
-      { "date": "ок. 1800 до н.э.", "title": "Прото-ханаанский", "description": "Пиктографические знаки сокращаются до набора согласных, удобного для записи речи." },
-      { "date": "ок. 1050 до н.э.", "title": "Финикийский", "description": "Алфавит получает устойчивую форму и распространяется по торговым маршрутам." },
-      { "date": "ок. 1000 до н.э.", "title": "Палео-иврит", "description": "Финикийская графическая основа входит в письменную традицию древнего Израиля." },
-      { "date": "III–II вв. до н.э.", "title": "Квадратный иврит", "description": "Арамейская форма письма постепенно становится стандартом книжной записи." }
+      {
+        "date": "ок. 1800 до н.э.",
+        "sortKey": -1800,
+        "title": "Прото-ханаанский",
+        "kind": "glyph",
+        "confidence": "interpretation",
+        "description": "Пиктографические знаки сокращаются до набора согласных, удобного для записи речи.",
+        "source": "data/paleo-linguistics/proto-canaanite.json"
+      },
+      {
+        "date": "ок. 1050 до н.э.",
+        "sortKey": -1050,
+        "title": "Финикийский",
+        "kind": "glyph",
+        "confidence": "fact",
+        "description": "Алфавит получает устойчивую форму и распространяется по торговым маршрутам.",
+        "source": "data/paleo-linguistics/phoenician.json"
+      },
+      {
+        "date": "ок. 1000 до н.э.",
+        "sortKey": -1000,
+        "title": "Палео-иврит",
+        "kind": "glyph",
+        "confidence": "fact",
+        "description": "Финикийская графическая основа входит в письменную традицию древнего Израиля.",
+        "source": "data/paleo-linguistics/paleo-hebrew.json"
+      },
+      {
+        "date": "III–II вв. до н.э.",
+        "sortKey": -150,
+        "title": "Квадратный иврит",
+        "kind": "glyph",
+        "confidence": "fact",
+        "description": "Арамейская форма письма постепенно становится стандартом книжной записи.",
+        "source": "content/tanakh/archive/paleo-hebrew.md"
+      }
     ]
   }
 ]
