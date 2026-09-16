@@ -21,6 +21,14 @@ const SectionRenderer = (function() {
     });
   }
 
+  function wrapTranslit(html) {
+    return String(html || '').replace(/\(([^<>()\n]{1,48})\)/g, '<span class="essence-translit">($1)</span>');
+  }
+
+  function renderEssence(value) {
+    return wrapTranslit(renderMarkdown(value));
+  }
+
   function renderMarkdown(value) {
     if (Array.isArray(value)) {
       return '<ul>' + value.map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>';
@@ -33,12 +41,28 @@ const SectionRenderer = (function() {
   }
 
   // В контексте ТаНаХа разделяем квадратный текст, транслитерацию и перевод.
+  // Строка «Контекст: …» выходит из цитаты отдельной контекст-строкой под ней.
+  function contextSpan(text) {
+    return text ? '<span class="inner-form-context">' + text + '</span>' : '';
+  }
+
   function renderTanakh(value) {
     var html = renderMarkdown(value);
-    return html.replace(/<blockquote>([\s\S]*?)<\/blockquote>/gi, function(_, inner) {
+    html = html.replace(/<blockquote>([\s\S]*?)<\/blockquote>/gi, function(_, inner) {
       var clean = inner.replace(/<\/p>\s*<p>/gi, '<br>').replace(/<\/?p>/gi, '');
-      var lines = clean.split(/<br\s*\/?>\s*/i).filter(function(line) { return line.trim(); });
-      if (lines.length < 2) return '<blockquote class="tanakh-quote inner-form-quote">' + clean + '</blockquote>';
+      // Строки внутри цитаты разделены и <br>, и обычным переносом (ленивое
+      // продолжение абзаца в blockquote не даёт <br>) — учитываем оба случая.
+      var lines = clean.split(/(?:<br\s*\/?>|\n)\s*/i).filter(function(line) { return line.trim(); });
+      var context = '';
+      lines = lines.filter(function(line) {
+        var match = line.match(/^\s*(?:<strong>)?\s*Контекст:?\s*(?:<\/strong>)?\s*([\s\S]*)$/i);
+        if (!match) return true;
+        context = match[1].trim();
+        return false;
+      });
+      if (lines.length < 2) {
+        return '<blockquote class="tanakh-quote inner-form-quote">' + (lines[0] || '') + '</blockquote>' + contextSpan(context);
+      }
       var seenHebrew = false;
       var nonHebrewLines = 0;
       var rendered = lines.map(function(line) {
@@ -55,7 +79,11 @@ const SectionRenderer = (function() {
       });
       return '<blockquote class="tanakh-quote inner-form-quote">' + rendered.map(function(line) {
         return (line.divider ? '<span class="tanakh-quote-divider" aria-hidden="true"></span>' : '') + line.html;
-      }).join('') + '</blockquote>';
+      }).join('') + '</blockquote>' + contextSpan(context);
+    });
+    // Fallback: в части записей контекст идёт отдельным абзацем после цитаты.
+    return html.replace(/<\/blockquote>\s*<p>\s*(?:<strong>)?\s*Контекст:?\s*(?:<\/strong>)?\s*([\s\S]*?)<\/p>/gi, function(_, context) {
+      return '</blockquote>' + contextSpan(context.trim());
     });
   }
 
@@ -307,11 +335,11 @@ const SectionRenderer = (function() {
   }
 
   var RULES = {
-    essence: { className: 'essence-card', render: renderMarkdown },
+    essence: { className: 'essence-card', render: renderEssence },
     etymology: { className: 'etymology-card', render: renderPatchList },
     tanakh: { className: 'tanakh-card', render: renderTanakh },
-    exposure: { className: 'exposure-card exposure-section-card', render: renderPatchList },
-    distortions: { className: 'exposure-card exposure-section-card', render: renderPatchList },
+    exposure: { className: 'exposure-section-card', render: renderPatchList },
+    distortions: { className: 'exposure-section-card', render: renderPatchList },
     practice: { className: 'practice-card', render: renderPatchList },
     summary: { className: 'summary-card', render: renderPatchList },
     typology: { className: 'typology-card', render: renderTypology },

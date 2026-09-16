@@ -292,7 +292,14 @@
 /* Содержание остаётся навигацией в потоке, но больше не занимает боковую колонку. */
 .exposure-case-layout { display: block; }
 .exposure-case-layout .research-detail-content { width: 100%; }
-.exposure-case-page { overflow-x: hidden; }
+.exposure-case-page { overflow-x: clip; }
+
+/* Оглавление дела липнет под шапку (top: --header-compact).
+   Почему так: у .lab-content (layout.css) задан overflow-y: auto, а его высота
+   растёт по контенту (min-height), поэтому он — скролл-контейнер, который сам
+   не скроллится, и sticky внутри него не срабатывает. Для страницы дела
+   возвращаем видимый overflow; горизонт всё равно режет .exposure-case-page. */
+.lab-content:has(.exposure-case-layout) { overflow: visible; }
 .exposure-case-layout .exposure-case-toc {
   position: sticky;
   top: var(--header-compact, 48px);
@@ -425,6 +432,38 @@
   color: var(--accent-gold);
 }
 .exposure-icon-btn svg { width: 16px; height: 16px; }
+.exposure-ask-ai-btn {
+  width: auto;
+  min-width: 36px;
+  padding: 0 10px;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  white-space: nowrap;
+}
+.exposure-ai-hypothesis {
+  margin: var(--space-6) 0 0;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--border-light);
+}
+.exposure-ai-hypothesis-body {
+  margin-top: var(--space-2);
+  color: var(--text-secondary);
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.7;
+}
+.lab-hero__chip.claim-badge {
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+  font-size: var(--ui-10);
+}
+.lab-hero__chip.claim-badge--fact {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.lab-hero__chip.claim-badge--hypothesis { opacity: 0.7; }
 
 @media (max-width: 640px) {
   .exposure-case-layout .exposure-case-infobox { align-items: flex-start; }

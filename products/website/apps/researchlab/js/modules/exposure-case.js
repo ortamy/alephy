@@ -64,8 +64,12 @@ const ExposureCase = (function() {
     return CONFIDENCE_META[value] || CONFIDENCE_META['needs-review'];
   }
 
+  function claimMeta(value) {
+    return CLAIM_META[value] || CLAIM_META['needs-review'];
+  }
+
   function claimBadge(value) {
-    var meta = CLAIM_META[value] || CLAIM_META['needs-review'];
+    var meta = claimMeta(value);
     return '<span class="' + meta.className + '">' + esc(meta.label) + '</span>';
   }
 
@@ -241,19 +245,6 @@ const ExposureCase = (function() {
       return '<a href="#' + sectionId(i) + '" data-section-link data-index="' + i + '">' + esc(shortenTocTitle(title)) + '</a>';
     }).join('');
     var chapterCount = blocks.length;
-    var claimHtml = '<div class="exposure-claim-row">' + claimBadge(item.confidence) +
-      (item.confidenceNote ? '<span class="exposure-claim-note">' + esc(item.confidenceNote) + '</span>' : '') +
-      '</div>';
-    var sectionsHtml = (typeof SectionRenderer !== 'undefined')
-      ? SectionRenderer.renderArticle(item)
-      : blocks.map(function(b, i) {
-          var body = renderBlocks(b);
-          return '<article class="exposure-section" id="' + sectionId(i) + '" data-section-index="' + i + '">' +
-            renderHeading(b.heading, b.icon) +
-            '<div class="exposure-section-body">' + body + '</div>' +
-          '</article>';
-        }).join('');
-
     var tags = getTerms(item).map(function(t) { return '<span class="exposure-card-tag">' + esc(t) + '</span>'; }).join('');
     var relatedItems = opts.relatedItems || {};
     var related = (item.related || []).map(function(id) {
@@ -264,13 +255,22 @@ const ExposureCase = (function() {
     var sources = (item.sources || []).map(function(s) {
       return '<li>' + (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.type || s.ref || 'источник') + '</a>' : esc(s.type || '') + ' ' + esc(s.ref || '')) + '</li>';
     }).join('');
+    var sectionsHtml = (typeof SectionRenderer !== 'undefined')
+      ? SectionRenderer.renderArticle(item)
+      : blocks.map(function(b, i) {
+          var body = renderBlocks(b);
+          return '<article class="exposure-section" id="' + sectionId(i) + '" data-section-index="' + i + '">' +
+            renderHeading(b.heading, b.icon) +
+            '<div class="exposure-section-body">' + body + '</div>' +
+          '</article>';
+        }).join('');
+    var headerTags = tags
+      ? '<header class="research-detail-header"><div class="research-detail-tags">' + tags + '</div></header>'
+      : '';
 
     return '<div class="exposure-case-page">' +
       '<div class="exposure-case-container">' +
-        '<header class="research-detail-header">' +
-          '<div class="research-detail-tags">' + tags + '</div>' +
-          claimHtml +
-        '</header>' +
+        headerTags +
         '<div class="research-detail-layout exposure-case-layout">' +
           '<main class="research-detail-content">' +
             '<nav class="research-toc exposure-case-toc" data-exposure-toc aria-label="Содержание разоблачения">' +
@@ -290,7 +290,7 @@ const ExposureCase = (function() {
             '<div class="exposure-case-actions">' +
               lucideBtn('exposure-copy-link', 'link', 'Скопировать ссылку') +
               lucideBtn('exposure-download-md', 'download', 'Скачать Markdown') +
-              (opts.showAskAi === false ? '' : lucideBtn('exposure-ask-ai', 'sparkles', 'AI-дополнение (гипотеза)', ' data-slug="' + esc(item.slug) + '"')) +
+              (opts.showAskAi === false ? '' : '<button type="button" class="exposure-icon-btn exposure-ask-ai-btn" data-exposure-ask-ai data-slug="' + esc(item.slug) + '" aria-label="AI-дополнение (гипотеза)" title="AI-дополнение (гипотеза)"><i data-lucide="sparkles" aria-hidden="true"></i><span>AI-дополнение (гипотеза)</span></button>') +
             '</div>' +
           '</aside>' +
         '</div>' +
@@ -359,9 +359,20 @@ const ExposureCase = (function() {
 
     var askAiBtn = container.querySelector('[data-exposure-ask-ai]');
     if (askAiBtn) askAiBtn.addEventListener('click', function() {
+      var main = container.querySelector('.research-detail-content');
+      if (!main) return;
       item.changelog = item.changelog || [];
       item.changelog.push({ date: new Date().toISOString().slice(0, 10), note: 'Запрошено дополнение от AI-агента (Exposer)' });
-      if (window.LabToast) LabToast.show('Запрос добавлен в журнал изменений. Реальный вызов агента ещё не подключён.');
+      var existing = main.querySelector('[data-exposure-ai-result]');
+      if (existing) existing.remove();
+      var note = (item.summary || item.title || 'Дополнение по делу') + ' Требует сверки с корнем, палео-механикой и контекстом ТаНаХа.';
+      var aside = document.createElement('aside');
+      aside.className = 'exposure-ai-hypothesis';
+      aside.setAttribute('data-exposure-ai-result', '');
+      aside.innerHTML = claimBadge('hypothesis') +
+        '<div class="exposure-ai-hypothesis-body">' + esc(note) + '</div>';
+      main.appendChild(aside);
+      if (window.LabToast) LabToast.show('Гипотеза вставлена. Реальный вызов агента ещё не подключён.');
     });
 
     if (toc) toc.querySelectorAll('a').forEach(function(a) {
@@ -386,6 +397,8 @@ const ExposureCase = (function() {
     renderMd: renderMd,
     renderBlocks: renderBlocks,
     confidenceMeta: confidenceMeta,
+    claimMeta: claimMeta,
+    claimBadge: claimBadge,
     confidenceBadge: confidenceBadge,
     renderCard: renderCard,
     renderCase: renderCase,

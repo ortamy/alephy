@@ -511,12 +511,17 @@ const LoadResearches = (function() {
     // Шапка модуля собирается из данных активного дела.
     if (window.LabHero && window.LabHero.setView) {
       var confidence = ExposureCase.confidenceMeta(item.confidence);
+      var claim = ExposureCase.claimMeta ? ExposureCase.claimMeta(item.confidence) : confidence;
+      var statusLabel = ExposureCase.STATUS_LABELS[item.status] || item.status || '';
       container._labHeroOverride = {
         kicker: 'АЛЕФИ · ИССЛЕДОВАНИЯ',
         title: item.title || '',
         subtitle: (item.category || ''),
         icon: 'scribe/scroll.png',
-        meta: [{ label: confidence.label, className: confidence.className }]
+        meta: [
+          statusLabel ? { label: statusLabel, className: 'lab-hero__chip--status' } : null,
+          { label: claim.label, className: claim.className || confidence.className }
+        ].filter(Boolean)
       };
       window.LabHero.setView('researches', 'detail', container._labHeroOverride);
       if (window.LabRouter) LabRouter.renderBreadcrumbs('researches', LabRouter.parseHash());
