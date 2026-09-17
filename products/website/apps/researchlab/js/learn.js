@@ -103,6 +103,7 @@
       course = segments[1] ? findCourse(segments[1]) : null;
       state.view = course ? 'course' : 'courses';
       state.course = course;
+      state.courseOpenModule = null;
     } else if (target === 'paleo-trainer') {
       state.view = segments[1] === 'battle' ? 'battle' : 'trainer';
       if (state.view === 'battle') initBattle();
@@ -337,26 +338,178 @@
     var course = state.course;
     if (!course) { state.view = 'courses'; return renderCourses(); }
     var p = courseProgress();
-    var lessons = course.lessons || [];
-    var done = lessons.filter(function(lesson) { return p.lessons[lesson.id]; }).length;
-    var cards = lessons.map(function(lesson, index) {
-      var isDone = !!p.lessons[lesson.id];
-      return '<article class="lesson-scroll' + (isDone ? ' is-done' : '') + '" style="animation-delay:' + index * 70 + 'ms">' +
-        '<div class="lesson-scroll-side"><span class="lesson-paleo" lang="hbo" aria-hidden="true">' + esc(lesson.letter) + '</span><span class="lesson-number">' + lesson.number + '/' + lessons.length + '</span></div>' +
-        '<div class="lesson-scroll-body">' +
-          '<header class="lesson-scroll-head"><h2>' + esc(lesson.title) + '</h2><span class="lesson-letter-name">' + esc(lesson.letterName) + '</span></header>' +
-          '<span class="lesson-paleo-word" lang="hbo">' + esc(lesson.paleo) + '</span>' +
-          '<p class="lesson-meaning">' + esc(lesson.meaning) + '</p>' +
-          '<blockquote class="lesson-quote">' + esc(lesson.quote) + '</blockquote>' +
-          '<div class="lesson-ask"><h3>Вопрос</h3><p>' + esc(lesson.question) + '</p></div>' +
-          '<div class="lesson-practice"><h3>Практика</h3><p>' + esc(lesson.practice) + '</p></div>' +
-          '<button type="button" class="lab-btn ' + (isDone ? 'lab-btn-secondary' : 'lab-btn-primary') + ' lesson-done-btn" onclick="LearnLab.toggleLesson(\'' + course.id + '\',\'' + lesson.id + '\')">' + (isDone ? 'Пройдено — снять отметку' : 'Отметить пройденным') + '</button>' +
-        '</div>' +
-      '</article>';
+    var lessons = courseModules(course);
+    var openIndex = courseOpenIndex(course, p);
+    return '<div class="course-detail">' +
+      coursePathMarkup(course, p, openIndex) +
+      '<div class="course-detail-inner">' +
+        courseRailMarkup(course, p, openIndex) +
+        '<div class="course-detail-main">' + courseModulesMarkup(course, p, openIndex) + '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* ===== Course stepper: one lesson of the course = one module chapter. ===== */
+
+  function courseModules(course) {
+    return course.lessons || [];
+  }
+
+  function isModuleDone(course, moduleIndex, p) {
+    var lesson = courseModules(course)[moduleIndex];
+    return !!(lesson && p.lessons[lesson.id]);
+  }
+
+  function currentModuleIndex(course, p) {
+    var lessons = courseModules(course);
+    for (var i = 0; i < lessons.length; i++) {
+      if (!p.lessons[lessons[i].id]) return i;
+    }
+    return Math.max(0, lessons.length - 1);
+  }
+
+  function courseOpenIndex(course, p) {
+    var total = courseModules(course).length;
+    if (state.courseOpenModule === -1) return -1;
+    if (typeof state.courseOpenModule === 'number' && state.courseOpenModule >= 0 && state.courseOpenModule < total) return state.courseOpenModule;
+    return currentModuleIndex(course, p);
+  }
+
+  function doneModuleCount(course, p) {
+    var lessons = courseModules(course);
+    var count = 0;
+    for (var i = 0; i < lessons.length; i++) {
+      if (p.lessons[lessons[i].id]) count++;
+    }
+    return count;
+  }
+
+  function padNumber(n) {
+    return n < 10 ? '0' + n : '' + n;
+  }
+
+  /* Повторы: одинаковые у всех уроков курса поля рендерим один раз в модуле 01. */
+  function sharedCourseFields(course) {
+    var lessons = courseModules(course);
+    if (lessons.length < 2) return {};
+    var shared = {};
+    ['paleo', 'meaning', 'quote', 'question', 'practice'].forEach(function(field) {
+      var first = lessons[0][field];
+      if (!first) return;
+      var same = lessons.every(function(lesson) { return lesson[field] === first; });
+      if (same) shared[field] = true;
+    });
+    return shared;
+  }
+
+  function coursePathMarkup(course, p, openIndex) {
+    var lessons = courseModules(course);
+    var doneCount = doneModuleCount(course, p);
+    var chips = lessons.map(function(lesson, i) {
+      var done = !!p.lessons[lesson.id];
+      var cls = done ? 'is-done' : (i === openIndex ? 'is-current' : '');
+      return '<button type="button" class="course-path-chip ' + cls + '" data-module-index="' + i + '"' + (i === openIndex ? ' aria-current="step"' : '') + ' onclick="LearnLab.jumpToModule(' + i + ')">' +
+        '<span class="course-path-chip-dot" aria-hidden="true"></span>' +
+        '<span class="course-path-chip-label">Модуль ' + padNumber(i + 1) + '</span>' +
+        (done ? '<span class="course-path-chip-check" aria-hidden="true">✓</span>' : '') +
+      '</button>';
     }).join('');
-    return '<div class="course-progress-line" role="progressbar" aria-valuemin="0" aria-valuemax="' + lessons.length + '" aria-valuenow="' + done + '" aria-label="Пройдено уроков"><span style="width:' + (lessons.length ? done / lessons.length * 100 : 0) + '%"></span></div>' +
-      '<p class="course-progress-label">Пройдено ' + done + ' из ' + lessons.length + '</p>' +
-      '<div class="lesson-list">' + cards + '</div>';
+    return '<div class="course-path" role="navigation" aria-label="Путь по модулям курса">' +
+      '<div class="course-path-legend" aria-hidden="true">' +
+        '<span class="course-path-legend-item"><span class="course-path-dot"></span>Новый</span>' +
+        '<span class="course-path-legend-item"><span class="course-path-dot is-current"></span>Текущий</span>' +
+        '<span class="course-path-legend-item"><span class="course-path-dot is-done"></span>Пройден</span>' +
+      '</div>' +
+      '<div class="course-path-scroll">' + chips + '</div>' +
+      '<div class="course-path-bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + lessons.length + '" aria-valuenow="' + doneCount + '" aria-label="Пройдено модулей"><span style="width:' + (lessons.length ? doneCount / lessons.length * 100 : 0) + '%"></span></div>' +
+    '</div>';
+  }
+
+  function courseRailMarkup(course, p, openIndex) {
+    var lessons = courseModules(course);
+    var nodes = lessons.map(function(lesson, i) {
+      var done = !!p.lessons[lesson.id];
+      var cls = done ? 'is-done' : (i === openIndex ? 'is-current' : '');
+      return '<button type="button" class="course-rail-node ' + cls + '" data-module-index="' + i + '" aria-label="Модуль ' + padNumber(i + 1) + (done ? ', пройден' : '') + '" onclick="LearnLab.jumpToModule(' + i + ')">' +
+        '<span class="course-rail-glyph" lang="hbo" aria-hidden="true">' + esc(lesson.letter) + '</span>' +
+      '</button>';
+    }).join('');
+    return '<div class="course-rail"><div class="course-rail-line" aria-hidden="true"></div>' + nodes + '</div>';
+  }
+
+  function courseModulesMarkup(course, p, openIndex) {
+    var lessons = courseModules(course);
+    var shared = sharedCourseFields(course);
+    var hasShared = Object.keys(shared).length > 0;
+    var current = currentModuleIndex(course, p);
+    var sections = [];
+    for (var i = 0; i < lessons.length; i++) {
+      var lesson = lessons[i];
+      var done = !!p.lessons[lesson.id];
+      var isOpen = i === openIndex;
+      var phase = done ? ' is-done' : (i === current ? ' is-current' : ' is-future');
+      var body = '';
+      if (isOpen) {
+        var inner = (i === 0 || !hasShared)
+          ? courseLessonBlock(course, lesson, p, i === 0 ? {} : shared, hasShared && i === 0)
+          : '<p class="course-block-dup">Смыслы, цитата, вопрос и практика совпадают с модулем 01 — общий образ курса открыт там.</p>';
+        body = '<div class="course-module-body" id="course-module-body-' + i + '"><div class="course-module-body-inner">' + inner + '</div></div>';
+      } else if (!done) {
+        var preview = String(lesson.meaning || '');
+        if (preview.length > 110) preview = preview.slice(0, 110).trimEnd() + '…';
+        body = '<p class="course-module-preview">' + esc(preview) + '</p>';
+      }
+      sections.push('<section class="course-module' + phase + (isOpen ? ' is-open' : ' is-collapsed') + '" id="course-module-' + i + '" data-module-index="' + i + '">' +
+        '<header class="course-module-head">' +
+          '<button type="button" class="course-module-toggle" aria-expanded="' + (isOpen ? 'true' : 'false') + '" aria-controls="course-module-body-' + i + '" onclick="LearnLab.toggleModule(' + i + ')">' +
+            '<span class="course-module-num" aria-hidden="true">' + padNumber(i + 1) + '</span>' +
+            '<span class="course-module-titles">' +
+              '<span class="course-module-title">' + esc(lesson.title) + '</span>' +
+              '<span class="course-module-sub">' + esc(lesson.letterName) + '</span>' +
+            '</span>' +
+            (done ? '<span class="course-module-check" role="img" aria-label="Модуль пройден">✓</span>' : '') +
+            '<span class="course-module-chevron" aria-hidden="true">▸</span>' +
+          '</button>' +
+          '<button type="button" class="lab-btn lab-btn-sm module-chapter-done-btn' + (done ? ' lab-btn-secondary' : ' lab-btn-primary') + '" onclick="LearnLab.toggleLesson(\'' + course.id + '\',\'' + lesson.id + '\')">' + (done ? 'Пройден' : 'Отметить') + '</button>' +
+        '</header>' +
+        body +
+      '</section>');
+    }
+    return sections.join('');
+  }
+
+  function courseLessonBlock(course, lesson, p, shared, withNote) {
+    var isDone = !!p.lessons[lesson.id];
+    var html = '<article class="course-block' + (isDone ? ' is-done' : '') + '" data-lesson-id="' + esc(lesson.id) + '">';
+    if (!shared.paleo) html += '<span class="course-block-paleo" lang="hbo">' + esc(lesson.paleo) + '</span>';
+    if (!shared.meaning) html += '<p class="course-block-meaning">' + esc(lesson.meaning) + '</p>';
+    if (!shared.quote) html += '<blockquote class="course-block-quote">' + esc(lesson.quote) + '</blockquote>';
+    if (!shared.question || !shared.practice) {
+      html += '<div class="course-block-panels">';
+      if (!shared.question) html += '<div class="course-block-panel is-question"><h4>Вопрос</h4><p>' + esc(lesson.question) + '</p></div>';
+      if (!shared.practice) html += '<div class="course-block-panel is-practice"><h4>Практика</h4><p>' + esc(lesson.practice) + '</p></div>';
+      html += '</div>';
+    }
+    html += '</article>';
+    if (withNote) html += '<p class="course-block-shared-note">Образ, цитата, вопрос и практика этого курса общие для всех модулей.</p>';
+    return html;
+  }
+
+  var courseSpy = null;
+  function courseEnhance() {
+    if (courseSpy) { courseSpy.disconnect(); courseSpy = null; }
+    var container = getContainer();
+    if (!container) return;
+    var sections = container.querySelectorAll('.course-module');
+    if (!sections.length || !('IntersectionObserver' in window)) return;
+    courseSpy = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        var index = entry.target.getAttribute('data-module-index');
+        var marks = container.querySelectorAll('.course-path-chip[data-module-index="' + index + '"], .course-rail-node[data-module-index="' + index + '"]');
+        for (var k = 0; k < marks.length; k++) marks[k].classList.toggle('is-in-view', entry.isIntersecting);
+      });
+    }, { rootMargin: '-35% 0px -55% 0px' });
+    for (var s = 0; s < sections.length; s++) courseSpy.observe(sections[s]);
   }
 
   function renderLessons() {
@@ -612,7 +765,7 @@
       root.LabHero.setView('learn', null);
     }
   }
-  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); }
+  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); if (state.view === 'course') courseEnhance(); }
   function markStarted(item) { var p = progress(); if (!p.letters[item.hebrew] || p.letters[item.hebrew].status !== 'complete') p.letters[item.hebrew] = {status:'progress',score:0}; touch(p); }
   function feedback(text, ok) { var el = document.getElementById('learn-feedback'); if (el) { el.textContent = text; el.className = 'learn-feedback ' + (ok ? 'is-correct' : 'is-wrong'); } }
   function advance(ok) { if (!ok) return; state.lesson.score++; if (state.lesson.step < 4) { state.lesson.step++; render(); } else { var p = progress(), item = state.lesson.item; p.letters[item.hebrew] = {status:'complete',score:state.lesson.score,attempts:(p.letters[item.hebrew] && p.letters[item.hebrew].attempts || 0) + 1,lastActivity:now()}; srsLetterCards(item).forEach(function(def) { srsSchedule(def.id, def.type, def.label, state.lesson.score >= 4 ? 'good' : 'hard'); }); touch(p); state.view = 'lesson'; state.lesson.done = true; render(); } }
@@ -642,6 +795,8 @@
     applyRoute: applyRoute,
     routeTitle: routeTitle,
     toggleLesson: function(courseId, lessonId) { var p = courseProgress(); if (p.lessons[lessonId]) delete p.lessons[lessonId]; else p.lessons[lessonId] = { course: courseId, done: true, at: now() }; write(COURSE_KEY, p); render(); },
+    toggleModule: function(index) { if (!state.course) return; state.courseOpenModule = state.courseOpenModule === index ? -1 : index; render(); },
+    jumpToModule: function(index) { if (!state.course) return; state.courseOpenModule = index; render(); var section = document.getElementById('course-module-' + index); if (section) { var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); } },
     gameAnswer: function(key) { var game=state.game; if (!game || game.locked) return; game.locked=true; var ok=key===game.item.hebrew, earned=0; if(ok){game.streak++; earned=10*(game.streak >= 3 ? 3 : game.streak === 2 ? 2 : 1); game.score+=earned;} else {game.streak=0; game.score=Math.max(0,game.score-5);} render(); var feedbackEl=document.getElementById('learn-game-feedback'); if(feedbackEl){feedbackEl.textContent=ok ? 'Верно! +' + earned + ' очков' : 'Неверно. Правильный образ: ' + game.item.image; feedbackEl.className='learn-game-feedback ' + (ok?'correct':'wrong');} setTimeout(function(){ if(!state.game || state.game !== game) return; if(game.round >= 10) finishGame(); else {game.round++; nextRound();} },700); },
     openCourse: function(id) { navigate(['courses', encodeURIComponent(id)]); },
     reset: function() { if (!window.LabModal) return; window.LabModal.show('Сбросить прогресс?', '<p class="learn-hub-reset-text">Будут удалены уроки букв, очередь повторения и рекорд игры, сохранённые в этом браузере. Прогресс курсов останется.</p>', '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Отмена</button><button type="button" class="lab-btn lab-btn-primary lab-btn-sm learn-danger" onclick="LearnLab.resetConfirm()">Сбросить</button>'); },
