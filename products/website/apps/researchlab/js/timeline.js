@@ -107,23 +107,8 @@ const Timeline = (function() {
       return;
     }
 
-    // ROADMAP SCALE: ширина бара пропорциональна доле событий ленты —
-    // честная шкала наполнения (count * 20 давал одинаковые 100% при 5+ событиях).
-    var maxCount = timelines.reduce(function(max, tl) {
-      return Math.max(max, tl.events ? tl.events.length : 0);
-    }, 0);
-    var roadmapHtml = '<div class="tl-roadmap" role="list" aria-label="Шкала таймлайнов">' +
-      timelines.map(function(tl, idx) {
-        var count = tl.events ? tl.events.length : 0;
-        var activeClass = idx === 0 ? ' active' : '';
-        var width = maxCount ? Math.round((count / maxCount) * 100) : 0;
-        return '<div class="tl-roadmap-segment' + activeClass + '" data-tl-id="' + escapeHtml(tl.id) + '" role="listitem" tabindex="0" aria-label="' + escapeHtml(tl.title) + '" style="--tl-index:' + idx + '">' +
-          '<div class="tl-roadmap-bar"><div class="tl-roadmap-bar-fill" style="width:' + width + '%"></div></div>' +
-          '<span class="tl-roadmap-label">' + escapeHtml(tl.title) + '</span>' +
-          '<span class="tl-roadmap-count">' + count + '</span>' +
-        '</div>';
-      }).join('') +
-    '</div>';
+    // Шкала-дубль (roadmap bars) удалена: она повторяла названия и счётчики
+    // событий, которые уже несёт шапка каждой карточки в каталоге.
 
     // FILTER CHIPS: чипы строятся из эр, найденных в данных (era), а не из хардкода ID.
     var eraCounts = {};
@@ -184,26 +169,10 @@ const Timeline = (function() {
     // Шапку рисует LabHero — ПОСЛЕ innerHTML: присвоение container.innerHTML
     // стирает секцию .lab-hero, и вызов setView до него терялся (hero
     // пересоздавался scan-ом из базового конфига каталога).
-    container.innerHTML = roadmapHtml + filtersHtml + '<div class="tl-catalog">' + catalogHtml + '</div>';
+    container.innerHTML = filtersHtml + '<div class="tl-catalog">' + catalogHtml + '</div>';
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('timeline', null, (window.LabHero.views && window.LabHero.views.timeline) || {});
     }
-
-    // Обработчики roadmap segments
-    var segments = container.querySelectorAll('.tl-roadmap-segment');
-    segments.forEach(function(seg) {
-      seg.addEventListener('click', function() {
-        var tlId = seg.getAttribute('data-tl-id');
-        if (tlId) location.hash = '#timeline/' + tlId;
-      });
-      seg.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          var tlId = seg.getAttribute('data-tl-id');
-          if (tlId) location.hash = '#timeline/' + tlId;
-        }
-      });
-    });
 
     // Обработчики filter chips
     var chips = container.querySelectorAll('.tl-filter-chip');
