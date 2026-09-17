@@ -2054,7 +2054,9 @@ const PageController = (function() {
       else if (params.state) viewId = 'detail';
     } else if (moduleId === 'timeline') {
       var seg2 = parsed && parsed.segments;
-      if (seg2 && seg2[1]) { viewId = 'detail'; override = timelineHeroOverride(seg2[1]); }
+      // Шапку подменяет только полный вид ленты (#timeline/<id>/full) и сравнение;
+      // каталог с раскрытой карточкой или подсвеченным событием остаётся каталогом.
+      if (seg2 && (seg2[2] === 'full' || seg2[1] === 'compare')) { viewId = 'detail'; override = timelineHeroOverride(seg2[1]); }
       else viewId = 'catalog';
         } else if (moduleId === 'paleo-linguistics') {
       var seg3 = parsed && parsed.segments;

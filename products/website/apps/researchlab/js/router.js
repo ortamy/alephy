@@ -91,6 +91,15 @@ const LabRouter = (function() {
       routes.push('timeline');
       if (segments[2]) routes.push('timeline/' + segments[2]);
       routes.push(segments.join('/'));
+    } else if (segments[0] === 'timeline' && segments[2] === 'full') {
+      // Полный вид ленты: каталог → сама лента (сегмент full — служебный).
+      routes.push('timeline');
+      routes.push(segments.join('/'));
+    } else if (segments[0] === 'timeline' && segments[2] === 'event') {
+      // Событие: каталог → лента → событие (сегмент event — служебный).
+      routes.push('timeline');
+      routes.push('timeline/' + segments[1]);
+      routes.push(segments.join('/'));
     } else {
       for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
     }
