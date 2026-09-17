@@ -10,7 +10,7 @@
 - **Тема:** Классификация типов искажений, через которые проходят ивритские понятия при переводе. Девять типов, каждый со своими приёмами. Комбинации типов и способы восстановления.
 - **Аудит:** bdikah ⏳ | mivdak ⏳ | tikun ⏳ | factcheck ⏳
 - **Язык:** русский
-- **Связанные файлы:** `docs/06-METHODOLOGY/DISTORTIONS.md`, `docs/06-METHODOLOGY/EXPOSURE-LANGUAGE.md`, `docs/06-METHODOLOGY/MECHANISMS.md`, `docs/06-METHODOLOGY/SYSTEM-ARCHITECTURE.md`, `docs/06-METHODOLOGY/TECHNIQUES.md`, ``, `docs/04-STANDARD/PALEO-STANDARD.md`
+- **Связанные файлы:** `docs/06-METHODOLOGY/DISTORTIONS.md`, `docs/06-METHODOLOGY/EXPOSURE-LANGUAGE.md`, `docs/06-METHODOLOGY/MECHANISMS.md`, `docs/06-METHODOLOGY/SYSTEM-ARCHITECTURE.md`, `docs/06-METHODOLOGY/TECHNIQUES.md`, `docs/04-STANDARD/PALEO-STANDARD.md`
 - **Хеш:** ожидает
 - **Достоверность:** средняя
 - **Последний аудит:** 2026-08-21

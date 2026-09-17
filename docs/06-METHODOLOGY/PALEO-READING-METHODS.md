@@ -6,7 +6,7 @@
 **Статус:** Активный  
 **Тема:** Пять режимов чтения палео-ивритского слова: последовательный, механический, пространственный, циклический, корневой.  
 **Принципы:** Палео-иврит, Карта утрат, Принцип потока, Хук Свива  
-**Связанные файлы:** `docs/00-START/MANIFEST.md`, `docs/04-STANDARD/PALEO-STANDARD.md`, ``, ``, ``, `docs/06-METHODOLOGY/STATES.md`
+**Связанные файлы:** `docs/00-START/MANIFEST.md`, `docs/04-STANDARD/PALEO-STANDARD.md`, `docs/06-METHODOLOGY/STATES.md`
 
 ---
 

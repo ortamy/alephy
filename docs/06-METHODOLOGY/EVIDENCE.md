@@ -10,7 +10,7 @@
 - **Тема:** Критерии доказательности для разоблачений: факт, интерпретация, гипотеза. Карта утрат. Принцип Арона. Хук Свива. Правила работы с неполными данными.
 - **Аудит:** bdikah ⏳ | mivdak ⏳ | tikun ⏳ | factcheck ⏳
 - **Язык:** русский
-- **Связанные файлы:** `docs/00-START/MANIFEST.md`, `docs/04-STANDARD/PALEO-STANDARD.md`, ``, ``, ``, ``, ``, ``, ``, ``, ``, ``, `docs/06-METHODOLOGY/STATES.md`, `products/website/researchlab/data/roots.json`
+- **Связанные файлы:** `docs/00-START/MANIFEST.md`, `docs/04-STANDARD/PALEO-STANDARD.md`, `docs/06-METHODOLOGY/STATES.md`, `products/website/researchlab/data/roots.json`
 - **Хеш:** ожидает
 - **Достоверность:** высокая
 - **Последний аудит:** 2026-08-21
