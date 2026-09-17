@@ -46,6 +46,83 @@ const PageController = (function() {
     container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">' + escapeHtml(text || 'Загрузка…') + '</div></div>';
   }
 
+  // ===== ГАРД ЗАГРУЗКИ МОДУЛЯ =====
+  // Вечный спиннер — это ошибка, а не состояние. Падение init или молчание
+  // дольше WATCHDOG_MS переводит панель в error-state с кнопкой «Повторить».
+  var WATCHDOG_MS = 8000;
+  var moduleWatchdogs = {};
+
+  function hasVisibleSpinner(container) {
+    var spinners = container.querySelectorAll('.lab-spinner');
+    for (var i = 0; i < spinners.length; i++) {
+      if (window.getComputedStyle(spinners[i]).display !== 'none') return true;
+    }
+    return false;
+  }
+
+  function moduleErrorMessage(error) {
+    if (!error) return '';
+    return error.message ? error.message : String(error);
+  }
+
+  function showModuleError(container, moduleId, reason) {
+    if (!container) return;
+    if (moduleWatchdogs[moduleId]) {
+      clearTimeout(moduleWatchdogs[moduleId]);
+      delete moduleWatchdogs[moduleId];
+    }
+    delete container.dataset.loading;
+    container.dataset.loaded = '1';
+    container.dataset.moduleError = '1';
+    container.innerHTML =
+      '<div class="lab-alert lab-alert-error" role="alert" data-module-error="' + escapeHtml(moduleId) + '">' +
+      '<div class="flex gap-8"><i data-lucide="alert-triangle" aria-hidden="true"></i><strong>Модуль не загрузился</strong></div>' +
+      '<p class="text-small text-muted mt-8">Модуль «' + escapeHtml(moduleId) + '»' + (reason ? ': ' + escapeHtml(reason) : '') + '</p>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm mt-8" data-module-retry><i data-lucide="refresh-cw" aria-hidden="true"></i>Повторить</button>' +
+      '</div>';
+    var retry = container.querySelector('[data-module-retry]');
+    if (retry) {
+      retry.addEventListener('click', function() { retryModule(container, moduleId); });
+    }
+    if (window.LabIcons) window.LabIcons.sync();
+  }
+
+  function retryModule(container, moduleId) {
+    if (!container) return;
+    delete container.dataset.loaded;
+    delete container.dataset.loading;
+    delete container.dataset.moduleError;
+    container.innerHTML = '';
+    render(moduleId, container, container._labParsed);
+  }
+
+  // Watchdog не требует явного «ready»: если через WATCHDOG_MS в панели
+  // всё ещё виден спиннер — модуль не завершил загрузку.
+  function guardModuleLoad(moduleId, container) {
+    if (moduleWatchdogs[moduleId]) clearTimeout(moduleWatchdogs[moduleId]);
+    moduleWatchdogs[moduleId] = setTimeout(function() {
+      delete moduleWatchdogs[moduleId];
+      if (!container.isConnected || container.dataset.moduleError === '1') return;
+      if (!hasVisibleSpinner(container)) return;
+      console.warn('[PageController] Модуль «' + moduleId + '» не сигнализировал готовность за ' + WATCHDOG_MS + ' мс — показан error-state');
+      showModuleError(container, moduleId, 'таймаут загрузки');
+    }, WATCHDOG_MS);
+  }
+
+  // Модули без post-render хука завершают загрузку сразу после разметки —
+  // эту разметку они получают либо синхронно из switch, либо из fetch ниже.
+  function initHtmlModule(moduleId, container) {
+    try {
+      if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
+      if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
+      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
+      if (window.RevealObserver) window.RevealObserver.scan(container);
+    } catch (error) {
+      console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
+      showModuleError(container, moduleId, moduleErrorMessage(error));
+    }
+  }
+
   var AGENT_API_URL = 'http://127.0.0.1:5000';
 
   function checkAgentServer() {
@@ -1272,10 +1349,28 @@ const PageController = (function() {
   }
 
   // ===== ОСНОВНОЙ МЕТОД РЕНДЕРИНГА =====
+  // Обёртка гейтит весь dispatch: любое синхронное падение модуля (в рендере
+  // или в его init) превращается в error-state панели, а не в вечный спиннер.
   function render(moduleId, container, parsed) {
-    console.log('[PC] Рендерим модуль:', moduleId, container);
     if (!container) return;
+    container._labParsed = parsed;
 
+    if (container.dataset.moduleError === '1') {
+      retryModule(container, moduleId);
+      return;
+    }
+
+    guardModuleLoad(moduleId, container);
+
+    try {
+      renderModule(moduleId, container, parsed);
+    } catch (error) {
+      console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
+      showModuleError(container, moduleId, moduleErrorMessage(error));
+    }
+  }
+
+  function renderModule(moduleId, container, parsed) {
     if (container.dataset.loading === '1') {
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -1753,32 +1848,25 @@ const PageController = (function() {
       case 'translation-comparator':
         if (container.dataset.loading === '1') return;
         if (container.dataset.loaded === '1' && container.innerHTML.trim() !== '') {
-          if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
-          if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
-          if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
-          if (window.RevealObserver) window.RevealObserver.scan(container);
+          initHtmlModule(moduleId, container);
           break;
         }
+        // Гейт для асинхронной ветки. Без него .then-обработчик ниже выходил
+        // сразу (loading !== '1') и панель оставалась со спиннером навсегда.
+        container.dataset.loading = '1';
         showSpinner(container, 'Загрузка модуля…');
         fetchPage('pages/' + moduleId + '.html').then(function(html) {
           if (container.dataset.loading !== '1') return;
           container.innerHTML = html;
+          // Модуль без post-render хука считается загруженным сразу после
+          // разметки: спиннер снят до init, панель не «висит» на загрузке.
           container.dataset.loaded = '1';
           delete container.dataset.loading;
-          if (moduleId === 'paleo-builder' && window.PaleoBuilder) {
-            window.PaleoBuilder.init(container);
-          }
-          if (moduleId === 'video-lab' && window.VideoLab) {
-            window.VideoLab.init(container);
-          }
-          if (moduleId === 'translation-comparator' && window.TransComp) {
-            window.TransComp.init();
-          }
-          if (window.RevealObserver) window.RevealObserver.scan(container);
+          initHtmlModule(moduleId, container);
         }).catch(function(err) {
           if (container.dataset.loading !== '1') return;
-          delete container.dataset.loading;
-          showError(container, 'Ошибка загрузки модуля: ' + err.message);
+          console.warn('[PageController] Модуль «' + moduleId + '» не загрузил разметку: ' + moduleErrorMessage(err));
+          showModuleError(container, moduleId, moduleErrorMessage(err));
         });
         break;
 

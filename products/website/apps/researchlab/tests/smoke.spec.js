@@ -77,6 +77,79 @@ test.describe('registered routes', () => {
     });
   }
 });
+// ===== РЕГРЕССИЯ: ВЕЧНЫЙ СПИННЕР ЗАГРУЗКИ МОДУЛЯ =====
+// Модуль, который не закончил загрузку, обязан либо показать контент, либо
+// error-state с кнопкой «Повторить» (гард в page-controller.js). Видимый
+// спиннер дольше бюджета — это баг, а не состояние ожидания.
+const SPINNER_BUDGET_MS = 5_000;
+
+// Ключевой узел для модулей с fetch-разметкой (pages/<route>.html): ловит
+// случай «разметка скачалась, но панель осталась пустой».
+const moduleAnchors = {
+  'paleo-builder': '[data-paleo-palette]',
+  'video-lab': '.prompt-generator-layout',
+  generators: '.gc-grid',
+  checkers: '.gc-grid',
+  'translation-comparator': '.tc-checker-content',
+  'paleo-keyboard': '#pk-keys .pk-key',
+  analyzers: '.analyzers-shell'
+};
+
+const gridRoutes = process.env.SMOKE_QUICK === '1' ? routes.filter((route) => quickRoutes.has(route)) : routes;
+
+test.describe('route loading finishes', () => {
+  for (const route of gridRoutes) {
+    test(`#${route} показывает контент без вечного спиннера (loading grid)`, async ({ page }) => {
+      const errors = [];
+      page.on('console', (message) => {
+        if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(`console: ${message.text()}`);
+      });
+      page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+      await page.goto(`/#${route}`, { waitUntil: 'domcontentloaded' });
+
+      const panel = page.locator('#labContent .module.active').first();
+      await expect(panel, `панель модуля #${route}`).toBeVisible({ timeout: SPINNER_BUDGET_MS });
+
+      // Спиннер учитывается только если он реально занимает место в раскладке:
+      // скрытые спиннеры соседних модулей остаются в DOM.
+      const visibleSpinners = () => page
+        .locator('#labContent .lab-spinner')
+        .evaluateAll((nodes) => nodes.filter((node) => node.getBoundingClientRect().height > 0).length);
+
+      await expect
+        .poll(visibleSpinners, { timeout: SPINNER_BUDGET_MS, message: `вечный спиннер на #${route}` })
+        .toBe(0);
+
+      const anchor = moduleAnchors[route];
+      if (anchor) {
+        await expect(page.locator(`#labContent ${anchor}`).first(), `ключевой узел ${anchor} на #${route}`).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+      } else {
+        // В диагностику попадает разметка панели: без неё по таймауту не понять,
+        // панель пустая или модуль отрисовался в другой контейнер.
+        try {
+          await expect
+            .poll(() => panel.evaluate((node) => node.children.length), { timeout: SPINNER_BUDGET_MS, message: `пустая панель #${route}` })
+            .toBeGreaterThan(0);
+        } catch (error) {
+          const dump = await page.evaluate(() => {
+            const active = document.querySelector('#labContent .module.active');
+            return {
+              panel: active ? active.id : null,
+              html: active ? active.outerHTML.slice(0, 300) : '',
+              labChildren: Array.from(document.getElementById('labContent').children).map((node) => `${node.id}.${node.className}`).join(' ')
+            };
+          });
+          throw new Error(`${error.message}\n#${route}: ${JSON.stringify(dump)}`);
+        }
+      }
+
+      // Error-state гарда — тоже «модуль не загрузился», а не нормальный рендер.
+      await expect(page.locator('#labContent [data-module-error]'), `error-state на #${route}`).toHaveCount(0);
+      expect(errors, `uncaught errors on #${route}`).toEqual([]);
+    });
+  }
+});
 
 test('agent server offline shows Сервер отключен without uncaught errors', async ({ page }) => {
   const errors = [];

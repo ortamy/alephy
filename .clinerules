@@ -95,9 +95,8 @@ Context7 — когда API библиотеки неизвестен или и�
 
 - `docs/00-START/MANIFEST.md` — методология;
 - `docs/01-ARCHITECTURE/ARCHITECTURE.md` — структура и границы;
-- `docs/10-DESIGN/DESIGN-SYSTEM.md` — UI Research Lab;
-- `docs/09-GUIDES/TESTING.md` — обязательные проверки;
-- `docs/06-METHODOLOGY/` — методы и терминология;
+- `docs/10-DESIGN/ANTI-SLOP-CHECKLIST.md` — обязательный чек-лист анти-slop для дизайна Research Lab и лендинга
+
 - `docs/decisions.md` — архитектурные решения (ADR).
 
 Детальные чек-листы живут в `docs/09-GUIDES/` (создаются по мере надобности):
@@ -106,6 +105,8 @@ Context7 — когда API библиотеки неизвестен или и�
 Не создавай гайды без отдельной задачи.
 
 Не перечитывай эти документы без необходимости. Читай только нужные разделы.
+
+После любых правок `docs/` запускать `python tools/generate-docs-index.py` и прикладывать перегенерированные файлы тем же коммитом; проверка `python tools/check-docs.py check` обязана быть зелёной до коммита.
 
 ## 5. Сохранность рабочего дерева
 
