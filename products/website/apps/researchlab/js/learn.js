@@ -5,6 +5,7 @@
   var PROGRESS_KEY = 'alephy_learn_progress';
   var RECORD_KEY = 'alephy_guess_record';
   var COURSE_KEY = 'alephy_course_progress';
+  var COURSE_OPEN_KEY = 'alephy_course_open';
   var SRS_KEY = 'alephy_srs_cards';
   var LETTER_KEYS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
   var fallback = [
@@ -103,7 +104,7 @@
       course = segments[1] ? findCourse(segments[1]) : null;
       state.view = course ? 'course' : 'courses';
       state.course = course;
-      state.courseOpenModule = null;
+      state.courseOpenModule = course ? readCourseOpen(course.id) : null;
     } else if (target === 'paleo-trainer') {
       state.view = segments[1] === 'battle' ? 'battle' : 'trainer';
       if (state.view === 'battle') initBattle();
@@ -351,6 +352,20 @@
 
   /* ===== Course stepper: one lesson of the course = one module chapter. ===== */
 
+  /* Последний раскрытый модуль курса хранится в localStorage, ключ — id курса. */
+  function readCourseOpen(courseId) {
+    var store = read(COURSE_OPEN_KEY, {});
+    var value = store && store[courseId];
+    return typeof value === 'number' ? value : null;
+  }
+
+  function writeCourseOpen(courseId, index) {
+    var store = read(COURSE_OPEN_KEY, {});
+    if (!store || typeof store !== 'object') store = {};
+    store[courseId] = index;
+    write(COURSE_OPEN_KEY, store);
+  }
+
   function courseModules(course) {
     return course.lessons || [];
   }
@@ -370,8 +385,10 @@
 
   function courseOpenIndex(course, p) {
     var total = courseModules(course).length;
-    if (state.courseOpenModule === -1) return -1;
-    if (typeof state.courseOpenModule === 'number' && state.courseOpenModule >= 0 && state.courseOpenModule < total) return state.courseOpenModule;
+    var runtime = state.courseOpenModule;
+    if (typeof runtime === 'number' && (runtime === -1 || runtime < total)) return runtime;
+    var saved = readCourseOpen(course.id);
+    if (typeof saved === 'number' && (saved === -1 || saved < total)) return saved;
     return currentModuleIndex(course, p);
   }
 
@@ -496,8 +513,41 @@
   }
 
   var courseSpy = null;
+  var courseAlignBound = false;
+
+  /* Узлы рельсы ставятся по центру шапки своей главы; линия — от первого узла к последнему. */
+  function courseAlignRail() {
+    var container = getContainer();
+    if (!container) return;
+    var rail = container.querySelector('.course-rail');
+    var line = rail ? rail.querySelector('.course-rail-line') : null;
+    if (!rail || !line) return;
+    var nodes = rail.querySelectorAll('.course-rail-node');
+    if (!nodes.length) return;
+    var railRect = rail.getBoundingClientRect();
+    var firstCenter = null;
+    var lastCenter = null;
+    var modules = container.querySelectorAll('.course-module');
+    for (var i = 0; i < modules.length; i++) {
+      var head = modules[i].querySelector('.course-module-head');
+      var node = rail.querySelector('.course-rail-node[data-module-index="' + modules[i].getAttribute('data-module-index') + '"]');
+      if (!head || !node) continue;
+      var headRect = head.getBoundingClientRect();
+      var center = headRect.top + headRect.height / 2 - railRect.top;
+      node.style.top = center + 'px';
+      if (firstCenter === null) firstCenter = center;
+      lastCenter = center;
+    }
+    if (firstCenter !== null) {
+      line.style.top = firstCenter + 'px';
+      line.style.height = Math.max(0, lastCenter - firstCenter) + 'px';
+    }
+  }
+
   function courseEnhance() {
     if (courseSpy) { courseSpy.disconnect(); courseSpy = null; }
+    courseAlignRail();
+    if (!courseAlignBound) { window.addEventListener('resize', courseAlignRail); courseAlignBound = true; }
     var container = getContainer();
     if (!container) return;
     var sections = container.querySelectorAll('.course-module');
@@ -795,8 +845,8 @@
     applyRoute: applyRoute,
     routeTitle: routeTitle,
     toggleLesson: function(courseId, lessonId) { var p = courseProgress(); if (p.lessons[lessonId]) delete p.lessons[lessonId]; else p.lessons[lessonId] = { course: courseId, done: true, at: now() }; write(COURSE_KEY, p); render(); },
-    toggleModule: function(index) { if (!state.course) return; state.courseOpenModule = state.courseOpenModule === index ? -1 : index; render(); },
-    jumpToModule: function(index) { if (!state.course) return; state.courseOpenModule = index; render(); var section = document.getElementById('course-module-' + index); if (section) { var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); } },
+    toggleModule: function(index) { if (!state.course) return; state.courseOpenModule = state.courseOpenModule === index ? -1 : index; writeCourseOpen(state.course.id, state.courseOpenModule); render(); },
+    jumpToModule: function(index) { if (!state.course) return; state.courseOpenModule = index; writeCourseOpen(state.course.id, index); render(); var section = document.getElementById('course-module-' + index); if (section) { var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); } },
     gameAnswer: function(key) { var game=state.game; if (!game || game.locked) return; game.locked=true; var ok=key===game.item.hebrew, earned=0; if(ok){game.streak++; earned=10*(game.streak >= 3 ? 3 : game.streak === 2 ? 2 : 1); game.score+=earned;} else {game.streak=0; game.score=Math.max(0,game.score-5);} render(); var feedbackEl=document.getElementById('learn-game-feedback'); if(feedbackEl){feedbackEl.textContent=ok ? 'Верно! +' + earned + ' очков' : 'Неверно. Правильный образ: ' + game.item.image; feedbackEl.className='learn-game-feedback ' + (ok?'correct':'wrong');} setTimeout(function(){ if(!state.game || state.game !== game) return; if(game.round >= 10) finishGame(); else {game.round++; nextRound();} },700); },
     openCourse: function(id) { navigate(['courses', encodeURIComponent(id)]); },
     reset: function() { if (!window.LabModal) return; window.LabModal.show('Сбросить прогресс?', '<p class="learn-hub-reset-text">Будут удалены уроки букв, очередь повторения и рекорд игры, сохранённые в этом браузере. Прогресс курсов останется.</p>', '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Отмена</button><button type="button" class="lab-btn lab-btn-primary lab-btn-sm learn-danger" onclick="LearnLab.resetConfirm()">Сбросить</button>'); },

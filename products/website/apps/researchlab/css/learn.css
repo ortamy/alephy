@@ -180,32 +180,7 @@
 @media (max-width:800px) { .learn-letter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:600px) { .learn-section-head { display:block; }.learn-hub-bar { row-gap:10px; }.learn-hub-reset { order:2; margin-left:auto; }.learn-hub-chips { order:3; width:100%; }.learn-hub-spark { order:4; }.learn-hub-bar .lab-btn { order:5; width:100%; }.learn-hub-cards { grid-template-columns:1fr; }.learn-hub-day { flex-wrap:wrap; }.learn-hub-day .lab-btn { margin-left:0; }.learn-hub-empty { flex-wrap:wrap; }.learn-hub-empty .lab-btn { margin-left:0; }.learn-letter-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }.learn-question { padding:20px 14px; }.learn-game-bar { flex-wrap:wrap; }.learn-options { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }.learn-option { padding:12px 10px; font-size:16px; } }
 @media (prefers-reduced-motion:reduce) { #learn *, #learn *::before, #learn *::after { animation-duration:.01ms!important; transition-duration:.01ms!important; } }
-/* ===== Курс: открытый статус и уроки-свитки ===== */
-.course-progress-line { height:8px; overflow:hidden; background:var(--bg-tertiary); border-radius:99px; }
-.course-progress-line span { display:block; height:100%; background:var(--accent-gold); border-radius:inherit; transition:width .25s ease; }
-.lesson-list { display:grid; gap:18px; max-width:880px; }
-.lesson-scroll { position:relative; display:flex; gap:22px; padding:26px 30px; border:1px solid var(--border-light); border-radius:12px; background:linear-gradient(180deg, color-mix(in srgb,var(--accent-gold) 5%,var(--bg-card)), var(--bg-card)); box-shadow:var(--shadow-soft); animation:learn-card-in var(--dur-2) ease both; }
-.lesson-scroll::before,.lesson-scroll::after { content:''; position:absolute; top:10px; bottom:10px; width:6px; border-radius:99px; background:color-mix(in srgb,var(--accent-gold) 35%,var(--border-light)); }
-.lesson-scroll::before { left:0; }
-.lesson-scroll::after { right:0; }
-.lesson-scroll-side { flex:0 0 74px; display:flex; flex-direction:column; align-items:center; gap:10px; padding:16px 10px; border:1px solid var(--border-light); border-radius:10px; background:var(--bg-primary); }
-.lesson-paleo { font:44px/1 var(--font-paleo); color:var(--accent-gold); }
-.lesson-number { font:600 13px var(--font-heading); color:var(--text-muted); }
-.lesson-scroll-body { flex:1; min-width:0; }
-.lesson-scroll-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; }
-.lesson-scroll-head h2 { font:600 24px/1.2 var(--font-heading); }
-.lesson-letter-name { color:var(--text-muted); font-size:14px; }
-.lesson-paleo-word { display:inline-block; margin:8px 0 12px; font:22px/1 var(--font-paleo); letter-spacing:.14em; color:var(--text-gold); }
-.lesson-meaning { color:var(--text-secondary); }
-.lesson-quote { margin:14px 0 0; padding:12px 16px; border-left:3px solid var(--accent-gold); border-radius:0 8px 8px 0; background:var(--bg-primary); font-style:italic; color:var(--text-primary); }
-.lesson-ask,.lesson-practice { margin-top:14px; padding:14px 16px; border:1px dashed var(--border-light); border-radius:8px; }
-.lesson-ask h3,.lesson-practice h3 { margin:0 0 6px; font:600 13px var(--font-heading); letter-spacing:.06em; text-transform:uppercase; color:var(--text-gold); }
-.lesson-ask p,.lesson-practice p { margin:0; color:var(--text-secondary); }
-.lesson-done-btn { margin-top:16px; }
-.lesson-scroll.is-done { border-color:color-mix(in srgb,var(--accent-green) 50%,var(--border-light)); }
-.lesson-scroll.is-done::before,.lesson-scroll.is-done::after { background:var(--accent-green); }
-.lesson-scroll.is-done .lesson-paleo { color:var(--accent-green); }
-@media (max-width:600px) { .course-hero { display:block; } .course-hero-mark { display:none; } .lesson-scroll { flex-direction:column; padding:20px 18px; } .lesson-scroll-side { flex-direction:row; flex-basis:auto; justify-content:center; padding:10px; } }
+@media (max-width:600px) { .course-hero { display:block; } .course-hero-mark { display:none; } }
 
 /* ===== ПАЛЕО-ТРЕНАЖЁР ===== */
 .learn-trainer { max-width:720px; margin:0 auto; display:grid; justify-items:center; gap:18px; }
@@ -313,10 +288,10 @@ html[data-theme="dark"] .learn-trainer-word { background:var(--bg-card); }
 .course-path-chip-check { color:var(--accent-gold); font-size:12px; }
 .course-path-bar { height:3px; overflow:hidden; border-radius:99px; background:var(--bg-tertiary); }
 .course-path-bar span { display:block; height:100%; background:var(--accent-gold); border-radius:inherit; transition:width .25s ease; }
-.course-detail-inner { display:grid; grid-template-columns:56px minmax(0, 1fr); gap:16px; align-items:start; }
-.course-rail { position:relative; display:flex; flex-direction:column; align-items:center; gap:12px; padding:4px 0; }
-.course-rail-line { position:absolute; top:10px; bottom:10px; left:50%; width:1px; background:var(--border-light); }
-.course-rail-node { position:relative; z-index:1; display:grid; place-items:center; width:42px; height:42px; padding:0; border:1px solid var(--border-light); border-radius:50%; background:var(--bg-card); cursor:pointer; transition:border-color .15s ease, background .15s ease; }
+.course-detail-inner { display:grid; grid-template-columns:56px minmax(0, 1fr); gap:16px; align-items:stretch; }
+.course-rail { position:relative; }
+.course-rail-line { position:absolute; left:50%; width:1px; transform:translateX(-50%); background:var(--border-light); }
+.course-rail-node { position:absolute; left:50%; top:0; transform:translate(-50%, -50%); z-index:1; display:grid; place-items:center; width:42px; height:42px; padding:0; border:1px solid var(--border-light); border-radius:50%; background:var(--bg-card); cursor:pointer; transition:border-color .15s ease, background .15s ease; }
 .course-rail-node:focus-visible { outline:3px solid color-mix(in srgb, var(--accent-gold) 45%, transparent); outline-offset:2px; }
 .course-rail-glyph { font:20px/1 var(--font-paleo); color:var(--text-muted); }
 .course-rail-node:hover, .course-rail-node.is-in-view { border-color:var(--accent-gold); }
@@ -352,8 +327,9 @@ html[data-theme="dark"] .learn-trainer-word { background:var(--bg-card); }
 .course-block-shared-note { margin:0; padding:0 16px 16px 54px; color:var(--text-muted); font-size:13px; }
 .course-block.is-done .course-block-paleo { color:var(--accent-green); }
 @media (max-width:700px) {
-  .course-rail { flex-direction:row; overflow-x:auto; padding:2px; scrollbar-width:thin; }
+  .course-rail { display:flex; flex-direction:row; align-items:center; gap:8px; overflow-x:auto; padding:2px; scrollbar-width:thin; }
   .course-rail-line { display:none; }
+  .course-rail-node { position:static; transform:none; top:auto; }
   .course-rail-node { flex:0 0 auto; width:38px; height:38px; }
   .course-block, .course-module-preview, .course-block-dup, .course-block-shared-note { padding-left:16px; }
   .course-block-panels { grid-template-columns:1fr; }
