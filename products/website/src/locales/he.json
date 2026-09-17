@@ -1,9 +1,18 @@
 {
-  "lang": "he",
   "dir": "rtl",
+  "meta": {
+    "code": "he",
+    "status": "draft",
+    "coverage": 0.11,
+    "note": "черновик: переведена обвязка сайта. RTL-аудит вёрстки не проведён. status=draft в locales/index.json отключает язык в переключателе"
+  },
   "site": {
-    "name": "גולם",
+    "name": "אלפי",
     "tagline": "שחזור אמת · יהוה אחד"
+  },
+  "lang": {
+    "aria": "שפת הממשק",
+    "draft": "בפיתוח"
   },
   "nav": {
     "home": "ראשי",
@@ -13,45 +22,51 @@
     "dictionaries": "מילונים",
     "methodology": "מתודולוגיה",
     "tools": "כלים",
-    "about": "אודות"
+    "about": "אודות",
+    "lab": "🔬 מעבדה"
   },
   "pages": {
     "index": {
-      "title": "גולם — שחזור אמת",
-      "hero_title": "◈ שחזור אמת",
+      "title": "אלפי — שחזור האמת",
+      "hero_title": "◈ שחזור האמת",
       "hero_subtitle": "מחקר תנ״ך על פי המקור העברי",
       "cta_research": "מחקר",
       "cta_tools": "כלים",
-      "cta_about": "אודות"
+      "cta_about": "אודות",
+      "section1_title": "מהו פרויקט «אלפי»?",
+      "section2_title": "מה תמצאו באתר?",
+      "section3_title": "אמיתות מפתח",
+      "section4_title": "למי זה מיועד?",
+      "section5_title": "איך מתחילים?"
     },
     "tools": {
-      "title": "כלים — גולם",
-      "heading": "◈ כלי פרויקט «גולם»",
-      "description": "במחלקה זו נאספו כלים למחקר תנ״ך, לניתוח טקסטים וליצירת חומרים ויזואליים.",
+      "title": "כלים — אלפי",
+      "heading": "◈ כלי פרויקט «אלפי»",
+      "description": "במדור זה נאספו כלים לחקר תנ״ך, לניתוח טקסטים וליצירת חומרים חזותיים.",
       "card1_title": "מחולל לוחות מחקר",
-      "card1_desc": "צרו לוחות מחקר ויזואליים לניתוח ראיות, חוטים ומסקנות.",
-      "card1_link": "פתח כלי ←",
-      "card2_title": "בודק מונחים",
-      "card2_desc": "בדיקה אוטומטית של טקסטים להחלפות ועיוותים.",
-      "card3_title": "בונה פירוש מילה במילה",
-      "card3_desc": "צרו פירושים מילה במילה מותאמים אישית עם כתב עברי קדום, טקסט מסורתי, תעתיק ותרגום."
+      "card1_desc": "צרו לוחות מחקר חזותיים לניתוח ראיות, מסקנות וקבצים מצורפים.",
+      "card1_link": "פתח את הכלי ←",
+      "card2_title": "בודק מונחים דתיים",
+      "card2_desc": "בדיקה אוטומטית של טקסטים לאיתור החלפות ועיוותים.",
+      "card3_title": "בונה בין־שורתי",
+      "card3_desc": "צרו תרגומים בין־שורתיים משלכם לתנ״ך."
     },
     "about": {
-      "title": "אודות — גולם",
+      "title": "אודות — אלפי",
       "heading": "◈ אודות"
     },
     "research": {
-      "title": "מחקר — גולם",
+      "title": "מחקר — אלפי",
       "heading": "◈ מחקר"
     },
     "tanakh": {
-      "title": "קריאת תנ״ך — גולם",
+      "title": "קריאת תנ״ך — אלפי",
       "heading": "◈ קריאת תנ״ך"
     },
     "interlinear": {
-      "title": "פרשנות מילה במילה — גולם",
-      "heading": "◈ פרשנות מילה במילה",
-      "subtitle": "פרו-עברי / מסורתי / תעתיק / תרגום"
+      "title": "בין־שורתי — אלפי",
+      "heading": "◈ תנ״ך בין־שורתי",
+      "subtitle": "עברי קדום / נוסח מסורה / תעתיק / תרגום"
     }
   },
   "footer": {
@@ -59,20 +74,6 @@
     "research": "מחקר",
     "about": "אודות",
     "github": "GitHub",
-    "copy": "פרויקט «גולם» · שחזור אמת · יהוה אחד"
+    "copy": "פרויקט «אלפי» · שחזור טקסטים קדומים"
   }
 }
-</parameter>
-<parameter=task_progress>
-- [x] Step 1: Create pages/ and locales/ folders
-- [x] Step 2: Move pages from ru/ to pages/
-- [x] Step 3: Delete ru/, en/, he/
-- [x] Step 4: Create ru.json
-- [x] Step 5: Create en.json
-- [x] Step 6: Create he.json
-- [ ] Step 7: Create js/i18n.js
-- [ ] Step 8: Update HTML pages with i18n keys
-- [ ] Step 9: Add language switcher
-- [ ] Step 10: Test all languages
-</parameter>
-</write_to_file>

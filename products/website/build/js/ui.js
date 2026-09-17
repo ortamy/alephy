@@ -27,7 +27,9 @@
     function renderBreadcrumbs(p) {
         const parts = p.split('/');
         const container = document.createElement('div');
-        container.textContent = 'Главная';
+        // Хлебная крошка — тоже текст интерфейса: берём перевод, если рантайм i18n подключён.
+        const i18n = global.AlephyI18n;
+        container.textContent = i18n && typeof i18n.t === 'function' ? i18n.t('nav.home', 'Главная') : 'Главная';
         for (let i = 0; i < parts.length; i++) {
             const sep = document.createElement('span');
             sep.className = 'bc-sep';

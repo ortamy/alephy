@@ -1,72 +1,98 @@
+// js/burger-menu.js — боковая панель (гамбургер).
+//
+// Тексты берутся из AlephyI18n с русским резервом: меню обязано строиться,
+// даже если i18n.js не подключён или манифест локалей недоступен.
 // currentScript валиден только во время синхронного выполнения — захватываем сразу.
 var burgerMenuScriptEl = document.currentScript || document.querySelector('script[src*="burger-menu.js"]');
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Путь к самому скрипту (../../js/burger-menu.js) уже верно резолвится
-    // браузером с учётом любого суб-пути хостинга (например /alephy/ на GitHub Pages).
-    // Строим ссылки от корня сайта (js/ на уровень выше), а не от глубины URL,
-    // которая не знает о суб-пути хостинга.
-    var prefix = new URL('../', burgerMenuScriptEl.src).href;
+var BURGER_FALLBACK = {
+    home: 'Главная',
+    tanakh: 'Чтение ТаНаХа',
+    research: 'Исследования',
+    methods: 'Методы разоблачения',
+    dictionaries: 'Словари',
+    methodology: 'Методология',
+    tools: 'Инструменты',
+    lab: '🔬 Лаборатория',
+    about: 'О проекте',
+    logo: 'АЛЕФИ'
+};
 
-    var htmlLang = document.documentElement.lang || 'ru';
-    var isRTL = document.documentElement.dir === 'rtl';
-    
-    var menuTexts = {
-        ru: { home: 'Главная', tanakh: 'Чтение ТаНаХа', research: 'Исследования', methods: 'Методы разоблачения', dictionaries: 'Словари', methodology: 'Методология', tools: 'Инструменты', about: 'О проекте', logo: 'АЛЕФИ' },
-        en: { home: 'Home', tanakh: 'Tanakh Reading', research: 'Research', methods: 'Exposure Methods', dictionaries: 'Dictionaries', methodology: 'Methodology', tools: 'Tools', about: 'About', logo: 'ALEPHY' },
-        he: { home: 'ראשי', tanakh: 'קריאת תנ״ך', research: 'מחקר', methods: 'שיטות חשיפה', dictionaries: 'מילונים', methodology: 'מתודולוגיה', tools: 'כלים', about: 'אודות', logo: 'גולם' }
-    };
-    
-    var texts = menuTexts[htmlLang] || menuTexts.ru;
-    
-    var langOptions = {
-        ru: [
-            { value: '?lang=ru', label: 'RU', selected: htmlLang === 'ru' },
-            { value: '?lang=en', label: 'EN', selected: htmlLang === 'en' },
-            { value: '?lang=he', label: 'HE', selected: htmlLang === 'he' }
-        ],
-        en: [
-            { value: '?lang=en', label: 'EN', selected: htmlLang === 'en' },
-            { value: '?lang=ru', label: 'RU', selected: htmlLang === 'ru' },
-            { value: '?lang=he', label: 'HE', selected: htmlLang === 'he' }
-        ],
-        he: [
-            { value: '?lang=he', label: 'HE', selected: htmlLang === 'he' },
-            { value: '?lang=ru', label: 'RU', selected: htmlLang === 'ru' },
-            { value: '?lang=en', label: 'EN', selected: htmlLang === 'en' }
-        ]
-    };
-    
-    var options = langOptions[htmlLang] || langOptions.ru;
-    var selectHTML = '<select onchange="if(this.value) AlephyI18n.switchLanguage(this.value.split(\'=\')[1])">';
-    options.forEach(function(opt) {
-        selectHTML += '<option value="' + opt.value + '"' + (opt.selected ? ' selected' : '') + '>' + opt.label + '</option>';
-    });
-    selectHTML += '</select>';
-    
-    var rtlStyle = isRTL ? ' style="direction:rtl;text-align:right"' : '';
-    
-    var burgerHTML = '<div class="side-panel-overlay" id="sidePanelOverlay" onclick="toggleSidePanel()"></div>' +
-        '<div class="side-panel" id="sidePanel"' + rtlStyle + '>' +
+var BURGER_KEYS = {
+    home: 'nav.home',
+    tanakh: 'nav.tanakh',
+    research: 'nav.research',
+    methods: 'nav.methods',
+    dictionaries: 'nav.dictionaries',
+    methodology: 'nav.methodology',
+    tools: 'nav.tools',
+    lab: 'nav.lab',
+    about: 'nav.about',
+    logo: 'site.name'
+};
+
+// Порядок пунктов меню и путь от корня сайта (префикс подставляется на месте).
+var BURGER_ITEMS = [
+    ['home', 'index.html'],
+    ['tanakh', 'pages/tanakh/index.html'],
+    ['research', 'pages/research/index.html'],
+    ['methods', 'pages/research/methods.html'],
+    ['dictionaries', 'pages/research/dictionaries.html'],
+    ['methodology', 'pages/research/methodology.html'],
+    ['tools', 'pages/tools/index.html'],
+    ['lab', 'apps/researchlab/index.html'],
+    ['about', 'pages/about/index.html']
+];
+
+function burgerText(key) {
+    var russian = BURGER_FALLBACK[key] || '';
+    var i18n = window.AlephyI18n;
+    if (i18n && typeof i18n.t === 'function' && BURGER_KEYS[key]) {
+        return i18n.t(BURGER_KEYS[key], russian);
+    }
+    return russian;
+}
+
+function buildBurgerMenu(prefix) {
+    var rtl = document.documentElement.dir === 'rtl';
+    var html = '<div class="side-panel-overlay" id="sidePanelOverlay" onclick="toggleSidePanel()"></div>' +
+        '<div class="side-panel" id="sidePanel"' + (rtl ? ' style="direction:rtl;text-align:right"' : '') + '>' +
         '  <div class="side-panel-header">' +
-        '    <span class="logo-text">' + texts.logo + '</span>' +
+        '    <span class="logo-text" data-burger-key="logo">' + burgerText('logo') + '</span>' +
         '    <button class="side-panel-close" onclick="toggleSidePanel()">✕</button>' +
         '  </div>' +
-        '  <div class="side-panel-links">' +
-        '    <a href="' + prefix + 'index.html">' + texts.home + '</a>' +
-        '    <a href="' + prefix + 'pages/tanakh/index.html">' + texts.tanakh + '</a>' +
-        '    <a href="' + prefix + 'pages/research/index.html">' + texts.research + '</a>' +
-        '    <a href="' + prefix + 'pages/research/methods.html">' + texts.methods + '</a>' +
-        '    <a href="' + prefix + 'pages/research/dictionaries.html">' + texts.dictionaries + '</a>' +
-        '    <a href="' + prefix + 'pages/research/methodology.html">' + texts.methodology + '</a>' +
-        '    <a href="' + prefix + 'pages/tools/index.html">' + (texts.tools || 'Инструменты') + '</a>' +
-        '    <a href="' + prefix + 'apps/researchlab/index.html">🔬 Лаборатория</a>' +
-        '    <a href="' + prefix + 'pages/about/index.html">' + texts.about + '</a>' +
-        '  </div>' +
-        '  <div class="side-panel-lang-switcher">' + selectHTML + '</div>' +
+        '  <div class="side-panel-links">';
+    for (var i = 0; i < BURGER_ITEMS.length; i++) {
+        var key = BURGER_ITEMS[i][0];
+        html += '    <a href="' + prefix + BURGER_ITEMS[i][1] + '" data-burger-key="' + key + '">' +
+            burgerText(key) + '</a>';
+    }
+    // Переключатель языка строит рантайм i18n: одна реализация на сайт и лабу.
+    html += '  </div>' +
+        '  <div class="side-panel-lang-switcher" data-i18n-switcher></div>' +
         '</div>';
+    document.body.insertAdjacentHTML('beforeend', html);
+}
 
-    document.body.insertAdjacentHTML('beforeend', burgerHTML);
+function refreshBurgerMenu() {
+    var panel = document.getElementById('sidePanel');
+    if (!panel) return;
+    var nodes = panel.querySelectorAll('[data-burger-key]');
+    for (var i = 0; i < nodes.length; i++) {
+        nodes[i].textContent = burgerText(nodes[i].getAttribute('data-burger-key'));
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (!burgerMenuScriptEl || !burgerMenuScriptEl.src) return;
+    // Путь к самому скрипту (../../js/burger-menu.js) браузер резолвит в абсолютный,
+    // поэтому префикс корректен и при суб-пути хостинга (/alephy/), и на любой глубине страницы.
+    buildBurgerMenu(new URL('../', burgerMenuScriptEl.src).href);
+
+    // Язык может примениться позже (манифест локалей грузится асинхронно):
+    // слушаем событие, а не полагаемся на порядок тегов <script>.
+    document.addEventListener('alephy:langchange', refreshBurgerMenu);
+    refreshBurgerMenu();
 });
 
 function toggleSidePanel() {

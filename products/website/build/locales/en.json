@@ -1,9 +1,18 @@
 {
-  "lang": "en",
   "dir": "ltr",
+  "meta": {
+    "code": "en",
+    "status": "draft",
+    "coverage": 0.11,
+    "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
+  },
   "site": {
     "name": "ALEPHY",
-    "tagline": "Restoring truth · Yahweh is one"
+    "tagline": "Restoring the truth · Yahweh is one"
+  },
+  "lang": {
+    "aria": "Interface language",
+    "draft": "in progress"
   },
   "nav": {
     "home": "Home",
@@ -13,28 +22,34 @@
     "dictionaries": "Dictionaries",
     "methodology": "Methodology",
     "tools": "Tools",
-    "about": "About"
+    "about": "About",
+    "lab": "🔬 Research Lab"
   },
   "pages": {
     "index": {
-      "title": "Alephy — Restoring Truth",
-      "hero_title": "◈ restoring truth",
-      "hero_subtitle": "Tanakh research based on Hebrew original",
+      "title": "Alephy — Restoring the Truth",
+      "hero_title": "◈ restoring the truth",
+      "hero_subtitle": "Tanakh research based on the Hebrew original",
       "cta_research": "Research",
       "cta_tools": "Tools",
-      "cta_about": "About"
+      "cta_about": "About",
+      "section1_title": "What is the Alephy project?",
+      "section2_title": "What will you find on the site?",
+      "section3_title": "Key truths",
+      "section4_title": "Who is it for?",
+      "section5_title": "How to start?"
     },
     "tools": {
       "title": "Tools — Alephy",
       "heading": "◈ Alephy Project Tools",
-      "description": "Tools for Tanakh research, text analysis, and visual materials creation.",
-      "card1_title": "Research Board Generator",
-      "card1_desc": "Create visual research boards for evidence, threads, and conclusions analysis.",
-      "card1_link": "Open Tool →",
-      "card2_title": "Term Checker",
-      "card2_desc": "Automatic text verification for substitutions and distortions.",
-      "card3_title": "Interlinear Constructor",
-      "card3_desc": "Create custom Tanakh interlinear with Paleo-Hebrew, Masoretic text, transliteration and translation."
+      "description": "This section gathers tools for Tanakh research, text analysis and the creation of visual materials.",
+      "card1_title": "Research board generator",
+      "card1_desc": "Build visual research boards for analysing evidence, conclusions and attachments.",
+      "card1_link": "Open the tool →",
+      "card2_title": "Religious-term checker",
+      "card2_desc": "Automatic checking of texts for substitutions and distortions.",
+      "card3_title": "Interlinear builder",
+      "card3_desc": "Build your own Tanakh interlinears."
     },
     "about": {
       "title": "About — Alephy",
@@ -59,21 +74,6 @@
     "research": "Research",
     "about": "About",
     "github": "GitHub",
-    "copy": "Project «Alephy» · Restoring truth · Yahweh is one"
+    "copy": "Project «Alephy» · Restoring palaeo-texts"
   }
 }
-</parameter>
-<parameter=task_progress>
-- [x] Step 1: Create pages/ and locales/ folders
-- [x] Step 2: Move pages from ru/ to pages/
-- [x] Step 3: Delete ru/, en/, he/
-- [x] Step 4: Create ru.json
-- [x] Step 5: Create en.json
-- [ ] Step 6: Create he.json
-- [ ] Step 7: Extract texts to JSON (verify complete)
-- [ ] Step 8: Replace HTML texts with i18n keys
-- [ ] Step 9: Create js/i18n.js
-- [ ] Step 10: Add language switcher
-- [ ] Step 11: Test all languages
-</parameter>
-</write_to_file>

@@ -1,0 +1,30 @@
+{
+  "default": "ru",
+  "note": "Манифест языков. status=draft убирает язык из переключателя: неполный перевод не попадает к пользователю. coverage — доля переведённых строк (пересчитывает tools/i18n-extract.py, фаза 1).",
+  "languages": [
+    {
+      "code": "ru",
+      "label": "RU",
+      "name": "Русский",
+      "dir": "ltr",
+      "status": "ready",
+      "coverage": 1
+    },
+    {
+      "code": "en",
+      "label": "EN",
+      "name": "English",
+      "dir": "ltr",
+      "status": "draft",
+      "coverage": 0.11
+    },
+    {
+      "code": "he",
+      "label": "HE",
+      "name": "עברית",
+      "dir": "rtl",
+      "status": "draft",
+      "coverage": 0.11
+    }
+  ]
+}
