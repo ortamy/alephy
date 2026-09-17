@@ -116,7 +116,7 @@ const ClubModule = (function() {
         return;
       }
       container.innerHTML = feed.top;
-      if (archive) archive.innerHTML = buildSessionsPreview();
+      if (archive) archive.innerHTML = '';
       if (discussions) {
         discussions.innerHTML = '';
       }
@@ -125,10 +125,6 @@ const ClubModule = (function() {
 
   function buildFeedHTML(cards) {
     var role = getRole();
-    var actionBar = '<div class="club-create-card">' +
-      '<div><strong>Исследовательский круг</strong><p>Создайте тему, соберите контекст и пригласите участников к проверяемому обсуждению.</p></div>' +
-      '<div class="club-create-actions"><a class="lab-btn lab-btn-primary" href="#club/discussions">Обсуждения</a><a class="lab-btn lab-btn-secondary" href="#club/create">Создать обсуждение</a></div>' +
-    '</div>';
 
     var cardsHtml = cards.map(function(card, i) {
       var typeLabels = { word: 'Слово', state: 'Состояние', board: 'Доска', verse: 'Стих' };
@@ -150,7 +146,7 @@ const ClubModule = (function() {
       '</article>';
     }).join('');
 
-    var topPanel = buildTopPanel(role, actionBar);
+    var topPanel = buildTopPanel(role);
     return {
       top: '<div class="club-feed club-top-feed">' + topPanel + '</div>',
       discussions: '<main class="club-main club-discussions">' +
@@ -210,53 +206,63 @@ const ClubModule = (function() {
     if (save) save.addEventListener('click', function() { submit('draft'); });
   }
 
-  function buildTopPanel(role, actionBar) {
+  function buildTopPanel(role) {
     var circlePlaceholders = [
       { id: 'shabbat', paleo: '𐤔', image: 'зуб', topic: 'Шаббат — остановка в потоке' },
       { id: 'mitsraim', paleo: '𐤌', image: 'вода', topic: 'Мицраим — сужение потока' },
       { id: 'sheol', paleo: '𐤏', image: 'глаз', topic: 'Состояние Шеол' },
       { id: 'board-avraam', paleo: '𐤀', image: 'бык', topic: 'Авраам — отец множества' }
     ];
-    var circlesHtml = '<div class="club-circle-placeholders" aria-label="Палео-образы моих кругов">' +
-      circlePlaceholders.map(function(circle) {
-        return '<a class="club-circle-placeholder paleo" href="#club/' + encodeURIComponent(circle.id) + '" title="' + circle.topic + ' — образ: ' + circle.image + '" aria-label="Открыть обсуждение: ' + circle.topic + '">' + circle.paleo + '</a>';
-      }).join('') +
-      '</div>';
-    var waitlistHtml = '';
-    if (role === 'guest') {
-      waitlistHtml = '<div class="club-waitlist">' +
-        '<h3>Сообщить об открытии</h3>' +
-        '<p>Оставьте email — мы пришлём код для входа.</p>' +
-        '<div class="club-form">' +
-          '<input type="email" id="club-email" class="club-input" placeholder="your@email.com">' +
-          '<button class="club-btn" id="club-submit">Сообщить</button>' +
+    var circlesChips = circlePlaceholders.map(function(circle) {
+      return '<a class="club-circle-chip paleo" href="#club/' + encodeURIComponent(circle.id) + '" title="' + circle.topic + ' — образ: ' + circle.image + '" aria-label="Открыть обсуждение: ' + circle.topic + '">' + circle.paleo + '</a>';
+    }).join('');
+    var circlesBlock = circlePlaceholders.length ?
+      '<span class="club-circle-chips">' + circlesChips + '</span>' :
+      '<span class="club-pulse-note">Нет кругов — создайте первый.</span>';
+    var previewSessions = (ClubData.MOCK.sessions || []).slice(0, 2);
+    var sessionsBlock = previewSessions.length ?
+      '<div class="club-session-grid">' + previewSessions.map(buildSessionCard).join('') + '</div>' :
+      '<div class="club-empty" role="status"><span class="club-empty-glyph" aria-hidden="true">𐤀</span><p>Сессий пока нет — поле ждёт первый знак.</p></div>';
+
+    var groups = '<section class="club-group" aria-label="Круг">' +
+        '<div class="club-group-head"><span class="club-group-label">Круг</span><span class="club-group-line" aria-hidden="true"></span></div>' +
+        '<p class="club-group-desc">Создайте тему, соберите контекст и пригласите участников к проверяемому обсуждению.</p>' +
+        '<div class="club-group-actions">' +
+          '<a class="lab-btn lab-btn-primary lab-btn-sm" href="#club/create">Создать обсуждение</a>' +
+          '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#club/discussions">Обсуждения</a>' +
         '</div>' +
+      '</section>' +
+      '<section class="club-group" aria-label="Пульс клуба">' +
+        '<div class="club-group-head"><span class="club-group-label">Пульс</span><span class="club-group-line" aria-hidden="true"></span></div>' +
+        '<div class="club-pulse-strip">' +
+          '<div class="club-pulse-cluster">' +
+            renderAvatarStack(ClubData.MOCK.profiles, 5) +
+            '<span class="club-pulse-note">6 онлайн</span>' +
+          '</div>' +
+          '<div class="club-pulse-sep" aria-hidden="true"></div>' +
+          '<div class="club-pulse-cluster"><span class="club-pulse-note">Мои круги</span>' + circlesBlock + '</div>' +
+          '<div class="club-pulse-sep" aria-hidden="true"></div>' +
+          '<div class="club-pulse-cluster club-pulse-session">' +
+            '<span class="club-pulse-session-title">Как рождается значение</span>' +
+            '<span class="club-pulse-session-meta">Сегодня, 19:00</span>' +
+            '<span class="club-status-chip is-active"><i aria-hidden="true"></i>Идёт сейчас</span>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
+      '<section class="club-group" aria-label="Сессии">' +
+        '<div class="club-group-head"><span class="club-group-label">Сессии</span><span class="club-group-badge" aria-label="Количество сессий">' + (ClubData.MOCK.sessions || []).length + '</span><span class="club-group-line" aria-hidden="true"></span></div>' +
+        sessionsBlock +
+      '</section>';
+
+    var subscribeHtml = role === 'guest' ?
+      '<section class="club-subscribe" aria-label="Подписка на открытие клуба">' +
+        '<span class="club-subscribe-note">Оставьте email — мы пришлём код для входа.</span>' +
+        '<input type="email" id="club-email" class="club-input" placeholder="your@email.com" aria-label="Email для уведомления">' +
+        '<button class="lab-btn lab-btn-primary lab-btn-sm" id="club-submit">Сообщить</button>' +
         '<div id="club-notice" class="club-notice" style="display:none;"></div>' +
-      '</div>';
-    }
-    return '<section class="club-top-panel" aria-label="Информация клуба">' +
-      actionBar +
-      '<div class="club-top-card club-side-card club-members">' +
-        '<h3>Сейчас в клубе</h3>' +
-        renderAvatarStack(ClubData.MOCK.profiles, 5) +
-        '<p class="club-side-stub">Исследователи онлайн: 6</p>' +
-      '</div>' +
-      '<div class="club-top-card club-side-card club-session-teaser">' +
-      '<h3>Ближайшая сессия</h3>' +
-      '<div class="club-session-signal" role="img" aria-label="Сессия «Как рождается значение» формируется">' +
-        '<span class="club-session-orbit" aria-hidden="true"><span class="club-session-dot"></span></span>' +
-        '<span class="club-session-copy">' +
-          '<strong>Как рождается значение</strong>' +
-          '<small>Сессия формируется</small>' +
-        '</span>' +
-      '</div>' +
-    '</div>' +
-    '<div class="club-top-card club-side-card club-my-circles">' +
-      '<h3>Мои круги</h3>' +
-      circlesHtml +
-    '</div>' +
-    (waitlistHtml ? '<div class="club-top-card club-side-card club-top-waitlist">' + waitlistHtml + '</div>' : '') +
-    '</section>';
+      '</section>' : '';
+
+    return groups + subscribeHtml;
   }
 
   function sessionStatusLabel(status) {
@@ -264,21 +270,17 @@ const ClubModule = (function() {
   }
 
   function buildSessionCard(session) {
-    var bars = (session.result || [0, 0, 0, 0]).map(function(value) {
-      return '<span style="height:' + Math.max(18, value * 8) + '%"></span>';
-    }).join('');
-    var progress = session.status !== 'completed' && typeof session.progress === 'number' ? '<div class="club-session-progress"><span style="width:' + session.progress + '%"></span></div><small>' + session.progress + '% маршрута собрано</small>' : '';
+    var progress = typeof session.progress === 'number' && session.progress > 0 ?
+      '<div class="club-session-progress" role="progressbar" aria-valuenow="' + session.progress + '" aria-valuemin="0" aria-valuemax="100"><span style="width:' + session.progress + '%"></span></div>' +
+      '<small class="club-session-progress-meta">' + session.progress + '% · ' + session.participants + '/' + session.capacity + '</small>' : '';
     return '<article class="club-session-card club-session-' + escapeHtml(session.status) + '">' +
       '<div class="club-session-card-head"><span class="club-session-status"><i aria-hidden="true"></i>' + sessionStatusLabel(session.status) + '</span><time>' + escapeHtml(session.date) + '</time></div>' +
-      '<h3>' + escapeHtml(session.title) + '</h3><p>' + escapeHtml(session.findings) + '</p>' + progress +
-      '<div class="club-session-card-foot"><span>' + session.participants + '/' + session.capacity + ' участников</span>' +
-      (session.status === 'completed' ? '<span class="club-session-result" aria-label="Мини-граф итогов">' + bars + '</span>' : '') +
-      '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#club/sessions">' + escapeHtml(session.action) + '</a></div></article>';
-  }
-
-  function buildSessionsPreview() {
-    var sessions = ClubData.MOCK.sessions.slice(0, 2);
-    return '<section class="club-session-archive club-top-card club-side-card" aria-labelledby="club-session-archive-title"><div class="club-section-heading"><div><h3 id="club-session-archive-title">Архив сессий</h3><p class="club-session-archive-subtitle">Текущие, будущие и завершённые маршруты, которые клуб проходит вместе.</p></div><a class="lab-btn lab-btn-secondary lab-btn-sm" href="#club/sessions">Сессии</a></div><div class="club-session-preview-list">' + sessions.map(buildSessionCard).join('') + '</div></section>';
+      '<h3>' + escapeHtml(session.title) + '</h3>' +
+      '<p class="club-session-card-findings">' + escapeHtml(session.findings) + '</p>' +
+      '<div class="club-session-card-foot">' + progress +
+        '<a class="lab-btn lab-btn-secondary lab-btn-sm club-session-join" href="#club/sessions">' + escapeHtml(session.action) + '</a>' +
+      '</div>' +
+    '</article>';
   }
 
   function renderSessions(container) {

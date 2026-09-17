@@ -233,33 +233,57 @@
 .club-sessions-timeline .club-session-card::before { content: ''; position: absolute; top: 22px; left: calc(var(--space-5) * -1 - 5px); width: 9px; height: 9px; border: 2px solid var(--bg-card); border-radius: 50%; background: var(--accent-gold); }
 @keyframes club-session-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .club-side-stub { margin: 0; color: var(--text-muted); }
-.club-session-teaser { display: flex; flex-direction: column; }
-.club-session-signal { display: flex; align-items: center; gap: var(--space-3); box-sizing: border-box; width: 100%; padding: 10px 12px; border: 1px solid var(--border-light); border-radius: var(--radius-sm, 6px); background: var(--bg-tertiary); }
-.club-session-orbit { position: relative; display: grid; flex: 0 0 32px; place-items: center; width: 32px; height: 32px; border: 1px solid var(--accent-gold); border-radius: 50%; color: var(--accent-gold); animation: club-session-pulse 2.6s ease-in-out infinite; }
-.club-session-orbit::before { position: absolute; inset: 5px; border: 1px solid currentColor; border-radius: 50%; opacity: .46; content: ''; }
-.club-session-dot { position: relative; z-index: 1; width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px var(--bg-card); }
-.club-session-copy { display: grid; flex: 1; gap: 3px; min-width: 0; }
-.club-session-copy strong { color: var(--text-primary); font-size: 17px; line-height: 1.15; }
-.club-session-copy small { color: var(--accent-gold); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; }
-.club-session-teaser:hover .club-session-orbit { animation-duration: 1.6s; }
-@keyframes club-session-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--accent-gold-rgb) / 0); transform: scale(1); }
-  50% { box-shadow: 0 0 0 7px rgb(var(--accent-gold-rgb) / .14); transform: scale(1.04); }
-}
-.club-my-circles { display: flex; flex-direction: column; min-height: 116px; align-items: center; text-align: center; }
-.club-circle-placeholders { display: flex; flex: 1; align-items: center; justify-content: center; min-height: 72px; }
-.club-circle-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; margin-right: -12px; border: 3px solid var(--bg-card); border-radius: 50%; background: var(--bg-tertiary); color: var(--accent-gold); font-size: 29px; line-height: 1; text-decoration: none; box-shadow: var(--shadow-soft); transition: transform .2s ease, background-color .2s ease, color .2s ease; }
-.club-circle-placeholder:hover, .club-circle-placeholder:focus-visible { z-index: 1; transform: translateY(-3px); background: var(--bg-secondary); color: var(--text-primary); outline: 2px solid var(--accent-gold); outline-offset: 2px; }
-.club-circle-placeholder:last-child { margin-right: 0; }
-.club-side .club-waitlist { padding: var(--space-4); text-align: left; }
-.club-side .club-waitlist h3 { margin: 0 0 var(--space-2); }
-.club-side .club-form { flex-direction: column; }
-.club-top-panel { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); width: 100%; }
-.club-create-card { display: flex; grid-column: 1 / -1; flex-direction: column; align-items: stretch; justify-content: space-between; gap: var(--space-4); min-width: 0; padding: var(--space-4); background: var(--bg-secondary); border: 1px solid var(--border-gold); border-radius: var(--radius-md, 10px); }
-.club-create-card strong { color: var(--text-primary); font-size: 20px; }
-.club-create-card p { margin: var(--space-2) 0 0; color: var(--text-secondary); }
-.club-create-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); width: 100%; }
-.club-create-actions .lab-btn { flex: 1 1 0; min-height: 38px; box-sizing: border-box; }
+/* === Группы (minimalism, DESIGN-SYSTEM §4.1) === */
+.club-group { margin: 0 0 var(--space-3); }
+.club-group-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
+.club-group-label { flex-shrink: 0; color: var(--text-muted); font-size: 11px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; }
+.club-group-line { flex: 1; height: 1px; background: var(--border-light); }
+.club-group-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border: 1px solid var(--border-light); border-radius: 999px; color: var(--text-muted); font-size: 11px; box-sizing: border-box; }
+.club-group-desc { margin: 0 0 var(--space-3); color: var(--text-muted); }
+.club-group-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+/* Пульс — одна strip-карточка */
+.club-pulse-strip { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-2) var(--space-4); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-lg, 8px); }
+.club-pulse-cluster { display: flex; flex: 1; align-items: center; justify-content: center; gap: var(--space-2); min-width: 0; }
+.club-pulse-note { color: var(--text-muted); font-size: 13px; white-space: nowrap; }
+.club-pulse-sep { flex-shrink: 0; width: 1px; align-self: stretch; background: var(--border-light); }
+.club-circle-chips { display: inline-flex; align-items: center; }
+.club-circle-chip { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; margin-left: -8px; border: 1px solid var(--border-light); border-radius: 50%; background: var(--bg-tertiary); color: var(--accent-gold); font-size: 15px; line-height: 1; text-decoration: none; transition: background-color .2s ease, color .2s ease; }
+.club-circle-chip:first-child { margin-left: 0; }
+.club-circle-chip:hover, .club-circle-chip:focus-visible { background: var(--bg-secondary); color: var(--text-primary); outline: 1px solid var(--accent-gold); outline-offset: 1px; }
+.club-pulse-session { flex-wrap: wrap; }
+.club-pulse-session-title { color: var(--text-primary); font-weight: 600; }
+.club-pulse-session-meta { color: var(--text-muted); font-size: 13px; }
+.club-status-chip { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 9px; color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+.club-status-chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); }
+.club-status-chip.is-active { border-color: var(--accent-gold); color: var(--accent-gold); }
+.club-status-chip.is-active i { background: var(--accent-gold); animation: club-pulse 1.5s ease-in-out infinite; }
+/* Сессии — компактные карточки 2 колонки */
+.club-session-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.club-session-card { display: flex; flex-direction: column; min-height: 150px; padding: var(--space-3) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-lg, 8px); background: var(--bg-card); box-sizing: border-box; }
+.club-session-card:hover { border-color: var(--accent-gold); }
+.club-session-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.club-session-card-head time { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.club-session-card h3 { margin: var(--space-1) 0; color: var(--text-primary); font-family: var(--font-display); font-size: 17px; font-weight: 600; }
+.club-session-card-findings { margin: 0; overflow: hidden; color: var(--text-secondary); font-size: 13px; white-space: nowrap; text-overflow: ellipsis; }
+.club-session-card-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-top: auto; padding-top: var(--space-2); }
+.club-session-progress { flex: 1; max-width: 90px; height: 3px; overflow: hidden; border-radius: 999px; background: var(--border-light); }
+.club-session-progress span { display: block; height: 100%; border-radius: inherit; background: var(--accent-gold); }
+.club-session-progress-meta { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.club-session-join { flex-shrink: 0; min-height: 32px; }
+.club-session-active { border-color: var(--accent-gold); }
+.club-session-active .club-session-status { color: var(--accent-gold); }
+.club-session-active .club-session-status i { background: var(--accent-gold); animation: club-pulse 1.5s ease-in-out infinite; }
+.club-session-status { display: inline-flex; align-items: center; gap: 5px; color: var(--text-secondary); font-size: 12px; }
+.club-session-status i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+/* Подписка — hairline-панель внизу */
+.club-subscribe { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-2) var(--space-3); padding: var(--space-2) var(--space-4); border: 1px solid var(--border-light); border-radius: var(--radius-lg, 8px); }
+.club-subscribe-note { flex: 1; min-width: 200px; color: var(--text-muted); }
+.club-subscribe .club-input { flex: 1; min-width: 180px; max-width: 280px; }
+.club-subscribe .club-btn { flex-shrink: 0; }
+/* Empty-state (DESIGN-SYSTEM §4.6) */
+.club-empty { display: grid; place-items: center; gap: var(--space-2); padding: var(--space-6); border: 1px dashed var(--border-light); border-radius: var(--radius-lg, 8px); }
+.club-empty-glyph { color: var(--text-muted); font-size: 34px; opacity: .35; }
+.club-empty p { margin: 0; color: var(--text-muted); text-align: center; }
 .club-create-card .club-create-actions { flex-direction: column; flex-wrap: nowrap; }
 .club-create-card .club-create-actions .lab-btn { flex: 0 0 auto; width: 100%; }
 .club-top-card { min-width: 0; padding: var(--space-3); }
@@ -324,23 +348,33 @@
   .club-detail { margin: var(--space-4); padding: var(--space-4); }
   .club-attachment, .club-composer-actions { align-items: stretch; flex-direction: column; }
   .club-attachment .lab-btn { width: 100%; }
-  .club-top-panel { grid-template-columns: 1fr; }
   .club-discussions { padding: var(--space-4); }
   .club-discussions-head { align-items: stretch; flex-direction: column; }
   .club-topic-filter, .club-topic-filter .lab-select { width: 100%; }
   .club-topic-filter { align-items: stretch; flex-direction: column; }
   .club-cards { grid-template-columns: 1fr; }
-  .club-session-preview-list { grid-template-columns: 1fr; }
-  .club-section-heading, .club-session-card-head, .club-session-card-foot { align-items: stretch; flex-direction: column; }
+  /* Группы стеком */
+  .club-group { margin-bottom: var(--space-4); }
+  .club-group-actions .lab-btn { flex: 1 1 auto; min-height: 40px; }
+  /* Strip-карточка пульса — кластеры строками */
+  .club-pulse-strip { align-items: stretch; flex-direction: column; gap: var(--space-3); }
+  .club-pulse-cluster { flex-wrap: wrap; justify-content: flex-start; }
+  .club-pulse-session-title, .club-pulse-session-meta { min-width: 0; }
+  .club-pulse-sep { width: auto; height: 1px; align-self: stretch; }
+  /* Сессии — 1 колонка */
+  .club-session-grid { grid-template-columns: 1fr; }
+  .club-session-card-foot { align-items: stretch; flex-wrap: wrap; }
   .club-session-card-foot .lab-btn { width: 100%; }
+  /* Подписка строкой */
+  .club-subscribe { align-items: stretch; flex-direction: column; }
+  .club-subscribe .club-input { min-width: 0; max-width: none; }
+  .club-subscribe .club-btn { width: 100%; min-height: 40px; }
   .club-sessions-page { padding: var(--space-4); }
-  .club-create-card { align-items: stretch; flex-direction: column; }
-  .club-create-actions, .club-create-actions .lab-btn { width: 100%; }
   .club-form-grid, .club-research-picker { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .club-session-orbit, .club-session-active .club-session-status i, .club-session-card { animation: none; }
+  .club-session-active .club-session-status i, .club-status-chip.is-active i, .club-session-card { animation: none; }
 }
 
 /* Светлый скруглённый контейнер содержимого клуба под общей шапкой. */
@@ -348,13 +382,24 @@
   box-sizing: border-box;
   width: min(100%, 1240px);
   margin: 0 auto;
-  padding: var(--space-4);
+  padding: var(--space-3);
   overflow: hidden;
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-lg, 8px);
   box-shadow: var(--shadow-soft);
 }
+
+/* Компактный hero клуба — умещает хаб в один экран (1280×800) */
+#club-app .lab-hero {
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-2);
+}
+#club-app .lab-hero-title { font-size: 26px; }
+#club-app .lab-hero-subtitle { font-size: 14px; margin-top: var(--space-1); }
+/* Пустые контейнеры не рисуют пустые панели */
+#club-session-archive:empty,
+#club-discussions:empty { display: none; margin: 0; padding: 0; background: none; border: 0; }
 
 #club-app .club-content,
 #club-app .club-feed {
