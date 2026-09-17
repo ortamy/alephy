@@ -31,10 +31,10 @@
 .top-bar nav { display: flex; gap: 20px; align-items: center; }
 .top-bar nav a { font-family: 'EB Garamond', Georgia, serif; font-size: 14px; color: #ede0c8; text-decoration: none; letter-spacing: 1px; transition: color 0.3s; }
 .top-bar nav a:hover { color: #b8860b; }
-.lang-switcher select { background: #3a2215; color: #ede0c8; border: 1px solid #5c3a2a; border-radius: 4px; padding: 4px 8px; font-family: 'EB Garamond', Georgia, serif; font-size: 13px; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; min-width: 80px; }
-.lang-switcher select:focus { border-color: #b8860b; }
-.lang-switcher select option { background: #2c1810; color: #ede0c8; }
-.lang-switcher select option:disabled { color: #5c4a3a; }
+.lang-switcher select, .side-panel-lang-switcher select { background: #3a2215; color: #ede0c8; border: 1px solid #5c3a2a; border-radius: 4px; padding: 4px 8px; font-family: 'EB Garamond', Georgia, serif; font-size: 13px; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; min-width: 80px; }
+.lang-switcher select:focus, .side-panel-lang-switcher select:focus { border-color: #b8860b; }
+.lang-switcher select option, .side-panel-lang-switcher select option { background: #2c1810; color: #ede0c8; }
+.lang-switcher select option:disabled, .side-panel-lang-switcher select option:disabled { color: #5c4a3a; }
 .site-footer { background: #2c1810; color: #8a7a6a; padding: 40px 24px 24px; text-align: center; }
 .footer-links { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; }
 .footer-links a { color: #b8860b; text-decoration: none; font-size: 14px; letter-spacing: 1px; font-family: 'EB Garamond', Georgia, serif; border-bottom: 1px solid transparent; transition: border-color 0.3s; }
@@ -110,22 +110,10 @@ body { font-family: 'EB Garamond', Georgia, serif; font-size: 18px; line-height:
     <a href="../../content/hebrew">Иврит</a>
     <a href="../about/index.html">О проекте</a>
   </div>
-  <div class="side-panel-lang-switcher">
-    <select onchange="if(this.value) window.location.href=this.value;">
-      <option value="" selected>RU</option>
-      <option value="../../en/about/index.html">EN</option>
-      <option value="../../he/about/index.html">HE</option>
-      <option value="" disabled>ES (скоро)</option>
-      <option value="" disabled>DE (скоро)</option>
-      <option value="" disabled>FR (скоро)</option>
-      <option value="" disabled>PT (скоро)</option>
-      <option value="" disabled>AR (скоро)</option>
-      <option value="" disabled>ZH (скоро)</option>
-      <option value="" disabled>JA (скоро)</option>
-      <option value="" disabled>KO (скоро)</option>
-    </select>
-  </div>
+  <!-- Переключатель языка наполняет AlephyI18n: активные языки задаёт locales/index.json -->
+  <div class="side-panel-lang-switcher" data-i18n-switcher></div>
 </div>
+<script src="../../js/i18n.js"></script>
 <script>
 function toggleSidePanel() {
   document.getElementById('sidePanel').classList.toggle('open');
