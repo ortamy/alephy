@@ -1,0 +1,198 @@
+/* ============================================================
+   components/panels.css — общий канон панелей, глав и пустых состояний.
+   DESIGN-SYSTEM §4.1 (заголовок секции), §4.2 (карточка), §4.6 (empty-state).
+   Только токены tokens.css: hairline-рамки, без теней; золото — не здесь.
+   Разметка: .lab-panel + .lab-chapter (номер + uppercase-лейбл + бейдж) + контент.
+   ============================================================ */
+
+.lab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-6);
+  color: var(--text-primary);
+  background: var(--surface);
+  border: var(--card-border);
+  border-radius: var(--radius-8);
+}
+
+/* Ряд панелей: две колонки desktop → стек на mobile (§5.1, §5.3).
+   stretch держит панели ряда одной высоты. */
+.lab-panel-row {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(420px, 1.15fr);
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+/* Глава: номер + uppercase-лейбл + опциональный бейдж, одна волосяная линия */
+.lab-chapter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.lab-chapter-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+}
+
+/* Селектор специфичнее `.module h2:not(:last-child)` из layout.css (0,2,1):
+   без него h2 перед бейджем раздувается в сериф 28px, получает собственное
+   подчёркивание и выдавливает номер главы на отдельную вертикаль. */
+.lab-panel .lab-chapter h2.lab-chapter-title {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.lab-chapter-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+/* Бейдж состояния в главе (DESIGN-SYSTEM §4.3, §6) */
+.lab-panel .lab-chapter .wb-badge {
+  margin-left: auto;
+  color: var(--text-secondary);
+}
+
+.lab-panel .lab-chapter .wb-badge.is-running { color: var(--gold-text); }
+.lab-panel .lab-chapter .wb-badge.is-done { color: var(--accent-green); }
+.lab-panel .lab-chapter .wb-badge.is-error { color: var(--red-text); }
+
+/* Строка статуса панели */
+.lab-status {
+  min-height: 18px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.lab-status.is-error { color: var(--red-text); }
+.lab-status.is-success { color: var(--accent-green); }
+
+/* ===== Пустое состояние (§4.6): пунктир, глиф по центру, подсказка muted ===== */
+.lab-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 148px;
+  padding: var(--space-5);
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+.lab-empty-glyph {
+  color: var(--accent-gold);
+  font-family: var(--font-paleo);
+  font-size: 28px;
+  line-height: 1;
+  opacity: 0.35;
+}
+
+.lab-empty-hint {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+/* ===== Скелетон загрузки (running): без бликов, тихие полосы ===== */
+.lab-skeleton {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 148px;
+  align-content: center;
+  padding: var(--space-5);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+.lab-skeleton-line {
+  height: 12px;
+  border-radius: var(--radius-xs);
+  background: var(--border-light);
+  animation: lab-skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.lab-skeleton-line:nth-child(2) { width: 82%; }
+.lab-skeleton-line:nth-child(3) { width: 64%; }
+
+@keyframes lab-skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lab-skeleton-line { animation: none; opacity: 0.75; }
+}
+
+/* ===== Примеры-чипы: полезный низ панели, клик подставляет значение ===== */
+.lab-examples {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.lab-examples-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.lab-example-chip {
+  min-height: var(--control-h-sm);
+  padding: 2px var(--space-3);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.lab-example-chip:hover,
+.lab-example-chip:focus-visible { border-color: var(--accent-gold); }
+
+/* ===== Мобильный закон (§5.3) ===== */
+@media (max-width: 760px) {
+  .lab-panel-row { grid-template-columns: 1fr; }
+  .lab-panel { padding: var(--space-4); }
+  .lab-empty { min-height: 128px; padding: var(--space-4); }
+}

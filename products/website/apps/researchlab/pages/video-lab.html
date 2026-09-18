@@ -1,13 +1,14 @@
 <!-- Шапка раздела — реестр LabHero (uppercase-лейбл, сериф-заголовок,
-     subtitle, glyph-чип справа): локальной разметки шапки здесь нет. -->
+     subtitle, glyph-чип справа): локальной разметки шапки здесь нет.
+     Каркас — общий канон css/components/panels.css. -->
 <section class="vl-shell" aria-label="Генератор видео-образов">
-  <div class="vl-layout">
-    <section class="vl-panel" aria-labelledby="vl-input-title">
-      <header class="vl-chapter">
-        <span class="vl-chapter-num" aria-hidden="true">01</span>
-        <h2 class="vl-chapter-title" id="vl-input-title" data-i18n="lab.video.inputTitle">Исходное слово</h2>
+  <div class="lab-panel-row">
+    <section class="lab-panel" aria-labelledby="vl-input-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">01</span>
+        <h2 class="lab-chapter-title" id="vl-input-title" data-i18n="lab.video.inputTitle">Исходное слово</h2>
       </header>
-      <p class="vl-chapter-note" data-i18n="lab.video.inputNote">Введите слово на иврите для построения видео-образа.</p>
+      <p class="lab-chapter-note" data-i18n="lab.video.inputNote">Введите слово на иврите для построения видео-образа.</p>
       <form class="vl-form" id="vl-form">
         <input type="text" id="vl-word-input" class="lab-input vl-word-input"
                placeholder="Например: אמת, תורה, שלום"
@@ -22,41 +23,41 @@
           <i data-lucide="eraser" class="lab-icon" aria-hidden="true"></i>
         </button>
       </form>
-      <p class="vl-status" id="vl-status" role="status" aria-live="polite"></p>
-      <div class="vl-examples" id="vl-examples" role="group"
+      <p class="lab-status" id="vl-status" role="status" aria-live="polite"></p>
+      <div class="lab-examples" id="vl-examples" role="group"
            aria-label="Примеры" data-i18n-attr="aria-label:lab.video.examplesLabel">
-        <span class="vl-examples-label" data-i18n="lab.video.examplesLabel">Примеры</span>
-        <button type="button" class="vl-example-chip" data-vl-example="אמת">אמת</button>
-        <button type="button" class="vl-example-chip" data-vl-example="תורה">תורה</button>
-        <button type="button" class="vl-example-chip" data-vl-example="שלום">שלום</button>
+        <span class="lab-examples-label" data-i18n="lab.video.examplesLabel">Примеры</span>
+        <button type="button" class="lab-example-chip" data-vl-example="אמת">אמת</button>
+        <button type="button" class="lab-example-chip" data-vl-example="תורה">תורה</button>
+        <button type="button" class="lab-example-chip" data-vl-example="שלום">שלום</button>
       </div>
     </section>
 
-    <section class="vl-panel" aria-labelledby="vl-visual-title">
-      <header class="vl-chapter">
-        <span class="vl-chapter-num" aria-hidden="true">02</span>
-        <h2 class="vl-chapter-title" id="vl-visual-title" data-i18n="lab.video.visualTitle">Видео-образ</h2>
+    <section class="lab-panel" aria-labelledby="vl-visual-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="vl-visual-title" data-i18n="lab.video.visualTitle">Видео-образ</h2>
         <span class="wb-badge" id="vl-visual-badge" data-i18n="lab.video.stateEmpty">Ожидание</span>
       </header>
       <div class="vl-output" id="vl-visual-output">
-        <div class="vl-empty">
-          <span class="vl-empty-glyph" aria-hidden="true">𐤀</span>
-          <p class="vl-empty-hint" data-i18n="lab.video.emptyVisual">Введите слово и нажмите «Сгенерировать».</p>
+        <div class="lab-empty">
+          <span class="lab-empty-glyph" aria-hidden="true">𐤀</span>
+          <p class="lab-empty-hint" data-i18n="lab.video.emptyVisual">Введите слово и нажмите «Сгенерировать».</p>
         </div>
       </div>
     </section>
   </div>
 
-  <section class="vl-panel" aria-labelledby="vl-description-title">
-    <header class="vl-chapter">
-      <span class="vl-chapter-num" aria-hidden="true">03</span>
-      <h2 class="vl-chapter-title" id="vl-description-title" data-i18n="lab.video.descriptionTitle">Описание движения</h2>
+  <section class="lab-panel" aria-labelledby="vl-description-title">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">03</span>
+      <h2 class="lab-chapter-title" id="vl-description-title" data-i18n="lab.video.descriptionTitle">Описание движения</h2>
       <span class="wb-badge" id="vl-description-badge" data-i18n="lab.video.stateEmpty">Ожидание</span>
     </header>
     <div class="vl-output" id="vl-description-output">
-      <div class="vl-empty">
-        <span class="vl-empty-glyph" aria-hidden="true">𐤀</span>
-        <p class="vl-empty-hint" data-i18n="lab.video.emptyDescription">Здесь появится описание.</p>
+      <div class="lab-empty">
+        <span class="lab-empty-glyph" aria-hidden="true">𐤀</span>
+        <p class="lab-empty-hint" data-i18n="lab.video.emptyDescription">Здесь появится описание.</p>
       </div>
     </div>
   </section>

@@ -62,16 +62,16 @@
 
   /* Empty-state (§4.6): пунктирная рамка, глиф по центру, подсказка muted. */
   function emptyState(hint) {
-    return '<div class="vl-empty">' +
-      '<span class="vl-empty-glyph" aria-hidden="true">\uD800\uDF00</span>' +
-      '<p class="vl-empty-hint">' + esc(hint) + '</p>' +
+    return '<div class="lab-empty">' +
+      '<span class="lab-empty-glyph" aria-hidden="true">\uD800\uDF00</span>' +
+      '<p class="lab-empty-hint">' + esc(hint) + '</p>' +
       '</div>';
   }
 
   function runningState() {
-    return '<div class="vl-empty">' +
+    return '<div class="lab-empty">' +
       '<i data-lucide="loader-circle" class="vl-run-icon" aria-hidden="true"></i>' +
-      '<p class="vl-empty-hint">' + esc(t('lab.video.running', 'Собираем образ слова…')) + '</p>' +
+      '<p class="lab-empty-hint">' + esc(t('lab.video.running', 'Собираем образ слова…')) + '</p>' +
       '</div>';
   }
 
@@ -147,7 +147,7 @@
     function setStatus(message, state) {
       if (!status) return;
       status.textContent = message || '';
-      status.className = 'vl-status' + (state ? ' is-' + state : '');
+      status.className = 'lab-status' + (state ? ' is-' + state : '');
     }
 
     function setState(state) {
@@ -229,7 +229,7 @@
     // Примеры слов: клик подставляет слово в инпут (без авто-запуска).
     container.addEventListener('click', function (event) {
       var target = event.target;
-      var chip = target && target.closest ? target.closest('.vl-example-chip') : null;
+      var chip = target && target.closest ? target.closest('.lab-example-chip') : null;
       if (!chip) return;
       wordInput.value = chip.getAttribute('data-vl-example') || chip.textContent.trim();
       setStatus('', '');

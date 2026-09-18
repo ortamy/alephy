@@ -115,6 +115,7 @@ const PageController = (function() {
     try {
       if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
       if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
+      if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
       if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
       if (window.RevealObserver) window.RevealObserver.scan(container);
     } catch (error) {
@@ -2487,18 +2488,8 @@ const PageController = (function() {
         container.dataset.loaded = '1';
         break;
 
-      case 'religionism-checker':
-        container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Чекер религионимов" style="vertical-align: middle; margin-right: 6px;"> Чекер религионимов</h1>' +
-          '<p class="subtitle">Проверка текста на подмены. Вставьте текст на русском — мы подсветим религионизмы.</p>' +
-          '<textarea id="rc-input" class="lab-textarea" rows="6" placeholder="Вставьте текст, например: Господь Бог сказал Моисею..."></textarea>' +
-          '<div class="flex gap-8 items-center mb-16">' +
-          '<button class="lab-btn lab-btn-primary" onclick="RelChecker.check()"><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Проверить" style="vertical-align: middle; margin-right: 6px;"> Проверить текст</button>' +
-          '<button class="lab-btn lab-btn-secondary" onclick="RelChecker.clear()"><img src="assets/icons/32/nav/alert.png" width="32" height="32" alt="Очистить" style="vertical-align: middle; margin-right: 6px;"> Очистить</button></div>' +
-          '<div id="rc-result" class="lab-card" style="display:none;"><div class="lab-card-header"><img src="assets/icons/32/scribe/scroll.png" width="32" height="32" alt="Результат" style="vertical-align: middle; margin-right: 6px;"> Результат проверки</div><div class="lab-card-body" id="rc-body"></div></div>' +
-          '<div class="lab-card"><div class="lab-card-header"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt="Словарь" style="vertical-align: middle; margin-right: 6px;"> Словарь подмен</div><div class="lab-card-body" id="rc-dict"></div></div>';
-        container.dataset.loaded = '1';
-        if (window.RelChecker) window.RelChecker.init();
-        break;
+      // religionism-checker отдаётся fetch-веткой ниже: разметка живёт в
+      // pages/religionism-checker.html и строится по общему канону панелей.
 
       case 'religionisms':
         container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Религионизмы" style="vertical-align: middle; margin-right: 6px;"> Религионизмы</h1>' +
@@ -2638,6 +2629,7 @@ const PageController = (function() {
       // ===== МОДУЛИ С FETCH HTML-СТРАНИЦЫ =====
       case 'paleo-builder':
       case 'video-lab':
+      case 'religionism-checker':
       case 'generators':
       case 'checkers':
       case 'translation-comparator':

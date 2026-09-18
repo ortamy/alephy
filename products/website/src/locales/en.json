@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.17,
+    "coverage": 0.24,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -537,6 +537,49 @@
       "placeholder": "For example: אמת, תורה, שלום",
       "visualTitle": "Video image",
       "examplesLabel": "Examples"
+    },
+    "religionism": {
+      "check": "Check",
+      "cleanHint": "No substitutions found — the text is clean.",
+      "clear": "Clear",
+      "colNote": "Note",
+      "colOriginal": "Original",
+      "colReplacement": "Substitution",
+      "confidence": "interpretation",
+      "copied": "Markdown copied",
+      "copy": "Copy Markdown",
+      "copyFailed": "Copying unavailable",
+      "ctrlEnter": "Ctrl+Enter",
+      "deepLink": "Term in the dictionary: ",
+      "dictNote": "A result row leads to the dictionary entry: jump and highlight the term.",
+      "dictTitle": "Dictionary of religionisms",
+      "download": "Download .md",
+      "emptyHint": "Paste a text and press Check.",
+      "errorEmpty": "Paste a text to check.",
+      "examplesLabel": "Examples",
+      "found": "Substitutions found: ",
+      "inputLabel": "Text to check",
+      "inputNote": "Paste a Russian text — substitutions are highlighted and Hebrew originals shown.",
+      "inputTitle": "Input text",
+      "placeholder": "For example: И сказал Господь Бог: да будет свет.",
+      "resultTitle": "Result",
+      "retry": "Retry",
+      "stateClean": "Clean",
+      "stateEmpty": "Waiting",
+      "stateError": "Error",
+      "stateRunning": "Checking",
+      "stateSuccess": "Done",
+      "summary": "{hits} substitutions · {types} types",
+      "type": {
+        "adversary": "Adversary",
+        "concepts": "Concepts and states",
+        "cult": "Feasts and service",
+        "elohim": "Names of Elohim",
+        "mashiach": "Mashiach and deliverance",
+        "nameYah": "Name of Yahveh",
+        "servants": "Servants and assembly",
+        "temple": "Temple, sacrifice and fate"
+      }
     }
   }
 }

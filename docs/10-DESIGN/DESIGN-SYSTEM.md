@@ -47,7 +47,7 @@
 
 Запрещено: новые hex в компонентах; «семейные» оттенки вне ролей; чужие палитры (admin-синий и т.п.) — мигрируются в роли.
 
-Композиции для читаемости: текстовое золото/красное на светлой поверхности смешивается к цвету текста темы — `color-mix(in srgb, var(--accent-gold) 65%, var(--text-primary))` и `color-mix(in srgb, var(--accent-red) 72%, var(--text-primary))` (эталон: `css/video-lab.css`, ≥4.5:1 во всех темах). Второй план текста на светлых панелях берёт `--text-secondary`: `--text-muted` как текст в темах light/white/beige не добирает AA (3.74 / 3.61 / 2.79:1) — фон и hairline-роли это не касается.
+Композиции для читаемости: текстовые версии акцентов — токены `--gold-text` / `--red-text` (`color-mix` 65% золота и 72% красного к цвету текста темы, ≥4.5:1 во всех темах; источник — `css/tokens.css`). Второй план текста на светлых панелях берёт `--text-secondary`: `--text-muted` как текст в темах light/white/beige не добирает AA (3.74 / 3.61 / 2.79:1) — фон и hairline-роли это не касается.
 
 ### 1.2 Типографика
 Шрифты: **EB Garamond** (сериф: display, заголовки, цитаты) + **DM Sans** (UI: мета, лейблы, кнопки).
@@ -103,6 +103,8 @@ Uppercase-лейблы секций: `--ui-11`, letter-spacing .08em, цвет `
 
 ### 4.1 Заголовок секции
 Uppercase `--ui-11` + волосяная линия 1px `--border-light` под ним + опциональный бейдж-счётчик (круг 20px, hairline) справа. Это маркер границ панели (эталон: палео-конструктор).
+
+Общий каркас панелей и глав — `css/components/panels.css`: `.lab-panel` (hairline-панель без теней), `.lab-panel-row` (ряд панелей: две колонки → стек), `.lab-chapter` + `.lab-chapter-num` + `.lab-chapter-title` (номер, uppercase-микролейбл, одна волосяная линия; селектор задан сильнее `.module h2:not(:last-child)` из `layout.css`, иначе h2 перед бейджем раздувается в сериф), `.lab-chapter-note`, `.lab-empty` + `.lab-empty-glyph` + `.lab-empty-hint` (§4.6), `.lab-skeleton` (состояние running), `.lab-examples` + `.lab-example-chip` (чипы примеров), `.lab-status` (+ `is-error` / `is-success`). Модули дублируют только свою специфику (`.vl-*`, `.rc-*`), а не каркас.
 
 ### 4.2 Карточка
 Компактная (~140px): мета-строка (статус-точка + категория-чип + дата справа) → сериф-заголовок ≤2 строк → описание 1 строка ellipsis → до 3 мини-чипов терминов (нет — строки нет). Рамка 1px, radius `-8`, без теней; hover: рамка → `--accent-gold` + подложка rgba(gold,.06).
@@ -182,4 +184,4 @@ Hero-карточка (лейбл «АЛЕФИ · МОДУЛЬ», сериф-з�
 ---
 
 ## 9. Карта файлов
-`css/tokens.css` (токены, темы) · `css/lab.css` (база лаба) · `css/layout.css` (каркас, шапка) · `css/redesign.css` (редизайн-слой) · `products/website/site.css` (лендинг) · `css/components/*` (glass, lucide, toast…) · данный файл = канон; ссылки «DESIGN-SYSTEM §N» в коде указывают на разделы этого файла.
+`css/tokens.css` (токены, темы) · `css/lab.css` (база лаба) · `css/layout.css` (каркас, шапка) · `css/redesign.css` (редизайн-слой) · `css/components/*` (panels, glass, lucide, toast…) · `products/website/site.css` (лендинг) · данный файл = канон; ссылки «DESIGN-SYSTEM §N» в коде указывают на разделы этого файла.
