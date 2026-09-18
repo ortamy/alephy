@@ -123,6 +123,12 @@
       subtitle: 'Наблюдение за состояниями системы и переходами между ними.',
       icon: 'ui/web.png'
     },
+    'state-checker': {
+      kicker: 'АЛЕФИ · ЧЕКЕР СТРАН',
+      title: 'Чекер стран',
+      subtitle: 'Диагностика страны по восьми состояниям пространств: доминанта, распределение и вывод.',
+      icon: 'ui/web.png'
+    },
     'paleo-mechanics': {
       kicker: 'АЛЕФИ · ПАЛЕО-МЕХАНИКА',
       title: 'Палео-механика',
@@ -466,15 +472,24 @@
     return element;
   }
 
-  // Для модулей без статической записи шапка не маскируется под route-id.
+  /* Модуль без записи в TARGETS получает генерический герой из имени маршрута:
+     служебный текст («нет записи») пользователю не показывается никогда,
+     о пропуске сообщаем только в консоль. */
+  function routeLabel(moduleId) {
+    var words = String(moduleId || '').replace(/[-_/]+/g, ' ').replace(/\s+/g, ' ').trim().split(' ');
+    return words.map(function (word) {
+      return word ? word.charAt(0).toLocaleUpperCase('ru-RU') + word.slice(1) : word;
+    }).join(' ');
+  }
+
   function fallbackConfig(moduleId) {
-    if (typeof console !== 'undefined' && console.error) {
-      console.error('[LabHero] нет TARGETS для маршрута «' + moduleId + '»');
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('[LabHero] нет TARGETS для маршрута «' + moduleId + '» — собран генерический герой');
     }
     return {
-      kicker: 'АЛЕФИ · ОШИБКА ШАПКИ',
-      title: 'Нет записи шапки',
-      subtitle: 'Маршрут «' + moduleId + '» не зарегистрирован в LabHero.TARGETS.'
+      kicker: 'АЛЕФИ',
+      title: i18nText('lab.nav.' + moduleId, routeLabel(moduleId)),
+      subtitle: ''
     };
   }
 

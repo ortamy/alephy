@@ -116,6 +116,7 @@ const PageController = (function() {
       if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
       if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
       if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
+      if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
       if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
       if (window.RevealObserver) window.RevealObserver.scan(container);
     } catch (error) {
@@ -2630,6 +2631,7 @@ const PageController = (function() {
       case 'paleo-builder':
       case 'video-lab':
       case 'religionism-checker':
+      case 'state-checker':
       case 'generators':
       case 'checkers':
       case 'translation-comparator':
@@ -2674,15 +2676,8 @@ const PageController = (function() {
         }
         break;
 
-      case 'state-checker':
-        showSpinner(container, 'Загрузка чекера стран…');
-        if (window.StateChecker) {
-          window.StateChecker.init(container);
-        } else {
-          showError(container, 'Модуль «Чекер стран» не загрузился.');
-        }
-        container.dataset.loaded = '1';
-        break;
+      // state-checker отдаётся fetch-веткой ниже: разметка живёт в
+      // pages/state-checker.html и строится по общему канону панелей.
 
       case 'tree-checker':
         showSpinner(container, 'Загрузка дерева…');

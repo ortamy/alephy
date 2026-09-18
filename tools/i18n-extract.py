@@ -79,8 +79,10 @@ def source_files() -> list[Path]:
         lab / "js" / "page-controller.js",
         lab / "js" / "video-lab.js",
         lab / "js" / "religionism-checker.js",
+        lab / "js" / "state-checker.js",
         lab / "pages" / "video-lab.html",
         lab / "pages" / "religionism-checker.html",
+        lab / "pages" / "state-checker.html",
     ]
     for base in SCAN_DIRS:
         if not base.is_dir():

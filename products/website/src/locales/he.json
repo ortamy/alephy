@@ -3,7 +3,7 @@
   "meta": {
     "code": "he",
     "status": "draft",
-    "coverage": 0.04,
+    "coverage": 0.03,
     "note": "черновик: переведена обвязка сайта. RTL-аудит вёрстки не проведён. status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -429,6 +429,11 @@
         "kicker": "",
         "subtitle": "",
         "title": ""
+      },
+      "state-checker": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
       }
     },
     "nav": {
@@ -580,6 +585,40 @@
         "servants": "",
         "temple": ""
       }
+    },
+    "stateChecker": {
+      "chartLabel": "",
+      "check": "",
+      "confidence": "",
+      "copied": "",
+      "copy": "",
+      "copyFailed": "",
+      "ctrlEnter": "",
+      "diagnosisTitle": "",
+      "dominantLine": "",
+      "dominates": "",
+      "doorAnalyzer": "",
+      "doorStates": "",
+      "download": "",
+      "effectLine": "",
+      "emptyHint": "",
+      "errorEmpty": "",
+      "errorLoad": "",
+      "errorNotFound": "",
+      "examplesLabel": "",
+      "found": "",
+      "inputLabel": "",
+      "inputNote": "",
+      "inputTitle": "",
+      "mdDistribution": "",
+      "mdTitle": "",
+      "placeholder": "",
+      "resultTitle": "",
+      "retry": "",
+      "stateEmpty": "",
+      "stateError": "",
+      "stateRunning": "",
+      "stateSuccess": ""
     }
   }
 }

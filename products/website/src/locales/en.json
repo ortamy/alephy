@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.24,
+    "coverage": 0.29,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -429,6 +429,11 @@
         "kicker": "ALEPHY · GENERATORS · VISUALIZATION",
         "subtitle": "Visualize the mechanics of a word: letters, states and transitions in motion.",
         "title": "Video image generator"
+      },
+      "state-checker": {
+        "kicker": "ALEPHY · COUNTRY CHECKER",
+        "subtitle": "Diagnosis of a country across the eight states of space: dominant state, distribution and conclusion.",
+        "title": "Country checker"
       }
     },
     "nav": {
@@ -580,6 +585,40 @@
         "servants": "Servants and assembly",
         "temple": "Temple, sacrifice and fate"
       }
+    },
+    "stateChecker": {
+      "chartLabel": "State chart",
+      "check": "Check",
+      "confidence": "interpretation",
+      "copied": "Markdown copied",
+      "copy": "Copy Markdown",
+      "copyFailed": "Copying unavailable",
+      "ctrlEnter": "Ctrl+Enter",
+      "diagnosisTitle": "Diagnosis",
+      "dominantLine": "“{state}” dominates — {value}% of the space.",
+      "dominates": "dominates",
+      "doorAnalyzer": "State analyzer",
+      "doorStates": "State map",
+      "download": "Download .md",
+      "effectLine": "Consequence: {effect}",
+      "emptyHint": "Enter a country and press Check.",
+      "errorEmpty": "Enter a country.",
+      "errorLoad": "State data unavailable: ",
+      "errorNotFound": "Country not found: {name}",
+      "examplesLabel": "Examples",
+      "found": "Dominant state: ",
+      "inputLabel": "Country name",
+      "inputNote": "Diagnosis across the eight states of space: dominant state, distribution, conclusion.",
+      "inputTitle": "Country",
+      "mdDistribution": "Distribution across 8 states",
+      "mdTitle": "State checker",
+      "placeholder": "For example: Israel, Egypt, Rome",
+      "resultTitle": "Result",
+      "retry": "Retry",
+      "stateEmpty": "Waiting",
+      "stateError": "Error",
+      "stateRunning": "Diagnosing",
+      "stateSuccess": "Done"
     }
   }
 }

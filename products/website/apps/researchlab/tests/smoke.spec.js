@@ -87,9 +87,11 @@ const SPINNER_BUDGET_MS = 5_000;
 // случай «разметка скачалась, но панель осталась пустой».
 const moduleAnchors = {
   'paleo-builder': '[data-paleo-palette]',
-  'video-lab': '.prompt-generator-layout',
+  'video-lab': '.vl-shell',
   generators: '.gc-grid',
   checkers: '.gc-grid',
+  'religionism-checker': '.rc-shell',
+  'state-checker': '.stc-shell',
   'translation-comparator': '.tc-checker-content',
   'paleo-keyboard': '#pk-keys .pk-key',
   analyzers: '.analyzers-shell'
@@ -149,6 +151,41 @@ test.describe('route loading finishes', () => {
       expect(errors, `uncaught errors on #${route}`).toEqual([]);
     });
   }
+});
+
+// Гард шапок: реестр LabHero — источник истины для заголовков модулей, и его
+// служебный текст («Нет записи шапки») не должен доходить до пользователя.
+// Обход реестра — тот же приём, что в route loading grid.
+test.describe('hero guard', () => {
+  test('маршруты реестра LabHero не показывают служебный текст шапки', async ({ page }) => {
+    await page.goto('/#dashboard', { waitUntil: 'domcontentloaded' });
+    const targets = await page.evaluate(() => Object.keys((window.LabHero && window.LabHero.targets) || {}));
+    expect(targets.length, 'реестр LabHero.TARGETS пуст').toBeGreaterThan(0);
+
+    for (const route of targets) {
+      await page.goto(`/#${route}`, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#labContent .module.active').first()).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+      const activeId = await page.evaluate(() => {
+        const active = document.querySelector('#labContent .module.active');
+        return active ? active.id : null;
+      });
+
+      // Открытый маршрут обязан получить шапку из реестра...
+      if (activeId === route) {
+        await expect(
+          page.locator(`#labContent .lab-hero[data-lab-hero="${route}"]`),
+          `шапка маршрута #${route}`
+        ).toBeVisible({ timeout: SPINNER_BUDGET_MS });
+      }
+
+      // ...и ни одна видимая шапка не содержит служебный текст.
+      await expect(
+        page.locator('#labContent .lab-hero', { hasText: 'Нет записи шапки' }),
+        `служебный текст шапки на #${route}`
+      ).toHaveCount(0);
+    }
+  });
 });
 
 test('agent server offline shows Сервер отключен without uncaught errors', async ({ page }) => {
