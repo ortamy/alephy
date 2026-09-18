@@ -34,17 +34,21 @@ LOCALES = WEBSITE / "src" / "locales"
 MANIFEST_PATH = LOCALES / "index.json"
 I18N_JS = WEBSITE / "src" / "js" / "i18n.js"
 
-# Интерфейс сайта: страницы и скрипты. Корпус (src/content, src/data) — контент
-# другого уровня, он не входит в UI-покрытие; Research Lab подключится к i18n
-# отдельной фазой, иначе его русские тексты сразу уронят покрытие почти до нуля.
-SCAN_DIRS = [WEBSITE / "src" / "pages", WEBSITE / "src" / "js"]
+# Интерфейс сайта: страницы, скрипты и Research Lab.
+# Корпус (src/content, src/data) — контент другого уровня, не входит в UI-покрытие.
+SCAN_DIRS = [
+    WEBSITE / "src" / "pages",
+    WEBSITE / "src" / "js",
+]
 SCAN_SUFFIXES = {".html", ".js"}
 SKIP_PARTS = {"build", "node_modules", ".git"}
 
 # Ключ словаря: точка-разделитель, строчные буквы, без пробелов
 # (русский текст как ключ — это phrases.* фазы 3, он сюда не попадает).
-KEY_RE = re.compile(r"^[a-z][A-Za-z0-9]*(\.[A-Za-z0-9_]+)+$")
-_T_CALL = re.compile(r"\bt\(\s*'([^']+)'")
+KEY_RE = re.compile(r"^[a-z][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+)+$")
+# t('key') или t('key', 'русский резерв') — второй захватывается как ru-текст,
+# чтобы write мог заполнить словарь даже для динамических строк из JS.
+_T_CALL = re.compile(r"\bt\(\s*'([^']+)'\s*(?:,\s*'([^']*)')?")
 _BURGER_BLOCK = re.compile(r"BURGER_KEYS\s*=\s*\{(.*?)\}", re.S)
 
 # Теги, весь текст которых служебный.
@@ -63,7 +67,9 @@ _WORDS = re.compile(r"[A-Za-zА-Яа-яЁё]{2,}")
 
 def source_files() -> list[Path]:
     """HTML/JS исходников сайта, которые обязан покрывать словарь."""
-    found = []
+    lab = WEBSITE / "apps" / "researchlab"
+    # Phase 2 covers the shell, breadcrumbs and hero registries, not module content.
+    found = [lab / "index.html", lab / "js" / "router.js", lab / "js" / "lab-hero.js"]
     for base in SCAN_DIRS:
         if not base.is_dir():
             continue
@@ -166,14 +172,17 @@ def scan_js(text: str, rel: str) -> tuple[dict[str, dict], int]:
     """Ключи скрипта: литералы t('key', ...) и значения карты BURGER_KEYS."""
     found: dict[str, dict] = {}
 
-    def remember(key: str, line: int) -> None:
+    def remember(key: str, line: int, ru: str = "") -> None:
         item = found.setdefault(key, {"ru": "", "files": set(), "line": line})
         item["files"].add(rel)
+        if ru and not item["ru"]:
+            item["ru"] = ru
 
     for match in _T_CALL.finditer(text):
         key = match.group(1).strip()
         if KEY_RE.match(key):
-            remember(key, text.count("\n", 0, match.start()) + 1)
+            fallback = match.group(2) or ""
+            remember(key, text.count("\n", 0, match.start()) + 1, fallback)
 
     burger = 0
     block = _BURGER_BLOCK.search(text)
@@ -183,6 +192,16 @@ def scan_js(text: str, rel: str) -> tuple[dict[str, dict], int]:
             if KEY_RE.match(key):
                 remember(key, text.count("\n", 0, block.start()) + 1)
                 burger += 1
+    # LabHero builds keys from the two static registries; dynamic overrides are content.
+    if rel.endswith("/researchlab/js/lab-hero.js"):
+        for registry, prefix in (("TARGETS", "lab.hero."), ("VIEWS", "lab.hero.views.")):
+            block = re.search(r"var " + registry + r"\s*=\s*\{(.*?)\n  \};", text, re.S)
+            if not block:
+                raise ValueError(f"LabHero registry not found: {registry}")
+            for route in re.finditer(r"'([^']+)'\s*:\s*\{([^{}]*)\}", block.group(1)):
+                for field in re.finditer(r"\b(kicker|title|subtitle):\s*'([^'\\]*)'", route.group(2)):
+                    key = prefix + route.group(1).replace("/", ".") + "." + field.group(1)
+                    remember(key, text.count("\n", 0, block.start()) + 1, field.group(2))
     return found, burger
 
 
@@ -311,7 +330,7 @@ def drift(scan: dict, ru: dict) -> list[str]:
     out = []
     for key, item in sorted(scan["tagged"].items()):
         value = value_of(ru, key)
-        if non_empty(item["ru"]) and non_empty(value) and item["ru"] != value.strip():
+        if non_empty(item["ru"]) and non_empty(value) and item["ru"].strip() != value.strip():
             out.append(key)
     return out
 

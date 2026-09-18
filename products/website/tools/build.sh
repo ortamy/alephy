@@ -12,9 +12,9 @@ echo "=== ALEPHY Website Build ==="
 echo "Root: $ROOT_DIR"
 echo "Build: $BUILD_DIR"
 
-# 1. Очистка build/
-rm -rf "$BUILD_DIR"
+# Сохраняем каталог: локальный сервер может держать его как cwd на Windows.
 mkdir -p "$BUILD_DIR"
+find "$BUILD_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 
 # 2. Копирование корневых файлов
 echo "[1/8] Copying root files..."

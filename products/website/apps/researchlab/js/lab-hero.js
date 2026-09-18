@@ -9,6 +9,23 @@
     });
   }
 
+  // Делегирует перевод window.AlephyI18n.t() с русским резервом:
+  // для ru dict пуст (файл не грузится — ноль запросов, ноль мигания),
+  // для en/he t() вернёт перевод из словаря или русский fallback.
+  function i18nText(key, fallback) {
+    var api = window.AlephyI18n;
+    return (api && typeof api.t === 'function' && key) ? api.t(key, fallback) : fallback;
+  }
+
+  // Translate static registry fields before merging dynamic research titles.
+  function resolveConfig(route, config) {
+    var result = Object.assign({}, config);
+    ['kicker', 'title', 'subtitle'].forEach(function(field) {
+      if (config[field]) result[field] = i18nText('lab.hero.' + route.replace(/\//g, '.') + '.' + field, config[field]);
+    });
+    return result;
+  }
+
   function metaChips(chips) {
     if (!chips || !chips.length) return '';
     return '<div class="lab-hero__meta">' + chips.map(function (c) {
@@ -424,6 +441,7 @@
     'researches/detail': {}
   };
 
+  var activeViews = {};
   var observedContainers = [];
   var documentObserver = null;
   var scheduled = false;
@@ -480,7 +498,7 @@
 
   function mount(container) {
     if (!container || !container.id || !TARGETS[container.id]) return;
-    ensureHero(container, container.id, TARGETS[container.id]);
+    ensureHero(container, container.id, resolveConfig(container.id, TARGETS[container.id]));
   }
 
   /* Подмена шапки под внутренний экран модуля (вызывается после рендера экрана).
@@ -490,7 +508,10 @@
     var base = TARGETS[moduleId] || fallbackConfig(moduleId);
     var container = document.getElementById(moduleId);
     if (!container) return;
-    var config = Object.assign({}, base, (viewId && VIEWS[moduleId + '/' + viewId]) || {}, override || {});
+    var viewRoute = moduleId + '/' + viewId;
+    var config = Object.assign({}, resolveConfig(moduleId, base),
+      resolveConfig('views/' + viewRoute, (viewId && VIEWS[viewRoute]) || {}), override || {});
+    activeViews[moduleId] = { viewId: viewId, override: override };
     var hero = ensureHero(container, moduleId, config);
     // Учитываем всю визуальную конфигурацию: старый hero мог остаться в DOM
     // после hot reload, если совпадали только title и subtitle.
@@ -516,8 +537,18 @@
   /* Единый источник подписей для шапки и хлебных крошек. */
   function getTitle(route) {
     var config = TARGETS[route] || VIEWS[route];
-    return config && config.title ? config.title : '';
+    return config && config.title ? resolveConfig(TARGETS[route] ? route : 'views/' + route, config).title : '';
   }
+
+  // Locale loading may finish after the first module render; keep dynamic overrides.
+  document.addEventListener('alephy:langchange', function() {
+    Object.keys(TARGETS).forEach(function(moduleId) {
+      var container = document.getElementById(moduleId);
+      if (!container || !findHero(container, moduleId)) return;
+      var view = activeViews[moduleId] || {};
+      setView(moduleId, view.viewId || null, view.override);
+    });
+  });
 
   function scan() {
     var root = document.querySelector(ROOT_SELECTOR) || document.body;

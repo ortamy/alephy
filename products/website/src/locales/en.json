@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.11,
+    "coverage": 0.05,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -67,6 +67,9 @@
       "title": "Interlinear — Alephy",
       "heading": "◈ Tanakh Interlinear",
       "subtitle": "paleo-hebrew / masoretic / transliteration / translation"
+    },
+    "researchlab": {
+      "title": ""
     }
   },
   "footer": {
@@ -75,5 +78,387 @@
     "about": "About",
     "github": "GitHub",
     "copy": "Project «Alephy» · Restoring palaeo-texts"
+  },
+  "lab": {
+    "breadcrumbs": {
+      "battle": "",
+      "brand": "",
+      "dictionaries": "",
+      "discussions": "",
+      "glossary": "",
+      "graphPrefix": "",
+      "page": "",
+      "rootDictionary": "",
+      "search": "",
+      "searchPrefix": "",
+      "sessions": ""
+    },
+    "chrome": {
+      "menu": "",
+      "search": "",
+      "searchLabel": "",
+      "searchPlaceholder": "",
+      "theme": ""
+    },
+    "hero": {
+      "admin-settings": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "agent-server": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "ai-agents": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "ai-analyzer": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "analyzers": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "board-generator": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "board-library": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "board": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "cartography": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "checkers": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "club": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "clue-generator": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "dashboard": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "davar-checker": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "dialect-analyzer": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "dictionaries": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "ed-chat": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "etymology-checker": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "exposure-editor": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "generators": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "heraldry": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "investigation": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "language-map": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "layer-analyzer": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "learn": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "linguistic-tensor": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "manifest": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "methodology": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "name-decoder": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "paleo-builder": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "paleo-keyboard": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "paleo-linguistics": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "paleo-mechanics": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "pipelines": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "prompt-generator": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "religionism-checker": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "religionisms": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "research-generator": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "researches": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "root-dictionary": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "scripture-reader": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "state-analyzer": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "states": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "timeline": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "translation-comparator": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "views": {
+        "club": {
+          "discussions": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "kicker": "",
+          "subtitle": "",
+          "title": ""
+        },
+        "language-map": {
+          "detail": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        },
+        "learn": {
+          "courses": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "game": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "lesson": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "lessons": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "paleo-trainer": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        },
+        "paleo-linguistics": {
+          "detail": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        },
+        "states": {
+          "detail": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "diagnostic": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        },
+        "timeline": {
+          "detail": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        },
+        "workbench": {
+          "project": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          },
+          "run": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
+          }
+        }
+      },
+      "vision": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "word-analyzer": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "workbench": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      }
+    },
+    "nav": {
+      "admin-settings": "",
+      "agent-server": "",
+      "ai-agents": "",
+      "analyzers": "",
+      "cartography": "",
+      "checkers": "",
+      "club": "",
+      "dashboard": "",
+      "dictionaries": "",
+      "ed-chat": "",
+      "generators": "",
+      "language-map": "",
+      "learn": "",
+      "manifest": "",
+      "methodology": "",
+      "paleo-builder": "",
+      "paleo-keyboard": "",
+      "paleo-linguistics": "",
+      "paleo-mechanics": "",
+      "pipelines": "",
+      "religionisms": "",
+      "researches": "",
+      "scripture-reader": "",
+      "states": "",
+      "timeline": "",
+      "vision": "",
+      "workbench": ""
+    },
+    "sections": {
+      "data": "",
+      "system": "",
+      "tools": ""
+    }
   }
 }
