@@ -68,9 +68,16 @@
 
 /* Группы по роли: uppercase-лейбл + hairline + бейдж-счётчик (как hub «Обучения»). */
 .agent-group { margin-bottom: var(--space-5); }
-.agent-group-head { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--space-3); }
-.agent-group-label { color: var(--text-muted); font: 700 var(--ui-11)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
-.agent-group-rule { flex: 1 1 20px; min-width: 16px; height: 1px; background: var(--border-light); }
+/* §4.1: заголовок секции — uppercase-микролейбл + волосяная линия.
+   Одна формула на группы списка (.agent-group-*) и панели детали (.agent-panel-*). */
+.agent-group-head,
+.agent-panel-head { display: flex; align-items: center; gap: 10px; }
+.agent-group-head { margin: 0 0 var(--space-3); }
+.agent-panel-head { margin: 0 0 var(--space-4); }
+.agent-group-label,
+.agent-panel-label { color: var(--text-muted); font: 700 var(--ui-11)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.agent-group-rule,
+.agent-panel-rule { flex: 1 1 20px; min-width: 16px; height: 1px; background: var(--border-light); }
 .agent-group-count { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); white-space: nowrap; }
 .agent-group-body { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
 .agent-group-body.is-list { grid-template-columns: 1fr; gap: 2px; }
@@ -129,7 +136,9 @@
   .agent-list-row-desc { flex: 1 1 100%; order: 5; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .agent-role-card, .agent-list-row, .pipeline-chip { transition: none; }
+  .agent-role-card, .agent-list-row, .pipeline-chip,
+  .agent-example-chip, .agent-history-row, .agent-pipeline-chip { transition: none; }
+  .agent-detail-page { animation: none; }
 }
 .agent-pipelines-view {
   max-width: 1120px;
@@ -336,33 +345,80 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
-.agent-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+/* Сетка детали §5.1: строка 1 — Запуск (span 8) + Связи (span 4), строка 2 — Результат (span 12). */
+.agent-detail-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--space-4); }
+.agent-detail-run { grid-column: span 8; }
+.agent-detail-links { grid-column: span 4; }
+.agent-detail-result { grid-column: 1 / -1; }
+/* Панель детали: hairline-рамка, без теней (§4.2 канон). */
 .agent-detail-section {
-  padding: var(--space-6);
+  padding: var(--space-5);
   background: var(--bg-card);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-8);
 }
-.agent-detail-section h2 { margin-bottom: 16px; }
-.agent-detail-section h3 { margin: 20px 0 8px; color: var(--accent-gold); font: 600 18px var(--font-heading); }
-.agent-detail-section ul { padding-left: 22px; color: var(--text-secondary); }
-.agent-detail-section li + li { margin-top: 6px; }
-.agent-detail-wide { grid-column: 1 / -1; }
-/* Связи: пайплайны, где агент входит в цепочку (§4.2 — hairline, без теней). */
-.agent-detail-section .agent-connections-list { display: grid; gap: var(--space-2); margin-top: 0; padding-left: 0; list-style: none; }
-.agent-detail-section .agent-connections-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-top: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-light); border-radius: var(--radius-8); background: var(--bg-secondary); }
-.agent-connections-link { color: var(--text-primary); font-weight: 600; }
-.agent-connections-link:hover { color: var(--accent-gold); }
-.agent-prompt, .agent-output {
-  margin: 0;
-  padding: 18px;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  color: var(--text-primary);
-  background: var(--bg-dark);
-  border-left: 3px solid var(--accent-gold);
-  border-radius: 3px;
-  font: 14px/1.7 var(--font-mono);
+
+
+
+/* Панель запуска: контекст-строка, примеры, поле ~120px, строка действий. */
+.agent-run-form { display: grid; gap: var(--space-3); }
+.agent-run-context { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); margin: 0; color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); }
+.agent-run-pipelines, .agent-run-pipeline-chips { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.agent-pipeline-chip { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-secondary); font: 500 var(--ui-11)/1.6 var(--font-ui); text-decoration: none; }
+.agent-pipeline-chip:hover { color: var(--accent-gold); border-color: var(--accent-gold); }
+.agent-pipeline-chip--plain { cursor: default; }
+.agent-chain-more, .agent-chain-none { color: var(--text-muted); font: 500 var(--ui-11)/1.6 var(--font-ui); }
+.agent-run-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.agent-run-examples[hidden], .agent-run-server[hidden] { display: none; }
+.agent-run-examples-label { color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.agent-example-chip { padding: 2px 10px; border: 1px dashed var(--border-light); border-radius: var(--radius-pill); background: none; color: var(--text-secondary); font: 500 var(--ui-12)/1.6 var(--font-ui); cursor: pointer; }
+.agent-example-chip:hover { border-style: solid; border-color: var(--accent-gold); color: var(--text-primary); }
+.agent-run-input { min-height: 120px; }
+.agent-run-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.agent-run-hint { margin-left: auto; color: var(--text-muted); font: 500 var(--ui-11)/1 var(--font-mono); }
+.agent-run-server { flex: 1 1 100%; color: var(--text-muted); font: 500 var(--ui-12)/1.5 var(--font-ui); }
+/* Offline-сервер: primary приглушён, причина — строкой под действиями. */
+.agent-run-actions .lab-btn-primary.is-offline { background: var(--bg-tertiary); border-color: var(--border-light); color: var(--text-muted); }
+/* Результат §4.6: empty с пунктиром и глифом → контент, бейджи, действия, история. */
+.agent-empty { display: grid; justify-items: center; gap: var(--space-2); padding: var(--space-5) var(--space-4); border: 1px dashed var(--border-light); border-radius: var(--radius-8); text-align: center; }
+.agent-empty-glyph { color: var(--text-muted); opacity: .35; }
+.agent-empty-glyph svg { width: 30px; height: 30px; }
+.agent-empty-hint { margin: 0; color: var(--text-muted); font: 500 var(--ui-12)/1.5 var(--font-ui); }
+.agent-empty-link { color: var(--accent-gold); font: 600 var(--ui-12)/1.5 var(--font-ui); }
+.agent-result-body { display: grid; gap: var(--space-3); }
+.agent-result-body[hidden], .agent-result-history[hidden] { display: none; }
+.agent-result-summary { margin: 0; color: var(--text-primary); font-size: var(--text-14); line-height: 1.6; }
+.agent-result-summary--muted { color: var(--text-muted); }
+.agent-result-limitations { display: grid; gap: 4px; margin: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-light); border-radius: var(--radius-8); background: var(--bg-secondary); color: var(--text-secondary); font: 500 var(--ui-12)/1.6 var(--font-ui); }
+.agent-result-limitations-label { color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.agent-result-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.agent-result-raw summary { color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.agent-result-payload { margin: var(--space-2) 0 0; padding: var(--space-3); overflow-x: auto; white-space: pre-wrap; background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-8); color: var(--text-secondary); font: var(--ui-12)/1.6 var(--font-mono); }
+.agent-result-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.agent-result-status { color: var(--text-muted); font: 500 var(--ui-12)/1.5 var(--font-ui); }
+.agent-result-history { display: grid; gap: var(--space-2); }
+.agent-history-label { margin: 0; color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.agent-history-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.agent-history-row { display: flex; align-items: center; gap: var(--space-3); width: 100%; padding: var(--space-2) var(--space-1); border: 0; border-bottom: 1px solid var(--border-light); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.agent-history-row:hover .agent-history-query { color: var(--accent-gold); }
+.agent-history-query { flex: 1 1 auto; min-width: 0; color: var(--text-primary); font: var(--text-14)/1.4 var(--font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.agent-history-time { flex: 0 0 auto; color: var(--text-muted); font: var(--ui-11)/1 var(--font-mono); }
+
+/* Связи: чипы пайплайнов + мини-цепочка «передаёт → агент → принимает». */
+.agent-links-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.agent-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-light); }
+.agent-chain-label { color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.agent-chain-self { padding: 2px 10px; border: 1px solid rgb(var(--accent-gold-rgb) / .45); border-radius: var(--radius-pill); color: var(--accent-gold); font: 600 var(--ui-12)/1.6 var(--font-ui); }
+.agent-chain-arrow { color: var(--text-muted); font-family: var(--font-mono); }
+
+/* Mobile: стек запуск → результат → связи, края = контейнер шапки (§5.3). */
+@media (max-width: 900px) {
+  .agent-detail-grid { grid-template-columns: 1fr; }
+  .agent-detail-run, .agent-detail-links, .agent-detail-result { grid-column: auto; }
+  .agent-detail-run { order: 1; }
+  .agent-detail-result { order: 2; }
+  .agent-detail-links { order: 3; }
 }
-.agent-output { border-left-color: var(--accent-green); }
-.agent-detail-back { margin-top: 24px; }
+
+/* Низ детали: компактная secondary со стрелкой, не широкая кнопка (§4.4). */
+.agent-detail-back { margin-top: var(--space-4); }

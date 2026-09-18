@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.05,
+    "coverage": 0.12,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -459,6 +459,51 @@
       "data": "",
       "system": "",
       "tools": ""
+    },
+    "agents": {
+      "back": "Back to agents",
+      "links": {
+        "browse": "Browse pipelines",
+        "empty": "The agent is not part of any chain",
+        "gives": "hands over",
+        "loading": "Collecting pipeline chains…",
+        "takes": "receives",
+        "unavailable": "Chains unavailable: the local pipeline list did not load"
+      },
+      "panel": {
+        "links": "LINKS",
+        "result": "RESULT",
+        "run": "RUN"
+      },
+      "result": {
+        "copied": "Result copied.",
+        "copy": "Copy",
+        "copyFail": "Copying is unavailable in this browser.",
+        "download": "Download .md",
+        "empty": "The result appears after a run",
+        "error": "Run error: ",
+        "full": "Full response",
+        "history": "Recent runs",
+        "historyGone": "The response was not saved — run the query again.",
+        "limits": "Limitations",
+        "mdDate": "Date",
+        "mdQuery": "Query",
+        "raw": "The server returned a structure without a summary — full response below.",
+        "research": "Open in research"
+      },
+      "run": {
+        "clear": "Clear",
+        "examples": "Example queries",
+        "offline": "Agent server is unavailable — start python products/agents/server.py",
+        "participates": "participates in ",
+        "pipelineMany": "pipelines",
+        "pipelineOne": "pipeline",
+        "pipelinesLoading": "",
+        "pipelinesZero": "is not part of any pipeline",
+        "placeholder": "analyze the word Bereshit",
+        "query": "Request to the agent",
+        "start": "Run"
+      }
     }
   }
 }

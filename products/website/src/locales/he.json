@@ -3,7 +3,7 @@
   "meta": {
     "code": "he",
     "status": "draft",
-    "coverage": 0.05,
+    "coverage": 0.04,
     "note": "черновик: переведена обвязка сайта. RTL-аудит вёрстки не проведён. status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -459,6 +459,51 @@
       "data": "",
       "system": "",
       "tools": ""
+    },
+    "agents": {
+      "back": "",
+      "links": {
+        "browse": "",
+        "empty": "",
+        "gives": "",
+        "loading": "",
+        "takes": "",
+        "unavailable": ""
+      },
+      "panel": {
+        "links": "",
+        "result": "",
+        "run": ""
+      },
+      "result": {
+        "copied": "",
+        "copy": "",
+        "copyFail": "",
+        "download": "",
+        "empty": "",
+        "error": "",
+        "full": "",
+        "history": "",
+        "historyGone": "",
+        "limits": "",
+        "mdDate": "",
+        "mdQuery": "",
+        "raw": "",
+        "research": ""
+      },
+      "run": {
+        "clear": "",
+        "examples": "",
+        "offline": "",
+        "participates": "",
+        "pipelineMany": "",
+        "pipelineOne": "",
+        "pipelinesZero": "",
+        "placeholder": "",
+        "query": "",
+        "start": "",
+        "pipelinesLoading": ""
+      }
     }
   }
 }

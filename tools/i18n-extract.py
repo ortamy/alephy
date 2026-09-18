@@ -68,8 +68,14 @@ _WORDS = re.compile(r"[A-Za-zА-Яа-яЁё]{2,}")
 def source_files() -> list[Path]:
     """HTML/JS исходников сайта, которые обязан покрывать словарь."""
     lab = WEBSITE / "apps" / "researchlab"
-    # Phase 2 covers the shell, breadcrumbs and hero registries, not module content.
-    found = [lab / "index.html", lab / "js" / "router.js", lab / "js" / "lab-hero.js"]
+    # Phase 2: оболочка, крошки и реестры шапки; page-controller.js даёт ключи панелей
+    # детали агента (литералы t('lab.agents.*', ...) в JS модуля).
+    found = [
+        lab / "index.html",
+        lab / "js" / "router.js",
+        lab / "js" / "lab-hero.js",
+        lab / "js" / "page-controller.js",
+    ]
     for base in SCAN_DIRS:
         if not base.is_dir():
             continue

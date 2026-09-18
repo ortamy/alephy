@@ -362,11 +362,8 @@
     gap: var(--space-3);
   }
 
-  .agent-detail-grid { grid-template-columns: 1fr; gap: 12px; }
-  .agent-detail-wide { grid-column: auto; }
-  .agent-detail-section { padding: 18px 16px; }
-  .agent-detail-section .agent-connections-list li { flex-direction: column; gap: 4px; }
-  .agent-prompt, .agent-output { font-size: 12px; padding: 14px; }
+  .agent-detail-grid { grid-template-columns: 1fr; gap: var(--space-3); }
+  .agent-detail-section { padding: var(--space-4); }
 
   .tool-card {
     width: 100%;

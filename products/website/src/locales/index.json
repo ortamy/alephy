@@ -16,7 +16,7 @@
       "name": "English",
       "dir": "ltr",
       "status": "draft",
-      "coverage": 0.05
+      "coverage": 0.12
     },
     {
       "code": "he",
@@ -24,7 +24,7 @@
       "name": "עברית",
       "dir": "rtl",
       "status": "draft",
-      "coverage": 0.05
+      "coverage": 0.04
     }
   ]
 }

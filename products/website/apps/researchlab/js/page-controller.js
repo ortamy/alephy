@@ -1204,6 +1204,84 @@ const PageController = (function() {
     run(query);
   }
 
+  // ===== ДЕТАЛЬ АГЕНТА: паспорт-шапка (LabHero) + панели §4.1 =====
+  var AGENT_RUNS_KEY = 'alephy_agent_runs_';
+  var AGENT_RUNS_LIMIT = 5;
+  var AGENT_RUN_CHARS = 20000;
+
+  // Делегат i18n: литералы t('key', 'русский резерв') читает tools/i18n-extract.py.
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  // Заголовок панели §4.1: uppercase-микролейбл + волосяная линия.
+  function agentPanelHead(labelHtml) {
+    return '<header class="agent-panel-head"><span class="agent-panel-label">' + labelHtml +
+      '</span><span class="agent-panel-rule" aria-hidden="true"></span></header>';
+  }
+
+  // Empty-state §4.6: пунктир + глиф + подсказка (+ действие, если есть).
+  function agentEmptyState(glyph, hintHtml, actionHtml) {
+    return '<div class="agent-empty"><span class="agent-empty-glyph" aria-hidden="true"><i data-lucide="' + glyph + '"></i></span>' +
+      '<p class="agent-empty-hint">' + hintHtml + '</p>' + (actionHtml || '') + '</div>';
+  }
+
+  function pipelineCountPhrase(n) {
+    if (!n) return t('lab.agents.run.pipelinesZero', 'не участвует ни в одном пайплайне');
+    var word = (n % 10 === 1 && n % 100 !== 11)
+      ? t('lab.agents.run.pipelineOne', 'пайплайне')
+      : t('lab.agents.run.pipelineMany', 'пайплайнах');
+    return t('lab.agents.run.participates', 'участвует в ') + n + ' ' + word;
+  }
+
+  function readAgentRuns(agentId) {
+    try {
+      var runs = JSON.parse(localStorage.getItem(AGENT_RUNS_KEY + agentId) || '[]');
+      return Array.isArray(runs) ? runs : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeAgentRuns(agentId, runs) {
+    try {
+      localStorage.setItem(AGENT_RUNS_KEY + agentId, JSON.stringify(runs.slice(0, AGENT_RUNS_LIMIT)));
+    } catch (error) { /* приватный режим или переполнение — история просто не сохраняется */ }
+  }
+
+  function rememberAgentRun(agentId, entry) {
+    var runs = readAgentRuns(agentId).filter(function(run) { return run.q !== entry.q; });
+    runs.unshift(entry);
+    writeAgentRuns(agentId, runs);
+  }
+
+  function agentResultParts(payload) {
+    var core = (payload && payload.result && typeof payload.result === 'object') ? payload.result : {};
+    return {
+      json: JSON.stringify(payload, null, 2),
+      summary: typeof core.summary === 'string' ? core.summary : '',
+      limitations: typeof core.limitations === 'string' ? core.limitations : ''
+    };
+  }
+
+  // Бейджи уверенности — единая легенда проекта (§6): палитра ExposureCase.CONFIDENCE_META.
+  var AGENT_CONFIDENCE_ALIASES = {
+    'факт': 'verified', 'проверено': 'verified', 'интерпретация': 'needs-review',
+    'требует проверки': 'needs-review', 'гипотеза': 'hypothesis', 'спорно': 'disputed'
+  };
+
+  function agentConfidence(payload) {
+    var meta = window.ExposureCase && window.ExposureCase.CONFIDENCE_META;
+    if (!meta) return '';
+    var core = (payload && payload.result && typeof payload.result === 'object') ? payload.result : {};
+    var raw = (payload && typeof payload.confidence === 'string') ? payload.confidence : core.confidence;
+    var key = typeof raw === 'string' ? (AGENT_CONFIDENCE_ALIASES[raw.trim().toLowerCase()] || raw.trim().toLowerCase()) : '';
+    // Если уверенность не объявлена, но ответ несёт ограничения — это «требует проверки».
+    if (!meta[key] && agentResultParts(payload).limitations) key = 'needs-review';
+    return meta[key] ? key : '';
+  }
+
+
   // Деталь агента — паспорт (герой: имя, роль, статус, модель, описание), запуск, результат, связи.
   // Тулбара списка здесь нет: поиск, фильтры, счётчик, вид и «Карта агентов» — хром списка.
   function renderAgentDetail(container, agentId) {
@@ -1234,56 +1312,380 @@ const PageController = (function() {
       window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
     detail.innerHTML = '<div class="agent-detail-page">' +
-      '<div class="agent-detail-grid"><section class="agent-detail-section agent-detail-wide"><h2>Запуск агента</h2><form id="agent-run-form"><label for="agent-run-input">Запрос</label><textarea id="agent-run-input" class="lab-textarea agent-prompt" rows="4">разбери слово Берешит</textarea><button type="submit" class="lab-btn lab-btn-primary" id="agent-run-button">Запустить</button></form></section>' +
-      '<section class="agent-detail-section agent-detail-wide"><h2>Результат</h2><pre id="agent-run-output" class="agent-output" aria-live="polite">Результат появится после запуска.</pre></section>' +
-      '<section class="agent-detail-section agent-detail-wide" data-agent-connections><h2>Связи</h2><p class="text-muted text-small">Поиск пайплайнов с этим агентом…</p></section></div>' +
-      '<button type="button" class="lab-btn lab-btn-secondary agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')">К списку агентов</button></div>';
-    var form = detail.querySelector('#agent-run-form');
-    var input = detail.querySelector('#agent-run-input');
-    var output = detail.querySelector('#agent-run-output');
-    var button = detail.querySelector('#agent-run-button');
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
-      var query = input.value.trim();
-      if (!query) return;
-      button.disabled = true;
-      output.textContent = 'Запуск пайплайна…';
-      checkAgentServer().then(function() {
-        return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
-      })
-        .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-        .then(function(result) { output.textContent = JSON.stringify(result, null, 2); })
-        .catch(function(error) { output.innerHTML = isAgentServerUnavailable(error) ? agentServerMessage() : 'Ошибка запуска: ' + escapeHtml(error.message); })
-        .then(function() { button.disabled = false; });
-    });
-    loadAgentConnections(detail, agent.name);
+      '<div class="agent-detail-grid">' +
+      '<section class="agent-detail-section agent-detail-run">' +
+        agentPanelHead(t('lab.agents.panel.run', 'ЗАПУСК')) +
+        '<form id="agent-run-form" class="agent-run-form">' +
+          '<p class="agent-run-context"><span class="agent-model-chip">' + escapeHtml(model) + '</span>' +
+          '<span class="agent-run-pipelines" data-agent-run-context>' + t('lab.agents.run.pipelinesLoading', 'Считаем пайплайны…') + '</span></p>' +
+          '<div class="agent-run-examples" data-agent-run-examples hidden></div>' +
+          '<textarea id="agent-run-input" class="lab-textarea agent-run-input" rows="4" placeholder="' + t('lab.agents.run.placeholder', 'разбери слово Берешит') + '" aria-label="' + t('lab.agents.run.query', 'Запрос к агенту') + '"></textarea>' +
+          '<div class="agent-run-actions">' +
+            '<button type="submit" class="lab-btn lab-btn-primary" id="agent-run-button">' + t('lab.agents.run.start', 'Запустить') + '</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" id="agent-run-clear" aria-label="' + t('lab.agents.run.clear', 'Очистить') + '" title="' + t('lab.agents.run.clear', 'Очистить') + '"><i data-lucide="eraser" class="lab-icon" aria-hidden="true"></i></button>' +
+            '<span class="agent-run-hint">Ctrl+Enter</span>' +
+            '<span class="agent-run-server" data-agent-run-server hidden aria-live="polite"></span>' +
+          '</div>' +
+        '</form>' +
+      '</section>' +
+      '<section class="agent-detail-section agent-detail-links">' +
+        agentPanelHead(t('lab.agents.panel.links', 'СВЯЗИ')) +
+        '<div data-agent-connections>' + agentEmptyState('workflow', t('lab.agents.links.loading', 'Собираем цепочки пайплайнов…')) + '</div>' +
+      '</section>' +
+      '<section class="agent-detail-section agent-detail-result">' +
+        agentPanelHead(t('lab.agents.panel.result', 'РЕЗУЛЬТАТ')) +
+        '<div data-agent-result-empty>' + agentEmptyState('scroll-text', t('lab.agents.result.empty', 'Результат появится после запуска')) + '</div>' +
+        '<div class="agent-result-body" data-agent-result-body hidden aria-live="polite"></div>' +
+        '<div class="agent-result-history" data-agent-history hidden><p class="agent-history-label">' + t('lab.agents.result.history', 'Последние запуски') + '</p><ul class="agent-history-list" data-agent-history-list></ul></div>' +
+      '</section>' +
+      '</div>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.back', 'К списку агентов') + '</button></div>';
+    initAgentRunPanel(detail, agent);
+    renderAgentHistory(detail, agent.id);
+    loadAgentPipelines(detail, agent);
   }
 
-  // Связи агента: пайплайны, в цепочку которых он входит (data/pipelines.json).
-  function loadAgentConnections(detail, agentName) {
-    var box = detail.querySelector('[data-agent-connections]');
+  function agentAttr(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Бейджи уверенности — единая легенда проекта (§6), палитра ExposureCase.
+  function agentResultBadges(payload) {
+    var key = agentConfidence(payload);
+    var meta = window.ExposureCase && window.ExposureCase.CONFIDENCE_META;
+    if (!key || !meta || !meta[key]) return '';
+    return '<div class="agent-result-badges"><span class="exposure-badge ' + meta[key].className + '">' +
+      escapeHtml(meta[key].label) + '</span></div>';
+  }
+
+  function agentResultMarkup(payload) {
+    var parts = agentResultParts(payload);
+    var summary = parts.summary
+      ? '<p class="agent-result-summary">' + escapeHtml(parts.summary) + '</p>'
+      : '<p class="agent-result-summary agent-result-summary--muted">' + t('lab.agents.result.raw', 'Сервер вернул структуру без резюме — полный ответ ниже.') + '</p>';
+    var limitations = parts.limitations
+      ? '<p class="agent-result-limitations"><span class="agent-result-limitations-label">' + t('lab.agents.result.limits', 'Ограничения') + '</span>' + escapeHtml(parts.limitations) + '</p>'
+      : '';
+    return agentResultBadges(payload) + summary + limitations +
+      '<details class="agent-result-raw"><summary>' + t('lab.agents.result.full', 'Полный ответ') + '</summary>' +
+      '<pre class="agent-result-payload">' + escapeHtml(parts.json) + '</pre></details>' +
+      '<div class="agent-result-actions">' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-copy><i data-lucide="copy" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.copy', 'Копировать') + '</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-download><i data-lucide="download" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.download', 'Скачать .md') + '</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-research><i data-lucide="archive" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.research', 'Открыть в исследовании') + '</button>' +
+        '<span class="agent-result-status" data-agent-result-status aria-live="polite"></span>' +
+      '</div>';
+  }
+
+  function showAgentResult(detail, payload, query) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (!body) return;
+    body.dataset.query = query;
+    body.agentPayload = payload;
+    body.innerHTML = agentResultMarkup(payload);
+    body.hidden = false;
+    if (empty) empty.hidden = true;
+  }
+
+  function clearAgentResult(detail) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (body) {
+      body.hidden = true;
+      body.innerHTML = '';
+      body.agentPayload = null;
+      body.removeAttribute('data-query');
+    }
+    if (empty) empty.hidden = false;
+  }
+
+  function copyAgentResult(detail) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var status = detail.querySelector('[data-agent-result-status]');
+    var unavailable = t('lab.agents.result.copyFail', 'Копирование недоступно в этом браузере.');
+    if (!navigator.clipboard) {
+      if (status) status.textContent = unavailable;
+      return;
+    }
+    var text = body && body.agentPayload ? agentResultParts(body.agentPayload).json : (body ? body.textContent : '');
+    navigator.clipboard.writeText(text).then(function() {
+      if (status) status.textContent = t('lab.agents.result.copied', 'Результат скопирован.');
+    }).catch(function() {
+      if (status) status.textContent = unavailable;
+    });
+  }
+
+  function agentResultMarkdown(agentName, query, payload) {
+    var parts = agentResultParts(payload);
+    var lines = ['# ' + agentName, '',
+      t('lab.agents.result.mdQuery', 'Запрос') + ': ' + query,
+      t('lab.agents.result.mdDate', 'Дата') + ': ' + new Date().toLocaleString('ru-RU'), ''];
+    if (parts.summary) lines.push(parts.summary, '');
+    if (parts.limitations) lines.push('> ' + parts.limitations, '');
+    lines.push('```json', parts.json, '```', '');
+    return lines.join('\n');
+  }
+
+  function downloadAgentResult(agentName, query, payload) {
+    var blob = new Blob([agentResultMarkdown(agentName, query, payload)], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'agent-' + agentName.toLowerCase().replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.md';
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+  }
+
+  // Offline-сервер: primary muted с причиной (§4.4 + честное состояние).
+  function setAgentServerState(detail, online) {
+    var button = detail.querySelector('#agent-run-button');
+    var note = detail.querySelector('[data-agent-run-server]');
+    var reason = t('lab.agents.run.offline', 'Сервер агентов недоступен — запустите python products/agents/server.py');
+    if (button) {
+      button.disabled = !online;
+      button.classList.toggle('is-offline', !online);
+      if (online) button.removeAttribute('title');
+      else button.title = reason;
+    }
+    if (note) {
+      note.hidden = online;
+      note.textContent = online ? '' : reason;
+    }
+  }
+
+  function runAgent(detail, agent) {
+    var input = detail.querySelector('#agent-run-input');
+    var button = detail.querySelector('#agent-run-button');
+    var query = input ? input.value.trim() : '';
+    if (!query) return;
+    if (button) button.disabled = true;
+    checkAgentServer().then(function() {
+      setAgentServerState(detail, true);
+      return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
+    })
+      .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+      .then(function(payload) {
+        showAgentResult(detail, payload, query);
+        rememberAgentRun(agent.id, { q: query, at: Date.now(), out: JSON.stringify(payload).slice(0, AGENT_RUN_CHARS) });
+        renderAgentHistory(detail, agent.id);
+      })
+      .catch(function(error) {
+        var offline = isAgentServerUnavailable(error);
+        if (offline) setAgentServerState(detail, false);
+        var body = detail.querySelector('[data-agent-result-body]');
+        var empty = detail.querySelector('[data-agent-result-empty]');
+        if (!body) return;
+        body.agentPayload = null;
+        body.dataset.query = query;
+        body.innerHTML = offline
+          ? agentServerMessage()
+          : '<p class="agent-result-summary">' + t('lab.agents.result.error', 'Ошибка запуска: ') + escapeHtml(error.message) + '</p>';
+        body.hidden = false;
+        if (empty) empty.hidden = true;
+      })
+      .then(function() {
+        if (button) button.disabled = button.classList.contains('is-offline');
+      });
+  }
+
+  function formatAgentRunTime(stamp) {
+    return new Date(stamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderAgentHistory(detail, agentId) {
+    var box = detail.querySelector('[data-agent-history]');
+    var list = detail.querySelector('[data-agent-history-list]');
+    if (!box || !list) return;
+    var runs = readAgentRuns(agentId);
+    box.hidden = !runs.length;
+    list.innerHTML = runs.map(function(run, index) {
+      return '<li><button type="button" class="agent-history-row" data-agent-history-index="' + index + '">' +
+        '<span class="agent-history-query">' + escapeHtml(run.q) + '</span>' +
+        '<span class="agent-history-time">' + escapeHtml(formatAgentRunTime(run.at)) + '</span></button></li>';
+    }).join('');
+  }
+
+  // Клик по истории возвращает запрос и сохранённый ответ.
+  function restoreAgentRun(detail, agent, index) {
+    var run = readAgentRuns(agent.id)[index];
+    if (!run) return;
+    var input = detail.querySelector('#agent-run-input');
+    if (input) input.value = run.q;
+    var payload = null;
+    if (run.out) {
+      try { payload = JSON.parse(run.out); } catch (error) { payload = null; }
+    }
+    if (payload) {
+      showAgentResult(detail, payload, run.q);
+      return;
+    }
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (!body) return;
+    body.agentPayload = null;
+    body.dataset.query = run.q;
+    body.innerHTML = '<p class="agent-result-summary agent-result-summary--muted">' + t('lab.agents.result.historyGone', 'Ответ не сохранён — запустите запрос заново.') + '</p>';
+    body.hidden = false;
+    if (empty) empty.hidden = true;
+  }
+
+  function initAgentRunPanel(detail, agent) {
+    var form = detail.querySelector('#agent-run-form');
+    var input = detail.querySelector('#agent-run-input');
+    var clear = detail.querySelector('#agent-run-clear');
+
+    if (form) form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      runAgent(detail, agent);
+    });
+    // Ctrl+Enter выполняет запрос, Enter в textarea остаётся переводом строки.
+    if (input) input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        runAgent(detail, agent);
+      }
+    });
+    if (clear) clear.addEventListener('click', function() {
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      clearAgentResult(detail);
+    });
+
+    // Делегирование на панель вешаем один раз: повторный рендер детали не должен
+    // накапливать обработчики и держать ссылку на прошлого агента.
+    detail.agentRef = agent;
+    if (!detail.dataset.agentWired) {
+      detail.dataset.agentWired = '1';
+      detail.addEventListener('click', function(event) {
+        var current = detail.agentRef;
+        if (!current) return;
+        var liveInput = detail.querySelector('#agent-run-input');
+        var liveBody = detail.querySelector('[data-agent-result-body]');
+        var example = event.target.closest('[data-agent-example]');
+        if (example && liveInput) {
+          liveInput.value = example.getAttribute('data-agent-example');
+          liveInput.focus();
+          return;
+        }
+        if (event.target.closest('[data-agent-result-copy]')) { copyAgentResult(detail); return; }
+        if (event.target.closest('[data-agent-result-download]')) {
+          if (liveBody && liveBody.agentPayload) downloadAgentResult(current.name, liveBody.dataset.query || '', liveBody.agentPayload);
+          return;
+        }
+        if (event.target.closest('[data-agent-result-research]')) {
+          LabRouter.navigate('researches', [], { q: liveBody ? liveBody.dataset.query || '' : '' });
+          return;
+        }
+        var row = event.target.closest('[data-agent-history-index]');
+        if (row) restoreAgentRun(detail, current, parseInt(row.getAttribute('data-agent-history-index'), 10));
+      });
+    }
+
+    checkAgentServer().then(function() {
+      setAgentServerState(detail, true);
+    }).catch(function() {
+      setAgentServerState(detail, false);
+    });
+  }
+  // Соседи агента в цепочках: кто передаёт ему и кто принимает от него.
+  function agentNeighbours(related, agentName) {
+    var gives = [], takes = [];
+    related.forEach(function(pipeline) {
+      var chain = pipeline.agents || [];
+      var index = chain.indexOf(agentName);
+      if (index < 0) return;
+      if (index > 0 && gives.indexOf(chain[index - 1]) === -1) gives.push(chain[index - 1]);
+      if (index < chain.length - 1 && takes.indexOf(chain[index + 1]) === -1) takes.push(chain[index + 1]);
+    });
+    return { gives: gives, takes: takes };
+  }
+
+  function agentChipRow(names, limit) {
+    var shown = names.slice(0, limit);
+    var html = shown.map(function(name) {
+      return '<span class="agent-pipeline-chip agent-pipeline-chip--plain">' + escapeHtml(name) + '</span>';
+    }).join('');
+    if (names.length > shown.length) html += '<span class="agent-chain-more">+' + (names.length - shown.length) + '</span>';
+    return html;
+  }
+
+  function renderAgentRunContext(detail, related) {
+    var context = detail.querySelector('[data-agent-run-context]');
+    var examples = detail.querySelector('[data-agent-run-examples]');
+    if (context) {
+      context.innerHTML = pipelineCountPhrase(related.length) + (related.length
+        ? ' <span class="agent-run-pipeline-chips">' + related.map(function(pipeline) {
+            return '<a class="agent-pipeline-chip" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>';
+          }).join('') + '</span>'
+        : '');
+    }
+    if (!examples) return;
+    var queries = [];
+    related.forEach(function(pipeline) {
+      if (pipeline.defaultQuery && queries.indexOf(pipeline.defaultQuery) === -1) queries.push(pipeline.defaultQuery);
+    });
+    queries = queries.slice(0, 3);
+    examples.hidden = !queries.length;
+    examples.innerHTML = queries.length
+      ? '<span class="agent-run-examples-label">' + t('lab.agents.run.examples', 'Примеры запроса') + '</span>' + queries.map(function(query) {
+          return '<button type="button" class="agent-example-chip" data-agent-example="' + agentAttr(query) + '">' + escapeHtml(query) + '</button>';
+        }).join('')
+      : '';
+  }
+
+  function renderAgentConnections(box, agent, related) {
     if (!box) return;
-    var heading = '<h2>Связи</h2>';
+    if (!related.length) {
+      box.innerHTML = agentEmptyState('workflow', t('lab.agents.links.empty', 'Агент не входит ни в одну цепочку'),
+        '<a class="agent-empty-link" href="#pipelines">' + t('lab.agents.links.browse', 'Смотреть пайплайны') + '</a>');
+      return;
+    }
+    var neighbours = agentNeighbours(related, agent.name);
+    box.innerHTML = '<div class="agent-links-chips">' + related.map(function(pipeline) {
+      return '<a class="agent-pipeline-chip" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>';
+    }).join('') + '</div>' +
+      '<div class="agent-chain">' +
+        '<span class="agent-chain-label">' + t('lab.agents.links.gives', 'передаёт') + '</span>' +
+        (neighbours.gives.length ? agentChipRow(neighbours.gives, 4) : '<span class="agent-chain-none">—</span>') +
+        '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
+        '<span class="agent-chain-self">' + escapeHtml(agent.name) + '</span>' +
+        '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
+        (neighbours.takes.length ? agentChipRow(neighbours.takes, 4) : '<span class="agent-chain-none">—</span>') +
+        '<span class="agent-chain-label">' + t('lab.agents.links.takes', 'принимает') + '</span>' +
+      '</div>';
+  }
+
+  // Один запрос на обе панели: контекст запуска и связи берутся из data/pipelines.json.
+  function loadAgentPipelines(detail, agent) {
+    var box = detail.querySelector('[data-agent-connections]');
     fetch('data/pipelines.json').then(function(response) {
       if (!response.ok) throw new Error('Локальный JSON недоступен');
       return response.json();
     }).then(function(pipelines) {
       if (!Array.isArray(pipelines)) throw new Error('Неверный формат данных');
       var related = pipelines.filter(function(pipeline) {
-        return (pipeline.agents || []).indexOf(agentName) !== -1;
+        return (pipeline.agents || []).indexOf(agent.name) !== -1;
       });
-      if (!related.length) {
-        box.innerHTML = heading + '<p class="text-muted text-small">Агент не входит ни в одну сохранённую цепочку.</p>';
-        return;
-      }
-      box.innerHTML = heading + '<ul class="agent-connections-list">' + related.map(function(pipeline) {
-        return '<li><a class="agent-connections-link" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>' +
-          '<span class="text-muted text-small">' + (pipeline.agents || []).map(escapeHtml).join(' → ') + '</span></li>';
-      }).join('') + '</ul>';
+      renderAgentRunContext(detail, related);
+      renderAgentConnections(box, agent, related);
     }).catch(function() {
-      box.innerHTML = heading + '<p class="text-muted text-small">Связи недоступны: локальный список пайплайнов не загрузился.</p>';
+      var context = detail.querySelector('[data-agent-run-context]');
+      // Данные недоступны — не утверждаем ни «участвует», ни «не участвует».
+      if (context) context.textContent = '';
+      if (box) box.innerHTML = agentEmptyState('workflow', t('lab.agents.links.unavailable', 'Цепочки недоступны: локальный список пайплайнов не загрузился'),
+        '<a class="agent-empty-link" href="#pipelines">' + t('lab.agents.links.browse', 'Смотреть пайплайны') + '</a>');
     });
   }
+
+
+
+
 
   // Тулбар (поиск, фильтры, счётчик, вид, карта) принадлежит только списку агентов.
   function setAgentListChrome(container, visible) {
