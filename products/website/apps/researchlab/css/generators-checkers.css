@@ -78,26 +78,6 @@
 @media (max-width: 640px) { .gc-grid { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .gc-card { transition: none; } }
 
-/* Стили Генератора видео-образов (Video Lab) */
-.vl-input-group { display: flex; gap: 12px; margin-top: 12px; }
-.vl-word-input { font-family: 'EB Garamond', 'Cormorant Garamond', serif; font-size: 1.2rem; flex: 1; }
-.vl-visual-output, .vl-description-output { min-height: 120px; display: flex; align-items: center; justify-content: center; background: rgba(44, 24, 16, 0.03); border: 1px dashed var(--border-light, #d8c8a8); border-radius: 6px; padding: 20px; width: 100%; box-sizing: border-box; }
-[data-theme="dark"] .vl-visual-output, [data-theme="dark"] .vl-description-output { background: rgba(237, 224, 200, 0.03); }
-.vl-timeline { display: flex; align-items: center; gap: 16px; overflow-x: auto; padding: 16px 8px; width: 100%; }
-.vl-timeline-node { flex: 0 0 160px; display: flex; flex-direction: column; align-items: center; text-align: center; background: var(--bg-secondary, #f7f1e5); border: 1px solid var(--border-light, #d8c8a8); border-radius: 8px; padding: 16px; box-shadow: 0 3px 10px rgba(71, 48, 22, 0.05); }
-.vl-paleo-char { font-family: 'PaleoHebrew', 'Noto Sans Phoenician', sans-serif; font-size: 3.5rem; color: var(--accent-gold); line-height: 1; margin-bottom: 8px; }
-.vl-char-name { font-weight: bold; font-size: 0.95rem; margin-bottom: 4px; }
-.vl-char-meaning { font-size: 0.8rem; color: var(--text-muted, #705e4c); }
-.vl-timeline-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1 0 80px; min-width: 60px; position: relative; }
-.vl-arrow-shaft { width: 100%; height: 2px; background: var(--accent-gold); position: relative; }
-.vl-arrow-shaft::after { content: ''; position: absolute; right: 0; top: -4px; width: 0; height: 0; border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 8px solid var(--accent-gold); }
-.vl-arrow-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-gold); margin-top: 4px; }
-.vl-desc-list { width: 100%; padding-left: 20px; margin: 0; line-height: 1.6; }
-.vl-desc-list li { margin-bottom: 12px; }
-.vl-synthesis { margin-top: 20px; padding: 16px; background: rgb(var(--accent-gold-rgb) / 0.05); border-left: 3px solid var(--accent-gold); border-radius: 0 8px 8px 0; width: 100%; }
-.vl-synthesis h4 { margin: 0 0 8px; color: var(--accent-gold); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.15rem; }
-.vl-synthesis p { margin: 0; font-size: 0.95rem; line-height: 1.5; }
-
 /* ==== ЧЕКЕР СТРАН (State Checker) ==== */
 .state-checker-page { max-width: 980px; margin: 0 auto; }
 .stc-hero { position: relative; padding: 28px 30px; margin-bottom: 22px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 10px; box-shadow: var(--shadow-soft); overflow: hidden; }

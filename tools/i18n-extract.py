@@ -69,12 +69,15 @@ def source_files() -> list[Path]:
     """HTML/JS исходников сайта, которые обязан покрывать словарь."""
     lab = WEBSITE / "apps" / "researchlab"
     # Phase 2: оболочка, крошки и реестры шапки; page-controller.js даёт ключи панелей
-    # детали агента (литералы t('lab.agents.*', ...) в JS модуля).
+    # детали агента (литералы t('lab.agents.*', ...) в JS модуля),
+    # video-lab.js — ключи Генератора видео-образов (литералы t('lab.video.*', ...)).
     found = [
         lab / "index.html",
         lab / "js" / "router.js",
         lab / "js" / "lab-hero.js",
         lab / "js" / "page-controller.js",
+        lab / "js" / "video-lab.js",
+        lab / "pages" / "video-lab.html",
     ]
     for base in SCAN_DIRS:
         if not base.is_dir():

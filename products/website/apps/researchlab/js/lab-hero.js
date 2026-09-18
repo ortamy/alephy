@@ -54,7 +54,9 @@
         (config.badge ? '<span class="lab-hero__badge ' + esc(config.badge.className || '') + '">' + esc(config.badge.label) + '</span>' : '') +
         (config.subtitle ? '<p class="lab-hero__subtitle' + (config.subtitleClass ? ' ' + esc(config.subtitleClass) : '') + '">' + esc(config.subtitle) + '</p>' : '') +
         metaChips(config.meta) +
-      '</div>'
+      '</div>' +
+      // Глиф-чип справа: квадрат hairline, палео-глиф тоном шапки (§5.1).
+      (config.glyph ? '<span class="lab-hero__glyph" aria-hidden="true">' + esc(config.glyph) + '</span>' : '')
     );
   }
 
@@ -142,6 +144,12 @@
       title: 'Генератор промптов',
       subtitle: 'Сборка точного исследовательского запроса из фрагментов, методов и ограничений.',
       icon: 'ui/question.png'
+    },
+    'video-lab': {
+      kicker: 'АЛЕФИ · ГЕНЕРАТОРЫ · ВИЗУАЛИЗАЦИЯ',
+      title: 'Генератор видео-образов',
+      subtitle: 'Визуализируй механику слова: буквы, состояния и переходы в движении.',
+      glyph: '𐤏'
     },
     'board': {
       kicker: 'АЛЕФИ · ИССЛЕДОВАТЕЛЬСКАЯ ДОСКА',
@@ -525,6 +533,7 @@
       subtitle: config.subtitle || '',
       subtitleClass: config.subtitleClass || '',
       icon: config.icon || '',
+      glyph: config.glyph || '',
       badge: config.badge || null,
       meta: config.meta || []
     });

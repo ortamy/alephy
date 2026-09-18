@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.13,
+    "coverage": 0.17,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -424,6 +424,11 @@
         "kicker": "",
         "subtitle": "",
         "title": ""
+      },
+      "video-lab": {
+        "kicker": "ALEPHY · GENERATORS · VISUALIZATION",
+        "subtitle": "Visualize the mechanics of a word: letters, states and transitions in motion.",
+        "title": "Video image generator"
       }
     },
     "nav": {
@@ -509,6 +514,28 @@
       "github": "Project GitHub",
       "site": "Project website",
       "title": "Links"
+    },
+    "video": {
+      "done": "Image assembled",
+      "emptyDescription": "The description will appear here.",
+      "emptyVisual": "Enter a word and press Generate.",
+      "running": "Assembling the word image…",
+      "stateEmpty": "Waiting",
+      "stateError": "Error",
+      "statePrefix": "State ",
+      "stateRunning": "Generating",
+      "stateSuccess": "Done",
+      "synthesis": "The impulse starts as {first}, transforms through the state {second} and is sealed in the final state {last}.",
+      "synthesisTitle": "Overall transition dynamics",
+      "transition": "transition",
+      "clear": "Clear",
+      "descriptionTitle": "Motion description",
+      "generate": "Generate",
+      "inputLabel": "Word in Hebrew",
+      "inputNote": "Enter a word in Hebrew to build the video image.",
+      "inputTitle": "Source word",
+      "placeholder": "For example: אמת, תורה, שלום",
+      "visualTitle": "Video image"
     }
   }
 }

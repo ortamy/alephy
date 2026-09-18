@@ -424,6 +424,11 @@
         "kicker": "",
         "subtitle": "",
         "title": ""
+      },
+      "video-lab": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
       }
     },
     "nav": {
@@ -509,6 +514,28 @@
       "github": "",
       "site": "",
       "title": ""
+    },
+    "video": {
+      "done": "",
+      "emptyDescription": "",
+      "emptyVisual": "",
+      "running": "",
+      "stateEmpty": "",
+      "stateError": "",
+      "statePrefix": "",
+      "stateRunning": "",
+      "stateSuccess": "",
+      "synthesis": "",
+      "synthesisTitle": "",
+      "transition": "",
+      "clear": "",
+      "descriptionTitle": "",
+      "generate": "",
+      "inputLabel": "",
+      "inputNote": "",
+      "inputTitle": "",
+      "placeholder": "",
+      "visualTitle": ""
     }
   }
 }

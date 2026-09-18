@@ -87,7 +87,7 @@
   z-index: 1;
   max-width: 760px;
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-muted-on-dark);
   line-height: 1.6;
 }
 
@@ -114,6 +114,24 @@
 
 /* Точка внутри чипа (легенда §6): цвет наследуется от чипа. */
 .lab-hero__chip-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: currentColor; }
+
+/* Глиф-чип шапки: квадрат hairline справа (glyph в реестре TARGETS). */
+.lab-hero__glyph {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  margin-left: auto;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-sm);
+  color: var(--accent-gold);
+  font-family: var(--font-paleo);
+  font-size: 22px;
+  line-height: 1;
+}
 
 /* Однострочная подпись героя: описание детали в одну строку (§4.2). */
 .lab-hero__subtitle--one-line { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
@@ -279,4 +297,24 @@
   }
 
   .lab-hero__meta { justify-content: center; }
+
+  .lab-hero__glyph { margin: 0 auto; }
+}
+
+/* ===== КОНТРАСТ ШАПКИ (DESIGN-SYSTEM §2, ≥4.5:1) =====
+   Шапка живёт на --bg-dark, который в темах white/beige светлый:
+   золото мелких лейблов и приглушённый текст берут роли
+   для светлой подложки (var(--accent-gold-hover) и var(--text-secondary)). */
+html[data-theme="white"] .lab-hero__kicker,
+html[data-theme="white"] .lab-hero__title,
+html[data-theme="white"] .lab-hero__glyph,
+html[data-theme="beige"] .lab-hero__kicker,
+html[data-theme="beige"] .lab-hero__title,
+html[data-theme="beige"] .lab-hero__glyph {
+  color: var(--accent-gold-hover);
+}
+
+html[data-theme="white"] .lab-hero__subtitle,
+html[data-theme="beige"] .lab-hero__subtitle {
+  color: var(--text-secondary);
 }

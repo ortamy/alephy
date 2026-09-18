@@ -1,53 +1,56 @@
-<section class="prompt-generator-shell" aria-labelledby="video-lab-title">
-  <header class="prompt-generator-heading">
-    <div>
-      <p class="prompt-generator-kicker">ГЕНЕРАТОРЫ · ВИЗУАЛИЗАЦИЯ</p>
-      <h1 id="video-lab-title">Генератор видео-образов</h1>
-      <p class="subtitle">Визуализируй механику слова: буквы, состояния и переходы в движении.</p>
-    </div>
-    <span class="prompt-generator-mark" aria-hidden="true">🎥</span>
-  </header>
-
-  <div class="prompt-generator-layout">
-    <section class="prompt-generator-card" aria-labelledby="vl-input-title">
-      <div class="prompt-generator-card-head">
-        <span class="prompt-generator-step">01</span>
-        <div>
-          <h2 id="vl-input-title">Исходное слово</h2>
-          <p>Введите слово на иврите для построения видео-образа.</p>
-        </div>
-      </div>
-      <div class="vl-input-group">
-        <input type="text" id="vl-word-input" class="lab-input vl-word-input" placeholder="Например: אמת, תורה, שלום" />
-        <button type="button" id="vl-generate-btn" class="lab-btn lab-btn-primary">Сгенерировать</button>
-      </div>
-      <p id="vl-status" class="prompt-generator-status" role="status" aria-live="polite"></p>
+<!-- Шапка раздела — реестр LabHero (uppercase-лейбл, сериф-заголовок,
+     subtitle, glyph-чип справа): локальной разметки шапки здесь нет. -->
+<section class="vl-shell" aria-label="Генератор видео-образов">
+  <div class="vl-layout">
+    <section class="vl-panel" aria-labelledby="vl-input-title">
+      <header class="vl-chapter">
+        <span class="vl-chapter-num" aria-hidden="true">01</span>
+        <h2 class="vl-chapter-title" id="vl-input-title" data-i18n="lab.video.inputTitle">Исходное слово</h2>
+      </header>
+      <p class="vl-chapter-note" data-i18n="lab.video.inputNote">Введите слово на иврите для построения видео-образа.</p>
+      <form class="vl-form" id="vl-form">
+        <input type="text" id="vl-word-input" class="lab-input vl-word-input"
+               placeholder="Например: אמת, תורה, שלום"
+               data-i18n-attr="placeholder:lab.video.placeholder;aria-label:lab.video.inputLabel"
+               aria-label="Слово на иврите" autocomplete="off" spellcheck="false" />
+        <button type="submit" id="vl-generate-btn" class="lab-btn lab-btn-primary">
+          <span data-i18n="lab.video.generate">Сгенерировать</span>
+        </button>
+        <button type="button" id="vl-clear-btn" class="lab-btn lab-btn-secondary lab-btn-compact vl-icon-btn"
+                aria-label="Очистить" title="Очистить"
+                data-i18n-attr="aria-label:lab.video.clear;title:lab.video.clear">
+          <i data-lucide="eraser" class="lab-icon" aria-hidden="true"></i>
+        </button>
+      </form>
+      <p class="vl-status" id="vl-status" role="status" aria-live="polite"></p>
     </section>
 
-    <section class="prompt-generator-card" aria-labelledby="vl-visual-title">
-      <div class="prompt-generator-card-head">
-        <span class="prompt-generator-step">02</span>
-        <div>
-          <h2 id="vl-visual-title">Видео-образ</h2>
-          <p>Последовательность состояний букв и их переходы.</p>
+    <section class="vl-panel" aria-labelledby="vl-visual-title">
+      <header class="vl-chapter">
+        <span class="vl-chapter-num" aria-hidden="true">02</span>
+        <h2 class="vl-chapter-title" id="vl-visual-title" data-i18n="lab.video.visualTitle">Видео-образ</h2>
+        <span class="wb-badge" id="vl-visual-badge" data-i18n="lab.video.stateEmpty">Ожидание</span>
+      </header>
+      <div class="vl-output" id="vl-visual-output">
+        <div class="vl-empty">
+          <span class="vl-empty-glyph" aria-hidden="true">𐤀</span>
+          <p class="vl-empty-hint" data-i18n="lab.video.emptyVisual">Введите слово и нажмите «Сгенерировать».</p>
         </div>
-      </div>
-      <div id="vl-visual-output" class="vl-visual-output">
-        <p class="prompt-generator-empty">Введите слово и нажмите «Сгенерировать».</p>
       </div>
     </section>
   </div>
 
-  <section class="prompt-generator-card" aria-labelledby="vl-description-title">
-    <div class="prompt-generator-card-head">
-      <span class="prompt-generator-step">03</span>
-      <div>
-        <h2 id="vl-description-title">Описание движения</h2>
-        <p>Текстовое описание визуальной механики слова.</p>
+  <section class="vl-panel" aria-labelledby="vl-description-title">
+    <header class="vl-chapter">
+      <span class="vl-chapter-num" aria-hidden="true">03</span>
+      <h2 class="vl-chapter-title" id="vl-description-title" data-i18n="lab.video.descriptionTitle">Описание движения</h2>
+      <span class="wb-badge" id="vl-description-badge" data-i18n="lab.video.stateEmpty">Ожидание</span>
+    </header>
+    <div class="vl-output" id="vl-description-output">
+      <div class="vl-empty">
+        <span class="vl-empty-glyph" aria-hidden="true">𐤀</span>
+        <p class="vl-empty-hint" data-i18n="lab.video.emptyDescription">Здесь появится описание.</p>
       </div>
-    </div>
-    <div id="vl-description-output" class="vl-description-output">
-      <p class="prompt-generator-empty">Здесь появится описание.</p>
     </div>
   </section>
 </section>
