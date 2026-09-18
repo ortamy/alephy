@@ -606,8 +606,8 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   max-width: 60ch;
 }
 
-/* --- Мобильная шапка: одна строка --- */
-@media (max-width: 768px) {
+/* --- Мобильная шапка: одна строка (≤900px) --- */
+@media (max-width: 900px) {
   .lab-header {
     height: 48px;
     min-height: 48px;
@@ -720,10 +720,14 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   background: rgb(var(--accent-gold-rgb) / 0.14);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .lab-header {
     padding-inline: var(--space-4);
   }
+
+  /* globe/github уходят в бургер-меню: правило обязано стоять ниже контрольной
+     семьи .lab-header nav a.icon-link (top-level, display: inline-flex). */
+  .lab-header nav a.icon-link { display: none; }
 
   .lab-header nav {
     gap: var(--space-2);

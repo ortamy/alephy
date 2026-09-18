@@ -324,6 +324,38 @@
 }
 .sidebar-item img { margin-right: 0 !important; }
 
+/* Ссылки бургер-меню (mobile-drawer): на desktop секция не дублируется.
+   Строки ≥44px, hairline-разделители, hover/active по канону drawer. */
+.sidebar-links {
+  display: none;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-light);
+}
+.sidebar-links-head {
+  padding: var(--space-2) var(--space-4) var(--space-1);
+  color: var(--text-muted);
+  font: 700 var(--ui-11)/1 var(--font-ui);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: var(--text-base);
+  transition: background-color var(--motion-base), color var(--motion-base), border-color var(--motion-base);
+}
+.sidebar-link:last-child { border-bottom: none; }
+.sidebar-link:hover { background: var(--bg-tertiary); color: var(--accent-gold); }
+.sidebar-link:active { background: rgb(var(--accent-gold-rgb) / 0.12); color: var(--accent-gold); }
+.sidebar-link:focus-visible { outline: none; box-shadow: var(--ring-focus); }
+.sidebar-link .lab-icon { width: 20px; height: 20px; flex-shrink: 0; }
+
 .lab-content {
   flex: 1; padding: var(--space-7) var(--space-8);
   overflow-y: auto; min-height: calc(100vh - 100px);

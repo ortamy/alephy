@@ -504,6 +504,11 @@
         "start": "",
         "pipelinesLoading": ""
       }
+    },
+    "links": {
+      "github": "",
+      "site": "",
+      "title": ""
     }
   }
 }

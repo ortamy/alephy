@@ -37,12 +37,14 @@
 
 @media (max-width: 900px) {
   .lab-sidebar { width: 200px; min-width: 200px; }
+  .sidebar-links { display: block; }
   .lab-content { padding: 20px; }
   .tool-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .agent-group-body:not(.is-list) { grid-template-columns: repeat(2, 1fr); }
   .header-search { flex-basis: 360px; width: min(360px, 42vw); max-width: 420px; }
 }
-@media (max-width: 768px) {
+/* Мобильный закон ≤900px: шапка одной строкой, бургер справа, sidebar = glass-drawer. */
+@media (max-width: 900px) {
   html, body {
     /* clip вместо hidden: hidden создаёт scroll-контейнер и ломает
        position: sticky шапки (она уезжала при скролле). Clip так же
@@ -213,7 +215,38 @@
     transition: transform var(--motion-base);
     z-index: 9996;
     overflow-y: auto;
-    background: var(--bg-secondary);
+  }
+
+  /* Glass-слой drawer (§6.3): полупрозрачный пергамент темы + стеклянная кромка.
+     Селектор с html[data-theme] перебивает тематические [data-theme] .lab-sidebar { background }. */
+  .lab-sidebar,
+  html[data-theme] .lab-layout > .lab-sidebar {
+    background: color-mix(in srgb, var(--bg-secondary) var(--glass-tint), transparent);
+    border-left-color: var(--glass-border);
+  }
+
+  /* §6.3: blur — только на широких тач-экранах; на телефоне выключен ради производительности. */
+  @media (min-width: 768px) {
+    .lab-sidebar,
+    html[data-theme] .lab-layout > .lab-sidebar {
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lab-sidebar,
+    .lab-sidebar-overlay,
+    html[data-theme] .lab-layout > .lab-sidebar {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /* Fallback без backdrop-filter: плотный фон темы, без blur. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lab-sidebar,
+    html[data-theme] .lab-layout > .lab-sidebar { background: var(--bg-secondary); }
   }
 
   .lab-sidebar.open {

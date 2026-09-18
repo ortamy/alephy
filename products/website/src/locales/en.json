@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.12,
+    "coverage": 0.13,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -504,6 +504,11 @@
         "query": "Request to the agent",
         "start": "Run"
       }
+    },
+    "links": {
+      "github": "Project GitHub",
+      "site": "Project website",
+      "title": "Links"
     }
   }
 }
