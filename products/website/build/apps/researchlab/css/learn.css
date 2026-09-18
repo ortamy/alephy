@@ -326,15 +326,23 @@ html[data-theme="dark"] .learn-trainer-word { background:var(--bg-card); }
 .course-block-dup { margin:0; padding:0 16px 14px 54px; color:var(--text-muted); font-size:13px; font-style:italic; }
 .course-block-shared-note { margin:0; padding:0 16px 16px 54px; color:var(--text-muted); font-size:13px; }
 .course-block.is-done .course-block-paleo { color:var(--accent-green); }
-@media (max-width:700px) {
-  .course-rail { display:flex; flex-direction:row; align-items:center; gap:8px; overflow-x:auto; padding:2px; scrollbar-width:thin; }
-  .course-rail-line { display:none; }
-  .course-rail-node { position:static; transform:none; top:auto; }
-  .course-rail-node { flex:0 0 auto; width:38px; height:38px; }
-  .course-block, .course-module-preview, .course-block-dup, .course-block-shared-note { padding-left:16px; }
-  .course-block-panels { grid-template-columns:1fr; }
-  .course-module-toggle { padding-left:12px; gap:8px; }
+/* Mobile ≤900px: рельса скрыта целиком — единственный индикатор прогресса
+   это sticky-путь (легенда + чипы). Шапка главы — нормальный поток в две
+   строки: номер + заголовок + подзаголовок, ниже компактная кнопка справа;
+   никакого absolute — перекрытий нет ни при какой ширине. */
+@media (max-width:900px) {
+  .course-detail-inner { display:block; }
+  .course-rail { display:none; }
+  .course-module-head { flex-wrap:wrap; }
+  .course-module-toggle { flex:1 1 100%; padding:12px 14px 6px; gap:10px; }
   .course-module-title { font-size:16px; }
   .course-module-num { min-width:22px; font-size:16px; }
-  .module-chapter-done-btn { margin-right:6px; }
+  .course-module-sub { font-size:12px; }
+  .module-chapter-done-btn { flex:0 0 auto; margin:0 14px 12px auto; }
+  /* Компакт 32-36px и по контенту: перебивает мобильные тач-таргеты
+     .lab-btn-sm (44px) и глобальное responsive-правило `.lab-btn{width:100%}`;
+     специфичность (0,2,0) против (0,1,0). */
+  .course-module-head .module-chapter-done-btn { width:auto; max-width:none; min-height:32px; height:32px; padding:0 12px; font-size:13px; white-space:nowrap; }
+  .course-block, .course-module-preview, .course-block-dup, .course-block-shared-note { padding-left:16px; }
+  .course-block-panels { grid-template-columns:1fr; }
 }

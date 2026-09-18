@@ -513,6 +513,7 @@
   }
 
   var courseSpy = null;
+  var courseResize = null;
   var courseAlignBound = false;
 
   /* Узлы рельсы ставятся по центру шапки своей главы; линия — от первого узла к последнему. */
@@ -546,6 +547,7 @@
 
   function courseEnhance() {
     if (courseSpy) { courseSpy.disconnect(); courseSpy = null; }
+    if (courseResize) { courseResize.disconnect(); courseResize = null; }
     courseAlignRail();
     if (!courseAlignBound) { window.addEventListener('resize', courseAlignRail); courseAlignBound = true; }
     var container = getContainer();
@@ -560,6 +562,13 @@
       });
     }, { rootMargin: '-35% 0px -55% 0px' });
     for (var s = 0; s < sections.length; s++) courseSpy.observe(sections[s]);
+    /* Аккордеон меняет высоту main — узлы рельсы съезжают со своих глав;
+       пересобираем выравнивание по ResizeObserver (ре-райз на открытие/закрытие). */
+    var main = container.querySelector('.course-detail-main');
+    if (main && 'ResizeObserver' in window) {
+      courseResize = new ResizeObserver(function() { courseAlignRail(); });
+      courseResize.observe(main);
+    }
   }
 
   function renderLessons() {
