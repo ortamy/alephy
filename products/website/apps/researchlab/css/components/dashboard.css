@@ -53,13 +53,17 @@
 .tool-card .tool-badge.beta { background: var(--bg-dark); color: var(--text-muted); }
 .tool-card .tool-badge.model { background: var(--accent-gold); color: #2c1810; }
 /* ===== AI-AGENTS REGISTRY (DESIGN-SYSTEM §4: тулбар, группы, паспорта) ===== */
-/* Тулбар §4.7: search flex-1 + чипы; строка 2 — счётчик + вид + «Карта агентов». */
-.agent-controls-panel { display: flex; flex-direction: column; gap: var(--space-3); margin: 0 0 var(--space-5); padding: var(--space-3) var(--space-4); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-md); }
-.agent-toolbar-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.agent-toolbar-row > .pipeline-count { margin-left: 0; }
+/* Тулбар §4.7: две строки во всю ширину плашки, без центрирования.
+   Строка 1 — поиск на всю ширину (flex) + «Карта агентов» справа;
+   строка 2 — чипы статусов слева, счётчик и тумблер вида справа. */
+.agent-controls-panel { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); }
+.agent-controls-panel[hidden] { display: none; }
+.agent-toolbar-row { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-2); width: 100%; min-width: 0; }
+.agent-toolbar-row--filters { flex-wrap: wrap; }
 .agent-toolbar-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-left: auto; }
-.agents-search { flex: 1 1 200px; min-width: 0; }
-.agent-filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.agents-search { flex: 1 1 auto; min-width: 0; }
+.agent-toolbar-map { flex: 0 0 auto; }
+.agent-filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
 .agent-list-view[hidden], .agent-map-view[hidden], .agent-detail-view[hidden] { display: none; }
 
 /* Группы по роли: uppercase-лейбл + hairline + бейдж-счётчик (как hub «Обучения»). */
@@ -112,39 +116,20 @@
 .agent-list-row .agent-model-chip { flex: 0 0 auto; }
 .agent-list-row-status { flex: 0 0 auto; }
 
-/* Mobile §5.3: одна колонка, края = края шапки, тулбар стеком. */
+/* Mobile §5.3: одна колонка, края = края шапки, строки тулбара стекуются. */
 @media (max-width: 560px) {
-  .agent-controls-panel { padding: var(--space-3); }
+  .agent-controls-panel { padding: var(--space-2) var(--space-3); }
+  .agent-toolbar-row { flex-wrap: wrap; }
   .agents-search { flex: 1 1 100%; }
+  .agent-toolbar-map { width: 100%; justify-content: center; }
   .agent-toolbar-actions { margin-left: 0; width: 100%; justify-content: space-between; }
+  .agent-filter-chips { width: 100%; }
   .agent-group-body { grid-template-columns: 1fr; }
   .agent-list-row { flex-wrap: wrap; }
   .agent-list-row-desc { flex: 1 1 100%; order: 5; }
 }
 @media (prefers-reduced-motion: reduce) {
   .agent-role-card, .agent-list-row, .pipeline-chip { transition: none; }
-}
-
-/* ===== AGENT DETAIL ===== */
-.agent-controls-panel {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  padding: var(--space-4) var(--space-5);
-  margin: 0 0 var(--space-6);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
-}
-.agent-control-button {
-  min-width: 190px;
-  justify-content: center;
-}
-.agent-control-button img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
 }
 .agent-pipelines-view {
   max-width: 1120px;
@@ -328,35 +313,22 @@
   .pipeline-list-chain { flex: 1 1 100%; order: 3; }
   .pipeline-list-row .pipeline-card-actions { margin-left: auto; }
 }
-.agent-detail-view[hidden] { display: none; }
+/* ===== AGENT DETAIL ===== */
+/* Герой детали — общий LabHero (имя агента + чипы роли/статуса/модели).
+   Селектор с двумя классами: lab-hero.css подключён позже и иначе победил бы каскадом,
+   а --text-on-dark в светлых темах на светлой шапке нечитаем. */
+.lab-hero__chip.agent-hero-chip { color: var(--text-secondary); border-color: var(--border-light); font-family: var(--font-ui); }
+.lab-hero__chip.agent-hero-chip--model { font-family: var(--font-mono); color: var(--text-muted); }
+.lab-hero__chip.agent-hero-chip--active { color: var(--accent-gold); border-color: rgb(var(--accent-gold-rgb) / .45); }
+.lab-hero__chip.agent-hero-chip--dev { color: var(--text-secondary); }
+.lab-hero__chip.agent-hero-chip--stub { color: var(--text-muted); border-style: dashed; }
+.lab-hero__chip.agent-hero-chip--dev .lab-hero__chip-dot { background: var(--text-muted); }
+.lab-hero__chip.agent-hero-chip--stub .lab-hero__chip-dot { background: var(--status-gray); }
 .agent-detail-page {
   max-width: 1120px;
   margin: 0 auto;
   animation: fadeIn var(--dur-2) ease both;
 }
-.agent-detail-hero {
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  padding: clamp(24px, 5vw, 48px);
-  margin-bottom: var(--space-6);
-  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-hover) 100%);
-  color: var(--text-light);
-  border: 1px solid var(--border-gold);
-  border-radius: 8px;
-  box-shadow: var(--shadow-soft);
-}
-.agent-detail-icon {
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 88px;
-  flex: 0 0 88px;
-  border: 1px solid var(--accent-gold);
-  border-radius: 50%;
-  background: rgb(var(--accent-gold-rgb) / 0.16);
-}
-.agent-detail-icon img { width: 48px; height: 48px; }
 .agent-detail-kicker {
   margin-bottom: 2px;
   color: var(--accent-gold);
@@ -364,30 +336,23 @@
   letter-spacing: 1.5px;
   text-transform: uppercase;
 }
-.agent-detail-hero h1 { margin: 0 0 4px; color: var(--text-light); }
-.agent-detail-role { max-width: 780px; color: var(--text-secondary); line-height: 1.55; }
-.agent-detail-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; font: 600 12px var(--font-mono); }
-.agent-detail-meta > span { padding: 4px 10px; border: 1px solid var(--border-dark); border-radius: 3px; color: var(--text-light); }
-.agent-detail-meta .agent-detail-status { color: #9ed18a; border-color: rgba(158,209,138,0.5); }
 .agent-detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
 .agent-detail-section {
   padding: var(--space-6);
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
 }
 .agent-detail-section h2 { margin-bottom: 16px; }
 .agent-detail-section h3 { margin: 20px 0 8px; color: var(--accent-gold); font: 600 18px var(--font-heading); }
 .agent-detail-section ul { padding-left: 22px; color: var(--text-secondary); }
 .agent-detail-section li + li { margin-top: 6px; }
 .agent-detail-wide { grid-column: 1 / -1; }
-.agent-connections { display: grid; grid-template-columns: minmax(130px, 0.8fr) 1.2fr; gap: 8px 16px; }
-.agent-connections dt { color: var(--text-muted); font-size: 14px; }
-.agent-connections dd { color: var(--text-primary); }
-.agent-task-list { list-style: none; padding-left: 0 !important; counter-reset: agent-task; }
-.agent-task-list li { counter-increment: agent-task; display: flex; gap: 10px; }
-.agent-task-list li::before { content: counter(agent-task, decimal-leading-zero); color: var(--accent-gold); font: 600 13px var(--font-mono); }
+/* Связи: пайплайны, где агент входит в цепочку (§4.2 — hairline, без теней). */
+.agent-detail-section .agent-connections-list { display: grid; gap: var(--space-2); margin-top: 0; padding-left: 0; list-style: none; }
+.agent-detail-section .agent-connections-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); margin-top: 0; padding: var(--space-2) var(--space-3); border: 1px solid var(--border-light); border-radius: var(--radius-8); background: var(--bg-secondary); }
+.agent-connections-link { color: var(--text-primary); font-weight: 600; }
+.agent-connections-link:hover { color: var(--accent-gold); }
 .agent-prompt, .agent-output {
   margin: 0;
   padding: 18px;

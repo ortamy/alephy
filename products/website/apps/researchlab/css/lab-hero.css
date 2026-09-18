@@ -112,6 +112,12 @@
   font-size: 12px;
 }
 
+/* Точка внутри чипа (легенда §6): цвет наследуется от чипа. */
+.lab-hero__chip-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: currentColor; }
+
+/* Однострочная подпись героя: описание детали в одну строку (§4.2). */
+.lab-hero__subtitle--one-line { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
 /* На десктопе иконка остаётся якорем, а текст собирается в одну левую ось. */
 @media (min-width: 1024px) {
   .lab-hero {

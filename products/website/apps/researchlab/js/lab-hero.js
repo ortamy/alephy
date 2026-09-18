@@ -26,12 +26,15 @@
     return result;
   }
 
+  /* Чип может быть строкой или { label, className, dot }.
+     dot — точка по легенде §6 для статусных чипов (агент: Активен / В разработке / Заглушка). */
   function metaChips(chips) {
     if (!chips || !chips.length) return '';
     return '<div class="lab-hero__meta">' + chips.map(function (c) {
       var label = typeof c === 'object' ? c.label : c;
       var className = typeof c === 'object' && c.className ? ' ' + esc(c.className) : '';
-      return '<span class="lab-hero__chip' + className + '">' + esc(label) + '</span>';
+      var dot = typeof c === 'object' && c.dot ? '<span class="lab-hero__chip-dot" aria-hidden="true"></span>' : '';
+      return '<span class="lab-hero__chip' + className + '">' + dot + esc(label) + '</span>';
     }).join('') + '</div>';
   }
 
@@ -49,7 +52,7 @@
           '</span>' +
         '</h1>' +
         (config.badge ? '<span class="lab-hero__badge ' + esc(config.badge.className || '') + '">' + esc(config.badge.label) + '</span>' : '') +
-        (config.subtitle ? '<p class="lab-hero__subtitle">' + esc(config.subtitle) + '</p>' : '') +
+        (config.subtitle ? '<p class="lab-hero__subtitle' + (config.subtitleClass ? ' ' + esc(config.subtitleClass) : '') + '">' + esc(config.subtitle) + '</p>' : '') +
         metaChips(config.meta) +
       '</div>'
     );
@@ -520,6 +523,7 @@
       kicker: config.kicker || '',
       title: config.title || '',
       subtitle: config.subtitle || '',
+      subtitleClass: config.subtitleClass || '',
       icon: config.icon || '',
       badge: config.badge || null,
       meta: config.meta || []

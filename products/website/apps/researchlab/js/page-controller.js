@@ -169,7 +169,7 @@ const PageController = (function() {
   var AGENT_GROUPS = ['Оркестрация', 'Исследование', 'Контроль качества', 'Документация', 'Разработка'];
   var AGENT_STATUSES = { active: 'Активен', dev: 'В разработке', stub: 'Заглушка' };
   var AGENT_ICONS = {
-    orchestrator: 'workflow', researcher: 'flask-conical', exposer: 'search-alert', collector: 'folder-output',
+    orchestrator: 'workflow', researcher: 'flask-conical', exposer: 'search-x', collector: 'folder-output',
     critic: 'gavel', semitologist: 'book-open-text', comparator: 'scale', editor: 'pen-line',
     'paleo-translator': 'languages', 'frontend-developer': 'braces', 'ai-engineer': 'cpu', verifier: 'shield-check',
     'technical-writer': 'book-open', 'code-reviewer': 'git-pull-request', 'flow-architect': 'network', liaison: 'link'
@@ -215,8 +215,7 @@ const PageController = (function() {
     var model = status === 'stub' ? 'без модели' : a.model;
     return '<button type="button" class="agent-list-card agent-role-card" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '">' +
       '<span class="agent-role-head"><span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + getAgentIcon(a) + '"></i></span>' +
-      '<span class="agent-role-name">' + a.name + '</span>' +
-      agentStatusMarkup(status, false) + '</span>' +
+      '<span class="agent-role-name">' + a.name + '</span></span>' +
       '<span class="agent-role-desc">' + a.desc + '</span>' +
       '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span>' +
       '<span class="agent-list-role" hidden>' + a.cat + '</span>' + agentStatusMarkup(status, true) + '</span></button>';
@@ -254,7 +253,7 @@ const PageController = (function() {
 
   function updateAgentsCount(container, shown) {
     var count = container.querySelector('[data-agents-count]');
-    if (count) count.innerHTML = '<strong>' + shown + '</strong> из ' + getAgentMapData().length + ' · ' + pluralizeRoles(shown);
+    if (count) count.innerHTML = '<strong>' + shown + '</strong> из ' + getAgentMapData().length;
   }
 
   function refreshAgentsList(container) {
@@ -1205,19 +1204,39 @@ const PageController = (function() {
     run(query);
   }
 
+  // Деталь агента — паспорт (герой: имя, роль, статус, модель, описание), запуск, результат, связи.
+  // Тулбара списка здесь нет: поиск, фильтры, счётчик, вид и «Карта агентов» — хром списка.
   function renderAgentDetail(container, agentId) {
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
     var agent = (agentMapData || []).filter(function(item) { return item.id === agentId; })[0];
     if (!detail || !agent) return;
     if (list) list.hidden = true;
+    setAgentListChrome(container, false);
     detail.hidden = false;
+    var status = getAgentStatus(agent);
+    var model = status === 'stub' ? 'без модели' : agent.model;
+    // Override дублируем в container._labHeroOverride: applyModuleHero вызывает
+    // setView после рендера и иначе вернул бы общую шапку «AI-Агенты».
+    container._labHeroOverride = {
+      kicker: 'АЛЕФИ · АГЕНТЫ',
+      title: agent.name,
+      subtitle: agent.desc,
+      subtitleClass: 'lab-hero__subtitle--one-line',
+      icon: agent.icon + '.png',
+      meta: [
+        { label: agent.cat, className: 'agent-hero-chip' },
+        { label: AGENT_STATUSES[status], className: 'agent-hero-chip agent-hero-chip--' + status, dot: true },
+        { label: model, className: 'agent-hero-chip agent-hero-chip--model' }
+      ]
+    };
     if (window.LabHero && window.LabHero.setView) {
-      window.LabHero.setView('ai-agents', 'agent', { kicker: 'ALEPHY · AI-AGENTS', title: agent.name, subtitle: agent.desc, icon: agent.icon + '.png', meta: [agent.cat, agent.model, 'Готов к запуску'] });
+      window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
     detail.innerHTML = '<div class="agent-detail-page">' +
       '<div class="agent-detail-grid"><section class="agent-detail-section agent-detail-wide"><h2>Запуск агента</h2><form id="agent-run-form"><label for="agent-run-input">Запрос</label><textarea id="agent-run-input" class="lab-textarea agent-prompt" rows="4">разбери слово Берешит</textarea><button type="submit" class="lab-btn lab-btn-primary" id="agent-run-button">Запустить</button></form></section>' +
-      '<section class="agent-detail-section agent-detail-wide"><h2>Результат</h2><pre id="agent-run-output" class="agent-output" aria-live="polite">Результат появится после запуска.</pre></section></div>' +
+      '<section class="agent-detail-section agent-detail-wide"><h2>Результат</h2><pre id="agent-run-output" class="agent-output" aria-live="polite">Результат появится после запуска.</pre></section>' +
+      '<section class="agent-detail-section agent-detail-wide" data-agent-connections><h2>Связи</h2><p class="text-muted text-small">Поиск пайплайнов с этим агентом…</p></section></div>' +
       '<button type="button" class="lab-btn lab-btn-secondary agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')">К списку агентов</button></div>';
     var form = detail.querySelector('#agent-run-form');
     var input = detail.querySelector('#agent-run-input');
@@ -1237,9 +1256,43 @@ const PageController = (function() {
         .catch(function(error) { output.innerHTML = isAgentServerUnavailable(error) ? agentServerMessage() : 'Ошибка запуска: ' + escapeHtml(error.message); })
         .then(function() { button.disabled = false; });
     });
+    loadAgentConnections(detail, agent.name);
+  }
+
+  // Связи агента: пайплайны, в цепочку которых он входит (data/pipelines.json).
+  function loadAgentConnections(detail, agentName) {
+    var box = detail.querySelector('[data-agent-connections]');
+    if (!box) return;
+    var heading = '<h2>Связи</h2>';
+    fetch('data/pipelines.json').then(function(response) {
+      if (!response.ok) throw new Error('Локальный JSON недоступен');
+      return response.json();
+    }).then(function(pipelines) {
+      if (!Array.isArray(pipelines)) throw new Error('Неверный формат данных');
+      var related = pipelines.filter(function(pipeline) {
+        return (pipeline.agents || []).indexOf(agentName) !== -1;
+      });
+      if (!related.length) {
+        box.innerHTML = heading + '<p class="text-muted text-small">Агент не входит ни в одну сохранённую цепочку.</p>';
+        return;
+      }
+      box.innerHTML = heading + '<ul class="agent-connections-list">' + related.map(function(pipeline) {
+        return '<li><a class="agent-connections-link" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>' +
+          '<span class="text-muted text-small">' + (pipeline.agents || []).map(escapeHtml).join(' → ') + '</span></li>';
+      }).join('') + '</ul>';
+    }).catch(function() {
+      box.innerHTML = heading + '<p class="text-muted text-small">Связи недоступны: локальный список пайплайнов не загрузился.</p>';
+    });
+  }
+
+  // Тулбар (поиск, фильтры, счётчик, вид, карта) принадлежит только списку агентов.
+  function setAgentListChrome(container, visible) {
+    var controls = container.querySelector('.agent-controls-panel');
+    if (controls) controls.hidden = !visible;
   }
 
   function showAgentList(container) {
+    container._labHeroOverride = null;
     if (window.LabHero && window.LabHero.setView) window.LabHero.setView('ai-agents', null);
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
@@ -1247,6 +1300,7 @@ const PageController = (function() {
     if (detail) detail.hidden = true;
     if (pipelines) pipelines.hidden = true;
     if (list) list.hidden = false;
+    setAgentListChrome(container, true);
   }
 
   function openAgentPipelines(container) {
@@ -2096,20 +2150,21 @@ const PageController = (function() {
         try { agentsUiState.view = localStorage.getItem(AGENT_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { agentsUiState.view = 'cards'; }
         agentsUiState.status = 'all';
         agentsUiState.query = '';
-        var agentsToolbar = '<div class="agent-toolbar-row">' +
+        var agentsToolbar = '<div class="agent-toolbar-row agent-toolbar-row--search">' +
           '<input type="search" class="lab-input agents-search" data-agents-search placeholder="Поиск по ролям…" aria-label="Поиск по агентам">' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-map" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
+          '</div>' +
+          '<div class="agent-toolbar-row agent-toolbar-row--filters">' +
           '<div class="agent-filter-chips" role="group" aria-label="Фильтр по статусу">' +
           '<button type="button" class="pipeline-chip active" data-agent-status="all">Все</button>' +
           '<button type="button" class="pipeline-chip" data-agent-status="active">Активен</button>' +
           '<button type="button" class="pipeline-chip" data-agent-status="dev">В разработке</button>' +
-          '<button type="button" class="pipeline-chip" data-agent-status="stub">Заглушка</button></div></div>' +
-          '<div class="agent-toolbar-row">' +
-          '<span class="pipeline-count" data-agents-count aria-live="polite"></span>' +
+          '<button type="button" class="pipeline-chip" data-agent-status="stub">Заглушка</button></div>' +
           '<div class="agent-toolbar-actions">' +
+          '<span class="pipeline-count" data-agents-count aria-live="polite"></span>' +
           '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'cards' ? ' active' : '') + '" data-agents-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'list' ? ' active' : '') + '" data-agents-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button></div>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
           '</div></div>';
         container.innerHTML = '<section class="agent-controls-panel" aria-label="Управление агентами">' + agentsToolbar + '</section>' +
           '<div class="agent-list-view' + (agentsUiState.view === 'list' ? ' is-list-view' : '') + '">' + renderAgentGroups(agents, agentsUiState).html + '</div>' +
