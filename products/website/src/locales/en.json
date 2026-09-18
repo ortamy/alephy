@@ -535,7 +535,8 @@
       "inputNote": "Enter a word in Hebrew to build the video image.",
       "inputTitle": "Source word",
       "placeholder": "For example: אמת, תורה, שלום",
-      "visualTitle": "Video image"
+      "visualTitle": "Video image",
+      "examplesLabel": "Examples"
     }
   }
 }

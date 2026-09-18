@@ -56,7 +56,9 @@
         metaChips(config.meta) +
       '</div>' +
       // Глиф-чип справа: квадрат hairline, палео-глиф тоном шапки (§5.1).
-      (config.glyph ? '<span class="lab-hero__glyph" aria-hidden="true">' + esc(config.glyph) + '</span>' : '')
+      (config.glyphIcon
+        ? '<span class="lab-hero__glyph" aria-hidden="true"><i data-lucide="' + esc(config.glyphIcon) + '"></i></span>'
+        : (config.glyph ? '<span class="lab-hero__glyph" aria-hidden="true">' + esc(config.glyph) + '</span>' : ''))
     );
   }
 
@@ -149,7 +151,7 @@
       kicker: 'АЛЕФИ · ГЕНЕРАТОРЫ · ВИЗУАЛИЗАЦИЯ',
       title: 'Генератор видео-образов',
       subtitle: 'Визуализируй механику слова: буквы, состояния и переходы в движении.',
-      glyph: '𐤏'
+      glyphIcon: 'clapperboard'
     },
     'board': {
       kicker: 'АЛЕФИ · ИССЛЕДОВАТЕЛЬСКАЯ ДОСКА',
@@ -534,6 +536,7 @@
       subtitleClass: config.subtitleClass || '',
       icon: config.icon || '',
       glyph: config.glyph || '',
+      glyphIcon: config.glyphIcon || '',
       badge: config.badge || null,
       meta: config.meta || []
     });

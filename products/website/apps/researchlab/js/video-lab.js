@@ -226,6 +226,16 @@
 
     if (clearBtn) clearBtn.addEventListener('click', clear);
 
+    // Примеры слов: клик подставляет слово в инпут (без авто-запуска).
+    container.addEventListener('click', function (event) {
+      var target = event.target;
+      var chip = target && target.closest ? target.closest('.vl-example-chip') : null;
+      if (!chip) return;
+      wordInput.value = chip.getAttribute('data-vl-example') || chip.textContent.trim();
+      setStatus('', '');
+      wordInput.focus();
+    });
+
     reset();
   }
 
