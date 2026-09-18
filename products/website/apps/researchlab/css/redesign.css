@@ -365,12 +365,6 @@ body.is-embed .lab-content { margin: 0; }
   box-shadow: none;
   background: var(--surface-hover);
 }
-.pipeline-status-badge,
-.pipeline-loop-badge,
-.pipeline-loop-close {
-  font-family: var(--font-ui);
-}
-
 /* ===== МОБИЛЬНЫЙ РЕЖИМ: сохраняем тач-таргеты 44px
         (стандарт доступности; см. DESIGN-SYSTEM.md «Мобильный режим») ===== */
 @media (max-width: 768px) {
@@ -511,7 +505,8 @@ body.is-embed .lab-content { margin: 0; }
 [data-theme="white"] .lab-btn-secondary,
 [data-theme="white"] .lab-badge,
 [data-theme="white"] .wb-badge,
-[data-theme="white"] .pipeline-status-badge,
+[data-theme="white"] .pipeline-result-chip,
+[data-theme="white"] .pipeline-schedule-chip,
 [data-theme="white"] .rd-card,
 [data-theme="white"] .dw-widget,
 [data-theme="white"] .dw-summary-item,

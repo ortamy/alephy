@@ -1137,7 +1137,29 @@ const PageController = (function() {
     pipelines.hidden = false;
     if (container.id === 'pipelines' && window.LabHero && window.LabHero.setView) window.LabHero.setView('pipelines', null);
     pipelines.innerHTML =
-      '<div class="pipeline-control-panel"><div><div class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span>Проверка сервера…</span></div></div><div class="pipeline-page-actions"><button type="button" class="lab-btn lab-btn-primary pipeline-create-btn" data-pipeline-create>Создать пайплайн</button><button type="button" class="lab-btn lab-btn-secondary" data-pipelines-back>К агентам</button></div></div>' +
+      '<div class="pipeline-control-panel">' +
+        '<div class="pipeline-toolbar-row">' +
+          '<span class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span class="pipeline-server-label">Проверка сервера…</span></span>' +
+          '<input type="search" class="lab-input pl-search" data-pipeline-search placeholder="Поиск по пайплайнам…" aria-label="Поиск по пайплайнам">' +
+          '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+            '<button type="button" class="res-view-btn" data-pipeline-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+            '<button type="button" class="res-view-btn" data-pipeline-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pipeline-toolbar-row">' +
+          '<div class="pipeline-filter-chips" role="group" aria-label="Фильтр по статусу">' +
+            '<button type="button" class="pipeline-chip active" data-pipeline-filter="all">Все</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="ready">Готовые</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="pending">Ожидание</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="loops">Циклы</button>' +
+          '</div>' +
+          '<span class="pipeline-count" data-pipeline-count aria-live="polite"></span>' +
+          '<div class="pipeline-page-actions">' +
+            '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-create-btn" data-pipeline-create><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Создать пайплайн</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-pipelines-back>К агентам</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
       '<div class="agent-pipelines-status lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка локальных пайплайнов…</div></div>';
     pipelines.querySelector('[data-pipelines-back]').addEventListener('click', function() {
       LabRouter.navigate('ai-agents');
@@ -1175,64 +1197,245 @@ const PageController = (function() {
     });
   }
 
+  var PIPELINE_OFFLINE_HINT = 'Сервер агентов отключен — запуск и редактирование недоступны. Запустите: python products/agents/server.py';
+  var PIPELINE_VIEW_KEY = 'alephy-pipelines-view';
+  var pipelinesUiState = { query: '', filter: 'all', view: 'cards', expanded: {}, online: null };
+
   function updatePipelineServerStatus(pipelines, isOnline) {
     var status = pipelines.querySelector('[data-pipeline-server-status]');
     if (!status) return;
+    pipelinesUiState.online = isOnline;
     status.dataset.status = isOnline ? 'online' : 'offline';
-    status.querySelector('span:last-child').textContent = isOnline ? 'Сервер запущен' : 'Сервер отключен';
+    status.querySelector('.pipeline-server-label').textContent = isOnline ? 'Сервер запущен' : 'Сервер отключен';
+    // Offline: действия с сервером muted + причина в тултипе (см. DESIGN-SYSTEM §4.4).
+    pipelines.querySelectorAll('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-create]').forEach(function(control) {
+      control.disabled = !isOnline;
+      control.title = isOnline ? '' : PIPELINE_OFFLINE_HINT;
+      control.setAttribute('aria-disabled', isOnline ? 'false' : 'true');
+    });
+  }
+
+  function pipelineAgentInfo(agentName) {
+    return (agentMapData || []).filter(function(item) { return item.name === agentName; })[0] ||
+      { name: agentName, desc: 'Участник цепочки передачи контекста.', icon: 'paleo/track' };
+  }
+
+  function pipelineKind(pipeline) {
+    return pipeline.type === 'loop' || pipeline.type === 'spiral' ? 'loops' : 'linear';
+  }
+
+  function pipelineScheduleChip(pipeline) {
+    if (pipeline.type === 'loop') return '<span class="pipeline-schedule-chip" title="Цикл: обратная связь до сходимости">Цикл</span>';
+    if (pipeline.type === 'spiral') return '<span class="pipeline-schedule-chip" title="Спираль: каждый виток расширяет горизонт (Хук Свива)">Спираль</span>';
+    return '';
+  }
+
+  function pipelineResultChip(result) {
+    return '<span class="pipeline-result-chip" data-pipeline-run-status data-status="' + (result ? 'done' : 'pending') + '"><span class="pipeline-result-dot" aria-hidden="true"></span><span class="pipeline-result-label">' + (result ? 'Готов' : 'Ожидание') + '</span></span>';
+  }
+
+  function pipelineChain(pipeline) {
+    return (pipeline.agents || []).map(function(agentName, index) {
+      return (index ? '<span class="pipeline-chain-arrow" aria-hidden="true">→</span>' : '') +
+        '<span class="pipeline-chain-chip" title="' + escapeHtml(pipelineAgentInfo(agentName).desc) + '">' + escapeHtml(agentName) + '</span>';
+    }).join('');
+  }
+
+  var PIPELINE_AGENT_ICONS = {
+    'Оркестратор': 'git-branch',
+    'Исследователь': 'microscope',
+    'Разоблачитель': 'eye',
+    'Сборщик': 'package',
+    'Критик': 'scale',
+    'Семитолог': 'book-open',
+    'Компаратор': 'git-compare',
+    'Редактор': 'pen-line',
+    'Переводчик палео-иврита': 'languages',
+    'Фронтенд-разработчик': 'code',
+    'AI-инженер': 'cpu',
+    'Проверяющий': 'shield-check',
+    'Технический писатель': 'file-text',
+    'Ревьюер кода': 'scan-search',
+    'Архитектор потока': 'workflow',
+    'Связной': 'link'
+  };
+
+  function pipelineAgentIcon(agentName) {
+    return PIPELINE_AGENT_ICONS[agentName] || 'circle-dot';
+  }
+
+  function pipelineDiagram(pipeline) {
+    var nodes = (pipeline.agents || []).map(function(agentName, index) {
+      return (index ? '<span class="pipeline-diagram-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>' : '') +
+        '<span class="pipeline-diagram-node" data-agent-name="' + escapeHtml(agentName) + '" data-status="pending">' +
+          '<span class="pipeline-diagram-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agentName) + '"></i></span>' +
+          '<span class="pipeline-diagram-dot" aria-hidden="true"></span>' +
+          '<span class="pipeline-diagram-label">' + escapeHtml(agentName) + '</span>' +
+        '</span>';
+    }).join('');
+    return '<div class="pipeline-diagram" data-pipeline-diagram hidden><div class="pipeline-diagram-inner">' + nodes +
+      (pipelineKind(pipeline) === 'loops' ? '<span class="pipeline-diagram-arrow pipeline-diagram-loop" title="Возврат в начало витка" aria-hidden="true"><i data-lucide="rotate-ccw"></i></span>' : '') +
+      '</div></div>';
   }
 
   function renderAgentPipelines(container, pipelines, data, results) {
-    var cards = (Array.isArray(data) ? data : []).map(function(pipeline) {
+    var list = (Array.isArray(data) ? data : []);
+    try { pipelinesUiState.view = localStorage.getItem(PIPELINE_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { pipelinesUiState.view = 'cards'; }
+
+    function entryState(pipeline) {
+      return findPipelineResult(results, pipeline.id) ? 'ready' : 'pending';
+    }
+
+    function matchesFilters(pipeline) {
+      var query = pipelinesUiState.query.trim().toLowerCase();
+      var matchesQuery = !query ||
+        (pipeline.name || '').toLowerCase().indexOf(query) !== -1 ||
+        (pipeline.description || '').toLowerCase().indexOf(query) !== -1 ||
+        (pipeline.agents || []).join(' ').toLowerCase().indexOf(query) !== -1;
+      var filter = pipelinesUiState.filter;
+      var matchesFilter = filter === 'all' ||
+        (filter === 'loops' ? pipelineKind(pipeline) === 'loops' : entryState(pipeline) === filter);
+      return matchesQuery && matchesFilter;
+    }
+
+    function cardHtml(pipeline) {
       var result = findPipelineResult(results, pipeline.id);
-      var agents = (pipeline.agents || []).map(function(agentName, agentIndex) {
-        var agent = (agentMapData || []).filter(function(item) { return item.name === agentName; })[0] || { name: agentName, desc: 'Участник цепочки передачи контекста.', icon: 'paleo/track' };
-        return (agentIndex ? '<span class="pipeline-flow-arrow" aria-hidden="true">→</span>' : '') + '<li class="pipeline-timeline-step" tabindex="0" title="' + escapeHtml(agent.desc) + '" data-agent-name="' + escapeHtml(agent.name) + '" data-status="pending"><img src="assets/icons/32/' + escapeHtml(agent.icon) + '.png" alt=""><span class="pipeline-status-dot" aria-hidden="true"></span><div><strong>' + escapeHtml(agent.name) + '</strong><small>' + escapeHtml(agent.desc) + '</small></div></li>';
-      }).join('');
-      var isLoop = pipeline.type === 'loop' || pipeline.type === 'spiral';
-      var loopBadge = isLoop ? '<span class="pipeline-loop-badge" title="' + (pipeline.type === 'spiral' ? 'Спираль: каждый виток расширяет горизонт (Хук Свива)' : 'Цикл: обратная связь до сходимости') + '">' + (pipeline.type === 'spiral' ? '↺ спираль' : '↺ цикл') + '</span>' : '';
-      var loopClose = isLoop ? '<li class="pipeline-loop-close" title="Возврат в начало витка">↺ в начало</li>' : '';
-      var resultButton = '<button type="button" class="lab-btn lab-btn-secondary pipeline-view-btn" data-pipeline-details>Открыть результат</button>';
-      return '<article class="agent-pipeline-card" data-pipeline-id="' + escapeHtml(pipeline.id) + '"><div class="pipeline-card-head"><div class="pipeline-card-title"><img src="assets/icons/32/paleo/track.png" alt=""><h3>' + escapeHtml(pipeline.name) + '</h3>' + loopBadge + '<span class="pipeline-status-badge" data-pipeline-run-status data-status="' + (result ? 'done' : 'pending') + '">' + (result ? 'Готовый результат' : 'Ожидание запуска') + '</span></div><div class="agent-pipeline-actions"><button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн">✎</button><button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн">✕</button></div></div><p class="agent-pipeline-route">' + escapeHtml(pipeline.description || 'Цепочка передачи контекста') + '</p><ol class="pipeline-timeline" aria-label="Этапы пайплайна">' + agents + loopClose + '</ol><div class="pipeline-card-buttons"><button type="button" class="lab-btn lab-btn-primary pipeline-run-btn" data-pipeline-run>Запустить локально</button>' + resultButton + '<button type="button" class="lab-btn lab-btn-secondary pipeline-detail-btn" data-pipeline-details>Подробнее</button></div></article>';
-    }).join('');
-    pipelines.querySelector('.agent-pipelines-status').outerHTML = '<div class="agent-pipelines-grid">' + (cards || '<div class="lab-alert lab-alert-info">Пайплайны пока не созданы.</div>') + '</div>';
+      var expanded = !!pipelinesUiState.expanded[pipeline.id];
+      return '<article class="agent-pipeline-card" data-pipeline-id="' + escapeHtml(pipeline.id) + '">' +
+        '<div class="pipeline-card-head">' +
+          '<span class="pipeline-glyph-chip" aria-hidden="true"><i data-lucide="workflow"></i></span>' +
+          '<h3 title="' + escapeHtml(pipeline.description || pipeline.name) + '">' + escapeHtml(pipeline.name) + '</h3>' +
+          pipelineResultChip(result) + pipelineScheduleChip(pipeline) +
+          '<span class="pipeline-card-actions">' +
+            '<button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн" title="Редактировать"><i data-lucide="pencil"></i></button>' +
+            '<button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн" title="Удалить"><i data-lucide="trash-2"></i></button>' +
+          '</span>' +
+        '</div>' +
+        '<div class="pipeline-chain" aria-label="Цепочка агентов">' + pipelineChain(pipeline) + '</div>' +
+        '<div class="pipeline-card-buttons">' +
+          '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-run-btn" data-pipeline-run>Запустить</button>' +
+          '<button type="button" class="pipeline-result-link" data-pipeline-open-detail>Результат</button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-toggle-diagram aria-expanded="' + expanded + '" aria-label="Подробнее: диаграмма цепочки" title="Подробнее"><i data-lucide="info"></i></button>' +
+        '</div>' +
+        pipelineDiagram(pipeline) +
+      '</article>';
+    }
+
+    function rowHtml(pipeline) {
+      return '<div class="pipeline-list-row" data-pipeline-id="' + escapeHtml(pipeline.id) + '">' +
+        '<span class="pipeline-glyph-chip" aria-hidden="true"><i data-lucide="workflow"></i></span>' +
+        '<span class="pipeline-list-name" title="' + escapeHtml(pipeline.name) + '">' + escapeHtml(pipeline.name) + '</span>' +
+        '<span class="pipeline-list-chain" title="' + escapeHtml((pipeline.agents || []).join(' → ')) + '">' + escapeHtml((pipeline.agents || []).join(' → ')) + '</span>' +
+        pipelineResultChip(findPipelineResult(results, pipeline.id)) +
+        '<span class="pipeline-card-actions">' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-run aria-label="Запустить пайплайн" title="Запустить"><i data-lucide="play"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-open-detail aria-label="Открыть результат" title="Результат"><i data-lucide="file-text"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн" title="Редактировать"><i data-lucide="pencil"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн" title="Удалить"><i data-lucide="trash-2"></i></button>' +
+        '</span>' +
+      '</div>';
+    }
+    function groupSection(key, label, items, renderItem) {
+      if (!items.length) return '';
+      return '<section class="pipeline-group" data-pipeline-group="' + key + '">' +
+        '<header class="pipeline-group-head"><h2>' + label + '</h2><span class="pipeline-group-badge">' + items.length + '</span></header>' +
+        '<div class="' + (pipelinesUiState.view === 'list' ? 'pipeline-list-rows' : 'agent-pipelines-grid') + '">' + items.map(renderItem).join('') + '</div>' +
+      '</section>';
+    }
+
+    function renderList() {
+      var visible = list.filter(matchesFilters);
+      var renderItem = pipelinesUiState.view === 'list' ? rowHtml : cardHtml;
+      var groups;
+      if (pipelinesUiState.filter === 'all' && !pipelinesUiState.query.trim()) {
+        var linear = function(p) { return pipelineKind(p) === 'linear'; };
+        groups = groupSection('ready', 'Готовые', visible.filter(function(p) { return entryState(p) === 'ready' && linear(p); }), renderItem) +
+          groupSection('pending', 'Ожидание запуска', visible.filter(function(p) { return entryState(p) === 'pending' && linear(p); }), renderItem) +
+          groupSection('loops', 'Циклы и спирали', visible.filter(function(p) { return pipelineKind(p) === 'loops'; }), renderItem);
+      } else {
+        groups = groupSection('filtered', 'Найденные', visible, renderItem);
+      }
+      pipelines.querySelector('[data-pipeline-list]').innerHTML = groups ||
+        '<div class="lab-alert lab-alert-info">По текущему фильтру пайплайнов нет.</div>';
+      var counter = pipelines.querySelector('[data-pipeline-count]');
+      if (counter) counter.innerHTML = '<strong>' + visible.length + '</strong> из ' + list.length;
+      pipelines.querySelectorAll('[data-pipeline-view]').forEach(function(button) {
+        button.classList.toggle('active', button.dataset.pipelineView === pipelinesUiState.view);
+      });
+      if (window.LabIcons && typeof window.LabIcons.sync === 'function') window.LabIcons.sync();
+      // После перерисовки списка повторно применяем offline-состояние к новым кнопкам.
+      if (pipelinesUiState.online !== null) updatePipelineServerStatus(pipelines, pipelinesUiState.online);
+    }
+
+    pipelines.querySelector('.agent-pipelines-status').outerHTML = '<div data-pipeline-list></div>';
+    pipelines.querySelector('[data-pipeline-search]').value = pipelinesUiState.query;
+    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
+      chip.classList.toggle('active', chip.dataset.pipelineFilter === pipelinesUiState.filter);
+    });
+
+    renderList();
+
     pipelines.querySelector('[data-pipeline-create]').addEventListener('click', function() { openPipelineModal(container, pipelines, null); });
-    pipelines.querySelectorAll('[data-pipeline-edit]').forEach(function(button) {
-      button.addEventListener('click', function() { openPipelineModal(container, pipelines, findPipeline(data, this.closest('[data-pipeline-id]').dataset.pipelineId)); });
+    pipelines.querySelector('[data-pipeline-search]').addEventListener('input', function() {
+      pipelinesUiState.query = this.value;
+      renderList();
     });
-    pipelines.querySelectorAll('[data-pipeline-delete]').forEach(function(button) {
-      button.addEventListener('click', function() { deletePipeline(container, pipelines, data, this.closest('[data-pipeline-id]').dataset.pipelineId); });
+    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        pipelinesUiState.filter = chip.dataset.pipelineFilter;
+        pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(other) { other.classList.toggle('active', other === chip); });
+        renderList();
+      });
     });
-    pipelines.querySelectorAll('[data-pipeline-run]').forEach(function(button) {
-      button.addEventListener('click', function() { runPipeline(this.closest('[data-pipeline-id]'), findPipeline(data, this.closest('[data-pipeline-id]').dataset.pipelineId)); });
+    pipelines.querySelectorAll('[data-pipeline-view]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        pipelinesUiState.view = button.dataset.pipelineView;
+        try { localStorage.setItem(PIPELINE_VIEW_KEY, pipelinesUiState.view); } catch (error) { /* приватный режим */ }
+        renderList();
+      });
     });
-    pipelines.querySelectorAll('[data-pipeline-details]').forEach(function(button) {
-      button.addEventListener('click', function() { LabRouter.navigate('pipelines', [this.closest('[data-pipeline-id]').dataset.pipelineId]); });
+    // Делегирование: список перерисовывается фильтрами, поэтому слушатель один на хосте.
+    pipelines.querySelector('[data-pipeline-list]').addEventListener('click', function(event) {
+      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail], [data-pipeline-toggle-diagram]');
+      if (!target || target.disabled) return;
+      var card = target.closest('[data-pipeline-id]');
+      if (!card) return;
+      var id = card.dataset.pipelineId;
+      if (target.hasAttribute('data-pipeline-edit')) { openPipelineModal(container, pipelines, findPipeline(list, id)); return; }
+      if (target.hasAttribute('data-pipeline-delete')) { deletePipeline(container, pipelines, list, id); return; }
+      if (target.hasAttribute('data-pipeline-run')) { runPipeline(card, findPipeline(list, id)); return; }
+      if (target.hasAttribute('data-pipeline-open-detail')) { LabRouter.navigate('pipelines', [id]); return; }
+      if (target.hasAttribute('data-pipeline-toggle-diagram')) {
+        var diagram = card.querySelector('[data-pipeline-diagram]');
+        if (!diagram) return;
+        pipelinesUiState.expanded[id] = diagram.hidden;
+        diagram.hidden = !diagram.hidden;
+        target.setAttribute('aria-expanded', diagram.hidden ? 'false' : 'true');
+      }
     });
   }
 
+  function setPipelineRunStatus(statusEl, status, label) {
+    if (!statusEl) return;
+    statusEl.dataset.status = status;
+    var labelEl = statusEl.querySelector('.pipeline-result-label');
+    if (labelEl) labelEl.textContent = label;
+  }
+
   function runPipeline(card, pipeline) {
-    var steps = Array.prototype.slice.call(card.querySelectorAll('.pipeline-timeline-step'));
     var status = card.querySelector('[data-pipeline-run-status]');
     var button = card.querySelector('[data-pipeline-run]');
-    if (!steps.length || !pipeline || button.disabled) return;
+    if (!pipeline || !button || button.disabled) return;
     button.disabled = true;
-    steps.forEach(function(step) { step.dataset.status = 'pending'; });
-    status.textContent = 'Запуск локальной цепочки…';
-    status.dataset.status = 'running';
+    setPipelineRunStatus(status, 'running', 'Запуск…');
     fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: pipeline.defaultQuery || '' }) }).then(function(response) {
       if (!response.ok) return response.json().then(function(error) { throw new Error(error.error || 'HTTP ' + response.status); });
       return response.json();
-    }).then(function(result) {
-      var trace = result.trace || [];
-      steps.forEach(function(step, index) { step.dataset.status = trace[index] ? 'done' : 'pending'; });
-      status.textContent = 'Готово';
-      status.dataset.status = 'done';
+    }).then(function() {
+      setPipelineRunStatus(status, 'done', 'Готов');
       LabRouter.navigate('pipelines', [pipeline.id]);
     }).catch(function(error) {
-      steps.forEach(function(step) { step.dataset.status = 'error'; });
-      status.textContent = isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка запуска';
-      status.dataset.status = 'error';
+      setPipelineRunStatus(status, 'error', isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка запуска');
       alert(isAgentServerUnavailable(error) ? 'Сервер AI-Агентов отключен. Готовые результаты доступны в карточках.' : 'Не удалось запустить пайплайн: ' + error.message);
     }).then(function() {
       button.disabled = false;
