@@ -319,3 +319,4 @@ const EtyLab = (function() {
 })();
 
 window.EtymologyLab = EtyLab;
+window.EtyLab = EtyLab;

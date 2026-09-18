@@ -2,62 +2,49 @@
   <header class="section-hero">
     <div class="section-hero-watermark" aria-hidden="true">𐤀 𐤁 𐤂 𐤃 𐤄 𐤅</div>
     <div class="section-hero-kicker">АЛЕФИ · ПАЛЕО-КОНСТРУКТОР</div>
-    <h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="gc-header-icon" alt="">Палео-конструктор</h1>
+    <h1 id="paleo-builder-title">Палео-конструктор</h1>
     <p class="section-hero-lead">Соберите слово как последовательность образов и действий.</p>
   </header>
 
   <div class="paleo-builder-layout">
-    <section class="letter-palette lab-card" aria-labelledby="letter-palette-title">
-      <div class="zone-heading">
-        <div>
-          <span class="zone-index">01</span>
-          <h2 id="letter-palette-title">Палео-буквы</h2>
-        </div>
+    <section class="letter-palette" aria-labelledby="letter-palette-title">
+      <header class="zone-heading">
+        <h2 id="letter-palette-title">Палео-буквы</h2>
         <span class="zone-count">22</span>
-      </div>
-      <p class="zone-note">Перетащите знак в рабочее поле или выберите его нажатием.</p>
+      </header>
+      <p class="zone-note">Нажмите на знак или перетащите его в поле сборки.</p>
       <div class="palette-grid" data-paleo-palette></div>
     </section>
 
-    <section class="workspace lab-card" data-paleo-workspace aria-labelledby="workspace-title">
-      <div class="zone-heading">
-        <div>
-          <span class="zone-index">02</span>
-          <h2 id="workspace-title">Рабочее поле</h2>
-        </div>
-        <span class="workspace-count" data-workspace-count>0</span>
-      </div>
+    <section class="assembly-panel" data-paleo-workspace aria-labelledby="assembly-title">
+      <header class="zone-heading">
+        <h2 id="assembly-title">Сборка</h2>
+        <span class="workspace-count" data-workspace-count aria-label="знаков в слове">0</span>
+      </header>
+
       <div class="workspace-drop" data-drop-zone tabindex="0" role="list" aria-label="Собираемое слово">
         <div class="workspace-empty" data-workspace-empty>
           <span class="drop-glyph" aria-hidden="true">𐤕</span>
           <strong>Поле ждёт первый знак</strong>
-          <span>Перетащите сюда букву из палитры.</span>
+          <span>Нажмите букву в палитре или перетащите её сюда.</span>
         </div>
         <div class="workspace-letters" data-workspace-letters></div>
       </div>
       <p class="drop-status" data-drop-status aria-live="polite">Готово к сборке.</p>
-    </section>
 
-    <aside class="assembly-panel lab-card" aria-labelledby="assembly-title">
-      <div class="zone-heading">
-        <div>
-          <span class="zone-index">03</span>
-          <h2 id="assembly-title">Сборка</h2>
-        </div>
-      </div>
-      <div class="assembly-word" data-assembly-word dir="rtl" aria-live="polite">—</div>
-      <div class="assembly-paleo" data-assembly-paleo aria-live="polite">Поле пусто</div>
-      <div class="assembly-breakdown" data-assembly-breakdown>
-        <p class="assembly-placeholder">Побуквенный разбор появится здесь.</p>
-      </div>
+      <p class="assembly-summary" data-assembly-summary aria-live="polite">Поле пусто</p>
+
       <div class="assembly-actions">
         <button type="button" class="lab-btn lab-btn-primary" data-action="check">
-          <img src="assets/icons/32/ui/book.png" width="16" height="16" alt="">Проверить в словаре
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V7"/><path d="m16 12 2 2 4-4"/><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"/></svg>
+          <span>Проверить в словаре</span>
         </button>
-        <button type="button" class="lab-btn lab-btn-secondary" data-action="remove">Удалить последнюю</button>
-        <button type="button" class="lab-btn lab-btn-danger" data-action="clear">Очистить поле</button>
+        <button type="button" class="lab-btn lab-btn-secondary assembly-clear" data-action="clear" aria-label="Очистить сборку" title="Очистить сборку">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+        </button>
       </div>
+
       <div class="dictionary-result" data-dictionary-result aria-live="polite"></div>
-    </aside>
+    </section>
   </div>
 </section>

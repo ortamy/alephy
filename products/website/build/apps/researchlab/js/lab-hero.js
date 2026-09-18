@@ -9,6 +9,23 @@
     });
   }
 
+  // Делегирует перевод window.AlephyI18n.t() с русским резервом:
+  // для ru dict пуст (файл не грузится — ноль запросов, ноль мигания),
+  // для en/he t() вернёт перевод из словаря или русский fallback.
+  function i18nText(key, fallback) {
+    var api = window.AlephyI18n;
+    return (api && typeof api.t === 'function' && key) ? api.t(key, fallback) : fallback;
+  }
+
+  // Translate static registry fields before merging dynamic research titles.
+  function resolveConfig(route, config) {
+    var result = Object.assign({}, config);
+    ['kicker', 'title', 'subtitle'].forEach(function(field) {
+      if (config[field]) result[field] = i18nText('lab.hero.' + route.replace(/\//g, '.') + '.' + field, config[field]);
+    });
+    return result;
+  }
+
   function metaChips(chips) {
     if (!chips || !chips.length) return '';
     return '<div class="lab-hero__meta">' + chips.map(function (c) {
@@ -172,7 +189,7 @@
       icon: 'ui/link.png'
     },
     'word-analyzer': {
-      kicker: 'АЛЕФИ · РАЗБОР СЛОВ',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Разбор слов',
       subtitle: 'Переход от формы слова к корню, образу и карте смысловых сдвигов.',
       icon: 'archaeology/testtube.png'
@@ -268,7 +285,7 @@
       icon: 'paleo/track.png'
     },
     'linguistic-tensor': {
-      kicker: 'АЛЕФИ · ЛИНГВИСТИЧЕСКИЙ ТЕНЗОР',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Лингвистический тензор',
       subtitle: 'Сопоставьте два языка и посмотрите, где их поток удерживает действие, корень и физику образа.',
       icon: 'archaeology/testtube.png'
@@ -298,10 +315,34 @@
       icon: 'paleo/track.png'
     },
     'analyzers': {
-      kicker: 'ALEPHY · RESEARCH LAB',
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
       title: 'Анализаторы',
       subtitle: 'Вертикальные инструменты для диагностики текста: увидеть слой, проверить смысловой сдвиг и найти слова, которые требуют палео-восстановления.',
       icon: 'archaeology/testtube.png'
+    },
+    'layer-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Слой-анализ',
+      subtitle: 'Измерьте присутствие восьми слоёв и найдите доминирующий сдвиг.',
+      icon: 'ui/map.png'
+    },
+    'ai-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'ИИ-анализ',
+      subtitle: 'Получите смысловую интерпретацию с прозрачным выбором режима и модели.',
+      icon: 'crafts/hammer-and-chisel.png'
+    },
+    'dialect-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Диалект-анализ',
+      subtitle: 'Найдите грецизмы и латинизмы и соберите карту возможных замен.',
+      icon: 'scribe/scroll.png'
+    },
+    'state-analyzer': {
+      kicker: 'АЛЕФИ · АНАЛИЗАТОРЫ',
+      title: 'Анализатор состояний',
+      subtitle: 'Выберите состояние потока и получите связанный псалом с краткой диагностикой.',
+      icon: 'paleo/track.png'
     }
   };
     /* Внутренние экраны модулей: '<moduleId>/<view>' → шапка экрана.
@@ -400,6 +441,7 @@
     'researches/detail': {}
   };
 
+  var activeViews = {};
   var observedContainers = [];
   var documentObserver = null;
   var scheduled = false;
@@ -411,14 +453,15 @@
     return element;
   }
 
-  // Для модулей без статической записи шапка собирается по подписи сайдбара.
+  // Для модулей без статической записи шапка не маскируется под route-id.
   function fallbackConfig(moduleId) {
-    var navItem = document.querySelector('.sidebar-item[data-module="' + moduleId + '"]');
-    var title = navItem ? navItem.textContent.trim().replace(/\s+/g, ' ') : moduleId.replace(/[-_]+/g, ' ');
+    if (typeof console !== 'undefined' && console.error) {
+      console.error('[LabHero] нет TARGETS для маршрута «' + moduleId + '»');
+    }
     return {
-      kicker: 'АЛЕФИ',
-      title: title,
-      subtitle: ''
+      kicker: 'АЛЕФИ · ОШИБКА ШАПКИ',
+      title: 'Нет записи шапки',
+      subtitle: 'Маршрут «' + moduleId + '» не зарегистрирован в LabHero.TARGETS.'
     };
   }
 
@@ -455,7 +498,7 @@
 
   function mount(container) {
     if (!container || !container.id || !TARGETS[container.id]) return;
-    ensureHero(container, container.id, TARGETS[container.id]);
+    ensureHero(container, container.id, resolveConfig(container.id, TARGETS[container.id]));
   }
 
   /* Подмена шапки под внутренний экран модуля (вызывается после рендера экрана).
@@ -465,7 +508,10 @@
     var base = TARGETS[moduleId] || fallbackConfig(moduleId);
     var container = document.getElementById(moduleId);
     if (!container) return;
-    var config = Object.assign({}, base, (viewId && VIEWS[moduleId + '/' + viewId]) || {}, override || {});
+    var viewRoute = moduleId + '/' + viewId;
+    var config = Object.assign({}, resolveConfig(moduleId, base),
+      resolveConfig('views/' + viewRoute, (viewId && VIEWS[viewRoute]) || {}), override || {});
+    activeViews[moduleId] = { viewId: viewId, override: override };
     var hero = ensureHero(container, moduleId, config);
     // Учитываем всю визуальную конфигурацию: старый hero мог остаться в DOM
     // после hot reload, если совпадали только title и subtitle.
@@ -491,8 +537,18 @@
   /* Единый источник подписей для шапки и хлебных крошек. */
   function getTitle(route) {
     var config = TARGETS[route] || VIEWS[route];
-    return config && config.title ? config.title : '';
+    return config && config.title ? resolveConfig(TARGETS[route] ? route : 'views/' + route, config).title : '';
   }
+
+  // Locale loading may finish after the first module render; keep dynamic overrides.
+  document.addEventListener('alephy:langchange', function() {
+    Object.keys(TARGETS).forEach(function(moduleId) {
+      var container = document.getElementById(moduleId);
+      if (!container || !findHero(container, moduleId)) return;
+      var view = activeViews[moduleId] || {};
+      setView(moduleId, view.viewId || null, view.override);
+    });
+  });
 
   function scan() {
     var root = document.querySelector(ROOT_SELECTOR) || document.body;

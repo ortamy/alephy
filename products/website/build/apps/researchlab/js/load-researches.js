@@ -8,8 +8,29 @@ const LoadResearches = (function() {
   'use strict';
 
   var STORAGE_KEY = 'alephy_exposure_drafts';
-  var state = { query: '', category: 'all', confidence: 'all', activeSlug: '' };
+  var VIEW_STORAGE_KEY = 'alephy_researches_view';
+  var STATUS_DOTS = {
+    verified: 'Проверено',
+    'needs-review': 'Требует проверки',
+    hypothesis: 'Гипотеза',
+    disputed: 'Спорно'
+  };
+  var CONF_ORDER = { verified: 0, 'needs-review': 1, hypothesis: 2, disputed: 3 };
+  var state = { query: '', category: 'all', confidence: 'all', activeSlug: '', view: 'cards', sort: 'date' };
   var items = [];
+
+  function readView() {
+    try {
+      var view = localStorage.getItem(VIEW_STORAGE_KEY);
+      return view === 'list' ? 'list' : 'cards';
+    } catch (e) {
+      return 'cards';
+    }
+  }
+
+  function saveView(view) {
+    try { localStorage.setItem(VIEW_STORAGE_KEY, view); } catch (e) { /* приватный режим */ }
+  }
 
   function escapeHtml(text) {
     var d = document.createElement('div');
@@ -190,11 +211,15 @@ const LoadResearches = (function() {
   }
 
   function render(container, parsed) {
+    state.view = readView();
+    state.sort = 'date';
     state.activeSlug = (parsed && parsed.segments && parsed.segments[1] === 'case') ? decodeURIComponent(parsed.segments[2] || '') : '';
     if (parsed && parsed.params) {
       if (parsed.params.q != null) state.query = parsed.params.q;
       if (parsed.params.category) state.category = parsed.params.category;
       if (parsed.params.confidence) state.confidence = parsed.params.confidence;
+      if (parsed.params.view === 'list' || parsed.params.view === 'cards') state.view = parsed.params.view;
+      if (['date', 'title', 'status'].indexOf(parsed.params.sort) !== -1) state.sort = parsed.params.sort;
     }
 
     if (items.length) {
@@ -253,15 +278,106 @@ const LoadResearches = (function() {
     if (state.query) params.push('q=' + encodeURIComponent(state.query));
     if (state.category !== 'all') params.push('category=' + encodeURIComponent(state.category));
     if (state.confidence !== 'all') params.push('confidence=' + encodeURIComponent(state.confidence));
+    if (state.view !== 'cards') params.push('view=' + state.view);
+    if (state.sort !== 'date') params.push('sort=' + state.sort);
     var hash = '#researches' + (params.length ? '?' + params.join('&') : '');
     history.replaceState(null, '', hash);
   }
 
-  function renderCards(list) {
-    if (!list.length) return '<div class="lab-alert lab-alert-info">Ничего не найдено.</div>';
-    return '<div class="exposure-grid">' +
-      list.map(function(item, i) { return ExposureCase.renderCard(item).replace('<article class="exposure-card">', '<article class="exposure-card reveal" style="--i:' + i + '">'); }).join('') +
+  // ===== Компактный архив: статус-точки, карточки, строки =====
+
+  function confKey(item) {
+    return STATUS_DOTS[item && item.confidence] ? item.confidence : 'needs-review';
+  }
+
+  function fmtDate(value) {
+    return String(value || '').slice(0, 10);
+  }
+
+  function getTermsLite(item) {
+    var values = [];
+    ['keyTerms', 'terms', 'tags', 'roots'].forEach(function(key) {
+      var value = item && item[key];
+      if (Array.isArray(value)) values = values.concat(value);
+      else if (value) values.push(value);
+    });
+    if (item && item.hebrewKeyword) values.push(item.hebrewKeyword);
+    return values.map(function(v) { return typeof v === 'object' ? (v.term || v.root || v.name || '') : String(v); })
+      .filter(Boolean)
+      .filter(function(v, i, list) { return list.indexOf(v) === i; })
+      .slice(0, 3);
+  }
+
+  function getSummaryLite(item) {
+    var sections = item && item.sections || {};
+    var content = Array.isArray(sections.content) ? sections.content : [];
+    var source = item.summary || sections.thesis || (content[0] && content[0].body) || '';
+    return String(source).replace(/!\[[^\]]*\]\([^)]*\)/g, '').replace(/[#*_>`~-]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function sortList(list) {
+    var copy = list.slice();
+    if (state.sort === 'title') {
+      copy.sort(function(a, b) { return String(a.title || '').localeCompare(String(b.title || ''), 'ru'); });
+    } else if (state.sort === 'status') {
+      copy.sort(function(a, b) {
+        var d = CONF_ORDER[confKey(a)] - CONF_ORDER[confKey(b)];
+        return d !== 0 ? d : String(a.title || '').localeCompare(String(b.title || ''), 'ru');
+      });
+    } else {
+      copy.sort(function(a, b) {
+        return String(b.updatedAt || b.createdAt || '').localeCompare(String(a.updatedAt || a.createdAt || ''));
+      });
+    }
+    return copy;
+  }
+
+  function dotHtml(item) {
+    var key = confKey(item);
+    var label = STATUS_DOTS[key];
+    return '<span class="res-dot res-dot-' + key + '" title="' + label + '" aria-label="Статус: ' + label + '"></span>';
+  }
+
+  function renderArchiveCard(item) {
+    var terms = getTermsLite(item);
+    return '<a class="exposure-card res-card" href="#researches/case/' + encodeURIComponent(item.slug) + '" data-slug="' + escapeHtml(item.slug) + '">' +
+      '<div class="res-card-top">' +
+        dotHtml(item) +
+        (item.category ? '<span class="res-card-cat">' + escapeHtml(item.category) + '</span>' : '') +
+        '<span class="res-card-date">' + escapeHtml(fmtDate(item.updatedAt || item.createdAt)) + '</span>' +
+      '</div>' +
+      '<div class="res-card-title">' + escapeHtml(item.title || '') + '</div>' +
+      '<div class="res-card-summary">' + escapeHtml(getSummaryLite(item)) + '</div>' +
+      (terms.length ? '<div class="res-card-terms">' + terms.map(function(t) {
+        return '<span class="res-card-term">' + escapeHtml(t) + '</span>';
+      }).join('') + '</div>' : '') +
+    '</a>';
+  }
+
+  function renderArchiveRow(item) {
+    return '<a class="res-row" href="#researches/case/' + encodeURIComponent(item.slug) + '" data-slug="' + escapeHtml(item.slug) + '">' +
+      dotHtml(item) +
+      '<span class="res-row-title">' + escapeHtml(item.title || '') + '</span>' +
+      '<span class="res-row-cat">' + escapeHtml(item.category || '') + '</span>' +
+      '<span class="res-row-date">' + escapeHtml(fmtDate(item.updatedAt || item.createdAt)) + '</span>' +
+    '</a>';
+  }
+
+  function renderResults(list) {
+    if (!list.length) {
+      return '<div class="res-empty">' +
+        '<span class="res-empty-glyph" aria-hidden="true">𐤀</span>' +
+        '<p class="res-empty-text">Ничего не найдено по текущим фильтрам.</p>' +
+        '<button type="button" class="lab-btn lab-btn-secondary" id="researches-reset">Сбросить фильтры</button>' +
       '</div>';
+    }
+    var sorted = sortList(list);
+    if (state.view === 'list') {
+      return '<div class="res-list">' + sorted.map(renderArchiveRow).join('') + '</div>';
+    }
+    return '<div class="exposure-grid">' + sorted.map(function(item) {
+      return renderArchiveCard(item).replace('<a class="exposure-card res-card"', '<a class="exposure-card res-card reveal"');
+    }).join('') + '</div>';
   }
 
   function itemIndex() {
@@ -287,16 +403,30 @@ const LoadResearches = (function() {
     }).join('');
     var filtered = getFiltered();
 
-    container.innerHTML = '<div class="research-controls exposure-filters">' +
-      '<label class="research-search-label">Поиск<input id="researches-search" class="lab-input" type="search" placeholder="Название, тема, тег или категория" value="' + escapeHtml(state.query) + '"></label>' +
-      '<label>Категория<select id="researches-category" class="lab-input"><option value="all">Все категории</option>' + options + '</select></label>' +
-      '<button type="button" class="lab-btn lab-btn-primary exposure-new-btn" id="researches-new-btn">Новое дело</button>' +
+    var sortLabels = { date: 'По дате', title: 'По названию', status: 'По статусу' };
+    var sortOptions = ['date', 'title', 'status'].map(function(key) {
+      return '<option value="' + key + '"' + (state.sort === key ? ' selected' : '') + '>' + sortLabels[key] + '</option>';
+    }).join('');
+
+    container.innerHTML = '<div class="res-toolbar">' +
+      '<div class="res-toolbar-row">' +
+        '<input id="researches-search" class="lab-input res-search" type="search" placeholder="Поиск по делам…" aria-label="Поиск по делам" value="' + escapeHtml(state.query) + '">' +
+        '<select id="researches-category" class="lab-input res-select" aria-label="Категория"><option value="all">Все категории</option>' + options + '</select>' +
+        '<button type="button" class="lab-btn lab-btn-primary res-new-btn" id="researches-new-btn"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Дело</button>' +
       '</div>' +
-      '<div class="research-confidence-bar">' +
-      renderConfidenceChips() +
-      '<div class="research-meta"><strong>' + filtered.length + ' из ' + items.length + '</strong></div>' +
+      '<div class="res-toolbar-row res-toolbar-row--secondary">' +
+        renderConfidenceChips() +
+        '<div class="res-toolbar-right">' +
+          '<span class="research-meta"><strong>' + filtered.length + ' из ' + items.length + '</strong></span>' +
+          '<select id="researches-sort" class="lab-input res-select res-select--sort" aria-label="Сортировка">' + sortOptions + '</select>' +
+          '<div class="res-view-toggle" role="group" aria-label="Вид каталога">' +
+            '<button type="button" class="res-view-btn' + (state.view === 'cards' ? ' active' : '') + '" data-view="cards" aria-label="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+            '<button type="button" class="res-view-btn' + (state.view === 'list' ? ' active' : '') + '" data-view="list" aria-label="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+          '</div>' +
+        '</div>' +
       '</div>' +
-      '<div id="researches-results">' + renderCards(filtered) + '</div>';
+    '</div>' +
+    '<div id="researches-results">' + renderResults(filtered) + '</div>';
 
     bindListEvents(container);
   }
@@ -308,19 +438,33 @@ const LoadResearches = (function() {
     var meta = container.querySelector('.research-meta strong');
     var newBtn = document.getElementById('researches-new-btn');
     var chipsWrap = document.getElementById('researches-confidence-chips');
+    var sortSelect = document.getElementById('researches-sort');
+    var viewToggle = container.querySelector('.res-view-toggle');
 
     function update() {
       state.query = search.value || '';
       state.category = category.value;
       var list = getFiltered();
       if (meta) meta.textContent = list.length + ' из ' + items.length;
-      results.innerHTML = renderCards(list);
+      results.innerHTML = renderResults(list);
       updateHash();
     }
 
-    // Открываем дело сразу, как карточку словаря.
+    function refreshAll() {
+      saveView(state.view);
+      renderList(container);
+    }
+
     if (results) results.addEventListener('click', function(e) {
-      var card = e.target.closest('.exposure-card');
+      var reset = e.target.closest('#researches-reset');
+      if (reset) {
+        state.query = '';
+        state.category = 'all';
+        state.confidence = 'all';
+        renderList(container);
+        return;
+      }
+      var card = e.target.closest('[data-slug]');
       if (!card) return;
       e.preventDefault();
       var slug = card.getAttribute('data-slug');
@@ -333,6 +477,16 @@ const LoadResearches = (function() {
     if (search) search.addEventListener('input', update);
     if (category) category.addEventListener('change', update);
     if (newBtn) newBtn.addEventListener('click', openNewExposureModal);
+    if (sortSelect) sortSelect.addEventListener('change', function() {
+      state.sort = this.value;
+      refreshAll();
+    });
+    if (viewToggle) viewToggle.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-view]');
+      if (!btn || btn.getAttribute('data-view') === state.view) return;
+      state.view = btn.getAttribute('data-view');
+      refreshAll();
+    });
     if (chipsWrap) chipsWrap.addEventListener('click', function(e) {
       var btn = e.target.closest('[data-confidence]');
       if (!btn) return;
@@ -357,12 +511,17 @@ const LoadResearches = (function() {
     // Шапка модуля собирается из данных активного дела.
     if (window.LabHero && window.LabHero.setView) {
       var confidence = ExposureCase.confidenceMeta(item.confidence);
+      var claim = ExposureCase.claimMeta ? ExposureCase.claimMeta(item.confidence) : confidence;
+      var statusLabel = ExposureCase.STATUS_LABELS[item.status] || item.status || '';
       container._labHeroOverride = {
         kicker: 'АЛЕФИ · ИССЛЕДОВАНИЯ',
         title: item.title || '',
         subtitle: (item.category || ''),
         icon: 'scribe/scroll.png',
-        meta: [{ label: confidence.label, className: confidence.className }]
+        meta: [
+          statusLabel ? { label: statusLabel, className: 'lab-hero__chip--status' } : null,
+          { label: claim.label, className: claim.className || confidence.className }
+        ].filter(Boolean)
       };
       window.LabHero.setView('researches', 'detail', container._labHeroOverride);
       if (window.LabRouter) LabRouter.renderBreadcrumbs('researches', LabRouter.parseHash());

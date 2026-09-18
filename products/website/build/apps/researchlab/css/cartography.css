@@ -4,11 +4,232 @@
  */
 
 .cartography-page {
-  padding: var(--space-6) clamp(16px, 3vw, 40px);
-  max-width: var(--shell-wide);
-  margin: 0 auto;
+  padding: 0 0 var(--space-4);
+  max-width: none;
+  margin: 0;
+  min-width: 0;
 }
 
+/* ===== BENTO-КАТАЛОГ ===== */
+.cartography-feature {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+}
+.cartography-feature:hover,
+.cartography-feature:focus-within {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+}
+.cartography-feature-visual {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  color: var(--accent-gold);
+}
+.cartography-feature-body { min-width: 0; }
+.module h2.cartography-feature-title {
+  margin: 0 0 var(--space-1);
+  padding: 0;
+  border: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.cartography-feature-lead {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-family: var(--font-body, 'EB Garamond', Georgia, serif);
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+.cartography-world-launch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.cartography-catalog-group { margin: 0 0 var(--space-5); min-width: 0; }
+.cartography-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
+.module h2.cartography-section-label {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui, inherit);
+  font-size: var(--ui-11, 11px);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps, .12em);
+  text-transform: uppercase;
+}
+.cartography-section-count {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.cartography-theme-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+}
+.cartography-theme-card {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 160px;
+  overflow: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease;
+  animation: cartographyFadeIn var(--dur-2) ease both;
+}
+.cartography-theme-card--wide { grid-column: span 6; }
+.cartography-theme-card:hover,
+.cartography-theme-card:focus-visible {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+  outline: none;
+}
+.cartography-theme-card:hover .cartography-theme-arrow,
+.cartography-theme-card:focus-visible .cartography-theme-arrow {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.cartography-theme-preview {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 var(--space-4);
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+}
+.cartography-mini-svg {
+  display: block;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+}
+.cartography-theme-mark { display: none; }
+.cartography-theme-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  min-width: 0;
+}
+.cartography-theme-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.cartography-card-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-family: var(--font-ui, inherit);
+  font-size: var(--ui-10, 10px);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.cartography-theme-count {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border: 1px solid var(--border-light);
+  border-radius: 999px;
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  line-height: 1;
+}
+.module .cartography-theme-card h2.cartography-card-title {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.cartography-theme-body .cartography-card-summary {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-body, 'EB Garamond', Georgia, serif);
+  font-size: 13px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.cartography-theme-arrow {
+  position: absolute;
+  right: var(--space-4);
+  bottom: var(--space-3);
+  color: var(--accent-gold);
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity .15s ease, transform .15s ease;
+}
 .cartography-world {
   margin: 0 0 28px;
   padding: 22px;
@@ -18,65 +239,6 @@
   box-shadow: 0 8px 22px rgba(44, 24, 16, 0.08);
 }
 
-.cartography-intro {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-6);
-  margin-bottom: 18px;
-  padding: var(--space-1) 2px 0;
-}
-
-.cartography-intro h2 {
-  margin: 5px 0;
-  color: var(--text-primary, #2c1810);
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
-  font-size: var(--text-2xl);
-}
-
-.cartography-intro p { margin: 0; color: var(--text-muted, #6b5b4e); }
-.cartography-intro-mark { color: var(--accent-gold); font-family: 'Times New Roman', serif; font-size: 44px; }
-
-.cartography-theme-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-4);
-  margin-bottom: 18px;
-}
-
-.cartography-theme-card {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  overflow: hidden;
-  background: var(--bg-secondary, #f7f1e5);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: 8px;
-  box-shadow: 0 7px 18px rgba(44, 24, 16, .08);
-  animation: cartographyFadeIn var(--dur-2) ease both;
-}
-
-.cartography-theme-preview {
-  position: relative;
-  aspect-ratio: 1.8;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-light, #d4c4a8);
-  background: #eee0bd;
-}
-
-.cartography-theme-preview svg { display: block; width: 100%; height: 100%; }
-.cartography-theme-preview .world-country { pointer-events: none; }
-.cartography-theme-mark { position: absolute; right: 12px; bottom: 5px; color: rgba(255, 253, 248, .78); font: 34px 'Times New Roman', serif; }
-.cartography-theme-body { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px; }
-.cartography-theme-body .cartography-card-summary { flex: 1; width: 100%; min-height: 0; margin: 0; background: transparent; padding: 0; }
-.cartography-open-map { margin-top: 5px; }
-.cartography-world-launch { display: flex; align-items: center; gap: 12px; width: 100%; margin: 0 0 20px; padding: 12px 16px; border: 1px solid var(--accent-gold); border-radius: 8px; background: var(--bg-secondary, #f7f1e5); color: var(--text-primary, #2c1810); cursor: pointer; text-align: left; box-shadow: 0 4px 12px rgba(44, 24, 16, .06); }
-.cartography-world-launch:hover { background: #f7efd9; }
-.cartography-world-launch > span:first-child { flex: 0 0 auto; color: var(--accent-gold); font: 22px/1 'Times New Roman', serif; }
-.cartography-world-launch > span:last-child { min-width: 0; color: var(--accent-gold); }
-.cartography-world-launch strong, .cartography-world-launch small { display: block; }
-.cartography-world-launch strong { font-size: 15px; font-weight: 600; line-height: 1.3; }
-.cartography-world-launch small { margin-top: 2px; color: var(--text-muted, #6b5b4e); font-size: 12px; }
 .cartography-map-shell { min-height: calc(100vh - 100px); padding: 0; background: transparent; }
 .cartography-world-fullscreen { width: 100%; max-width: none; margin: 0; }
 .lab-content:has(.cartography-map-shell) { padding: 0; }
@@ -293,50 +455,79 @@
   gap: 14px;
 }
 
+/* Карточка — тот же язык, что и .pl-lang-card в палео-лингвистике:
+   hairline-рамка --border-light без теней, отступы по шкале --space-*;
+   hover/focus — золотая рамка + золотая подложка rgba(gold,.08). */
 .cartography-card {
-  background: var(--bg-card, #faf3e0);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: 7px;
-  padding: 14px;
-  cursor: pointer;
-  transition: transform var(--motion-base), box-shadow var(--motion-base), border-color var(--motion-base);
-  animation: cartographyFadeIn var(--dur-2) ease both;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   min-width: 0;
+  padding: var(--space-3) var(--space-4);
+  cursor: pointer;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
   overflow: hidden;
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+  animation: cartographyFadeIn var(--dur-2) var(--ease-out) both;
 }
-
-.cartography-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.cartography-card:hover,
+.cartography-card:focus-visible {
   border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
+  box-shadow: none;
+  transform: translateY(-1px);
+  outline: none;
 }
 
 @keyframes cartographyFadeIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.cartography-card-type {
+.cartography-card-header {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  text-align: center;
+  min-width: 0;
+}
+
+.cartography-card-title-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.cartography-card .cartography-card-type {
   display: inline-block;
   align-self: flex-start;
   padding: 2px var(--space-2);
   border-radius: var(--radius-md);
   background: var(--bg-subtle, #f5f0e8);
   font-size: 11px;
+  line-height: 1.3;
   text-transform: uppercase;
   letter-spacing: 0.4px;
   color: var(--text-muted, #6b5b4e);
 }
 
-.cartography-card-title {
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
+/* Заголовок карточки: сериф EB Garamond — как буквицы манускрипта.
+   Специфичность выше .module h2:not(:last-child) из layout.css. */
+.cartography-grid .cartography-card h2.cartography-card-title {
+  font-family: var(--font-serif, 'EB Garamond', Georgia, serif);
   font-size: 19px;
   font-weight: 700;
   color: var(--text-primary, #2c1810);
   margin: 0;
+  padding: 0;
+  border: 0;
   min-height: 2.3em;
   overflow: hidden;
   overflow-wrap: anywhere;
@@ -347,30 +538,66 @@
 
 .cartography-card-hebrew {
   font-family: 'Times New Roman', serif;
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   color: var(--text-secondary, #4a3728);
   direction: rtl;
+  margin-top: var(--space-1);
   min-width: 0;
   overflow-wrap: anywhere;
 }
 
 .cartography-card-paleo {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 42px;
   font-family: 'Times New Roman', serif;
-  font-size: var(--text-base);
+  font-size: 2.25rem;
+  line-height: 1;
   color: var(--accent-gold);
   direction: rtl;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cartography-card-symbol {
+  padding: 5px var(--space-2);
+  border-inline-start: 3px solid var(--accent-gold);
+  background: var(--bg-subtle, #f5f0e8);
+  color: var(--text-primary, #2c1810);
+  font-size: var(--text-sm);
+  line-height: 1.25;
   min-width: 0;
   overflow-wrap: anywhere;
-  white-space: normal;
 }
 
-.cartography-card-meaning {
+.cartography-card-symbol-label {
+  margin-inline-end: 4px;
+  color: var(--text-muted, #6b5b4e);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cartography-card-description {
+  background: var(--bg-subtle, #f5f0e8);
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) 9px;
+  margin: 1px 0;
+  min-height: 3.4em;
   font-size: var(--text-sm);
-  font-weight: 600;
   color: var(--text-secondary, #4a3728);
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   overflow-wrap: anywhere;
 }
 
+/* .cartography-card-summary — вариант тематических карточек (renderThemeCard) */
 .cartography-card-summary {
   background: var(--bg-subtle, #f5f0e8);
   border-radius: var(--radius-xs);
@@ -383,8 +610,9 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   overflow-wrap: anywhere;
-  min-height: 4.2em;
+  margin: 0;
 }
+
 
 /* ===== ДЕТАЛЬНЫЙ ПРОСМОТР (МОДАЛКА) ===== */
 .cartography-detail {
@@ -552,34 +780,57 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cartography-related-tag,
-  .cartography-event {
+  .cartography-event,
+  .cartography-card,
+  .cartography-theme-card,
+  .cartography-feature,
+  .cartography-theme-arrow {
+    animation: none;
     transition: none;
   }
+  .cartography-theme-arrow { opacity: 1; transform: none; }
 }
 
 /* ===== АДАПТАЦИЯ ===== */
+@media (max-width: 1100px) and (min-width: 769px) {
+  .cartography-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 900px) {
+  .cartography-theme-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .cartography-theme-card { grid-column: span 2; }
+  .cartography-theme-card--wide { grid-column: span 4; }
+}
+
 @media (max-width: 768px) {
-  .cartography-page { padding: 16px; }
+  .cartography-page { padding: 0 0 var(--space-4); }
   .cartography-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cartography-theme-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cartography-theme-card,
+  .cartography-theme-card--wide { grid-column: span 1; }
   .cartography-state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cartography-stats { margin-left: 0; width: 100%; }
   .cartography-era-tabs { width: 100%; border-right: 0; padding-right: 0; }
 }
 
-@media (max-width: 1100px) and (min-width: 769px) {
-  .cartography-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+  #cartography {
+    overflow-x: clip;
+  }
+  .cartography-page { overflow-x: clip; }
+  .cartography-theme-grid { grid-template-columns: minmax(0, 1fr); }
+  .cartography-theme-card,
+  .cartography-theme-card--wide { grid-column: 1 / -1; }
+  .cartography-feature {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-3);
+  }
+  .cartography-feature-visual { width: 48px; height: 48px; }
+  .cartography-world-launch { width: 100%; justify-content: center; }
 }
 
 @media (max-width: 480px) {
   .cartography-grid { grid-template-columns: 1fr; }
-  .cartography-theme-grid { grid-template-columns: 1fr; }
   .cartography-state-grid { grid-template-columns: 1fr; }
-  .cartography-intro { padding-inline: 0; }
-  .cartography-intro-mark { font-size: 34px; }
   .cartography-map-legend { justify-content: flex-start; gap: 8px 12px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cartography-card { animation: none; transition: none; }
 }

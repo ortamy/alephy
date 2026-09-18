@@ -1,11 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 260" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 200" role="img" aria-labelledby="title desc">
   <title id="title">Alephy</title>
-  <desc id="desc">Векторный символ и логотип Alephy.</desc>
-  <g fill="currentColor">
-    <path d="M76 38h34c6 0 11 2 15 6l59 59c9 9 3 25-10 25h-34c-6 0-11-2-15-6L66 63c-9-9-3-25 10-25Z"/>
-    <path d="M31 95h29c6 0 11 2 15 6l22 22-22 22c-4 4-9 6-15 6H31c-13 0-19-15-10-24l25-24-25-24c-9-9-3-24 10-24Z" transform="translate(0 24)"/>
-    <path d="M90 136h38c6 0 11 2 15 6l66 66c9 9 3 24-10 24h-38c-6 0-11-2-15-6l-66-66c-9-9-3-24 10-24Z"/>
-    <path d="M31 160h38c6 0 11-2 15-6l22-22-22-22c-4-4-9-6-15-6H31c-13 0-19 15-10 24l25 24-25 24c-9 9-3 24 10 24Z"/>
-  </g>
-  <text x="270" y="184" fill="currentColor" font-family="Arial, Helvetica, sans-serif" font-size="174" font-weight="700" letter-spacing="-8">alephy</text>
+  <desc id="desc">Штриховой глиф алефа и слово alephy.</desc>
+  <!-- Знак: финикийский алеф. Цвет — currentColor. -->
+  <text x="0" y="160" fill="currentColor" font-family="Georgia, 'Times New Roman', serif" font-size="150" font-weight="600">𐤀</text>
+  <text x="170" y="146" fill="currentColor" font-family="'EB Garamond', Georgia, 'Times New Roman', serif" font-size="122" font-weight="600" letter-spacing="1">alephy</text>
 </svg>

@@ -13,6 +13,13 @@ const ExposureCase = (function() {
     disputed: { label: 'Спорно', className: 'exposure-badge-disputed' }
   };
 
+  var CLAIM_META = {
+    verified: { label: 'факт', className: 'claim-badge claim-badge--fact' },
+    'needs-review': { label: 'интерпретация', className: 'claim-badge claim-badge--interpretation' },
+    hypothesis: { label: 'гипотеза', className: 'claim-badge claim-badge--hypothesis' },
+    disputed: { label: 'гипотеза', className: 'claim-badge claim-badge--hypothesis' }
+  };
+
   var STATUS_LABELS = {
     draft: 'Черновик',
     review: 'На проверке',
@@ -57,9 +64,24 @@ const ExposureCase = (function() {
     return CONFIDENCE_META[value] || CONFIDENCE_META['needs-review'];
   }
 
+  function claimMeta(value) {
+    return CLAIM_META[value] || CLAIM_META['needs-review'];
+  }
+
+  function claimBadge(value) {
+    var meta = claimMeta(value);
+    return '<span class="' + meta.className + '">' + esc(meta.label) + '</span>';
+  }
+
   function confidenceBadge(value) {
     var meta = confidenceMeta(value);
     return '<span class="exposure-badge ' + meta.className + '">' + esc(meta.label) + '</span>';
+  }
+
+  function lucideBtn(action, icon, label, extraAttrs) {
+    return '<button type="button" class="exposure-icon-btn" data-' + action + (extraAttrs || '') +
+      ' aria-label="' + esc(label) + '" title="' + esc(label) + '">' +
+      '<i data-lucide="' + icon + '" aria-hidden="true"></i></button>';
   }
 
   function iconKey(value) {
@@ -222,16 +244,7 @@ const ExposureCase = (function() {
       var title = b.tocTitle || b.title || headingMeta(b.heading, b.icon).text;
       return '<a href="#' + sectionId(i) + '" data-section-link data-index="' + i + '">' + esc(shortenTocTitle(title)) + '</a>';
     }).join('');
-    var sectionsHtml = (typeof SectionRenderer !== 'undefined')
-      ? SectionRenderer.renderArticle(item)
-      : blocks.map(function(b, i) {
-          var body = renderBlocks(b);
-          return '<article class="exposure-section" id="' + sectionId(i) + '" data-section-index="' + i + '">' +
-            renderHeading(b.heading, b.icon) +
-            '<div class="exposure-section-body">' + body + '</div>' +
-          '</article>';
-        }).join('');
-
+    var chapterCount = blocks.length;
     var tags = getTerms(item).map(function(t) { return '<span class="exposure-card-tag">' + esc(t) + '</span>'; }).join('');
     var relatedItems = opts.relatedItems || {};
     var related = (item.related || []).map(function(id) {
@@ -242,23 +255,31 @@ const ExposureCase = (function() {
     var sources = (item.sources || []).map(function(s) {
       return '<li>' + (s.url ? '<a href="' + esc(s.url) + '" target="_blank" rel="noopener">' + esc(s.type || s.ref || 'источник') + '</a>' : esc(s.type || '') + ' ' + esc(s.ref || '')) + '</li>';
     }).join('');
+    var sectionsHtml = (typeof SectionRenderer !== 'undefined')
+      ? SectionRenderer.renderArticle(item)
+      : blocks.map(function(b, i) {
+          var body = renderBlocks(b);
+          return '<article class="exposure-section" id="' + sectionId(i) + '" data-section-index="' + i + '">' +
+            renderHeading(b.heading, b.icon) +
+            '<div class="exposure-section-body">' + body + '</div>' +
+          '</article>';
+        }).join('');
+    var headerTags = tags
+      ? '<header class="research-detail-header"><div class="research-detail-tags">' + tags + '</div></header>'
+      : '';
 
     return '<div class="exposure-case-page">' +
       '<div class="exposure-case-container">' +
-        '<header class="research-detail-header">' +
-          '<div class="research-detail-tags">' + tags + '</div>' +
-          '<div class="exposure-progress-wrap"><div class="exposure-progress-track"><div class="exposure-progress-bar" data-exposure-progress></div></div>' +
-            '<span class="exposure-progress-label" data-exposure-progress-label">0 из ' + blocks.length + ' секций</span></div>' +
-        '</header>' +
+        headerTags +
         '<div class="research-detail-layout exposure-case-layout">' +
           '<main class="research-detail-content">' +
             '<nav class="research-toc exposure-case-toc" data-exposure-toc aria-label="Содержание разоблачения">' +
-            '<h2>Содержание</h2>' + toc +
+            toc +
+            '<span class="exposure-progress-label" data-exposure-progress-label>чтение 1/' + chapterCount + '</span>' +
             '</nav>' +
             sectionsHtml +
           '</main>' +
           '<aside class="research-infobox exposure-case-infobox">' +
-            '<h2>Информация</h2>' +
             '<dl>' +
               '<dt>Статус</dt><dd>' + esc(STATUS_LABELS[item.status] || item.status || '') + '</dd>' +
               '<dt>Обновлено</dt><dd>' + esc(item.updatedAt || '') + '</dd>' +
@@ -267,9 +288,9 @@ const ExposureCase = (function() {
             (sources ? '<h3>Источники</h3><ul class="exposure-sources-list">' + sources + '</ul>' : '') +
             (related ? '<h3>Связанные дела</h3><div class="research-related">' + related + '</div>' : '') +
             '<div class="exposure-case-actions">' +
-              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-exposure-copy-link>Скопировать ссылку</button>' +
-              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-exposure-download-md>Скачать Markdown</button>' +
-              (opts.showAskAi === false ? '' : '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-exposure-ask-ai data-slug="' + esc(item.slug) + '">Попросить AI дополнить</button>') +
+              lucideBtn('exposure-copy-link', 'link', 'Скопировать ссылку') +
+              lucideBtn('exposure-download-md', 'download', 'Скачать Markdown') +
+              (opts.showAskAi === false ? '' : '<button type="button" class="exposure-icon-btn exposure-ask-ai-btn" data-exposure-ask-ai data-slug="' + esc(item.slug) + '" aria-label="AI-дополнение (гипотеза)" title="AI-дополнение (гипотеза)"><i data-lucide="sparkles" aria-hidden="true"></i><span>AI-дополнение (гипотеза)</span></button>') +
             '</div>' +
           '</aside>' +
         '</div>' +
@@ -291,7 +312,6 @@ const ExposureCase = (function() {
   function bindCase(container, item) {
     if (typeof BlockRenderer !== 'undefined' && BlockRenderer.bind) BlockRenderer.bind(container);
     var toc = container.querySelector('[data-exposure-toc]');
-    var progressBar = container.querySelector('[data-exposure-progress]');
     var progressLabel = container.querySelector('[data-exposure-progress-label]');
     var sections = container.querySelectorAll('.exposure-section');
     var total = sections.length;
@@ -300,8 +320,7 @@ const ExposureCase = (function() {
       if (toc) toc.querySelectorAll('a').forEach(function(a, i) {
         a.classList.toggle('active', i === idx);
       });
-      if (progressBar) progressBar.style.width = (total ? Math.round(((idx + 1) / total) * 100) : 0) + '%';
-      if (progressLabel) progressLabel.textContent = (idx + 1) + ' из ' + total + ' секций';
+      if (progressLabel) progressLabel.textContent = 'чтение ' + (idx + 1) + '/' + total;
     }
 
     if (total && typeof IntersectionObserver !== 'undefined') {
@@ -309,11 +328,12 @@ const ExposureCase = (function() {
         entries.forEach(function(entry) {
           if (entry.isIntersecting) {
             var idx = parseInt(entry.target.getAttribute('data-section-index'), 10);
-            setActive(idx);
+            if (!isNaN(idx)) setActive(idx);
           }
         });
-      }, { rootMargin: '-20% 0px -70% 0px' });
+      }, { rootMargin: '-92px 0px -70% 0px' });
       sections.forEach(function(s) { observer.observe(s); });
+      setActive(0);
     }
 
     var copyBtn = container.querySelector('[data-exposure-copy-link]');
@@ -339,9 +359,20 @@ const ExposureCase = (function() {
 
     var askAiBtn = container.querySelector('[data-exposure-ask-ai]');
     if (askAiBtn) askAiBtn.addEventListener('click', function() {
+      var main = container.querySelector('.research-detail-content');
+      if (!main) return;
       item.changelog = item.changelog || [];
       item.changelog.push({ date: new Date().toISOString().slice(0, 10), note: 'Запрошено дополнение от AI-агента (Exposer)' });
-      if (window.LabToast) LabToast.show('Запрос добавлен в журнал изменений. Реальный вызов агента ещё не подключён.');
+      var existing = main.querySelector('[data-exposure-ai-result]');
+      if (existing) existing.remove();
+      var note = (item.summary || item.title || 'Дополнение по делу') + ' Требует сверки с корнем, палео-механикой и контекстом ТаНаХа.';
+      var aside = document.createElement('aside');
+      aside.className = 'exposure-ai-hypothesis';
+      aside.setAttribute('data-exposure-ai-result', '');
+      aside.innerHTML = claimBadge('hypothesis') +
+        '<div class="exposure-ai-hypothesis-body">' + esc(note) + '</div>';
+      main.appendChild(aside);
+      if (window.LabToast) LabToast.show('Гипотеза вставлена. Реальный вызов агента ещё не подключён.');
     });
 
     if (toc) toc.querySelectorAll('a').forEach(function(a) {
@@ -366,6 +397,8 @@ const ExposureCase = (function() {
     renderMd: renderMd,
     renderBlocks: renderBlocks,
     confidenceMeta: confidenceMeta,
+    claimMeta: claimMeta,
+    claimBadge: claimBadge,
     confidenceBadge: confidenceBadge,
     renderCard: renderCard,
     renderCase: renderCase,

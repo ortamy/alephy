@@ -38,6 +38,28 @@ const AlephyStates = (function() {
     return d.innerHTML;
   }
 
+  function getLucideForState(stateId) {
+    var iconMap = {
+      'tohu': 'cloud',
+      'hoshekh': 'moon',
+      'rakiya': 'cloud-sun',
+      'mitzrayim': 'landmark',
+      'midbar': 'mountain',
+      'shamayim': 'cloud-sun',
+      'erets': 'globe',
+      'eden': 'flower',
+      'bohu': 'circle-off',
+      'thom': 'droplets',
+      'ever': 'sun',
+      'gan': 'tree-pine',
+      'mavet': 'heart-off',
+      'sheol': 'ghost',
+      'shabbat': 'calendar',
+      'olam': 'infinity'
+    };
+    return iconMap[stateId] || 'circle';
+  }
+
   function normalizeText(text) {
     return String(text == null ? '' : text).replace(/\s+/g, ' ').trim().toLowerCase();
   }
@@ -239,23 +261,29 @@ const AlephyStates = (function() {
 
     var cardsHtml = sorted.map(function(s, i) {
       var color = s.color || '#b8860b';
+      var paleo = s.paleo || '';
+      var paleoFirst = paleo ? paleo.charAt(0) : '';
+      var paleoInline = paleo ? '<span class="state-paleo-inline">' + escapeHtml(paleo) + '</span>' : '';
+      var lucideIcon = getLucideForState(s.id);
       return '<div class="state-card" data-state-id="' + escapeHtml(s.id) + '" role="button" aria-label="Открыть состояние: ' + escapeHtml(s.name) + '" tabindex="0" style="animation-delay:' + (i * 70) + 'ms; --state-color: ' + color + '">' +
-        '<div class="state-card-paleo">' + escapeHtml(s.paleo || '') + '</div>' +
-        '<h2 class="state-card-name">' + escapeHtml(s.name) + '</h2>' +
-        '<div class="state-card-hebrew" dir="rtl">' + escapeHtml(s.hebrew || '') + '</div>' +
-        '<div class="state-card-physics">' + escapeHtml(s.physics || '') + '</div>' +
-        '<div class="state-card-olam"><span>Олам:</span> ' + escapeHtml(s.olam || '') + '</div>' +
-        '<div class="state-card-intensity">' +
-          '<span>' + escapeHtml(s.intensity_label || '') + '</span>' +
-          '<div class="state-intensity-bar">' +
-            '<div class="state-intensity-fill" style="width: ' + (s.intensity * 100) + '%; background: ' + color + '"></div>' +
+        '<div class="state-card-icon"><i data-lucide="' + lucideIcon + '" aria-hidden="true"></i></div>' +
+        '<h2 class="state-card-name">' + paleoInline + escapeHtml(s.name) + '</h2>' +
+        '<div class="state-card-role">' + escapeHtml(s.olam || '') + '</div>' +
+        '<div class="state-card-secondary">' +
+          '<div class="state-card-hebrew" dir="rtl">' + escapeHtml(s.hebrew || '') + '</div>' +
+          '<div class="state-card-physics">' + escapeHtml(s.physics || '') + '</div>' +
+          '<div class="state-card-intensity">' +
+            '<span>' + escapeHtml(s.intensity_label || '') + '</span>' +
+            '<div class="state-intensity-bar">' +
+              '<div class="state-intensity-fill" style="width: ' + (s.intensity * 100) + '%; background: ' + color + '"></div>' +
+            '</div>' +
           '</div>' +
         '</div>' +
       '</div>';
     }).join('');
 
     return '<div class="states-page">' +
-      '<button type="button" class="cartography-world-launch states-map-launch" onclick="AlephyStates.openLandscape()">' +
+      '<button type="button" class="states-map-launch" onclick="AlephyStates.openLandscape()">' +
         '<span aria-hidden="true">𐤌</span>' +
         '<span><strong>Карта состояний</strong><small>Открыть полный слой состояний</small></span>' +
       '</button>' +

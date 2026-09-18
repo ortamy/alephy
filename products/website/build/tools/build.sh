@@ -12,9 +12,9 @@ echo "=== ALEPHY Website Build ==="
 echo "Root: $ROOT_DIR"
 echo "Build: $BUILD_DIR"
 
-# 1. Очистка build/
-rm -rf "$BUILD_DIR"
+# Сохраняем каталог: локальный сервер может держать его как cwd на Windows.
 mkdir -p "$BUILD_DIR"
+find "$BUILD_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 
 # 2. Копирование корневых файлов
 echo "[1/8] Copying root files..."
@@ -24,9 +24,9 @@ cp "$ROOT_DIR/favicon.svg" "$BUILD_DIR/"
 cp "$ROOT_DIR/robots.txt" "$BUILD_DIR/"
 cp "$ROOT_DIR/sitemap.xml" "$BUILD_DIR/"
 cp "$ROOT_DIR/files.json" "$BUILD_DIR/" 2>/dev/null || true
+cp "$ROOT_DIR/site.css" "$BUILD_DIR/"
 
-# 2.1. Копирование css/ (lean-CSS лендинга)
-cp -r "$ROOT_DIR/css" "$BUILD_DIR/css"
+# 2.1. Стили лендинга живут в site.css; каталог css/ больше не копируем.
 
 # 3. Копирование src/js/
 echo "[2/8] Copying js/..."

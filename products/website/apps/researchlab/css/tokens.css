@@ -422,6 +422,11 @@
   --header-bg: #ffffff;
   --header-text: #221a10;
   --header-muted: #8d8271;
+  /* Шапка на white — светлая: чернила должны быть тёмными. Без переопределения
+     иконки семьи .icon-btn (поиск/тема/язык/сайт/GitHub) остаются кремовыми
+     #fff8ea из :root и пропадают на белом фоне. */
+  --header-ink: var(--header-text);
+  --header-ink-muted: var(--header-muted);
   --info-bg: #f3f0e7;
   --info-border: #d8d0bd;
   --info-text: #57503c;

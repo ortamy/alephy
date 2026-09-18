@@ -1,119 +1,554 @@
 /* =============================================
-   components/neurochat.css - Alephy Research Lab layer
-   Layer of lab.css (split). Do not edit by hand -
-   regenerate from lab.css source sections.
+   components/neurochat.css — модуль «Нейрочат» (#ed-chat)
+   Дизайн-язык «Палео-конструктора» (css/paleo-builder.css):
+     • uppercase-заголовки секций + счётчик-бейдж (без линеек-разделителей);
+     • компактные чипы вместо карточек;
+     • пунктирный empty-state с глифом и подсказкой;
+     • hairline-рамки 1px, --radius-8, отступы только --space-*, без теней.
+   Desktop: ДИАЛОГ ~60% / КОНТЕКСТ+ИСТОРИЯ ~40%.
+   ≤900px: одна колонка ДИАЛОГ → КОНТЕКСТ → ИСТОРИЯ; каждый блок панели
+   по ширине контейнера шапки (.lab-hero) — см. проверку rect в отчёте.
    ============================================= */
 
-/* ===== NEUROCHAT ===== */
-#ed-chat .ec-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
-  gap: var(--space-5);
-  align-items: start;
+/* ===== КАРКАС: 60 / 40, без вылетов за контейнер ===== */
+#ed-chat {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip; /* страховка: ничего не торчит по горизонтали */
 }
 
-#ed-chat .ec-main { min-width: 0; }
+#ed-chat .ec-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-3);
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
 
-#ed-chat .ec-toolbar {
+#ed-chat .ec-main,
+#ed-chat .ec-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ===== ПАНЕЛИ «ДИАЛОГ» и подсекций контекста: hairline, без теней ===== */
+#ed-chat .ec-main,
+#ed-chat .ec-panel {
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+/* ===== ЗАГОЛОВОК СЕКЦИИ: caps + счётчик + контрол модели ===== */
+#ed-chat .ec-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-bottom: var(--space-4);
+  gap: var(--space-2);
+  min-width: 0;
 }
 
-#ed-chat .ec-toolbar label { font-weight: 600; }
-#ed-chat .ec-model-label { flex: 1; color: var(--text-muted); font-size: 14px; }
-#ed-chat .ec-tokens { color: var(--accent-green); font: 12px var(--font-mono); }
+#ed-chat .ec-head-title {
+  flex: none;
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  line-height: 1.6;
+  text-align: left;
+  text-transform: uppercase;
+}
 
-#ed-chat .ec-messages {
-  min-height: 360px;
-  max-height: 60vh;
+#ed-chat .ec-count {
+  flex: none;
+  min-width: 22px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ===== СЕЛЕКТ МОДЕЛИ: компактный триггер внутри строки заголовка ===== */
+#ed-chat .ec-model {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+  margin-left: auto;
+}
+
+#ed-chat .ec-model-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: var(--control-h);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#ed-chat .ec-model-trigger:hover,
+#ed-chat .ec-model-trigger[aria-expanded="true"] {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+#ed-chat .ec-model-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-chat .ec-model-trigger svg.lucide {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--motion-fast);
+}
+
+#ed-chat .ec-model-trigger[aria-expanded="true"] svg.lucide { transform: rotate(180deg); }
+
+/* --- список моделей: на mobile открывается как glass-modal в ширину контейнера --- */
+#ed-chat .ec-model-list {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 61;
+  min-width: 220px;
+  max-height: min(60vh, 360px);
+  margin: 0;
+  padding: var(--space-1);
   overflow-y: auto;
+  list-style: none;
+  background: color-mix(in srgb, var(--bg-card) var(--glass-tint), transparent);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-8);
 }
 
-#ed-chat .ec-welcome { padding: 72px 20px; text-align: center; }
+#ed-chat .ec-model-list[hidden],
+#ed-chat .ec-model-backdrop[hidden] { display: none; }
+
+#ed-chat .ec-model-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(0 0 0 / 0.28);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+#ed-chat .ec-model-option {
+  display: grid;
+  padding: var(--space-2);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+#ed-chat .ec-model-option:hover,
+#ed-chat .ec-model-option:focus-visible {
+  background: rgb(var(--accent-gold-rgb) / 0.10);
+  outline: none;
+}
+
+#ed-chat .ec-model-option[aria-selected="true"] .ec-model-option-name { color: var(--accent-gold); }
+
+#ed-chat .ec-model-option-name {
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  font-weight: 600;
+}
+
+#ed-chat .ec-model-option-style {
+  color: var(--text-muted);
+  font-size: var(--ui-10);
+  line-height: 1.4;
+}
+/* ===== ЛЕНТА СООБЩЕНИЙ: высота растёт от содержимого, скролл внутри ===== */
+#ed-chat .ec-messages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  max-height: min(60vh, 560px);
+  padding: var(--space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+/* Пунктирный empty-state: глиф + подпись + подсказка. */
+#ed-chat .ec-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-5) var(--space-3);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+#ed-chat .ec-empty strong {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  font-weight: 600;
+}
+
+#ed-chat .ec-empty-glyph {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-gold);
+}
 
 #ed-chat .ec-message {
-  max-width: 86%;
-  margin: 0 0 14px;
-  padding: var(--space-3) var(--space-4);
+  max-width: 88%;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  background: var(--bg-secondary);
+  border-radius: var(--radius-8);
 }
 
 #ed-chat .ec-message-user {
   margin-left: auto;
-  border-color: var(--accent-gold);
-  background: rgb(var(--accent-gold-rgb) / 0.08);
+  border-color: rgb(var(--accent-gold-rgb) / 0.45);
+  background: rgb(var(--accent-gold-rgb) / 0.07);
 }
 
 #ed-chat .ec-message-assistant { margin-right: auto; }
 
 #ed-chat .ec-message-meta {
   margin-bottom: var(--space-1);
-  color: var(--accent-gold);
-  font: 600 12px var(--font-mono);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
 
-#ed-chat .ec-message-body { white-space: pre-wrap; line-height: 1.6; }
-#ed-chat .ec-composer { margin-top: 16px; }
+#ed-chat .ec-message-user .ec-message-meta { color: var(--accent-gold); }
 
+#ed-chat .ec-message-body {
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: var(--ui-13);
+  line-height: var(--leading-ui);
+  white-space: pre-wrap;
+}
+
+/* ===== КОМПОЗЕР: строка ввода + primary «Отправить» в одну линию ===== */
+#ed-chat .ec-composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#ed-chat .ec-composer-row {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#ed-chat .ec-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: var(--space-2);
+  overflow-y: auto;
+  resize: none;
+}
+
+#ed-chat .ec-send {
+  flex: none;
+  /* Иначе mobile-правило responsive.css (`.lab-btn { width: 100% }`)
+     растягивает кнопку на всю строку и выдавливает инпут. */
+  width: auto;
+  max-width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* Вторичные действия: icon-кнопки 36px в один ряд (mobile — максимум 2 ряда). */
 #ed-chat .ec-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-top: 10px;
+  max-width: 100%;
 }
 
-#ed-chat .ec-sidebar { display: grid; gap: 16px; }
-
-#ed-chat .ec-panel {
-  padding: 18px;
-  background: var(--bg-card);
+#ed-chat .ec-icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
-}
-
-#ed-chat .ec-panel h2 { margin-bottom: 12px; font-size: 22px; }
-#ed-chat .ec-panel h3 { margin: 12px 0 6px; color: var(--accent-gold); font: 600 16px var(--font-heading); }
-
-#ed-chat .ec-document-list {
-  padding-left: var(--space-5);
+  border-radius: var(--radius-8);
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 14px;
-}
-
-#ed-chat .ec-prompt { font-size: 14px; line-height: 1.45; }
-#ed-chat .ec-history { display: grid; gap: 6px; color: var(--text-muted); font-size: 14px; }
-
-#ed-chat .ec-history-item {
-  width: 100%;
-  padding: var(--space-2) 10px;
-  text-align: left;
-  color: var(--text-primary);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-xs);
   cursor: pointer;
-  font: 14px var(--font-serif);
 }
 
-#ed-chat .ec-history-item:hover {
+#ed-chat .ec-icon-btn:hover,
+#ed-chat .ec-icon-btn:focus-visible {
   border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#ed-chat .ec-icon-btn svg.lucide { width: 18px; height: 18px; }
+
+/* Подпись модели/токенов под строкой заголовка. */
+#ed-chat .ec-note-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+#ed-chat .ec-model-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-chat .ec-tokens {
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+#ed-chat .ec-demo { min-width: 0; }
+/* ===== КОНТЕКСТ / ИСТОРИЯ: подсекции без линеек-разделителей ===== */
+#ed-chat .ec-block {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#ed-chat .ec-block + .ec-block {
+  padding-top: var(--space-3);
+}
+
+#ed-chat .ec-subhead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Компактные чипы вместо карточек: документы активного контекста. */
+#ed-chat .ec-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#ed-chat .ec-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10);
+}
+
+#ed-chat .ec-chip-glyph {
+  width: 12px;
+  height: 12px;
   color: var(--accent-gold);
 }
 
-@media (max-width: 900px) {
-  #ed-chat .ec-layout { grid-template-columns: 1fr; }
-  #ed-chat .ec-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+#ed-chat .ec-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  #ed-chat .ec-sidebar { grid-template-columns: 1fr; }
+#ed-chat .ec-prompt {
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  line-height: var(--leading-ui);
+  resize: vertical;
+}
+
+/* ===== ИСТОРИЯ: строки «название · дата» с обрезкой длинных названий ===== */
+#ed-chat .ec-history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+#ed-chat .ec-history-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  text-align: left;
+  cursor: pointer;
+}
+
+#ed-chat .ec-history-item:hover,
+#ed-chat .ec-history-item:focus-visible {
+  border-color: var(--border-light);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#ed-chat .ec-history-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-chat .ec-history-date {
+  flex: none;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10);
+}
+
+#ed-chat .ec-empty-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ===== DESKTOP: подсекции контекста и истории — одна панель с общей линией ===== */
+@media (min-width: 901px) {
+  #ed-chat .ec-side { gap: 0; }
+
+  #ed-chat .ec-side .ec-panel:first-child {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+
+  #ed-chat .ec-side .ec-panel:last-child {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+}
+
+/* ===== ≤900px: одна колонка; каждый блок = ширине контейнера шапки ===== */
+@media (max-width: 900px) {
+  #ed-chat .ec-layout {
+    position: relative; /* контейнер для glass-модалки модели */
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  #ed-chat .ec-main,
+  #ed-chat .ec-panel,
+  #ed-chat .ec-messages {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Модалка модели: края совпадают с контейнером шапки.
+     Не position: fixed — у контейнера модуля есть transform (анимация
+     раскрытия), из-за чего fixed считался бы от модуля, а не от окна. */
+  #ed-chat .ec-model { position: static; }
+
+  #ed-chat .ec-model-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    width: auto;
+    margin: 0;
+  }
+
+  #ed-chat .ec-model-backdrop {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  /* 16px — иначе iOS зумит страницу на фокусе поля. */
+  #ed-chat .ec-input,
+  #ed-chat .ec-prompt { font-size: 16px; }
+}
+
+/* ===== ≤640px: мобильные лимиты высоты и переносов ===== */
+@media (max-width: 640px) {
+  #ed-chat .ec-messages { max-height: 50vh; }
   #ed-chat .ec-message { max-width: 100%; }
-  #ed-chat .ec-toolbar { align-items: stretch; }
-  #ed-chat .ec-toolbar .lab-select { flex: 1; }
+  #ed-chat .ec-model-trigger { min-height: 36px; }
+  #ed-chat .ec-model-list { max-height: 50vh; }
+
+  /* Ряд icon-кнопок: ровно максимум 2 ряда, без выхода за контейнер. */
+  #ed-chat .ec-actions { max-width: calc(2 * 36px + var(--space-2)); }
+}
+
+/* ===== REDUCED-MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  #ed-chat .ec-model-trigger svg.lucide {
+    transition: none;
+    transform: none;
+  }
 }

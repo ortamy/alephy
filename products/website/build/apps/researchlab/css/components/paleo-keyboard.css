@@ -1,99 +1,470 @@
 /* =============================================
-   components/paleo-keyboard.css - Alephy Research Lab layer
-   Layer of lab.css (split). Do not edit by hand -
-   regenerate from lab.css source sections.
+   components/paleo-keyboard.css — модуль «Палео-клавиатура» (#paleo-keyboard)
+   Дизайн-язык «Палео-конструктора» (css/paleo-builder.css):
+     • uppercase-заголовки секций + счётчик-бейдж (без линеек-разделителей);
+     • сетка чипов-клавиш; селектор письменностей — ряд чипов (disabled «готовится»);
+     • пунктирный empty-state с глифом и подсказкой;
+     • hairline-рамки 1px, --radius-8, отступы только --space-*, без теней.
+   Desktop: СТРОКА + ИСТОРИЯ (слева) | КЛАВИШИ (справа).
+   ≤900px: одна колонка СТРОКА → КЛАВИШИ → ИСТОРИЯ, тап-таргеты ≥40px.
    ============================================= */
 
-/* ===== PALEO-HEBREW KEYBOARD ===== */
-.pk-output {
-  min-height: 64px;
+/* ===== КАРКАС: без вылетов за контейнер шапки ===== */
+#paleo-keyboard {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip; /* страховка: ничего не торчит по горизонтали */
+}
+
+#paleo-keyboard .pk-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'text keys'
+    'history keys';
+  gap: var(--space-3);
+  align-items: start;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* ===== ПАНЕЛИ: hairline-рамка, без теней ===== */
+#paleo-keyboard .pk-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  max-width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+#paleo-keyboard .pk-panel-text { grid-area: text; }
+#paleo-keyboard .pk-panel-keys { grid-area: keys; }
+#paleo-keyboard .pk-panel-history { grid-area: history; }
+
+/* ===== ЗАГОЛОВОК СЕКЦИИ: caps + счётчик-бейдж + подпись ===== */
+#paleo-keyboard .pk-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#paleo-keyboard .pk-head-title {
+  flex: none;
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  line-height: 1.6;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+#paleo-keyboard .pk-count {
+  flex: none;
+  min-width: 22px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+#paleo-keyboard .pk-head-note {
+  min-width: 0;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+#paleo-keyboard .pk-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ===== СЕЛЕКТОР ПИСЬМЕННОСТЕЙ: чипы; набор отсутствует — disabled «готовится» ===== */
+#paleo-keyboard .pk-writings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+#paleo-keyboard .pk-writing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  min-height: 28px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast), background-color var(--motion-fast);
+}
+
+#paleo-keyboard .pk-writing-chip:hover,
+#paleo-keyboard .pk-writing-chip:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#paleo-keyboard .pk-writing-chip[aria-checked="true"] {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
+  color: var(--accent-gold);
+}
+
+#paleo-keyboard .pk-writing-chip[disabled] {
+  border-style: dashed;
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+#paleo-keyboard .pk-writing-note {
+  color: var(--text-muted);
+  font-size: var(--ui-10);
+  font-weight: 400;
+}
+
+/* ===== СЕТКА КЛАВИШ: чипы-клавиши 56px, глиф + латинская клавиша ===== */
+#paleo-keyboard .pk-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+}
+
+#paleo-keyboard .pk-key {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 56px;
+  padding: var(--space-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--accent-gold);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast);
+}
+
+#paleo-keyboard .pk-key:hover,
+#paleo-keyboard .pk-key:focus-visible {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.08);
+  outline: none;
+}
+
+#paleo-keyboard .pk-key.is-active {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / 0.12);
+}
+
+#paleo-keyboard .pk-key-symbol {
+  font-family: var(--font-paleo);
+  font-size: 24px;
+  line-height: 1;
+}
+
+#paleo-keyboard .pk-key-hint {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10);
+  line-height: 1;
+  text-transform: uppercase;
+  transition: opacity var(--motion-fast);
+}
+
+/* Тумблер «Физическая клавиатура» выключен — латинские подсказки гаснут. */
+#paleo-keyboard .pk-keys[data-physical="off"] .pk-key-hint { opacity: 0.3; }
+
+/* Подмена глифа, если в системе нет палео-шрифта. */
+.paleo-fallback .pk-key-symbol,
+.paleo-fallback .pk-info-glyph,
+.paleo-fallback .pk-history-chip-text,
+.paleo-fallback .pk-empty-glyph { font-size: 0; }
+
+.paleo-fallback .pk-key-symbol::before,
+.paleo-fallback .pk-info-glyph::before,
+.paleo-fallback .pk-history-chip-text::before,
+.paleo-fallback .pk-empty-glyph::before { content: attr(data-fallback); font-family: var(--font-serif); font-size: 24px; }
+
+/* ===== СТРОКА: RTL-поле палео-знаков ===== */
+#paleo-keyboard .pk-output {
+  display: block;
   width: 100%;
+  min-height: 72px;
+  max-width: 100%;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
   resize: vertical;
-  padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-4);
   direction: rtl;
   text-align: right;
-  font-family: var(--font-hebrew);
+  font-family: var(--font-paleo);
   font-size: var(--text-2xl);
   line-height: 1.6;
   color: var(--text-primary);
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-light);
-  border-radius: var(--radius-xs);
-  box-shadow: inset 0 0 0 3px var(--bg-tertiary), var(--shadow-soft);
-  outline: none;
-}
-.pk-output:focus { border-color: var(--accent-gold); }
-.pk-keyboard {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-2);
-  padding: var(--space-2) 0;
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-}
-.pk-row { display: flex; justify-content: center; gap: 8px; }
-.pk-key {
-  position: relative;
-  display: flex;
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  color: var(--text-primary);
   background: transparent;
   border: 1px solid var(--border-light);
-  border-radius: 2px;
-  box-shadow: none;
-  cursor: pointer;
-  transition: color var(--motion-base), border-color var(--motion-base), background var(--motion-base);
+  border-radius: var(--radius-8);
+  outline: none;
 }
-.pk-key.is-active { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
-.pk-key:hover { border-color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / 0.06); }
-.pk-key:active { color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / 0.12); }
-.pk-key-symbol, .pk-output-symbol { font-family: 'Noto Sans Phoenician', 'Segoe UI Historic', 'Arial Unicode MS', 'Times New Roman', serif; font-size: 24px; line-height: 1; }
-.paleo-fallback .pk-key-symbol, .paleo-fallback .pk-output-symbol, .pk-modal-glyph-fallback { font-size: 0; }
-.paleo-fallback .pk-key-symbol::before, .paleo-fallback .pk-output-symbol::before, .pk-modal-glyph-fallback::before { content: attr(data-fallback); font-family: var(--font-serif); font-size: 24px; }
-.pk-analyzer {
-  width: 100%;
-  height: 0;
-  overflow: hidden;
-  padding: 0 10px;
-  color: var(--text-primary);
-  background: var(--bg-secondary);
-  border: 1px solid transparent;
-  font-family: var(--font-serif);
-  font-size: 14px;
-  font-style: normal;
-  line-height: 26px;
-  text-align: left;
+
+#paleo-keyboard .pk-output:focus { border-color: var(--accent-gold); }
+
+/* Транслитерация строки: латиница, слева направо. */
+#paleo-keyboard .pk-translit {
+  margin: 0;
+  min-width: 0;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  line-height: var(--leading-ui);
   direction: ltr;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity var(--motion-base), height var(--motion-base), visibility 0s linear 0.2s;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
-.pk-analyzer.show {
-  height: 28px;
-  border-color: var(--border-light);
-  opacity: 1;
-  visibility: visible;
-  transition-delay: 0s;
+
+#paleo-keyboard .pk-translit[hidden] { display: none; }
+
+/* ===== ДЕЙСТВИЯ: icon-кнопки 36px + тумблер физической клавиатуры ===== */
+#paleo-keyboard .pk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
 }
-.pk-key-name, .pk-key-translit, .pk-modal-symbol, .pk-modal-reference, .pk-toast { display: none; }
-.pk-modal-symbol { margin: 0 auto 16px; color: var(--text-primary); font-family: 'Noto Sans Phoenician', 'Segoe UI Historic', 'Arial Unicode MS', 'Times New Roman', serif; font-size: 92px; line-height: 1; text-align: center; }
-.pk-modal-glyph-fallback::before { font-size: 92px; }
-.pk-toast { position: fixed; top: 24px; left: 50%; z-index: 9999; padding: 10px 24px; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--accent-gold); border-radius: 4px; opacity: 0; pointer-events: none; transform: translateX(-50%); transition: opacity var(--motion-base); }
+
+#paleo-keyboard .pk-icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+#paleo-keyboard .pk-icon-btn:hover,
+#paleo-keyboard .pk-icon-btn:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#paleo-keyboard .pk-icon-btn svg.lucide { width: 18px; height: 18px; }
+
+#paleo-keyboard .pk-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 36px;
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#paleo-keyboard .pk-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--accent-gold);
+}
+
+/* Полноширинная primary-кнопка панели строки. */
+#paleo-keyboard .pk-primary {
+  width: 100%;
+  max-width: 100%;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+/* ===== EMPTY-STATE: пунктир с глифом и подсказкой ===== */
+#paleo-keyboard .pk-empty,
+#paleo-keyboard .pk-keys-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+#paleo-keyboard .pk-empty[hidden],
+#paleo-keyboard .pk-keys-empty[hidden] { display: none; }
+
+/* Пустое состояние внутри сетки клавиш занимает всю строку сетки. */
+#paleo-keyboard .pk-keys-empty { grid-column: 1 / -1; }
+
+#paleo-keyboard .pk-empty strong,
+#paleo-keyboard .pk-keys-empty strong {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  font-weight: 600;
+}
+
+#paleo-keyboard .pk-empty-glyph {
+  color: var(--accent-gold);
+  font-family: var(--font-paleo);
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+#paleo-keyboard .pk-retry {
+  margin-top: var(--space-2);
+}
+
+/* ===== ИСТОРИЯ: 5 последних строк чипами; клик возвращает строку в ввод ===== */
+#paleo-keyboard .pk-history {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#paleo-keyboard .pk-history-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  background: transparent;
+  color: var(--text-secondary);
+  font-family: var(--font-paleo);
+  font-size: var(--ui-13);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), color var(--motion-fast);
+}
+
+#paleo-keyboard .pk-history-chip:hover,
+#paleo-keyboard .pk-history-chip:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#paleo-keyboard .pk-history-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#paleo-keyboard .pk-history-empty {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ===== КАРТОЧКА БУКВЫ: hairline-рамка под сеткой клавиш ===== */
+#paleo-keyboard .pk-info {
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+#paleo-keyboard .pk-info[hidden] { display: none; }
+
+#paleo-keyboard .pk-info-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+#paleo-keyboard .pk-info-glyph {
+  color: var(--accent-gold);
+  font-family: var(--font-paleo);
+  font-size: 28px;
+  line-height: 1;
+}
+
+#paleo-keyboard .pk-info-name {
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13);
+  font-weight: 600;
+}
+
+#paleo-keyboard .pk-info-sound {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+#paleo-keyboard .pk-info-row {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+
+/* ===== ТОСТ: подтверждение копирования и сохранения в историю ===== */
+.pk-toast { position: fixed; top: 24px; left: 50%; z-index: 9999; padding: 10px 24px; background: var(--bg-dark); color: var(--text-light); border: 1px solid var(--accent-gold); border-radius: var(--radius-8); opacity: 0; pointer-events: none; transform: translateX(-50%); transition: opacity var(--motion-base); }
 .pk-toast.show { opacity: 1; }
 
-@media (max-width: 768px) {
-  .pk-keyboard { padding: 8px 0; gap: 8px; }
-  .pk-key { width: 56px; height: 56px; flex-basis: 56px; }
-  .pk-key-symbol { font-size: 30px; }
-  .pk-actions { flex-wrap: wrap; }
+/* ===== ≤900px: одна колонка СТРОКА → КЛАВИШИ → ИСТОРИЯ ===== */
+@media (max-width: 900px) {
+  #paleo-keyboard .pk-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'text'
+      'keys'
+      'history';
+  }
+
+  /* Подпись строки заголовка уходит на свою строку, а не в узкий хвост. */
+  #paleo-keyboard .pk-head-note {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  #paleo-keyboard .pk-head-title,
+  #paleo-keyboard .pk-count,
+  #paleo-keyboard .pk-writing-chip,
+  #paleo-keyboard .pk-history-chip,
+  #paleo-keyboard .pk-toggle { min-height: 40px; }
+
+  #paleo-keyboard .pk-icon-btn { width: 40px; height: 40px; }
+
+  #paleo-keyboard .pk-toggle { margin-left: 0; }
+
+  #paleo-keyboard .pk-output { font-size: 24px; }
 }
 
 @media print {

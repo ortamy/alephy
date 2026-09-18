@@ -56,6 +56,32 @@
   box-shadow: var(--ring-focus);
 }
 
+/* Переключатель языка в шапке: член семьи .icon-btn (см. «Header icon controls»
+   ниже) — размеры, обводка, hover и мобильные значения наследуются оттуда.
+   Поверх иконки растянут прозрачный нативный <select>: открывает список
+   языков, сохраняет клавиатурный фокус и мобильное поведение. */
+.lab-header .lang-btn {
+  position: relative;
+}
+.lab-header .lang-btn:focus-within { outline: none; box-shadow: var(--ring-focus); }
+.lab-header .lang-btn select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  opacity: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+.lab-header .lang-btn select:focus-visible { outline: none; }
+
 /* ===== КЛАВИАТУРНЫЙ ФОКУС (виден всегда) ===== */
 a:focus-visible,
 button:focus-visible,
@@ -156,7 +182,7 @@ textarea:focus-visible,
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  background: color-mix(in srgb, var(--header-bg) 74%, transparent);
+  background: color-mix(in srgb, var(--header-bg) var(--header-glass-mix), transparent);
   border-bottom: 1px solid transparent;
   transition: height 200ms ease, opacity 200ms ease, border-color 200ms ease;
 }
@@ -182,7 +208,7 @@ textarea:focus-visible,
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-sm);
   background: var(--bg-dark-hover);
-  color: var(--header-text);
+  color: var(--header-ink);
   font-family: var(--font-serif);
   font-size: var(--text-sm);
   outline: none;
@@ -398,7 +424,6 @@ body.is-embed .lab-content { margin: 0; }
   padding: 0 var(--space-4);
 }
 .lab-header .logo img { height: 28px; width: auto; }
-.alephy-beta { height: 16px; padding: 0 6px; font-size: 8px; }
 .lab-sidebar {
   top: 48px;
   height: calc(100vh - 48px);
@@ -459,16 +484,23 @@ body.is-embed .lab-content { margin: 0; }
 }
 [data-theme="white"] .lab-header .logo,
 [data-theme="white"] .lab-header nav a,
+[data-theme="white"] .lab-header nav a.icon-link,
 [data-theme="white"] .lab-header nav button,
+[data-theme="white"] .lab-header .lang-btn,
 [data-theme="white"] .header-search,
 [data-theme="white"] .header-search input,
 [data-theme="white"] #globalSearch,
 [data-theme="white"] #gs-input,
 [data-theme="white"] #gs-results,
-[data-theme="white"] .lab-header-mobile-links {
+[data-theme="white"] .lab-header-mobile-links,
+[data-theme="white"] .lab-header-mobile-links .mobile-icon-link {
   background: #ffffff;
   color: #221a10;
 }
+/* Явные усиления: семья .icon-btn (redesign, «Header icon controls») позже в
+   файле и на ничьей (0,2,2) перебивает правило выше для a.icon-link, а
+   .lang-btn (span) им не покрывается — без этих селекторов язык/сайт/GitHub
+   остаются с бежевым --bg-dark-hover на белой шапке. */
 [data-theme="white"] .lab-sidebar,
 [data-theme="white"] .lab-content {
   background: #ffffff;
@@ -525,14 +557,6 @@ html[data-theme="white"] .lab-header .logo img[src*="alephy-logo"] {
 html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   filter: invert(29%) sepia(19%) saturate(1090%) hue-rotate(348deg) brightness(83%) contrast(88%);
 }
-.alephy-beta {
-  height: 18px;
-  padding: 0 7px;
-  font-size: 10px;
-  line-height: 18px;
-  letter-spacing: 0.05em;
-}
-
 /* --- Hero модулей: консистентный компактный вид --- */
 .lab-hero,
 [data-lab-hero] {
@@ -597,7 +621,6 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
     gap: 8px;
   }
   .lab-header .logo { flex: 0 0 auto; }
-  .alephy-beta { display: none; }
   .lab-header-mobile-links { display: none !important; }
   .lab-header nav { display: flex; align-items: center; gap: 4px; }
   .lab-header nav a.icon-link { display: none; }
@@ -649,7 +672,9 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   gap: var(--space-2);
 }
 
-.lab-header .icon-btn {
+.lab-header .icon-btn,
+.lab-header nav a.icon-link,
+.lab-header .lang-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -661,26 +686,34 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   border: 1px solid var(--border-dark);
   border-radius: var(--radius-md);
   background: var(--bg-dark-hover);
-  color: var(--header-text);
+  color: var(--header-ink);
   cursor: pointer;
   flex: 0 0 auto;
   transition: background-color var(--motion-base), border-color var(--motion-base), color var(--motion-base), transform var(--motion-fast);
 }
 
-.lab-header .icon-btn svg.lucide {
+.lab-header .icon-btn svg.lucide,
+.lab-header nav a.icon-link svg.lucide,
+.lab-header .lang-btn svg.lucide {
   width: 18px;
   height: 18px;
   color: currentColor;
 }
 
-.lab-header .icon-btn:hover {
-  background: color-mix(in srgb, var(--bg-dark-hover) 76%, var(--header-text));
-  border-color: var(--header-muted);
+.lab-header .icon-btn:hover,
+.lab-header nav a.icon-link:hover,
+.lab-header .lang-btn:hover {
+  background: color-mix(in srgb, var(--bg-dark-hover) 76%, var(--header-ink));
+  border-color: var(--header-ink-muted);
+  color: var(--header-ink);
 }
 
-.lab-header .icon-btn:active { transform: scale(0.96); }
+.lab-header .icon-btn:active,
+.lab-header nav a.icon-link:active,
+.lab-header .lang-btn:active { transform: scale(0.96); }
 
-.lab-header .icon-btn:focus-visible {
+.lab-header .icon-btn:focus-visible,
+.lab-header nav a.icon-link:focus-visible {
   outline: none;
   box-shadow: var(--ring-focus);
 }
@@ -702,6 +735,8 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   }
 
   .lab-header .icon-btn,
+  .lab-header nav a.icon-link,
+  .lab-header .lang-btn,
   .lab-header nav .theme-toggle,
   .lab-header .lab-hamburger {
     width: 36px;
@@ -710,10 +745,16 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
     padding: 0;
   }
 
-  .lab-header .icon-btn svg.lucide { width: 16px; height: 16px; }
+  .lab-header .icon-btn svg.lucide,
+  .lab-header nav a.icon-link svg.lucide,
+  .lab-header .lang-btn svg.lucide { width: 16px; height: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .lab-header .icon-btn { transition: none; }
-  .lab-header .icon-btn:active { transform: none; }
+  .lab-header .icon-btn,
+  .lab-header nav a.icon-link,
+  .lab-header .lang-btn { transition: none; }
+  .lab-header .icon-btn:active,
+  .lab-header nav a.icon-link:active,
+  .lab-header .lang-btn:active { transform: none; }
 }

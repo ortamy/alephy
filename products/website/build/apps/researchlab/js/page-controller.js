@@ -18,10 +18,16 @@ const PageController = (function() {
     return d.innerHTML;
   }
 
+  var htmlCache = {};
+
   function fetchPage(path) {
+    if (htmlCache[path]) return Promise.resolve(htmlCache[path]);
     return fetch(path).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' for ' + path);
       return r.text();
+    }).then(function(html) {
+      htmlCache[path] = html;
+      return html;
     });
   }
 
@@ -38,6 +44,83 @@ const PageController = (function() {
 
   function showSpinner(container, text) {
     container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">' + escapeHtml(text || 'Загрузка…') + '</div></div>';
+  }
+
+  // ===== ГАРД ЗАГРУЗКИ МОДУЛЯ =====
+  // Вечный спиннер — это ошибка, а не состояние. Падение init или молчание
+  // дольше WATCHDOG_MS переводит панель в error-state с кнопкой «Повторить».
+  var WATCHDOG_MS = 8000;
+  var moduleWatchdogs = {};
+
+  function hasVisibleSpinner(container) {
+    var spinners = container.querySelectorAll('.lab-spinner');
+    for (var i = 0; i < spinners.length; i++) {
+      if (window.getComputedStyle(spinners[i]).display !== 'none') return true;
+    }
+    return false;
+  }
+
+  function moduleErrorMessage(error) {
+    if (!error) return '';
+    return error.message ? error.message : String(error);
+  }
+
+  function showModuleError(container, moduleId, reason) {
+    if (!container) return;
+    if (moduleWatchdogs[moduleId]) {
+      clearTimeout(moduleWatchdogs[moduleId]);
+      delete moduleWatchdogs[moduleId];
+    }
+    delete container.dataset.loading;
+    container.dataset.loaded = '1';
+    container.dataset.moduleError = '1';
+    container.innerHTML =
+      '<div class="lab-alert lab-alert-error" role="alert" data-module-error="' + escapeHtml(moduleId) + '">' +
+      '<div class="flex gap-8"><i data-lucide="alert-triangle" aria-hidden="true"></i><strong>Модуль не загрузился</strong></div>' +
+      '<p class="text-small text-muted mt-8">Модуль «' + escapeHtml(moduleId) + '»' + (reason ? ': ' + escapeHtml(reason) : '') + '</p>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm mt-8" data-module-retry><i data-lucide="refresh-cw" aria-hidden="true"></i>Повторить</button>' +
+      '</div>';
+    var retry = container.querySelector('[data-module-retry]');
+    if (retry) {
+      retry.addEventListener('click', function() { retryModule(container, moduleId); });
+    }
+    if (window.LabIcons) window.LabIcons.sync();
+  }
+
+  function retryModule(container, moduleId) {
+    if (!container) return;
+    delete container.dataset.loaded;
+    delete container.dataset.loading;
+    delete container.dataset.moduleError;
+    container.innerHTML = '';
+    render(moduleId, container, container._labParsed);
+  }
+
+  // Watchdog не требует явного «ready»: если через WATCHDOG_MS в панели
+  // всё ещё виден спиннер — модуль не завершил загрузку.
+  function guardModuleLoad(moduleId, container) {
+    if (moduleWatchdogs[moduleId]) clearTimeout(moduleWatchdogs[moduleId]);
+    moduleWatchdogs[moduleId] = setTimeout(function() {
+      delete moduleWatchdogs[moduleId];
+      if (!container.isConnected || container.dataset.moduleError === '1') return;
+      if (!hasVisibleSpinner(container)) return;
+      console.warn('[PageController] Модуль «' + moduleId + '» не сигнализировал готовность за ' + WATCHDOG_MS + ' мс — показан error-state');
+      showModuleError(container, moduleId, 'таймаут загрузки');
+    }, WATCHDOG_MS);
+  }
+
+  // Модули без post-render хука завершают загрузку сразу после разметки —
+  // эту разметку они получают либо синхронно из switch, либо из fetch ниже.
+  function initHtmlModule(moduleId, container) {
+    try {
+      if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
+      if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
+      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
+      if (window.RevealObserver) window.RevealObserver.scan(container);
+    } catch (error) {
+      console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
+      showModuleError(container, moduleId, moduleErrorMessage(error));
+    }
   }
 
   var AGENT_API_URL = 'http://127.0.0.1:5000';
@@ -1266,9 +1349,33 @@ const PageController = (function() {
   }
 
   // ===== ОСНОВНОЙ МЕТОД РЕНДЕРИНГА =====
+  // Обёртка гейтит весь dispatch: любое синхронное падение модуля (в рендере
+  // или в его init) превращается в error-state панели, а не в вечный спиннер.
   function render(moduleId, container, parsed) {
-    console.log('[PC] Рендерим модуль:', moduleId, container);
     if (!container) return;
+    container._labParsed = parsed;
+
+    if (container.dataset.moduleError === '1') {
+      retryModule(container, moduleId);
+      return;
+    }
+
+    guardModuleLoad(moduleId, container);
+
+    try {
+      renderModule(moduleId, container, parsed);
+    } catch (error) {
+      console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
+      showModuleError(container, moduleId, moduleErrorMessage(error));
+    }
+  }
+
+  function renderModule(moduleId, container, parsed) {
+    if (container.dataset.loading === '1') {
+      applyModuleHero(moduleId, container, parsed);
+      if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
+      return;
+    }
 
     if (container.dataset.loaded && container.innerHTML.trim() !== '') {
       if (moduleId === 'scripture-reader' && window.ScriptureReader) {
@@ -1310,6 +1417,7 @@ const PageController = (function() {
         window.ClubModule._setCardId(parsed && parsed.segments && parsed.segments[1] && parsed.segments[1] !== 'discussions' && parsed.segments[1] !== 'create' && parsed.segments[1] !== 'sessions' ? parsed.segments[1] : null);
         window.ClubModule.render(container.querySelector('#club-app') || container, parsed);
       }
+      if (moduleId === 'paleo-keyboard' && window.PaleoKey) PaleoKey.init();
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -1395,9 +1503,7 @@ const PageController = (function() {
         break;
 
       case 'word-analyzer':
-        container.innerHTML = '<h1><img src="assets/icons/32/archaeology/testtube.svg" class="lab-icon" alt="">Разбор слов</h1>' +
-          '<p class="subtitle">Вставьте слова через запятую или каждое с новой строки. Мы найдём корень, палео-образы, транслитерацию и цепочку подмен.</p>' +
-          '<textarea id="wa-input" class="lab-textarea" rows="8" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
+        container.innerHTML = '<textarea id="wa-input" class="lab-textarea" rows="8" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
           '<div class="flex gap-8 mb-16">' +
           '<button class="lab-btn lab-btn-primary" onclick="WordAnalyzer.analyze()"><img src="assets/icons/32/archaeology/testtube.svg" width="32" height="32" alt="Разобрать" style="vertical-align: middle; margin-right: 6px;"> Разобрать</button>' +
           '<button class="lab-btn lab-btn-secondary" onclick="document.getElementById(\'wa-input\').value=\'\';document.getElementById(\'wa-grid\').innerHTML=\'\';document.getElementById(\'wa-export\').style.display=\'none\';document.getElementById(\'wa-status\').className=\'lab-alert lab-alert-info\';document.getElementById(\'wa-status\').textContent=\'Введите слова для разбора.\'"><img src="assets/icons/32/nav/alert.png" width="32" height="32" alt="Очистить" style="vertical-align: middle; margin-right: 6px;"> Очистить</button>' +
@@ -1428,6 +1534,7 @@ const PageController = (function() {
           '<div class="search-wrap"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите..." onkeydown="if(event.key===\'Enter\')EtymologyLab.analyze()"><button class="lab-btn lab-btn-primary" onclick="EtymologyLab.analyze()">Разобрать</button></div>' +
           '<div id="el-results"></div>';
         container.dataset.loaded = '1';
+        if (window.EtyLab || window.EtymologyLab) (window.EtyLab || window.EtymologyLab).init();
         break;
 
       case 'scripture-reader':
@@ -1437,6 +1544,13 @@ const PageController = (function() {
           '</div>' +
           '<div id="scripture-verse-nav" class="scripture-verse-nav" style="display:none;" aria-label="Выбор главы и стиха"></div>' +
           '<div class="scripture-reader-layout"><main class="scripture-main">' +
+          '<div class="scripture-search" id="scripture-search">' +
+          '<label class="scripture-category-label" for="scripture-category">Категория</label>' +
+          '<select class="scripture-category-select" id="scripture-category" aria-label="Категория книг">' +
+          '<option value="">Все книги</option>' +
+          '</select>' +
+          '<input type="search" class="scripture-search-input" id="scripture-search-input" placeholder="Поиск по книгам…" aria-label="Поиск по книгам">' +
+          '</div>' +
           '<div id="scripture-book-grid" class="scripture-book-grid"></div>' +
           '<article class="scripture-verse" id="scripture-verse-article" style="display:none;" aria-labelledby="scripture-verse-title">' +
           '<div class="scripture-verse-meta" id="scripture-verse-title">Берешит 1:1</div>' +
@@ -1593,13 +1707,13 @@ const PageController = (function() {
           '<div id="rc-result" class="lab-card" style="display:none;"><div class="lab-card-header"><img src="assets/icons/32/scribe/scroll.png" width="32" height="32" alt="Результат" style="vertical-align: middle; margin-right: 6px;"> Результат проверки</div><div class="lab-card-body" id="rc-body"></div></div>' +
           '<div class="lab-card"><div class="lab-card-header"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt="Словарь" style="vertical-align: middle; margin-right: 6px;"> Словарь подмен</div><div class="lab-card-body" id="rc-dict"></div></div>';
         container.dataset.loaded = '1';
+        if (window.RelChecker) window.RelChecker.init();
         break;
 
       case 'religionisms':
         container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Религионизмы" style="vertical-align: middle; margin-right: 6px;"> Религионизмы</h1>' +
           '<p class="subtitle">Каждая сфера, учреждённая человеком вне откровения Яхве — структурированный шекер со своим алтарём, жрецами и жертвами. 9 компонентов на каждую сферу.</p>' +
           '<div class="search-wrap"><input type="text" id="rel-search" class="lab-input" placeholder="Медицина, алтарь, жрец..." oninput="if(window.Religionisms)Religionisms.filter(this.value)"></div>' +
-          '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rel-found">0</div><div class="label">Сфер найдено</div></div></div>' +
           '<div id="rel-grid" class="rel-grid"></div>' +
           '<div id="rel-detail" class="rel-detail" style="display:none;"></div>' +
           '<div id="rel-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
@@ -1679,23 +1793,46 @@ const PageController = (function() {
       case 'ed-chat':
         container.innerHTML = '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" width="32" height="32" alt="Нейрочат" style="vertical-align: middle; margin-right: 6px;"> Нейрочат</h1>' +
           '<p class="subtitle">Чат с исследовательской нейросетью для анализа, разбора слов и поиска подмен.</p>' +
-          '<div class="ec-layout"><main class="ec-main">' +
-          '<div class="ec-toolbar"><label for="ec-model">Модель</label><select id="ec-model" class="lab-select glass-btn-gold"><option value="claude">Claude Sonnet 4</option><option value="gpt4o">GPT-4o</option><option value="deepseek">DeepSeek</option><option value="gemini">Gemini</option></select><span id="ec-model-label" class="ec-model-label"></span><span id="ec-tokens" class="ec-tokens" hidden></span></div>' +
-          '<div class="lab-card ec-messages" id="ec-messages"><div class="text-muted ec-welcome" id="ec-welcome">Начните диалог.</div></div>' +
-          '<div class="ec-composer"><textarea id="ec-input" class="lab-textarea" rows="3" placeholder="Введите запрос..." onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();EdChat.send();}"></textarea><div class="ec-actions"><button class="lab-btn lab-btn-primary" onclick="EdChat.send()">Отправить</button><button class="lab-btn lab-btn-secondary" onclick="EdChat.clear()">Очистить</button><button class="lab-btn lab-btn-secondary" onclick="EdChat.save()">Сохранить диалог</button><button class="lab-btn lab-btn-secondary" onclick="EdChat.export()">Экспортировать Markdown</button><button class="lab-btn lab-btn-secondary" onclick="EdChat.useInPromptGenerator()">Использовать в генераторе промптов</button></div></div>' +
-          '</main><aside id="ec-sidebar" class="ec-sidebar"><section class="ec-panel"><h2>Контекст</h2><h3>Документы</h3><ul id="ec-context-documents" class="ec-document-list"></ul><h3>Активный промпт</h3><textarea id="ec-prompt" class="lab-textarea ec-prompt" rows="5"></textarea></section><section class="ec-panel"><h2>История диалогов</h2><div id="ec-history" class="ec-history">Сохранённых диалогов пока нет.</div></section></aside></div>' +
-          '<div class="text-small text-muted mt-8">Демо-режим: ответы формируются локально и учитывают выбранный стиль модели.</div>';
+          '<div class="ec-layout"><main class="ec-main" aria-labelledby="ec-dialog-title">' +
+          '<header class="ec-head"><h2 class="ec-head-title" id="ec-dialog-title">Диалог</h2><span class="ec-count" id="ec-count" aria-label="Сообщений в диалоге">0</span><div class="ec-model"><button type="button" id="ec-model" class="ec-model-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="ec-model-list" aria-label="Модель"><span class="ec-model-name" id="ec-model-name"></span><i data-lucide="chevron-down" aria-hidden="true"></i></button><ul id="ec-model-list" class="ec-model-list" role="listbox" aria-label="Список моделей" hidden></ul></div></header>' +
+          '<p class="ec-note-row"><span class="ec-model-label" id="ec-model-label"></span><span class="ec-tokens" id="ec-tokens" hidden></span></p>' +
+          '<div class="ec-messages" id="ec-messages"></div>' +
+          '<div class="ec-composer"><div class="ec-composer-row"><textarea id="ec-input" class="lab-textarea ec-input" rows="1" placeholder="Введите запрос..." aria-label="Запрос к модели" onkeydown="if(event.key===\'Enter\'&&!event.shiftKey){event.preventDefault();EdChat.send();}"></textarea><button type="button" class="lab-btn lab-btn-primary ec-send" onclick="EdChat.send()"><i data-lucide="send" aria-hidden="true"></i>Отправить</button></div><div class="ec-actions"><button type="button" class="ec-icon-btn" onclick="EdChat.clear()" title="Очистить диалог" aria-label="Очистить диалог"><i data-lucide="eraser" aria-hidden="true"></i></button><button type="button" class="ec-icon-btn" onclick="EdChat.save()" title="Сохранить диалог" aria-label="Сохранить диалог"><i data-lucide="save" aria-hidden="true"></i></button><button type="button" class="ec-icon-btn" onclick="EdChat.export()" title="Экспорт Markdown" aria-label="Экспортировать диалог в Markdown"><i data-lucide="download" aria-hidden="true"></i></button><button type="button" class="ec-icon-btn" onclick="EdChat.useInPromptGenerator()" title="В генератор промптов" aria-label="Использовать в генераторе промптов"><i data-lucide="sparkles" aria-hidden="true"></i></button></div></div>' +
+          '</main><aside id="ec-sidebar" class="ec-side"><section class="ec-panel" aria-labelledby="ec-context-title"><header class="ec-head"><h2 class="ec-head-title" id="ec-context-title">Активный контекст</h2><span class="ec-count" id="ec-doc-count" aria-label="Документов в контексте">0</span></header><div class="ec-block"><p class="ec-subhead">Документы</p><ul id="ec-context-documents" class="ec-chips"></ul></div><div class="ec-block"><p class="ec-subhead">Активный промпт</p><textarea id="ec-prompt" class="lab-textarea ec-prompt" rows="4" aria-label="Активный промпт"></textarea></div></section><section class="ec-panel" aria-labelledby="ec-history-title"><header class="ec-head"><h2 class="ec-head-title" id="ec-history-title">История диалогов</h2><span class="ec-count" id="ec-history-count" aria-label="Сохранённых диалогов">0</span></header><div id="ec-history" class="ec-history"></div></section></aside><div class="ec-model-backdrop" id="ec-model-backdrop" hidden></div></div>' +
+          '<p class="ec-demo text-small text-muted mt-8">Демо-режим: ответы формируются локально и учитывают выбранный стиль модели.</p>'; if (window.EdChat) EdChat.init();
         container.dataset.loaded = '1';
         break;
 
       case 'paleo-keyboard':
         container.innerHTML = '<h1><img src="assets/icons/32/paleo/track.png" width="32" height="32" alt="Палео-клавиатура" style="vertical-align: middle; margin-right: 6px;"> Палео-клавиатура</h1>' +
-          '<p class="subtitle">Нажимайте на буквы, чтобы вставить их. Каждая буква — с образом и значением.</p>' +
-          '<textarea id="pk-output" class="lab-card pk-output" aria-label="Поле палео-текста" placeholder="Введите палео-символы…"></textarea>' +
-          '<div class="flex gap-8 mb-16 pk-actions"><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.copy()"><i data-lucide="copy" aria-hidden="true"></i> Копировать</button><button type="button" class="lab-btn lab-btn-secondary" onclick="PaleoKey.clear()"><i data-lucide="trash-2" aria-hidden="true"></i> Очистить</button></div>' +
-          '<div id="pk-keys" class="pk-keyboard" aria-label="Палео-клавиатура"></div>' +
-          '<div id="pk-info" class="lab-card mt-16" style="display:none;"><div class="lab-card-header" id="pk-info-title"></div><div class="lab-card-body" id="pk-info-body"></div></div>';
+          '<p class="subtitle">Набирайте палео-знаки кликом или с физической клавиатуры. Каждая буква — с образом и значением.</p>' +
+          '<div class="pk-layout">' +
+          '<section class="pk-panel pk-panel-text" aria-labelledby="pk-text-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-text-title">Строка</h2><span class="pk-count" id="pk-text-count" aria-label="Знаков в строке">0</span><span class="pk-head-note">Enter — в историю, Backspace — удалить глиф</span></header>' +
+          '<textarea id="pk-output" class="pk-output" rows="2" dir="rtl" spellcheck="false" aria-label="Поле палео-текста" placeholder="𐤀𐤁𐤂"></textarea>' +
+          '<p id="pk-translit" class="pk-translit" aria-live="polite" hidden></p>' +
+          '<div id="pk-empty" class="pk-empty"><span class="pk-empty-glyph" aria-hidden="true">𐤕</span><strong>Строка пуста</strong><span>Нажмите клавишу на панели или введите глиф с физической клавиатуры.</span></div>' +
+          '<div class="pk-actions">' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.copy()" title="Копировать строку" aria-label="Копировать строку"><i data-lucide="copy" aria-hidden="true"></i></button>' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.clear()" title="Очистить строку" aria-label="Очистить строку"><i data-lucide="trash-2" aria-hidden="true"></i></button>' +
+          '<button type="button" class="pk-icon-btn" onclick="PaleoKey.downloadAsPng()" title="Скачать PNG" aria-label="Скачать строку как PNG"><i data-lucide="download" aria-hidden="true"></i></button>' +
+          '<label class="pk-toggle"><input type="checkbox" id="pk-physical" checked onchange="PaleoKey.setPhysical(this.checked)">Физическая клавиатура</label>' +
+          '</div>' +
+          '<button type="button" class="lab-btn lab-btn-primary pk-primary" onclick="PaleoKey.analyzeInEtymology()"><i data-lucide="search" aria-hidden="true"></i>Разобрать в этимологии</button>' +
+          '</section>' +
+          '<section class="pk-panel pk-panel-keys" aria-labelledby="pk-keys-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-keys-title">Клавиши</h2><span class="pk-count" id="pk-keys-count" aria-label="Клавиш в наборе">0</span><span class="pk-head-note">латинская клавиша вставляет глиф</span></header>' +
+          '<div id="pk-writings" class="pk-writings" role="radiogroup" aria-label="Письменность"></div>' +
+          '<div id="pk-keys" class="pk-keys" data-physical="on" aria-label="Палео-клавиатура"></div>' +
+          '<div id="pk-info" class="pk-info" hidden><div class="pk-info-head" id="pk-info-title"></div><div id="pk-info-body"></div></div>' +
+          '</section>' +
+          '<section class="pk-panel pk-panel-history" aria-labelledby="pk-history-title">' +
+          '<header class="pk-head"><h2 class="pk-head-title" id="pk-history-title">История</h2><span class="pk-count" id="pk-history-count" aria-label="Строк в истории">0</span><span class="pk-head-note">5 последних строк</span></header>' +
+          '<div id="pk-history" class="pk-history"></div>' +
+          '</section>' +
+          '</div>';
         container.dataset.loaded = '1';
+        if (window.PaleoKey) PaleoKey.init();
         break;
 
       case 'admin-settings':
@@ -1709,21 +1846,27 @@ const PageController = (function() {
       case 'generators':
       case 'checkers':
       case 'translation-comparator':
+        if (container.dataset.loading === '1') return;
+        if (container.dataset.loaded === '1' && container.innerHTML.trim() !== '') {
+          initHtmlModule(moduleId, container);
+          break;
+        }
+        // Гейт для асинхронной ветки. Без него .then-обработчик ниже выходил
+        // сразу (loading !== '1') и панель оставалась со спиннером навсегда.
+        container.dataset.loading = '1';
         showSpinner(container, 'Загрузка модуля…');
         fetchPage('pages/' + moduleId + '.html').then(function(html) {
+          if (container.dataset.loading !== '1') return;
           container.innerHTML = html;
+          // Модуль без post-render хука считается загруженным сразу после
+          // разметки: спиннер снят до init, панель не «висит» на загрузке.
           container.dataset.loaded = '1';
-          if (moduleId === 'paleo-builder' && window.PaleoBuilder) {
-            window.PaleoBuilder.init(container);
-          }
-          if (moduleId === 'video-lab' && window.VideoLab) {
-            window.VideoLab.init(container);
-          }
-          if (moduleId === 'translation-comparator' && window.TransComp) {
-            window.TransComp.init();
-          }
+          delete container.dataset.loading;
+          initHtmlModule(moduleId, container);
         }).catch(function(err) {
-          showError(container, 'Ошибка загрузки модуля: ' + err.message);
+          if (container.dataset.loading !== '1') return;
+          console.warn('[PageController] Модуль «' + moduleId + '» не загрузил разметку: ' + moduleErrorMessage(err));
+          showModuleError(container, moduleId, moduleErrorMessage(err));
         });
         break;
 
@@ -1737,7 +1880,6 @@ const PageController = (function() {
         break;
 
       case 'davar-checker':
-        showSpinner(container, 'Загрузка…');
         if (window.DavarChecker) {
           window.DavarChecker.init(container);
         } else {
@@ -2000,7 +2142,9 @@ const PageController = (function() {
       else if (params.state) viewId = 'detail';
     } else if (moduleId === 'timeline') {
       var seg2 = parsed && parsed.segments;
-      if (seg2 && seg2[1]) { viewId = 'detail'; override = timelineHeroOverride(seg2[1]); }
+      // Шапку подменяет только полный вид ленты (#timeline/<id>/full) и сравнение;
+      // каталог с раскрытой карточкой или подсвеченным событием остаётся каталогом.
+      if (seg2 && (seg2[2] === 'full' || seg2[1] === 'compare')) { viewId = 'detail'; override = timelineHeroOverride(seg2[1]); }
       else viewId = 'catalog';
         } else if (moduleId === 'paleo-linguistics') {
       var seg3 = parsed && parsed.segments;
@@ -2120,13 +2264,10 @@ const PageController = (function() {
     setTimeout(function() {
       if (window.RootDict) RootDict.init();
     }, 500);
-    if (window.EtyLab) EtyLab.init();
-    if (window.RelChecker) RelChecker.init();
     if (window.Religionisms) Religionisms.init();
     if (window.BoardLib) BoardLib.init();
     if (window.VisionUI) VisionUI.init();
     if (window.EdChat) EdChat.init();
-    if (window.PaleoKey) PaleoKey.init();
     if (window.LabIcons) window.LabIcons.sync();
     if (window.Investigation) Investigation.init();
     if (window.ScriptureReader) ScriptureReader.init();

@@ -42,6 +42,10 @@
   --header-bg: #2c1810;
   --header-text: #fff8ea;
   --header-muted: #d8c8b0;
+  --header-ink: #fff8ea;
+  --header-ink-muted: #d8c8b0;
+  --header-glass-mix: 74%;
+  --header-compact: 48px;
 
   /* ===== SPACING SCALE (4px base) ===== */
   --space-1: 4px;
@@ -63,6 +67,7 @@
 /* ===== RADIUS SCALE ===== */
   --radius-xs: 4px;     /* мелкие контролы, бейджи (точный захват массового 4px) */
   --radius-sm: 6px;
+  --radius-8: 8px;      /* рабочая ступень между sm(6) и md(10); согласовано в design-consistency-audit */
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-xl: 20px;
@@ -338,9 +343,15 @@
   --font-ui: 'DM Sans', -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
   /* Размеры UI-типографики (плотный режим) */
+  /* Размеры UI-типографики (плотный режим) */
   --ui-13: 13px;   /* основной текст контролов */
   --ui-12: 12px;   /* вторичный */
   --ui-11: 11px;   /* метки, бейджи, капс-заголовки */
+  --ui-10: 10px;   /* вложенные метки, вторичные кнопки, компактные поля ввода */
+
+  /* Для legacy-модулей, использующих --font-body: задаём один канон.
+     Значение берём из уже используемого fallback-множества модулей. */
+  --font-body: var(--font-serif);
 
   /* Высоты контролов */
   --control-h: 28px;
@@ -363,8 +374,8 @@
   --status-danger: var(--accent-red);
   --status-neutral: var(--text-muted);
 
-  /* Один фокус для клавиатуры: рамка+кольцо золотом */
-  --focus-outline: 1px solid var(--accent-gold);
+  /* ------ Фон для тонких поверхностей, второстепенного контента, карточек-фоновых слоёв ------ */
+  --bg-subtle: #f5f0e8;
 }
 
 /* =============================================
@@ -411,6 +422,11 @@
   --header-bg: #ffffff;
   --header-text: #221a10;
   --header-muted: #8d8271;
+  /* Шапка на white — светлая: чернила должны быть тёмными. Без переопределения
+     иконки семьи .icon-btn (поиск/тема/язык/сайт/GitHub) остаются кремовыми
+     #fff8ea из :root и пропадают на белом фоне. */
+  --header-ink: var(--header-text);
+  --header-ink-muted: var(--header-muted);
   --info-bg: #f3f0e7;
   --info-border: #d8d0bd;
   --info-text: #57503c;
@@ -423,6 +439,7 @@
   --success-bg: #eef4e6;
   --success-border: #c4d5a8;
   --success-text: #42582a;
+  --bg-subtle: #ecefda;
 }
 
 /* Бежевая (beige): лёгкая пастельная, цельный монохром (шапка/поиск/плашки — светлые) */
@@ -453,6 +470,9 @@
   --header-bg: #f1e6cf;
   --header-text: #3a2b17;
   --header-muted: #6a563a;
+  --header-ink: #3a2b17;
+  --header-ink-muted: #6a563a;
+  --header-glass-mix: 60%;
   --info-bg: #f0ecdd;
   --info-border: #c9cd9f;
   --info-text: #4a5230;
@@ -498,6 +518,9 @@
   --header-bg: #060301;
   --header-text: #f2ead9;
   --header-muted: #b9a68a;
+  --header-ink: #f2ead9;
+  --header-ink-muted: #b9a68a;
+  --header-glass-mix: 78%;
   --info-bg: #1c150c;
   --info-border: #5a6a4a;
   --info-text: #cfe0b8;
@@ -510,6 +533,7 @@
   --success-bg: #16200f;
   --success-border: #55673c;
   --success-text: #c2d6a6;
+  --bg-subtle: #302820;
   --grad-gold-cta: linear-gradient(135deg, #8a5f18 0%, #c89b3c 50%, #e0b85a 115%);
 }
 
@@ -538,9 +562,12 @@
   --accent-red: #d97b4e;
   --accent-red-hover: #e08a5a;
   --accent-green: #9cb96a;
-  --header-bg: #1f1407;
-  --header-text: #f3e9d6;
-  --header-muted: #c9b288;
+  --header-bg: #241810;
+  --header-text: #f4ead2;
+  --header-muted: #c2a880;
+  --header-ink: #f4ead2;
+  --header-ink-muted: #c2a880;
+  --header-glass-mix: 72%;
   --info-bg: #43331c;
   --info-border: #5d6a42;
   --info-text: #d8e0bc;

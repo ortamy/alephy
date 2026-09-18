@@ -121,12 +121,7 @@
     var defaultRight = current.languages.filter(function(language) { return language.id === 'hebrew'; })[0] || current.languages[1];
     current.left = current.left || (defaultLeft && defaultLeft.id);
     current.right = current.right || (defaultRight && defaultRight.id);
-    container.innerHTML = '<section class="tensor-shell" aria-labelledby="tensor-title"><header class="section-hero">' +
-      '<div class="section-hero-watermark" aria-hidden="true">𐤀 𐤁 𐤂 𐤃 𐤄 𐤅</div>' +
-      '<div class="section-hero-kicker">АЛЕФИ · ЛИНГВИСТИЧЕСКИЙ ТЕНЗОР</div>' +
-      '<h1><img src="assets/icons/32/archaeology/testtube.svg" class="lab-icon" alt="">Лингвистический тензор</h1>' +
-      '<p class="section-hero-lead">Сопоставьте два языка и посмотрите, где их поток удерживает действие, корень и физику образа.</p>' +
-      '</header>' +
+    container.innerHTML = '<section class="tensor-shell" aria-label="Лингвистический тензор">' +
       '<form class="tensor-controls" id="tensor-form"><div class="tensor-field"><label for="tensor-left">Первый язык</label><select id="tensor-left" class="lab-select">' + selectOptions(current.left, current.right) + '</select></div><div class="tensor-vs" aria-hidden="true">VS</div><div class="tensor-field"><label for="tensor-right">Второй язык</label><select id="tensor-right" class="lab-select">' + selectOptions(current.right, current.left) + '</select></div><button type="submit" class="lab-btn lab-btn-primary tensor-run"><img src="assets/icons/32/archaeology/testtube.svg" width="24" height="24" alt="">Запустить анализ</button></form>' +
       '<p class="tensor-status" id="tensor-status" role="status" aria-live="polite">Выберите два языка, чтобы собрать тензор.</p><div id="tensor-results"></div></section>';
     container.querySelector('#tensor-form').addEventListener('submit', function(event) {

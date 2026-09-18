@@ -5,13 +5,28 @@
 const SectionRenderer = (function() {
   'use strict';
 
-  var ICON_BASE = 'assets/icons/32/';
-  var DEFAULT_ICON = ICON_BASE + 'scribe/scroll.png';
+  function padChapter(index) {
+    return String(index + 1).padStart(2, '0');
+  }
 
   function escapeHtml(value) {
     var node = document.createElement('div');
     node.textContent = value == null ? '' : String(value);
     return node.innerHTML;
+  }
+
+  function wrapPaleo(html) {
+    return String(html || '').replace(/>([^<]*)</g, function(full, text) {
+      return '>' + text.replace(/[\u{10900}-\u{1091F}]+/gu, '<span class="paleo-glyph">$&</span>') + '<';
+    });
+  }
+
+  function wrapTranslit(html) {
+    return String(html || '').replace(/\(([^<>()\n]{1,48})\)/g, '<span class="essence-translit">($1)</span>');
+  }
+
+  function renderEssence(value) {
+    return wrapTranslit(renderMarkdown(value));
   }
 
   function renderMarkdown(value) {
@@ -21,16 +36,33 @@ const SectionRenderer = (function() {
     if (value == null || value === '') return '';
     var text = String(value);
     var html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(text) : '<p>' + escapeHtml(text).replace(/\n/g, '<br>') + '</p>';
-    return (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) ? DOMPurify.sanitize(html) : escapeHtml(text).replace(/\n/g, '<br>');
+    var safe = (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) ? DOMPurify.sanitize(html) : escapeHtml(text).replace(/\n/g, '<br>');
+    return wrapPaleo(safe);
   }
 
   // В контексте ТаНаХа разделяем квадратный текст, транслитерацию и перевод.
+  // Строка «Контекст: …» выходит из цитаты отдельной контекст-строкой под ней.
+  function contextSpan(text) {
+    return text ? '<span class="inner-form-context">' + text + '</span>' : '';
+  }
+
   function renderTanakh(value) {
     var html = renderMarkdown(value);
-    return html.replace(/<blockquote>([\s\S]*?)<\/blockquote>/gi, function(_, inner) {
+    html = html.replace(/<blockquote>([\s\S]*?)<\/blockquote>/gi, function(_, inner) {
       var clean = inner.replace(/<\/p>\s*<p>/gi, '<br>').replace(/<\/?p>/gi, '');
-      var lines = clean.split(/<br\s*\/?>\s*/i).filter(function(line) { return line.trim(); });
-      if (lines.length < 2) return '<blockquote class="tanakh-quote">' + clean + '</blockquote>';
+      // Строки внутри цитаты разделены и <br>, и обычным переносом (ленивое
+      // продолжение абзаца в blockquote не даёт <br>) — учитываем оба случая.
+      var lines = clean.split(/(?:<br\s*\/?>|\n)\s*/i).filter(function(line) { return line.trim(); });
+      var context = '';
+      lines = lines.filter(function(line) {
+        var match = line.match(/^\s*(?:<strong>)?\s*Контекст:?\s*(?:<\/strong>)?\s*([\s\S]*)$/i);
+        if (!match) return true;
+        context = match[1].trim();
+        return false;
+      });
+      if (lines.length < 2) {
+        return '<blockquote class="tanakh-quote inner-form-quote">' + (lines[0] || '') + '</blockquote>' + contextSpan(context);
+      }
       var seenHebrew = false;
       var nonHebrewLines = 0;
       var rendered = lines.map(function(line) {
@@ -45,23 +77,17 @@ const SectionRenderer = (function() {
         }
         return { html: '<span class="' + className + '">' + line + '</span>', divider: divider };
       });
-      return '<blockquote class="tanakh-quote">' + rendered.map(function(line) {
+      return '<blockquote class="tanakh-quote inner-form-quote">' + rendered.map(function(line) {
         return (line.divider ? '<span class="tanakh-quote-divider" aria-hidden="true"></span>' : '') + line.html;
-      }).join('') + '</blockquote>';
+      }).join('') + '</blockquote>' + contextSpan(context);
+    });
+    // Fallback: в части записей контекст идёт отдельным абзацем после цитаты.
+    return html.replace(/<\/blockquote>\s*<p>\s*(?:<strong>)?\s*Контекст:?\s*(?:<\/strong>)?\s*([\s\S]*?)<\/p>/gi, function(_, context) {
+      return '</blockquote>' + contextSpan(context.trim());
     });
   }
 
-  function typologyIcon(name, description) {
-    var text = (String(name || '') + ' ' + String(description || '')).toLowerCase();
-    var icon = 'ui/anchor.png';
-    if (/скини|ковчег|свит|тора/.test(text)) icon = 'scribe/scroll.png';
-    else if (/голгоф|гиппократ|пленени|вопрос/.test(text)) icon = 'ui/question.png';
-    else if (/огонь|жар|плам|свет|ламп/.test(text)) icon = 'archaeology/lamp.png';
-    else if (/камень|опор|основан/.test(text)) icon = 'ui/anchor.png';
-    return ICON_BASE + icon;
-  }
-
-  // Превращает строки «связь — пояснение» в сканируемую галерею карточек.
+  // Строки «связь — пояснение» → внутренние карточки (форма 1).
   function renderTypology(value) {
     var items = Array.isArray(value) ? value : String(value || '').split(/\r?\n/);
     var cards = items.map(function(item) {
@@ -70,61 +96,44 @@ const SectionRenderer = (function() {
       var parts = line.split(/\s+—\s+/);
       var name = parts.shift().trim();
       var description = parts.join(' — ').trim() || 'Связь в образной цепочке';
-      return '<article class="typology-link-card">' +
-        '<img class="typology-link-icon" src="' + escapeHtml(typologyIcon(name, description)) + '" alt="" width="32" height="32" loading="lazy">' +
+      return '<article class="typology-link-card inner-form-card" role="listitem">' +
         '<div class="typology-link-copy"><strong class="typology-link-name">' + escapeHtml(name) + '</strong>' +
         '<span class="typology-link-description">' + escapeHtml(description) + '</span></div>' +
       '</article>';
     }).filter(Boolean);
-    return '<div class="typology-links-gallery" role="list">' + cards.map(function(card) {
-      return card.replace('<article ', '<article role="listitem" ');
-    }).join('') + '</div>';
+    return '<div class="typology-links-gallery" role="list">' + cards.join('') + '</div>';
   }
 
-  function patchIcon(id, title, detail, index) {
-    var text = (String(title || '') + ' ' + String(detail || '')).toLowerCase();
-    var iconSets = {
-      etymology: ['archaeology/testtube.png', 'ui/book.png', 'scribe/scroll.png'],
-      exposure: ['weapons/sword.png', 'ui/question.png', 'ui/anchor.png'],
-      practice: ['paleo/track.png', 'archaeology/lamp.png', 'ui/anchor.png'],
-      summary: ['ui/scales.png', 'ui/book.png', 'scribe/scrolls.png']
-    };
-    if (/корень|этимолог|слово|палео|букв/.test(text)) return ICON_BASE + 'archaeology/testtube.png';
-    if (/искаж|подмен|греческ|латин|перевод/.test(text)) return ICON_BASE + 'weapons/sword.png';
-    if (/практи|сдел|шаг|примен|провер/.test(text)) return ICON_BASE + 'paleo/track.png';
-    if (/свод|итог|уров|вывод|ключ/.test(text)) return ICON_BASE + 'ui/scales.png';
-    var icons = iconSets[id] || ['ui/book.png', 'scribe/scroll.png', 'archaeology/testtube.png'];
-    return ICON_BASE + icons[(index || 0) % icons.length];
+  function splitPatchParts(content) {
+    var plain = content.replace(/<[^>]+>/g, '').replace(/\*\*/g, '').trim();
+    var parts = plain.split(/\s+—\s+|\s*:\s+/);
+    var title = parts.shift().trim() || 'Фрагмент';
+    var detail = parts.join(' — ').trim() || plain;
+    return { title: title, detail: detail };
   }
 
-  // Списки в аналитических карточках становятся компактными смысловыми плашками.
-  function renderPatchCards(items, id, offset) {
-    var cards = items.map(function(item, index) {
+  // Списки в главах практики/сводки — ряды с волосяными разделителями (форма 3).
+  function renderPatchCards(items) {
+    var cards = items.map(function(item) {
       var content = String(item || '').replace(/^\s*(?:[-*+]\s+|•\s*)/, '').trim();
       if (!content) return '';
-      var plain = content.replace(/<[^>]+>/g, '').replace(/\*\*/g, '').trim();
-      var parts = plain.split(/\s+—\s+|\s*:\s+/);
-      var title = parts.shift().trim() || 'Фрагмент';
-      var detail = parts.join(' — ').trim() || plain;
+      var parts = splitPatchParts(content);
       return '<article class="section-patch-card" role="listitem">' +
-        '<img class="section-patch-icon" src="' + escapeHtml(patchIcon(id, title, detail, (offset || 0) + index)) + '" alt="" width="28" height="28" loading="lazy">' +
-        '<div class="section-patch-copy"><strong class="section-patch-title">' + escapeHtml(title) + '</strong>' +
-        '<span class="section-patch-detail">' + escapeHtml(detail) + '</span></div>' +
+        '<div class="section-patch-copy"><strong class="section-patch-title">' + escapeHtml(parts.title) + '</strong>' +
+        '<span class="section-patch-detail">' + escapeHtml(parts.detail) + '</span></div>' +
       '</article>';
     }).filter(Boolean);
-    return '<div class="section-patches-gallery" role="list">' + cards.join('') + '</div>';
+    return '<div class="section-patches-gallery inner-form-rows" role="list">' + cards.join('') + '</div>';
   }
 
-  function renderPatchList(value, id) {
-    if (Array.isArray(value)) return renderPatchCards(value, id, 0);
+  function renderPatchList(value) {
+    if (Array.isArray(value)) return renderPatchCards(value);
     var lines = String(value || '').split(/\r?\n/);
     var output = [];
     var list = [];
-    var listIndex = 0;
     function flushList() {
       if (!list.length) return;
-      output.push(renderPatchCards(list, id, listIndex));
-      listIndex += list.length;
+      output.push(renderPatchCards(list));
       list = [];
     }
     lines.forEach(function(line) {
@@ -139,14 +148,14 @@ const SectionRenderer = (function() {
     return output.join('');
   }
 
-  // Оригинальные цитаты разделяем на отдельные карточки «цитата → разбор».
+  // Цитаты — карточка с волосяной рамкой: цитата (форма 2) + разбор.
   function renderOriginalCards(cards) {
     if (!Array.isArray(cards)) return renderMarkdown(cards);
     return '<div class="original-subcards" role="list">' + cards.map(function(card) {
-      return '<article class="original-subcard" role="listitem">' +
+      return '<article class="original-subcard inner-form-card" role="listitem">' +
         '<h3 class="original-subcard-title">' + escapeHtml(card.title || 'Цитата') + '</h3>' +
-        '<blockquote class="original-subcard-quote">' + renderMarkdown(card.quote || '') + '</blockquote>' +
-        '<div class="original-subcard-analysis"><strong>Разбор</strong>' + renderMarkdown(card.analysis || '') + '</div>' +
+        '<blockquote class="original-subcard-quote inner-form-quote">' + renderMarkdown(card.quote || '') + '</blockquote>' +
+        '<div class="original-subcard-analysis"><span class="inner-form-context">Разбор</span>' + renderMarkdown(card.analysis || '') + '</div>' +
       '</article>';
     }).join('') + '</div>';
   }
@@ -236,22 +245,6 @@ const SectionRenderer = (function() {
     return title.replace(/[^a-zа-яё0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'section';
   }
 
-  function iconForLegacy(value) {
-    var match = String(value || '').match(/([^/\\]+?)(?:\.png|\.svg)?$/i);
-    var name = match ? match[1].toLowerCase() : '';
-    var paths = {
-      scroll: 'scribe/scroll.png',
-      book: 'ui/book.png',
-      hourglass: 'ui/hourglass.png',
-      sword: 'weapons/sword.png',
-      anchor: 'ui/anchor.png',
-      lamp: 'archaeology/lamp.png',
-      scales: 'ui/scales.png',
-      question: 'ui/question.png'
-    };
-    return ICON_BASE + (paths[name] || 'scribe/scroll.png');
-  }
-
   function normalizeSection(section) {
     var title = cleanTitle(section && (section.title || section.heading));
     return {
@@ -259,7 +252,6 @@ const SectionRenderer = (function() {
       title: title,
       tocTitle: section && section.tocTitle ? String(section.tocTitle) : '',
       content: section && section.content !== undefined ? section.content : (section && section.body) || '',
-      icon: section && section.icon ? iconForLegacy(section.icon) : null,
       layout: section && section.layout ? String(section.layout) : '',
       cards: section && Array.isArray(section.cards) ? section.cards : null,
       comparison: section && section.comparison ? section.comparison : null
@@ -295,9 +287,9 @@ const SectionRenderer = (function() {
       used[unique] = true;
       return unique;
     }
-    function add(title, content, icon) {
+    function add(title, content) {
       if (content == null || content === '' || (Array.isArray(content) && !content.length)) return;
-      var section = normalizeSection({ title: title, content: content, icon: icon });
+      var section = normalizeSection({ title: title, content: content });
       section.id = uniqueId(section.id);
       sections.push(section);
     }
@@ -309,13 +301,13 @@ const SectionRenderer = (function() {
       if (original.translit) originalLines.push(original.translit);
       if (original.root) originalLines.push('Корень: ' + original.root);
       if (Array.isArray(original.paleo) && original.paleo.length) originalLines.push(original.paleo.join(' '));
-      add('Этимология', originalLines, 'book');
+      add('Этимология', originalLines);
     }
-    add('Сдвиг', source.shift, 'sword');
+    add('Сдвиг', source.shift);
     if (Array.isArray(source.transmissionChain) && source.transmissionChain.length) {
       add('Цепочка передачи', source.transmissionChain.map(function(step) {
         return [step.layer, step.word, step.meaning].filter(Boolean).join(' — ');
-      }), 'hourglass');
+      }));
     }
     (source.content || []).filter(function(section) {
       return !isHiddenSection(section);
@@ -327,11 +319,11 @@ const SectionRenderer = (function() {
     if (Array.isArray(source.evidence) && source.evidence.length) {
       add('Свидетельства', source.evidence.map(function(item) {
         return [item.type, item.ref, item.hebrew, item.note].filter(Boolean).join(' — ');
-      }), 'scales');
+      }));
     }
-    add('Реконструкция', source.reconstruction, 'lamp');
+    add('Реконструкция', source.reconstruction);
     if (Array.isArray(source.caveats) && source.caveats.length) {
-      add('Оговорки', source.caveats.map(function(item) { return [item.kind, item.text].filter(Boolean).join(' — '); }), 'question');
+      add('Оговорки', source.caveats.map(function(item) { return [item.kind, item.text].filter(Boolean).join(' — '); }));
     }
     return sections;
   }
@@ -343,17 +335,17 @@ const SectionRenderer = (function() {
   }
 
   var RULES = {
-    essence: { icon: ICON_BASE + 'scribe/scroll.png', className: 'essence-card', render: renderMarkdown },
-    etymology: { icon: ICON_BASE + 'archaeology/testtube.png', className: 'etymology-card', render: function(value) { return renderPatchList(value, 'etymology'); } },
-    tanakh: { icon: ICON_BASE + 'ui/book.png', className: 'tanakh-card', render: renderTanakh },
-    exposure: { icon: ICON_BASE + 'weapons/sword.png', className: 'exposure-card exposure-section-card', render: function(value) { return renderPatchList(value, 'exposure'); } },
-    distortions: { icon: ICON_BASE + 'weapons/sword.png', className: 'exposure-card exposure-section-card', render: function(value) { return renderPatchList(value, 'exposure'); } },
-    practice: { icon: ICON_BASE + 'archaeology/lamp.png', className: 'practice-card', render: function(value) { return renderPatchList(value, 'practice'); } },
-    summary: { icon: ICON_BASE + 'ui/scales.png', className: 'summary-card', render: function(value) { return renderPatchList(value, 'summary'); } },
-    typology: { icon: ICON_BASE + 'ui/anchor.png', className: 'typology-card', render: renderTypology },
-    related: { icon: ICON_BASE + 'scribe/scrolls.png', className: 'related-card', render: renderMarkdown },
-    transmission: { icon: ICON_BASE + 'ui/hourglass.png', className: 'transmission-card', render: renderMarkdown },
-    caveats: { icon: ICON_BASE + 'ui/question.png', className: 'caveats-card', render: renderMarkdown }
+    essence: { className: 'essence-card', render: renderEssence },
+    etymology: { className: 'etymology-card', render: renderPatchList },
+    tanakh: { className: 'tanakh-card', render: renderTanakh },
+    exposure: { className: 'exposure-section-card', render: renderPatchList },
+    distortions: { className: 'exposure-section-card', render: renderPatchList },
+    practice: { className: 'practice-card', render: renderPatchList },
+    summary: { className: 'summary-card', render: renderPatchList },
+    typology: { className: 'typology-card', render: renderTypology },
+    related: { className: 'related-card', render: renderMarkdown },
+    transmission: { className: 'transmission-card', render: renderMarkdown },
+    caveats: { className: 'caveats-card', render: renderMarkdown }
   };
 
   function ruleFor(section) {
@@ -361,17 +353,21 @@ const SectionRenderer = (function() {
     var content = section && section.content;
     var hasListMarkers = Array.isArray(content) || /(?:^|\n)\s*(?:[-*+]\s+|•\s*)/.test(String(content || ''));
     var knownRule = RULES[baseId];
-    // Специализированные форматы сохраняют приоритет над универсальным списком.
     if (knownRule && (baseId === 'tanakh' || baseId === 'typology')) return knownRule;
     if (hasListMarkers) {
       return {
-        icon: (knownRule && knownRule.icon) || section.icon || DEFAULT_ICON,
         className: (knownRule && knownRule.className) || 'generic-card list-card',
-        render: function(value) { return renderPatchList(value, baseId || 'generic'); }
+        render: renderPatchList
       };
     }
     if (knownRule) return knownRule;
-    return { icon: section.icon || DEFAULT_ICON, className: 'generic-card', render: renderMarkdown };
+    return { className: 'generic-card', render: renderMarkdown };
+  }
+
+  function isDistortionSection(section) {
+    var id = String(section && section.id || '').replace(/-\d+$/, '');
+    var title = String(section && section.title || '').toLowerCase();
+    return id === 'exposure' || id === 'distortions' || title.indexOf('искажен') !== -1 || title.indexOf('разоблач') !== -1;
   }
 
   function renderSection(section, index) {
@@ -379,8 +375,15 @@ const SectionRenderer = (function() {
     var body = section.layout === 'original-cards'
       ? renderOriginalCards(section.cards)
       : (section.layout === 'comparison' ? renderComparison(section.comparison) : rule.render(section.content));
+    var chip = isDistortionSection(section)
+      ? '<span class="research-section-chip research-section-chip--swap">подмена</span>'
+      : '';
     return '<article class="exposure-section research-section-card ' + rule.className + '" id="exposure-section-' + index + '" data-section-index="' + index + '" data-section-id="' + escapeHtml(section.id) + '">' +
-      '<header class="research-section-card-head"><img class="exposure-section-icon" src="' + escapeHtml(rule.icon) + '" alt="" width="40" height="40" loading="lazy"><h2 class="exposure-section-heading-text">' + escapeHtml(shortenTitle(section.title)) + '</h2></header>' +
+      '<header class="research-section-card-head">' +
+        '<span class="research-section-index" aria-hidden="true">' + padChapter(index) + '</span>' +
+        '<h2 class="exposure-section-heading-text">' + escapeHtml(shortenTitle(section.title)) + '</h2>' +
+        chip +
+      '</header>' +
       '<div class="exposure-section-body">' + body + '</div>' +
     '</article>';
   }

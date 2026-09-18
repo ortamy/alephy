@@ -25,9 +25,13 @@ const LabRouter = (function() {
     });
   }
 
+  function t(key, fallback) {
+    return window.AlephyI18n ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
   function routeTitle(route) {
-    if (route === 'dashboard') return 'АЛЕФИ';
-    if (route === 'learn/paleo-trainer/battle') return 'Палео-битва';
+    if (route === 'dashboard') return t('lab.breadcrumbs.brand', 'АЛЕФИ');
+    if (route === 'learn/paleo-trainer/battle') return t('lab.breadcrumbs.battle', 'Палео-битва');
     if (route.indexOf('learn') === 0 && window.LearnLab && window.LearnLab.routeTitle) {
       var learnTitle = window.LearnLab.routeTitle(route);
       if (learnTitle) return learnTitle;
@@ -45,20 +49,20 @@ const LabRouter = (function() {
       var timelineTitle = window.Timeline.routeTitle(route);
       if (timelineTitle) return timelineTitle;
     }
-    if (route === 'root-dictionary') return 'Корневой словарь';
-    if (route === 'root-dictionary/search') return 'Поиск';
+    if (route === 'root-dictionary') return t('lab.breadcrumbs.rootDictionary', 'Корневой словарь');
+    if (route === 'root-dictionary/search') return t('lab.breadcrumbs.search', 'Поиск');
     if (route.indexOf('root-dictionary/search/') === 0) {
       var dictionarySegments = route.split('/');
-      if (dictionarySegments[3] === 'page') return 'Страница ' + dictionarySegments[4];
-      return dictionarySegments[2] ? 'Поиск: ' + decodeURIComponent(dictionarySegments[2]) : 'Поиск';
+      if (dictionarySegments[3] === 'page') return t('lab.breadcrumbs.page', 'Страница ') + dictionarySegments[4];
+      return dictionarySegments[2] ? t('lab.breadcrumbs.searchPrefix', 'Поиск: ') + decodeURIComponent(dictionarySegments[2]) : t('lab.breadcrumbs.search', 'Поиск');
     }
-    if (route.indexOf('root-dictionary/page/') === 0) return 'Страница ' + route.split('/').pop();
-    if (route.indexOf('root-dictionary/graph/') === 0) return 'Связи: ' + decodeURIComponent(route.split('/').pop());
-    if (route === 'dictionaries') return 'Словари';
-    if (route === 'club/discussions') return 'Обсуждения';
-    if (route === 'club/sessions') return 'Сессии';
-    if (route === 'dictionaries/root-dictionary') return 'Корневой словарь';
-    if (route === 'dictionaries/paleo-glossary') return 'Палео-глоссарий';
+    if (route.indexOf('root-dictionary/page/') === 0) return t('lab.breadcrumbs.page', 'Страница ') + route.split('/').pop();
+    if (route.indexOf('root-dictionary/graph/') === 0) return t('lab.breadcrumbs.graphPrefix', 'Связи: ') + decodeURIComponent(route.split('/').pop());
+    if (route === 'dictionaries') return t('lab.breadcrumbs.dictionaries', 'Словари');
+    if (route === 'club/discussions') return t('lab.breadcrumbs.discussions', 'Обсуждения');
+    if (route === 'club/sessions') return t('lab.breadcrumbs.sessions', 'Сессии');
+    if (route === 'dictionaries/root-dictionary') return t('lab.breadcrumbs.rootDictionary', 'Корневой словарь');
+    if (route === 'dictionaries/paleo-glossary') return t('lab.breadcrumbs.glossary', 'Палео-глоссарий');
     if (route.indexOf('paleo-mechanics/') === 0 && window.PageController && PageController.jsonCache['paleo-mechanics']) {
       var paleoKey = decodeURIComponent(route.split('/')[1]);
       var paleoDocument = PageController.jsonCache['paleo-mechanics'][paleoKey];
@@ -91,6 +95,15 @@ const LabRouter = (function() {
       routes.push('timeline');
       if (segments[2]) routes.push('timeline/' + segments[2]);
       routes.push(segments.join('/'));
+    } else if (segments[0] === 'timeline' && segments[2] === 'full') {
+      // Полный вид ленты: каталог → сама лента (сегмент full — служебный).
+      routes.push('timeline');
+      routes.push(segments.join('/'));
+    } else if (segments[0] === 'timeline' && segments[2] === 'event') {
+      // Событие: каталог → лента → событие (сегмент event — служебный).
+      routes.push('timeline');
+      routes.push('timeline/' + segments[1]);
+      routes.push(segments.join('/'));
     } else {
       for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
     }
@@ -121,6 +134,10 @@ const LabRouter = (function() {
       if (id) {
         modules[id] = el;
       }
+    });
+
+    document.addEventListener('alephy:langchange', function() {
+      refreshBreadcrumbs(currentModule);
     });
 
     // Слушаем hashchange

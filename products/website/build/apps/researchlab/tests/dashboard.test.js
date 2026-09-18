@@ -129,6 +129,8 @@ function testSummaryRendering() {
   });
   assert.strictEqual((html.match(/dw-summary-item--link/g) || []).length, 5, 'Все показатели сводки кликабельны');
   assert.ok(!html.includes('dw-counter"'), 'Старые отдельные карточки удалены');
+  assert.ok(!/\bdw-summary-item[^>]*\breveal\b/.test(html), 'Сводка не стартует с opacity:0 через .reveal');
+  assert.ok(html.includes('dw-summary-value'), 'Цифры сводки присутствуют в разметке');
   console.log('OK  dashboard: единый блок статистики');
 }
 

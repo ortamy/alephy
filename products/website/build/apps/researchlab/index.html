@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Исследовательская лаборатория — Alephy</title>
+<title data-i18n="pages.researchlab.title">Исследовательская лаборатория — Alephy</title>
 <meta name="description" content="Полноценная исследовательская лаборатория проекта Алефи">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,9 +24,9 @@
 <link rel="stylesheet" href="css/board.css">
 <link rel="stylesheet" href="css/word-analyzer.css">
 <link rel="stylesheet" href="css/investigation.css">
-<link rel="stylesheet" href="css/research-library.css">
+<link rel="stylesheet" href="css/research-library.css?v=20260916-polish">
 <link rel="stylesheet" href="css/block-renderer.css">
-<link rel="stylesheet" href="css/section-renderer.css">
+<link rel="stylesheet" href="css/section-renderer.css?v=20260916-polish">
 <link rel="stylesheet" href="css/scripture-reader.css">
 <link rel="stylesheet" href="css/admin.css">
 <link rel="stylesheet" href="css/religionisms.css">
@@ -35,7 +35,7 @@
 <link rel="stylesheet" href="css/heraldry.css">
 <link rel="stylesheet" href="css/dashboard.css">
 <link rel="stylesheet" href="css/cartography.css">
-<link rel="stylesheet" href="css/states.css">
+<link rel="stylesheet" href="css/states.css?v=20260916-states-btn">
 <link rel="stylesheet" href="css/checkers-comparator.css">
 <link rel="stylesheet" href="css/prompt-generator.css">
 <link rel="stylesheet" href="css/davar-checker.css">
@@ -50,7 +50,7 @@
 <link rel="stylesheet" href="css/manifest.css">
 <link rel="stylesheet" href="css/theme-parchment.css">
 <link rel="stylesheet" href="css/theme-white.css">
-<link rel="stylesheet" href="css/timeline.css?v=20260906-lin3">
+<link rel="stylesheet" href="css/timeline.css?v=20260917-acc1">
 <link rel="stylesheet" href="css/analyzers.css">
 <link rel="stylesheet" href="css/components/buttons.css">
 <link rel="stylesheet" href="css/workbench.css">
@@ -58,7 +58,7 @@
 <link rel="stylesheet" href="css/club.css">
 <!-- LINEAR-PALEO слой редизайна: последним, чтобы побеждать каскад модульных CSS -->
 <link rel="stylesheet" href="css/redesign.css">
-<link rel="stylesheet" href="css/linear-timeline.css">
+<link rel="stylesheet" href="css/linear-timeline.css?v=20260917-lin4">
 <style>
   .name-decoder-shell { max-width: 980px; margin: 0 auto; }
   .name-decoder-hero { padding: 28px 30px; margin-bottom: 22px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 10px; box-shadow: var(--shadow-soft); }
@@ -90,15 +90,13 @@
 
 <!-- Embed mode styles -->
 <style>
-  .lab-header.is-embed, .lab-sidebar.is-embed, .lab-footer.is-embed,
-  .lab-sidebar-overlay.is-embed, .lab-hamburger.is-embed,
+  .lab-header.is-embed, .lab-sidebar.is-embed, .lab-sidebar-overlay.is-embed, .lab-hamburger.is-embed,
   .lab-header-mobile-links.is-embed, .hotkey-hint.is-embed,
   #labSidebarToggle.is-embed { display: none !important; }
   .is-embed .lab-layout { flex-direction: row !important; }
   .is-embed .lab-layout > .lab-sidebar { display: none !important; }
   .is-embed .lab-content { padding: 0 !important; min-height: 100vh; }
   .is-embed .lab-header { display: none !important; }
-  .is-embed .lab-footer { display: none !important; }
   body.is-embed { padding-top: 0; }
 </style>
 </head>
@@ -106,21 +104,23 @@
 
 <!-- HEADER -->
 <header class="lab-header glass-topbar" id="labHeader">
-  <a href="#dashboard" class="logo"><img src="../../assets/images/alephy-logo.svg" alt="Alephy" style="height: 40px; width: auto;"><span class="alephy-beta glass-btn-gold" aria-label="Бета-версия">BETA</span></a>
+  <a href="#dashboard" class="logo"><img src="../../assets/images/alephy-logo.svg" alt="Alephy" style="height: 40px; width: auto;"><span class="alephy-beta" aria-label="Бета-версия">BETA</span></a>
   
   <nav>
-    <button class="theme-toggle icon-btn" onclick="LabTheme.toggle()" title="Переключить тему" id="themeBtn"><i data-lucide="moon" aria-hidden="true"></i></button>
-    <button class="search-toggle icon-btn" id="searchToggle" type="button" aria-label="Поиск" role="button" tabindex="0" aria-expanded="false" aria-controls="globalSearch"><i data-lucide="search" aria-hidden="true"></i></button>
+    <button class="theme-toggle icon-btn" onclick="LabTheme.toggle()" data-i18n-attr="title:lab.chrome.theme" title="Переключить тему" id="themeBtn"><i data-lucide="moon" aria-hidden="true"></i></button>
+    <button class="search-toggle icon-btn" id="searchToggle" type="button" data-i18n-attr="aria-label:lab.chrome.search" aria-label="Поиск" role="button" tabindex="0" aria-expanded="false" aria-controls="globalSearch"><i data-lucide="search" aria-hidden="true"></i></button>
+    <span class="lang-btn"><i data-lucide="languages" aria-hidden="true"></i><span data-i18n-switcher><select class="lab-select" aria-label="Язык интерфейса" title="Язык интерфейса" data-i18n-attr="title:lang.aria"><option value="ru" selected>RU</option></select></span></span>
     <a href="../../" class="icon-link" title="Сайт" aria-label="Сайт"><i data-lucide="globe" aria-hidden="true"></i></a>
     <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="icon-link" title="GitHub" aria-label="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
   </nav>
   <div class="lab-header-mobile-links">
-    <button class="mobile-icon-link" onclick="LabTheme.toggle()" title="Переключить тему" id="themeBtnMobile"><i data-lucide="moon" aria-hidden="true"></i></button>
-    <button class="mobile-icon-link search-toggle" id="searchToggleMobile" type="button" aria-label="Поиск" role="button" tabindex="0" aria-expanded="false" aria-controls="globalSearch"><i data-lucide="search" aria-hidden="true"></i></button>
+    <button class="mobile-icon-link" onclick="LabTheme.toggle()" data-i18n-attr="title:lab.chrome.theme" title="Переключить тему" id="themeBtnMobile"><i data-lucide="moon" aria-hidden="true"></i></button>
+    <button class="mobile-icon-link search-toggle" id="searchToggleMobile" type="button" data-i18n-attr="aria-label:lab.chrome.search" aria-label="Поиск" role="button" tabindex="0" aria-expanded="false" aria-controls="globalSearch"><i data-lucide="search" aria-hidden="true"></i></button>
+    <span class="lang-btn"><i data-lucide="languages" aria-hidden="true"></i><span data-i18n-switcher><select class="lab-select" aria-label="Язык интерфейса" title="Язык интерфейса" data-i18n-attr="title:lang.aria"><option value="ru" selected>RU</option></select></span></span>
     <a href="../../" class="mobile-icon-link" title="Сайт"><i data-lucide="globe" aria-hidden="true"></i></a>
     <a href="https://github.com/ortamy/alephy" target="_blank" rel="noopener" class="mobile-icon-link" title="GitHub"><i data-lucide="github" aria-hidden="true"></i></a>
   </div>
-  <button class="lab-hamburger hamburger-btn icon-btn" id="labSidebarToggle" aria-label="Открыть меню" aria-controls="labSidebar" aria-expanded="false" onclick="LabSidebar.toggle()" style="display:none;">
+  <button class="lab-hamburger hamburger-btn icon-btn" id="labSidebarToggle" data-i18n-attr="aria-label:lab.chrome.menu" aria-label="Открыть меню" aria-controls="labSidebar" aria-expanded="false" onclick="LabSidebar.toggle()" style="display:none;">
     <i data-lucide="menu" aria-hidden="true"></i>
   </button>
 </header>
@@ -129,7 +129,7 @@
 <div class="glass-search-panel" id="globalSearch" aria-hidden="true">
   <div class="search-panel-inner">
     <span class="search-icon"><i data-lucide="search" aria-hidden="true"></i></span>
-    <input type="text" id="gs-input" placeholder="Поиск по модулям, словарям, исследованиям…" autocomplete="off" aria-label="Поиск по модулям, словарям, исследованиям" />
+    <input type="text" id="gs-input" data-i18n-attr="placeholder:lab.chrome.searchPlaceholder;aria-label:lab.chrome.searchLabel" placeholder="Поиск по модулям, словарям, исследованиям…" autocomplete="off" aria-label="Поиск по модулям, словарям, исследованиям" />
     <div class="search-results" id="gs-results"></div>
   </div>
 </div>
@@ -139,44 +139,45 @@
 
   <!-- SIDEBAR -->
   <aside class="lab-sidebar" id="labSidebar">
+  <div class="sidebar-item" data-i18n-switcher><select class="lab-select" aria-label="Язык интерфейса"><option value="ru">RU</option></select></div>
   <div class="sidebar-items">
-    <a href="#manifest" class="sidebar-item sidebar-item-top" data-module="manifest"><i data-lucide="scroll-text" class="lab-icon" aria-hidden="true"></i>Манифест</a>
-    <a href="#dashboard" class="sidebar-item sidebar-item-top" data-module="dashboard"><i data-lucide="layout-grid" class="lab-icon" aria-hidden="true"></i>Рабочий стол</a>
-    <a href="#workbench" class="sidebar-item sidebar-item-top" data-module="workbench"><i data-lucide="hammer" class="lab-icon" aria-hidden="true"></i>Мастерская</a>
-    <a href="#club" class="sidebar-item sidebar-item-top" data-module="club"><i data-lucide="footprints" class="lab-icon" aria-hidden="true"></i>Палео-клуб<span class="club-live-dot" aria-hidden="true"></span></a>
+    <a href="#manifest" class="sidebar-item sidebar-item-top" data-module="manifest"><i data-lucide="scroll-text" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.manifest">Манифест</span></a>
+    <a href="#dashboard" class="sidebar-item sidebar-item-top" data-module="dashboard"><i data-lucide="layout-grid" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.dashboard">Рабочий стол</span></a>
+    <a href="#workbench" class="sidebar-item sidebar-item-top" data-module="workbench"><i data-lucide="hammer" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.workbench">Мастерская</span></a>
+    <a href="#club" class="sidebar-item sidebar-item-top" data-module="club"><i data-lucide="footprints" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.club">Палео-клуб</span><span class="club-live-dot" aria-hidden="true"></span></a>
     <div class="sidebar-section">
       <div class="sidebar-section-header" data-section="data">
         <i data-lucide="book-open" class="icon" aria-hidden="true"></i>
-        <span>Данные</span>
+        <span data-i18n="lab.sections.data">Данные</span>
         <i data-lucide="chevron-down" class="toggle-icon" aria-hidden="true"></i>
       </div>
       <div class="sidebar-section-content" id="section-data">
-        <a href="#scripture-reader" class="sidebar-item" data-module="scripture-reader"><i data-lucide="book-open" class="lab-icon" aria-hidden="true"></i>Книгочтение</a>
-        <a href="#learn" class="sidebar-item" data-module="learn"><i data-lucide="graduation-cap" class="lab-icon" aria-hidden="true"></i>Обучение</a>
-        <a href="#dictionaries" class="sidebar-item" data-module="dictionaries"><i data-lucide="library" class="lab-icon" aria-hidden="true"></i>Словари</a>
-        <a href="#researches" class="sidebar-item" data-module="researches"><i data-lucide="archive" class="lab-icon" aria-hidden="true"></i>Исследования</a>
-        <a href="#methodology" class="sidebar-item" data-module="methodology"><i data-lucide="scale" class="lab-icon" aria-hidden="true"></i>Методология</a>
-        <a href="#paleo-mechanics" class="sidebar-item" data-module="paleo-mechanics"><i data-lucide="cog" class="lab-icon" aria-hidden="true"></i>Палео-механика</a>
-        <a href="#paleo-linguistics" class="sidebar-item" data-module="paleo-linguistics"><i data-lucide="languages" class="lab-icon" aria-hidden="true"></i>Палео-лингвистика</a>
-        <a href="#language-map" class="sidebar-item" data-module="language-map"><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта языков</a>
-        <a href="#cartography" class="sidebar-item" data-module="cartography"><i data-lucide="compass" class="lab-icon" aria-hidden="true"></i>Картография</a>
-        <a href="#states" class="sidebar-item" data-module="states"><i data-lucide="flag" class="lab-icon" aria-hidden="true"></i>Карта состояний</a>
-        <a href="#timeline" class="sidebar-item" data-module="timeline"><i data-lucide="clock" class="lab-icon" aria-hidden="true"></i>Палео-таймлайн</a>
-        <a href="#religionisms" class="sidebar-item" data-module="religionisms"><i data-lucide="help-circle" class="lab-icon" aria-hidden="true"></i>Религионизмы</a>
+        <a href="#scripture-reader" class="sidebar-item" data-module="scripture-reader"><i data-lucide="book-open" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.scripture-reader">Книгочтение</span></a>
+        <a href="#learn" class="sidebar-item" data-module="learn"><i data-lucide="graduation-cap" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.learn">Обучение</span></a>
+        <a href="#dictionaries" class="sidebar-item" data-module="dictionaries"><i data-lucide="library" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.dictionaries">Словари</span></a>
+        <a href="#researches" class="sidebar-item" data-module="researches"><i data-lucide="archive" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.researches">Исследования</span></a>
+        <a href="#methodology" class="sidebar-item" data-module="methodology"><i data-lucide="scale" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.methodology">Методология</span></a>
+        <a href="#paleo-mechanics" class="sidebar-item" data-module="paleo-mechanics"><i data-lucide="cog" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.paleo-mechanics">Палео-механика</span></a>
+        <a href="#paleo-linguistics" class="sidebar-item" data-module="paleo-linguistics"><i data-lucide="languages" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.paleo-linguistics">Палео-лингвистика</span></a>
+        <a href="#language-map" class="sidebar-item" data-module="language-map"><i data-lucide="map" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.language-map">Карта языков</span></a>
+        <a href="#cartography" class="sidebar-item" data-module="cartography"><i data-lucide="compass" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.cartography">Картография</span></a>
+        <a href="#states" class="sidebar-item" data-module="states"><i data-lucide="flag" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.states">Карта состояний</span></a>
+        <a href="#timeline" class="sidebar-item" data-module="timeline"><i data-lucide="clock" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.timeline">Палео-таймлайн</span></a>
+        <a href="#religionisms" class="sidebar-item" data-module="religionisms"><i data-lucide="help-circle" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.religionisms">Религионизмы</span></a>
       </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-header" data-section="tools">
         <i data-lucide="flask-conical" class="icon" aria-hidden="true"></i>
-        <span>Инструменты</span>
+        <span data-i18n="lab.sections.tools">Инструменты</span>
         <i data-lucide="chevron-down" class="toggle-icon" aria-hidden="true"></i>
       </div>
       <div class="sidebar-section-content" id="section-tools">
-        <a href="#paleo-builder" class="sidebar-item" data-module="paleo-builder"><i data-lucide="hammer" class="lab-icon" aria-hidden="true"></i>Палео-конструктор</a>
-        <a href="#paleo-keyboard" class="sidebar-item" data-module="paleo-keyboard"><i data-lucide="keyboard" class="lab-icon" aria-hidden="true"></i>Палео-клавиатура</a>
-        <a href="#generators" class="sidebar-item" data-module="generators"><i data-lucide="sparkles" class="lab-icon" aria-hidden="true"></i>Генераторы</a>
-        <a href="#checkers" class="sidebar-item" data-module="checkers"><i data-lucide="check-circle" class="lab-icon" aria-hidden="true"></i>Чекеры</a>
-        <a href="#analyzers" class="sidebar-item" data-module="analyzers"><i data-lucide="test-tube" class="lab-icon" aria-hidden="true"></i>Анализаторы</a>
+        <a href="#paleo-builder" class="sidebar-item" data-module="paleo-builder"><i data-lucide="hammer" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.paleo-builder">Палео-конструктор</span></a>
+        <a href="#paleo-keyboard" class="sidebar-item" data-module="paleo-keyboard"><i data-lucide="keyboard" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.paleo-keyboard">Палео-клавиатура</span></a>
+        <a href="#generators" class="sidebar-item" data-module="generators"><i data-lucide="sparkles" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.generators">Генераторы</span></a>
+        <a href="#checkers" class="sidebar-item" data-module="checkers"><i data-lucide="check-circle" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.checkers">Чекеры</span></a>
+        <a href="#analyzers" class="sidebar-item" data-module="analyzers"><i data-lucide="test-tube" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.analyzers">Анализаторы</span></a>
       </div>
     </div>
     <div class="sidebar-section">
@@ -186,21 +187,21 @@
         <i data-lucide="chevron-down" class="toggle-icon" aria-hidden="true"></i>
       </div>
       <div class="sidebar-section-content" id="section-ai">
-        <a href="#ai-agents" class="sidebar-item" data-module="ai-agents"><i data-lucide="users" class="lab-icon" aria-hidden="true"></i>Агенты</a>
-        <a href="#pipelines" class="sidebar-item" data-module="pipelines"><i data-lucide="workflow" class="lab-icon" aria-hidden="true"></i>Пайплайны</a>
-        <a href="#agent-server" class="sidebar-item" data-module="agent-server"><i data-lucide="server" class="lab-icon" aria-hidden="true"></i>Запуск сервера</a>
-        <a href="#ed-chat" class="sidebar-item" data-module="ed-chat"><i data-lucide="bell" class="lab-icon" aria-hidden="true"></i>Нейрочат</a>
-        <a href="#vision" class="sidebar-item" data-module="vision"><i data-lucide="image" class="lab-icon" aria-hidden="true"></i>Анализ изображений</a>
+        <a href="#ai-agents" class="sidebar-item" data-module="ai-agents"><i data-lucide="users" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.ai-agents">Агенты</span></a>
+        <a href="#pipelines" class="sidebar-item" data-module="pipelines"><i data-lucide="workflow" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.pipelines">Пайплайны</span></a>
+        <a href="#agent-server" class="sidebar-item" data-module="agent-server"><i data-lucide="server" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.agent-server">Запуск сервера</span></a>
+        <a href="#ed-chat" class="sidebar-item" data-module="ed-chat"><i data-lucide="bell" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.ed-chat">Нейрочат</span></a>
+        <a href="#vision" class="sidebar-item" data-module="vision"><i data-lucide="image" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.vision">Анализ изображений</span></a>
       </div>
     </div>
     <div class="sidebar-section" id="sidebar-admin-section">
       <div class="sidebar-section-header" data-section="system">
         <i data-lucide="settings" class="icon" aria-hidden="true"></i>
-        <span>Система</span>
+        <span data-i18n="lab.sections.system">Система</span>
         <i data-lucide="chevron-down" class="toggle-icon" aria-hidden="true"></i>
       </div>
       <div class="sidebar-section-content" id="section-system">
-        <a href="#admin-settings" class="sidebar-item" data-module="admin-settings"><i data-lucide="settings" class="lab-icon" aria-hidden="true"></i>Настройки</a>
+        <a href="#admin-settings" class="sidebar-item" data-module="admin-settings"><i data-lucide="settings" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.admin-settings">Настройки</span></a>
         
       </div>
     </div>
@@ -213,15 +214,6 @@
 </div>
 
 <div class="lab-sidebar-overlay" id="labSidebarOverlay" onclick="LabSidebar.close()" style="display:none;"></div>
-
-<!-- FOOTER -->
-<footer class="lab-footer">
-  <a href="../pages/index.html">Проект «Алефи»</a> — восстановление истины.
-  <span class="sep">|</span>
-  <a href="https://github.com/ortamy/alephy">GitHub</a>
-  <span class="sep">|</span>
-  <span id="lab-version">v0.2.0</span>
-</footer>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="labModal" onclick="if(event.target===this)LabModal.close()">
@@ -240,6 +232,8 @@
   <kbd>⌨</kbd> ?
 </div>
 
+<!-- Shared runtime: deployed beside the site locales, before lab modules. -->
+<script defer src="../../js/i18n.js"></script>
 <!-- Vendored Lucide: UI-иконки (навигация, кнопки). См. js/lucide-init.js. -->
 <script defer src="js/vendor/lucide.min.js"></script>
 <script defer src="js/lucide-init.js"></script>
@@ -247,19 +241,20 @@
 <script defer src="js/paleo-letters.js"></script>
 <script defer src="js/paleo-weaver.js"></script>
 <script defer src="js/paleo-highlight.js"></script>
-<script defer src="js/modules/exposure-case.js"></script>
-<script defer src="js/modules/section-renderer.js"></script>
+<script defer src="js/modules/exposure-case.js?v=20260916-polish"></script>
+<script defer src="js/modules/section-renderer.js?v=20260916-polish"></script>
 <script defer src="js/dashboard.js"></script>
 <script defer src="js/learn-courses.js"></script>
   <script defer src="js/paleo-battle.js"></script>
 <script defer src="js/learn.js"></script>
-<script defer src="js/load-researches.js"></script>
+<script defer src="js/load-researches.js?v=20260916-polish"></script>
 <script defer src="js/methodology.js?v=20260804-2"></script>
 <script defer src="js/name-decoder.js"></script>
 <script defer src="js/paleo-linguistics.js"></script>
 <script defer src="js/language-map.js"></script>
 <script defer src="js/linguistic-tensor.js"></script>
 <script defer src="js/states.js"></script>
+<script defer src="js/scripture-adapters.js"></script>
 <script defer src="js/scripture-reader.js"></script>
 <script defer src="js/checkers-comparator.js"></script>
 <script defer src="js/investigation.js"></script>
@@ -300,7 +295,7 @@
 <script defer src="js/video-lab.js"></script>
 <script defer src="js/cartography.js"></script>
 <script defer src="js/heraldry.js"></script>
-<script defer src="js/timeline.js?v=20260906-lin3"></script>
+<script defer src="js/timeline.js?v=20260917-acc1"></script>
 <script defer src="js/paleo-builder.js"></script>
 <script defer src="js/analyzers.js"></script>
 <script defer src="js/lab-search.js"></script>

@@ -1,100 +1,8 @@
 /* =============================================
    css/linear-timeline.css — LINEAR ROADMAP LAYER
    Подключается ПОСЛЕ redesign.css и timeline.css.
-   Компоненты: roadmap bars, filter chips, status dots.
+   Компоненты: filter chips, status dots.
    ============================================= */
-
-/* ===== ROADMAP SCALE: горизонтальная шкала эпох ===== */
-.tl-roadmap {
-  display: flex;
-  align-items: stretch;
-  gap: 0;
-  margin-bottom: var(--space-5);
-  padding: var(--space-4) var(--space-5);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-
-.tl-roadmap-segment {
-  position: relative;
-  flex: 1 1 0;
-  min-width: 80px;
-  padding: 0 4px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: opacity var(--motion-base);
-}
-
-.tl-roadmap-segment:hover { opacity: 0.85; }
-
-.tl-roadmap-bar {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--border);
-  position: relative;
-  overflow: visible;
-}
-
-.tl-roadmap-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  background: var(--accent-gold);
-  transition: width var(--motion-base);
-}
-
-.tl-roadmap-dot {
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 2px solid var(--accent-gold);
-}
-
-.tl-roadmap-label {
-  font-family: var(--font-ui);
-  font-size: var(--ui-11);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.tl-roadmap-count {
-  font-family: var(--font-ui);
-  font-size: var(--ui-10);
-  color: var(--text-muted);
-}
-
-.tl-roadmap-segment.active .tl-roadmap-label { color: var(--accent-gold); }
-
-/* Stagger-анимация появления сегментов */
-@keyframes tl-segment-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.tl-roadmap-segment {
-  animation: tl-segment-in 0.35s ease both;
-  animation-delay: calc(var(--tl-index, 0) * 50ms);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tl-roadmap-segment { animation: none; }
-}
 
 /* ===== FILTER CHIPS: сегментный фильтр ===== */
 .tl-filters {
@@ -190,18 +98,6 @@
 .tl-meta-line .meta-sep { color: var(--border); font-weight: 400; }
 
 /* ===== DARK THEME ===== */
-[data-theme="dark"] .tl-roadmap {
-  background: var(--bg-card, #2a2218);
-  border-color: var(--border-dark, #3a2a1a);
-}
-
-[data-theme="dark"] .tl-roadmap-bar { background: var(--border-dark, #3a2a1a); }
-
-[data-theme="dark"] .tl-roadmap-dot {
-  background: var(--bg-card, #2a2218);
-  border-color: var(--accent-gold);
-}
-
 [data-theme="dark"] .tl-filter-chip:hover { background: var(--bg-tertiary, #3a3228); }
 
 [data-theme="dark"] .tl-filter-chip.active {
@@ -217,11 +113,6 @@
 
 /* ===== MOBILE ===== */
 @media (max-width: 767px) {
-  .tl-roadmap {
-    padding: var(--space-3) var(--space-4);
-    margin-bottom: var(--space-4);
-  }
-  .tl-roadmap-segment { min-width: 60px; }
   .tl-filters {
     overflow-x: auto;
     flex-wrap: nowrap;

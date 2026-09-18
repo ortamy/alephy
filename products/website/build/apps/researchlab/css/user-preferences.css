@@ -4,7 +4,7 @@
   background: var(--bg-base);
   min-height: calc(100vh - 60px);
   padding: var(--space-6);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   transition: background var(--motion-medium);
 }
 
@@ -55,7 +55,7 @@
 .up-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   padding: var(--space-5);
 }
 

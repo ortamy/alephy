@@ -56,6 +56,32 @@
   box-shadow: var(--ring-focus);
 }
 
+/* Переключатель языка в шапке: член семьи .icon-btn (см. «Header icon controls»
+   ниже) — размеры, обводка, hover и мобильные значения наследуются оттуда.
+   Поверх иконки растянут прозрачный нативный <select>: открывает список
+   языков, сохраняет клавиатурный фокус и мобильное поведение. */
+.lab-header .lang-btn {
+  position: relative;
+}
+.lab-header .lang-btn:focus-within { outline: none; box-shadow: var(--ring-focus); }
+.lab-header .lang-btn select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  opacity: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+.lab-header .lang-btn select:focus-visible { outline: none; }
+
 /* ===== КЛАВИАТУРНЫЙ ФОКУС (виден всегда) ===== */
 a:focus-visible,
 button:focus-visible,
@@ -458,16 +484,23 @@ body.is-embed .lab-content { margin: 0; }
 }
 [data-theme="white"] .lab-header .logo,
 [data-theme="white"] .lab-header nav a,
+[data-theme="white"] .lab-header nav a.icon-link,
 [data-theme="white"] .lab-header nav button,
+[data-theme="white"] .lab-header .lang-btn,
 [data-theme="white"] .header-search,
 [data-theme="white"] .header-search input,
 [data-theme="white"] #globalSearch,
 [data-theme="white"] #gs-input,
 [data-theme="white"] #gs-results,
-[data-theme="white"] .lab-header-mobile-links {
+[data-theme="white"] .lab-header-mobile-links,
+[data-theme="white"] .lab-header-mobile-links .mobile-icon-link {
   background: #ffffff;
   color: #221a10;
 }
+/* Явные усиления: семья .icon-btn (redesign, «Header icon controls») позже в
+   файле и на ничьей (0,2,2) перебивает правило выше для a.icon-link, а
+   .lang-btn (span) им не покрывается — без этих селекторов язык/сайт/GitHub
+   остаются с бежевым --bg-dark-hover на белой шапке. */
 [data-theme="white"] .lab-sidebar,
 [data-theme="white"] .lab-content {
   background: #ffffff;
@@ -640,7 +673,8 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
 }
 
 .lab-header .icon-btn,
-.lab-header nav a.icon-link {
+.lab-header nav a.icon-link,
+.lab-header .lang-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -659,21 +693,24 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
 }
 
 .lab-header .icon-btn svg.lucide,
-.lab-header nav a.icon-link svg.lucide {
+.lab-header nav a.icon-link svg.lucide,
+.lab-header .lang-btn svg.lucide {
   width: 18px;
   height: 18px;
   color: currentColor;
 }
 
 .lab-header .icon-btn:hover,
-.lab-header nav a.icon-link:hover {
+.lab-header nav a.icon-link:hover,
+.lab-header .lang-btn:hover {
   background: color-mix(in srgb, var(--bg-dark-hover) 76%, var(--header-ink));
   border-color: var(--header-ink-muted);
   color: var(--header-ink);
 }
 
 .lab-header .icon-btn:active,
-.lab-header nav a.icon-link:active { transform: scale(0.96); }
+.lab-header nav a.icon-link:active,
+.lab-header .lang-btn:active { transform: scale(0.96); }
 
 .lab-header .icon-btn:focus-visible,
 .lab-header nav a.icon-link:focus-visible {
@@ -699,6 +736,7 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
 
   .lab-header .icon-btn,
   .lab-header nav a.icon-link,
+  .lab-header .lang-btn,
   .lab-header nav .theme-toggle,
   .lab-header .lab-hamburger {
     width: 36px;
@@ -708,12 +746,15 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   }
 
   .lab-header .icon-btn svg.lucide,
-  .lab-header nav a.icon-link svg.lucide { width: 16px; height: 16px; }
+  .lab-header nav a.icon-link svg.lucide,
+  .lab-header .lang-btn svg.lucide { width: 16px; height: 16px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .lab-header .icon-btn,
-  .lab-header nav a.icon-link { transition: none; }
+  .lab-header nav a.icon-link,
+  .lab-header .lang-btn { transition: none; }
   .lab-header .icon-btn:active,
-  .lab-header nav a.icon-link:active { transform: none; }
+  .lab-header nav a.icon-link:active,
+  .lab-header .lang-btn:active { transform: none; }
 }
