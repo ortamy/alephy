@@ -138,10 +138,8 @@ html[data-theme="parchment"] .scale-option:hover {
   background: var(--bg-tertiary);
 }
 
-html[data-theme="parchment"] .agent-grid .agent-card-orchestrator,
-html[data-theme="parchment"] .agent-grid .agent-card-orchestrator:hover {
+html[data-theme="parchment"] .agent-map-node {
   background: var(--bg-secondary);
-  box-shadow: var(--shadow-soft);
 }
 
 html[data-theme="parchment"] .sidebar-item.active,

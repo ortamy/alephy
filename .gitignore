@@ -65,3 +65,4 @@ reports/STATS_*.md
 # Playwright / test artifacts
 .playwright-mcp/
 **/test-results/
+**/smoke-*.txt

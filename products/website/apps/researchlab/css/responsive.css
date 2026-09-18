@@ -39,7 +39,7 @@
   .lab-sidebar { width: 200px; min-width: 200px; }
   .lab-content { padding: 20px; }
   .tool-grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
-  .agent-grid { grid-template-columns: repeat(2, 1fr); }
+  .agent-group-body:not(.is-list) { grid-template-columns: repeat(2, 1fr); }
   .header-search { flex-basis: 360px; width: min(360px, 42vw); max-width: 420px; }
 }
 @media (max-width: 768px) {
@@ -357,7 +357,7 @@
     gap: var(--space-3);
   }
 
-  .agent-grid {
+  .agent-group-body:not(.is-list) {
     grid-template-columns: 1fr;
     gap: var(--space-3);
   }
