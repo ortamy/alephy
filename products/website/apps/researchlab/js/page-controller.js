@@ -411,6 +411,10 @@ const PageController = (function() {
     return 'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.';
   }
 
+  function paleoGlossaryDescription() {
+    return 'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.';
+  }
+
   function renderDictRegistry(container, data, keys) {
     var view = dictReadView();
     var sort = dictReadSort();
@@ -421,7 +425,7 @@ const PageController = (function() {
         rootDictionaryDescription(),
         null, 'book-open', 'root-dictionary', 150),
       dictEntry('__paleo_glossary', 'Палео-глоссарий',
-        'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.',
+        paleoGlossaryDescription(),
         null, 'languages', 'paleo-glossary', 100)
     ];
     keys.forEach(function(key) {
@@ -625,24 +629,21 @@ const PageController = (function() {
   }
 
   function renderPaleoGlossaryModule(container, data) {
-    var backBtn = '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button>';
-    container.innerHTML = '<div class="research-page-head">' +
-      '<div class="paleo-glossary-head">' +
-      '<div class="paleo-glossary-icon" aria-hidden="true">𐤌</div>' +
-      '<div><p class="paleo-glossary-kicker">АЛЕФИ · СЛОВАРИ</p><h1>Палео-глоссарий</h1>' +
-      '<p class="subtitle">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</p></div>' +
-      '</div>' + backBtn +
-      '</div>' +
-      '<div class="paleo-glossary-controls">' +
-      '<label class="paleo-glossary-search">Поиск<input id="paleo-glossary-search" class="lab-input" type="search" placeholder="Палео-форма, слово или транслитерация" autocomplete="off"></label>' +
-      '<label>Корень<select id="paleo-glossary-root" class="lab-input"><option value="all">Все корни</option></select></label>' +
-      '</div>' +
-      '<div id="paleo-glossary-meta" class="paleo-glossary-meta" aria-live="polite"></div>' +
-      '<div id="paleo-glossary-grid" class="paleo-glossary-grid"></div>' +
-      '<nav id="paleo-glossary-pagination" class="paleo-glossary-pagination" aria-label="Страницы глоссария"></nav>';
-    if (window.PaleoGlossary) window.PaleoGlossary.init(container);
+    var partial = PaleoGlossary && PaleoGlossary.markup ? PaleoGlossary.markup('paleo-glossary') : '';
+    var backBtn = '<div class="rg-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">' + escapeHtml(t('lab.paleoGlossary.back', 'Назад к словарям')) + '</button></div>';
+    container.innerHTML = partial + backBtn;
+    applyHashFromParsed(container, parsed);
+    if (window.PaleoGlossary) window.PaleoGlossary.init(container, parsed);
   }
 
+  function applyHashFromParsed(container, parsed) {
+    if (!container || !parsed) return;
+    var params = (parsed && parsed.params) || {};
+    var qField = container.querySelector('[data-t="q"]');
+    var rootField = container.querySelector('[data-t="root"]');
+    if (qField && qField.value !== params.q) qField.value = params.q || '';
+    if (rootField) rootField.value = String(params.root || 'all');
+  }
   function renderInlineMarkdown(text) {
     if (typeof marked !== 'undefined' && marked.parseInline) {
       return marked.parseInline(text || '');
@@ -2383,6 +2384,9 @@ const PageController = (function() {
       if (moduleId === 'root-dictionary' && window.RootDict) {
         window.RootDict.applyRoute(parsed);
       }
+      if (moduleId === 'paleo-glossary' && window.PaleoGlossary) {
+        window.PaleoGlossary.applyParams(parsed);
+      }
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -2440,22 +2444,12 @@ const PageController = (function() {
         break;
 
       case 'paleo-glossary':
-        container.innerHTML = '<div class="paleo-glossary-page">' +
-          '<header class="paleo-glossary-head">' +
-          '<div class="paleo-glossary-icon" aria-hidden="true">𐤌</div>' +
-          '<div><p class="paleo-glossary-kicker">АЛЕФИ · ИНСТРУМЕНТЫ</p><h1>Палео-глоссарий</h1>' +
-          '<p class="subtitle">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</p></div>' +
-          '</header>' +
-          '<div class="paleo-glossary-controls">' +
-          '<label class="paleo-glossary-search">Поиск<input id="paleo-glossary-search" class="lab-input" type="search" placeholder="Палео-форма, слово или транслитерация" autocomplete="off"></label>' +
-          '<label>Корень<select id="paleo-glossary-root" class="lab-input"><option value="all">Все корни</option></select></label>' +
-          '</div>' +
-          '<div id="paleo-glossary-meta" class="paleo-glossary-meta" aria-live="polite"></div>' +
-          '<div id="paleo-glossary-grid" class="paleo-glossary-grid"></div>' +
-          '<nav id="paleo-glossary-pagination" class="paleo-glossary-pagination" aria-label="Страницы глоссария"></nav>' +
-          '</div>';
+        var pgPartial2 = PaleoGlossary && PaleoGlossary.markup ? PaleoGlossary.markup('paleo-glossary') : '';
+        var pgBackBtn2 = '<div class="rg-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">' + escapeHtml(t('lab.paleoGlossary.back', 'Назад к словарям')) + '</button></div>';
+        container.innerHTML = pgPartial2 + pgBackBtn2;
+        applyHashFromParsed(container, parsed);
         container.dataset.loaded = '1';
-        if (window.PaleoGlossary) window.PaleoGlossary.init(container);
+        if (window.PaleoGlossary) window.PaleoGlossary.init(container, parsed);
         break;
 
       case 'word-analyzer':
@@ -3118,6 +3112,9 @@ const PageController = (function() {
       if (segD && decodeURIComponent(segD[1] || '') === 'root-dictionary') {
         viewId = 'root-dictionary';
         override = { kicker: 'АЛЕФИ · СЛОВАРИ · КОРНЕВОЙ', title: 'Корневой словарь', subtitle: rootDictionaryDescription() };
+      } else if (segD && decodeURIComponent(segD[1] || '') === 'paleo-glossary') {
+        viewId = 'paleo-glossary';
+        override = { kicker: 'АЛЕФИ · СЛОВАРИ · ПАЛЕО-ГЛОССАРИЙ', title: 'Палео-глоссарий', subtitle: paleoGlossaryDescription() };
       }
     } else if (moduleId === 'club') {
       viewId = parsed && parsed.segments && parsed.segments[1] === 'discussions' ? 'discussions' : 'club';

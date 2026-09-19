@@ -1,24 +1,57 @@
-/* Палео-глоссарий: компактный каркас для будущего словаря. */
-.paleo-glossary-page { max-width: var(--shell-page); margin: 0 auto; }
-.paleo-glossary-head { display: flex; align-items: center; gap: 18px; padding: 24px; margin-bottom: 22px; background: var(--bg-dark); border: 1px solid var(--border-dark); border-radius: 10px; }
-.paleo-glossary-head h1 { margin: 0 0 6px; color: var(--accent-gold); }
-.paleo-glossary-head .subtitle { margin: 0; color: var(--text-muted); }
-.paleo-glossary-icon { display: grid; place-items: center; width: 64px; height: 64px; flex: 0 0 64px; color: var(--accent-gold); border: 1px solid var(--accent-gold); border-radius: 50%; font-size: 38px; }
-.paleo-glossary-kicker { margin: 0 0 6px; color: var(--accent-gold); font-size: 12px; font-weight: 700; letter-spacing: .14em; }
-.paleo-glossary-controls { display: flex; gap: 14px; align-items: end; margin-bottom: 14px; padding: 16px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; }
-.paleo-glossary-controls label { display: grid; gap: 6px; min-width: 190px; color: var(--text-secondary); font-weight: 700; }
-.paleo-glossary-controls .paleo-glossary-search { flex: 1; }
-.paleo-glossary-meta { margin-bottom: 14px; color: var(--text-muted); font-size: 14px; }
+/* Палео-глоссарий — канон: hairline, без теней; золото — только глифы и акценты. */
+
+/* ===== Тулбар ===== */
+.pg-toolbar { margin-bottom: 16px; }
+.pg-toolbar-label { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.pg-toolbar-label span:first-child { font-family: var(--font-ui); font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted); }
+.pg-toolbar-rule { flex: 1; height: 1px; background: var(--border-light); }
+.pg-toolbar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pg-search { flex: 1 1 200px; min-width: 0; }
+.pg-root { height: 36px; max-width: 220px; padding-right: 28px; color: var(--text-primary); background-color: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; cursor: pointer; }
+.pg-root:hover, .pg-root:focus-visible { border-color: var(--accent-gold); outline: none; }
+.pg-chip-mono { display: inline-flex; align-items: center; padding: 5px 12px; border: 1px solid var(--border-light); border-radius: 999px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .5px; color: var(--text-muted); white-space: nowrap; }
+
+/* ===== Сетка и карточка ~140px ===== */
 .paleo-glossary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.paleo-glossary-card { display: flex; min-height: 220px; flex-direction: column; padding: 20px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; transition: border-color .2s, transform .2s; }
+.paleo-glossary-card { min-width: 0; min-height: 140px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; overflow-wrap: anywhere; cursor: pointer; transition: border-color var(--motion-base); }
 .paleo-glossary-card:hover { border-color: var(--accent-gold); }
-.paleo-glossary-card-paleo { margin-bottom: 14px; color: var(--accent-gold); font-size: clamp(42px, 5vw, 64px); line-height: 1.15; letter-spacing: var(--tracking-caps); }
-.paleo-glossary-card-translit { margin-bottom: 10px; color: var(--text-primary); font-family: var(--font-heading); font-size: 24px; }
-.paleo-glossary-card-function { min-height: 48px; margin: 0 0 18px; color: var(--text-secondary); line-height: 1.5; }
-.paleo-glossary-details { align-self: flex-start; margin-top: auto; }
-.paleo-glossary-pagination { display: flex; justify-content: center; gap: 8px; margin-top: 22px; }
-.paleo-glossary-page-btn { padding: 6px 13px; color: var(--text-primary); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 4px; cursor: pointer; }
-.paleo-glossary-page-btn:hover, .paleo-glossary-page-btn.active { color: #faf3e0; background: var(--accent-gold); border-color: var(--accent-gold); }
-.paleo-glossary-detail-paleo { margin-bottom: 12px; color: var(--accent-gold); font-size: 52px; text-align: center; }
+.paleo-glossary-card:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+
+/* Строка 1: палео-глифы слева, транслит mono-чипом справа */
+.paleo-glossary-card-top { display: flex; align-items: center; gap: 10px; }
+.paleo-glossary-card-paleo { color: var(--accent-gold); font-size: 28px; line-height: 1.1; letter-spacing: 1px; }
+.paleo-glossary-card-translit { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); border: 1px solid var(--border-light); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+
+/* Строка 2: значение ≤2 строк */
+.paleo-glossary-card-function { margin: 0; color: var(--text-primary); font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* Строка 3 (футер): чип-дверь + функция */
+.paleo-glossary-card-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border-light); }
+.paleo-glossary-door { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-ui); font-size: 12px; color: var(--text-secondary); border: 1px solid var(--border-light); border-radius: 999px; padding: 4px 10px; transition: border-color var(--motion-base), color var(--motion-base); }
+.paleo-glossary-card:hover .paleo-glossary-door { border-color: var(--accent-gold); color: var(--accent-gold); }
+.paleo-glossary-card-fn { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+
+/* ===== Подгрузка и пустое состояние ===== */
+.pg-more { display: flex; justify-content: center; margin-top: 20px; }
+.pg-spinner { display: none; text-align: center; padding: 40px; }
+.pg-spinner.show { display: block; }
+.pg-spinner .loader { border: 4px solid var(--border-light); border-top: 4px solid var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: pgSpin 1s linear infinite; margin: 0 auto 10px; }
+@keyframes pgSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.pg-spinner .spinner-text { font-size: 16px; color: var(--text-muted); font-style: normal; }
+.pg-empty { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 32px 16px; border: 1px dashed var(--border-light); border-radius: 6px; }
+.pg-empty-glyph { color: var(--accent-gold); font-size: 32px; }
+.rg-back-row { display: flex; justify-content: flex-start; margin-top: 16px; }
+
+/* ===== Темы и адаптив ===== */
 @media (max-width: 900px) { .paleo-glossary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .paleo-glossary-head, .paleo-glossary-controls { align-items: stretch; flex-direction: column; } .paleo-glossary-grid { grid-template-columns: 1fr; } .paleo-glossary-icon { align-self: flex-start; } }
+@media (max-width: 640px) {
+  .paleo-glossary-grid { grid-template-columns: 1fr; }
+  .pg-toolbar-row { align-items: stretch; }
+  .pg-search { flex-basis: 100%; }
+  .pg-root { max-width: none; width: 100%; }
+  .pg-chip-mono { align-self: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paleo-glossary-card, .paleo-glossary-door, .pg-root, .pg-spinner .loader { transition: none; animation: none; }
+}

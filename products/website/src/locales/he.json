@@ -709,6 +709,20 @@
       "searchLabel": "",
       "searchPlaceholder": "",
       "subs": ""
+    },
+    "paleoGlossary": {
+      "allRoots": "",
+      "back": "",
+      "loadFailed": "",
+      "loadMore": "",
+      "loading": "",
+      "nothingFound": "",
+      "openRoot": "",
+      "reset": "",
+      "searchLabel": "",
+      "searchPlaceholder": "",
+      "toRoot": "",
+      "wordsLabel": ""
     }
   }
 }

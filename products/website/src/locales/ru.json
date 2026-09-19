@@ -694,6 +694,20 @@
       "typeMinorWord": "Частичное совпадение",
       "typeMissingWord": "Отсутствует"
     },
+    "paleoGlossary": {
+      "allRoots": "Все корни",
+      "back": "Назад к словарям",
+      "loadFailed": "Не удалось открыть глоссарий.",
+      "loadMore": "Показать ещё 24",
+      "loading": "Загрузка глоссария…",
+      "nothingFound": "Ничего не найдено.",
+      "openRoot": "Открыть корень",
+      "reset": "Сбросить",
+      "searchLabel": "Поиск слова",
+      "searchPlaceholder": "Палео-форма, слово или транслитерация",
+      "toRoot": "корень",
+      "wordsLabel": "слов"
+    },
     "rootDict": {
       "back": "Назад к словарям",
       "filterImage": "с образом",

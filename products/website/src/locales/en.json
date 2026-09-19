@@ -720,6 +720,20 @@
       "searchLabel": "Root search",
       "searchPlaceholder": "אמן, AMN, believe…",
       "subs": "Substitutions"
+    },
+    "paleoGlossary": {
+      "allRoots": "All roots",
+      "back": "Back to dictionaries",
+      "loadFailed": "Failed to open the glossary.",
+      "loadMore": "Show 24 more",
+      "loading": "Loading the glossary…",
+      "nothingFound": "Nothing found.",
+      "openRoot": "Open root",
+      "reset": "Reset",
+      "searchLabel": "Word search",
+      "searchPlaceholder": "Paleo form, word or transliteration",
+      "toRoot": "root",
+      "wordsLabel": "words"
     }
   }
 }
