@@ -117,7 +117,7 @@ const PageController = (function() {
       if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
       if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
       if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
-      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
+      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init(container);
       if (window.RevealObserver) window.RevealObserver.scan(container);
     } catch (error) {
       console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));

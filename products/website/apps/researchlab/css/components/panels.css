@@ -122,6 +122,9 @@
   line-height: var(--leading-ui);
 }
 
+/* hidden должен побеждать display: flex (иначе скрытый блок остаётся видимым) */
+.lab-empty[hidden] { display: none; }
+
 /* ===== Скелетон загрузки (running): без бликов, тихие полосы ===== */
 .lab-skeleton {
   display: grid;

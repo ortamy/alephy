@@ -92,7 +92,7 @@ const moduleAnchors = {
   checkers: '.gc-grid',
   'religionism-checker': '.rc-shell',
   'state-checker': '.stc-shell',
-  'translation-comparator': '.tc-checker-content',
+  'translation-comparator': '.tc-shell',
   'paleo-keyboard': '#pk-keys .pk-key',
   analyzers: '.analyzers-shell'
 };

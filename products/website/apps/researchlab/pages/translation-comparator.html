@@ -1,28 +1,89 @@
-<section id="translation-comparator" class="tc-checker-content" aria-labelledby="translation-comparator-title">
-  <div class="tc-checker-header">
-    <h2 id="translation-comparator-title">Компаратор переводов</h2>
-    <p>Сопоставление переводов для обнаружения сдвигов, потерь и смысловых подмен.</p>
+<!-- Компаратор переводов. Шапка — реестр LabHero (локального дубля нет);
+     каркас панелей и глав — css/components/panels.css. -->
+<section class="tc-shell" aria-label="Компаратор переводов">
+  <section class="lab-panel" aria-labelledby="tc-input-title">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">01</span>
+      <h2 class="lab-chapter-title" id="tc-input-title" data-i18n="lab.comparator.inputTitle">Стих</h2>
+    </header>
+    <p class="lab-chapter-note" data-i18n="lab.comparator.inputNote">Сопоставление слоёв: масоретский текст, древние и современные переводы.</p>
+    <form class="tc-form" id="tc-form">
+      <input type="text" id="tc-search" class="lab-input tc-search" autocomplete="off"
+             placeholder="Берешит 1:1, Шмот 20:2, Дварим 6:4"
+             aria-label="Ссылка на стих"
+             data-i18n-attr="placeholder:lab.comparator.placeholder;aria-label:lab.comparator.inputLabel" />
+      <button type="submit" id="tc-show" class="lab-btn lab-btn-primary">
+        <i data-lucide="book-open" aria-hidden="true"></i>
+        <span data-i18n="lab.comparator.show">Показать</span>
+      </button>
+    </form>
+    <p class="lab-status" id="tc-status" role="status" aria-live="polite"></p>
+    <div class="lab-examples" role="group" aria-label="Примеры"
+         data-i18n-attr="aria-label:lab.comparator.examplesLabel">
+      <span class="lab-examples-label" data-i18n="lab.comparator.examplesLabel">Примеры</span>
+      <button type="button" class="lab-example-chip" data-tc-example="Берешит 1:1">Берешит 1:1</button>
+      <button type="button" class="lab-example-chip" data-tc-example="Шмот 20:2">Шмот 20:2</button>
+      <button type="button" class="lab-example-chip" data-tc-example="Дварим 6:4">Дварим 6:4</button>
+    </div>
+  </section>
+
+  <div id="tc-placeholder" class="lab-empty">
+    <span class="lab-empty-glyph" aria-hidden="true">𐤀</span>
+    <p class="lab-empty-hint" data-i18n="lab.comparator.emptyHint">Введите ссылку на стих и нажмите «Показать».</p>
   </div>
-  <div class="tc-search-row"><label for="tc-search">Ссылка на стих</label><div class="search-wrap">
-    <input type="text" id="tc-search" class="lab-input" placeholder="Берешит 1:1, Исайя 53:5">
-    <button type="button" class="lab-btn lab-btn-primary" onclick="TransComp.search()"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt="">Показать</button>
-  </div></div>
-  <div id="tc-placeholder" class="lab-alert lab-alert-info">Введите ссылку на стих. Пример: <strong>Берешит 1:1</strong>.</div>
-  <main id="tc-results" class="tc-map-page" style="display:none;">
-    <section class="tc-section"><h2><img src="assets/icons/32/scribe/scroll.png" alt="">Ивритские источники</h2><div class="tc-source-grid">
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>ТМ<small>масоретский текст · квадратное письмо</small></span></h3><div id="tc-tm" class="tc-text tc-hebrew" dir="rtl" lang="he"></div></article>
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>Кумранский свиток<small>квадратное письмо · без огласовок</small></span></h3><div id="tc-qumran" class="tc-text tc-hebrew" dir="rtl" lang="he"></div></article>
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/paleo/track.png" alt=""><span>Сам. Пятикнижие<small>палео-шрифт</small></span></h3><div id="tc-samaritan" class="tc-text tc-paleo" lang="hbo"></div></article>
-    </div></section>
-    <section class="tc-section"><h2><img src="assets/icons/32/scribe/scroll.png" alt="">Древние переводы</h2><div class="tc-source-grid">
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>LXX <small>греч.</small></span></h3><div id="tc-lxx" class="tc-text"></div></article>
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>Пешитта <small>сир.</small></span></h3><div id="tc-peshitta" class="tc-text" dir="rtl" lang="syr"></div></article>
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>Вульгата <small>лат.</small></span></h3><div class="tc-text">Латинский слой пока не загружен.</div></article>
-    </div></section>
-    <section class="tc-section"><h2><img src="assets/icons/32/scribe/scroll.png" alt="">Современные переводы</h2><div class="tc-source-grid">
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>Синодальный <small>рус.</small></span></h3><div id="tc-synodal" class="tc-text"></div></article>
-      <article class="lab-card tc-source-card"><h3><img src="assets/icons/32/scribe/scroll.png" alt=""><span>Современный русский</span></h3><div id="tc-modern" class="tc-text"></div></article>
-    </div></section>
-    <section id="tc-analysis-section" class="tc-source-analysis tc-analysis-section" hidden aria-labelledby="tc-source-analysis-title"><h2 id="tc-source-analysis-title"><img src="assets/icons/32/ui/scales.png" alt="">Аналитика расхождений</h2><div class="tc-analysis-subsection"><h3>Расхождения и разбор</h3><div id="tc-divergence-block" class="tc-analysis-block"><h4>Описание расхождения</h4><div id="tc-divergence" class="tc-analysis-text"></div></div><div id="tc-paleo-block" class="tc-analysis-block"><h4>Палео-разбор ключевых слов</h4><div id="tc-paleo-analysis" class="tc-analysis-text"></div></div></div><div class="tc-analysis-subsection tc-analysis-stats"><h3>Статистика</h3><div id="tc-source-ratio" class="tc-source-ratio"></div><p id="tc-source-key-difference" class="tc-source-key-difference"></p></div></section>
+
+  <main id="tc-results" class="tc-map-page" hidden>
+    <section class="lab-panel tc-section" aria-labelledby="tc-hebrew-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="tc-hebrew-title" data-i18n="lab.comparator.sectionHebrews">Ивритские источники</h2>
+        <span class="wb-badge" data-tc-count="hebrew">0</span>
+      </header>
+      <div class="tc-source-grid" id="tc-grid-hebrew" data-tc-grid="hebrew"></div>
+      <p class="tc-legend" hidden data-tc-legend="hebrew">
+        <span class="tc-word tc-word-diverge" data-i18n="lab.comparator.legendDiverge">расхождение</span>
+        <span class="tc-word tc-word-minor" data-i18n="lab.comparator.legendMinor">частичное</span>
+      </p>
+    </section>
+
+    <section class="lab-panel tc-section" aria-labelledby="tc-ancient-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">03</span>
+        <h2 class="lab-chapter-title" id="tc-ancient-title" data-i18n="lab.comparator.sectionAncient">Древние переводы</h2>
+        <span class="wb-badge" data-tc-count="ancient">0</span>
+      </header>
+      <div class="tc-source-grid" id="tc-grid-ancient" data-tc-grid="ancient"></div>
+      <p class="tc-legend" hidden data-tc-legend="ancient">
+        <span class="tc-word tc-word-diverge" data-i18n="lab.comparator.legendDiverge">расхождение</span>
+        <span class="tc-word tc-word-minor" data-i18n="lab.comparator.legendMinor">частичное</span>
+      </p>
+    </section>
+
+    <section class="lab-panel tc-section" aria-labelledby="tc-modern-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">04</span>
+        <h2 class="lab-chapter-title" id="tc-modern-title" data-i18n="lab.comparator.sectionModern">Современные переводы</h2>
+        <span class="wb-badge" data-tc-count="modern">0</span>
+      </header>
+      <div class="tc-source-grid" id="tc-grid-modern" data-tc-grid="modern"></div>
+      <p class="tc-legend" hidden data-tc-legend="modern">
+        <span class="tc-word tc-word-diverge" data-i18n="lab.comparator.legendDiverge">расхождение</span>
+        <span class="tc-word tc-word-minor" data-i18n="lab.comparator.legendMinor">частичное</span>
+      </p>
+    </section>
+
+    <section class="lab-panel tc-section tc-analysis-section" id="tc-analysis-section" aria-labelledby="tc-analysis-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">05</span>
+        <h2 class="lab-chapter-title" id="tc-analysis-title" data-i18n="lab.comparator.sectionAnalytics">Аналитика расхождений</h2>
+        <span class="wb-badge" id="tc-analysis-badge"></span>
+      </header>
+      <p class="lab-chapter-note" id="tc-analysis-note"></p>
+      <ul class="tc-rows" id="tc-divergence-rows"></ul>
+      <section class="tc-stats" aria-labelledby="tc-stats-title">
+        <h3 class="tc-stats-title" id="tc-stats-title" data-i18n="lab.comparator.barsTitle">Статистика</h3>
+        <div class="tc-bars" id="tc-bars"></div>
+      </section>
+    </section>
   </main>
 </section>

@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.33,
+    "coverage": 0.36,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -660,6 +660,39 @@
       "verdictUnclearText": "The tree needs further checking: some levels are mixed.",
       "quickPreset": "Trinity",
       "quickReset": "Clear"
+    },
+    "comparator": {
+      "barDiverge": "Divergences",
+      "barMatch": "Matches",
+      "barMissing": "Missing",
+      "barsTitle": "Statistics",
+      "confidence": "interpretation",
+      "emptyHint": "Enter a verse reference and press Show.",
+      "errorEmpty": "Enter a verse reference.",
+      "examplesLabel": "Examples",
+      "found": "Verse shown: ",
+      "inputLabel": "Verse reference",
+      "inputNote": "Layers side by side: Masoretic text, ancient and modern translations.",
+      "inputTitle": "Verse",
+      "layerEmpty": "Layer not loaded: add data to the corpus",
+      "legendDiverge": "divergence",
+      "legendMinor": "partial",
+      "noWitness": "No textual divergence records for this verse.",
+      "notFound": "No data for “{ref}” yet. Examples: Берешит 1:1, Шмот 20:2, Дварим 6:4.",
+      "paleoLayer": "paleo",
+      "placeholder": "Берешит 1:1, Шмот 20:2, Дварим 6:4",
+      "sectionAnalytics": "Divergence analytics",
+      "sectionAncient": "Ancient translations",
+      "sectionHebrews": "Hebrew sources",
+      "sectionModern": "Modern translations",
+      "show": "Show",
+      "typeCritical": "Diverges",
+      "typeMinor": "Matches",
+      "typePartial": "Partly",
+      "typeDiverge": "Divergence",
+      "typeMatchWord": "Matches",
+      "typeMinorWord": "Partial match",
+      "typeMissingWord": "Missing"
     }
   }
 }
