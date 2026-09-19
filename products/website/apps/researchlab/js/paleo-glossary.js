@@ -79,7 +79,7 @@ const PaleoGlossary = (function() {
     readParams(parsed || (window.LabRouter && window.LabRouter.parseHash ? window.LabRouter.parseHash() : null));
     visible = CHUNK;
     syncControls();
-    if (words.length) render();
+    if (words.length) run();
   }
   function init(container, parsed) {
     if (words.length) {
