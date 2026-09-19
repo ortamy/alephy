@@ -13,6 +13,11 @@
 const Workbench = (function() {
   'use strict';
 
+  /* Плюрализация из общего источника js/plural.js. */
+  function labChars(n) {
+    return window.LabPluralWord ? LabPluralWord(n, 'знак', 'знака', 'знаков') : 'знаков';
+  }
+
   var STORE_KEY = 'alephy.workbench.projects';
   var AGENT_API_URL = 'http://127.0.0.1:5000';
 
@@ -411,8 +416,8 @@ const Workbench = (function() {
             }
               runtime.form.fileText = String(payload.text || '');
               runtime.form.fileChars = runtime.form.fileText.length;
-              if (status) status.textContent = '«' + file.name + '» — ' + runtime.form.fileChars + ' знаков, ' + (payload.pages || 0) + ' стр.';
-              setProgress(100, 'Прочитано ' + runtime.form.fileChars + ' знаков');
+              if (status) status.textContent = '«' + file.name + '» — ' + runtime.form.fileChars + ' ' + labChars(runtime.form.fileChars) + ', ' + (payload.pages || 0) + ' стр.';
+              setProgress(100, 'Прочитано ' + runtime.form.fileChars + ' ' + labChars(runtime.form.fileChars));
           };
           request.onerror = function() {
             runtime.form.fileText = '';
@@ -430,7 +435,7 @@ const Workbench = (function() {
           runtime.form.fileText = String(reader.result || '');
           runtime.form.fileChars = runtime.form.fileText.length;
           runtime.form.fileName = file.name;
-          if (status) status.textContent = '«' + file.name + '» — ' + runtime.form.fileChars + ' знаков';
+          if (status) status.textContent = '«' + file.name + '» — ' + runtime.form.fileChars + ' ' + labChars(runtime.form.fileChars);
         };
         reader.onerror = function() {
           if (status) status.textContent = 'Не удалось прочитать файл.';
@@ -498,7 +503,7 @@ const Workbench = (function() {
     var estimate = WorkbenchPipelines.estimate(pipeline, chars);
     body.innerHTML =
       '<ul class="wb-estimate-list">' +
-        '<li>Вход: <b>' + estimate.chars + '</b> знаков</li>' +
+        '<li>Вход: <b>' + estimate.chars + '</b> ' + labChars(estimate.chars) + '</li>' +
         '<li>Токены (≈знаки/4): <b>' + estimate.tokens + '</b></li>' +
         '<li>Стоимость: <b>' + estimate.price + ' ' + esc(estimate.currency) + '</b></li>' +
         '<li>Время (mock): <b>~' + Math.round(estimate.seconds) + ' с</b></li>' +
@@ -789,7 +794,7 @@ const Workbench = (function() {
     return '' +
       '<section class="wb-viewer" aria-label="Взор: перевод">' +
         '<div class="wb-viewer-meta">' +
-          '<span>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' знаков</span>' +
+          '<span>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' ' + labChars((meta.input && meta.input.chars) || 0) + '</span>' +
           '<span>Фрагментов: ' + (result.meta.chunks || (result.segments || []).length) + '</span>' +
           '<span>Палео-образы: ' + (result.meta.keepPaleo ? 'удержаны' : 'без удержания') + '</span>' +
           '<span>Движок: ' + esc(result.meta.engine || 'mock') + '</span>' +
@@ -809,7 +814,7 @@ const Workbench = (function() {
         '<p>' + esc(result.note || 'Результат зафиксирован метаданными проекта.') + '</p>' +
         '<ul class="wb-estimate-list">' +
           '<li>Конвейер: ' + esc(pipelineTitle) + '</li>' +
-          '<li>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' знаков</li>' +
+          '<li>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' ' + labChars((meta.input && meta.input.chars) || 0) + '</li>' +
           '<li>Этапов пройдено: ' + (meta.steps ? meta.steps.length : '—') + '</li>' +
           '<li>Движок: ' + esc(result.meta.engine || 'mock') + '</li>' +
         '</ul>' +
@@ -842,7 +847,7 @@ const Workbench = (function() {
   function buildTranslationMarkdown(result, meta, pipelineTitle) {
     var lines = ['# ' + meta.name, '',
       'Конвейер: ' + pipelineTitle,
-      'Вход: ' + ((meta.input && meta.input.name) || '—') + ' (' + ((meta.input && meta.input.chars) || 0) + ' знаков)',
+      'Вход: ' + ((meta.input && meta.input.name) || '—') + ' (' + ((meta.input && meta.input.chars) || 0) + ' ' + labChars((meta.input && meta.input.chars) || 0) + ')',
       'Движок: ' + (result.meta.engine || 'mock'), ''];
     (result.segments || []).forEach(function(segment) {
       lines.push('## ' + segment.title, '', '**Оригинал**', '', segment.original, '',
@@ -882,7 +887,7 @@ const Workbench = (function() {
       return '<section><h2>' + esc(segment.title) + '</h2><div class="pair"><article><h3>Оригинал</h3><pre>' + esc(segment.original) + '</pre></article><article><h3>Перевод (' + esc(result.meta.targetLang || 'ru') + ')</h3><pre>' + esc(segment.translated) + '</pre></article></div></section>';
     }).join('');
     popup.document.open();
-    popup.document.write('<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>' + esc(meta.name) + '</title><style>body{margin:32px;color:#2c1810;font:14px/1.55 Georgia,serif}h1,h2,h3{color:#5c3b18}h1{font-size:28px}h2{margin:26px 0 10px;border-bottom:1px solid #d4c4a8;padding-bottom:6px;font-size:19px}.meta{color:#675848}.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pair article{border:1px solid #d4c4a8;border-radius:6px;padding:12px}h3{margin:0 0 8px;font-size:13px;text-transform:uppercase}pre{margin:0;white-space:pre-wrap;font:13px/1.55 "Times New Roman",serif}@media print{body{margin:16mm}.pair{break-inside:avoid}}</style></head><body><h1>' + esc(meta.name) + '</h1><p class="meta">Конвейер: ' + esc(pipelineTitle) + '<br>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' знаков</p>' + sections + '<script>window.onload=function(){window.print();};<\/script></body></html>');
+    popup.document.write('<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>' + esc(meta.name) + '</title><style>body{margin:32px;color:#2c1810;font:14px/1.55 Georgia,serif}h1,h2,h3{color:#5c3b18}h1{font-size:28px}h2{margin:26px 0 10px;border-bottom:1px solid #d4c4a8;padding-bottom:6px;font-size:19px}.meta{color:#675848}.pair{display:grid;grid-template-columns:1fr 1fr;gap:18px}.pair article{border:1px solid #d4c4a8;border-radius:6px;padding:12px}h3{margin:0 0 8px;font-size:13px;text-transform:uppercase}pre{margin:0;white-space:pre-wrap;font:13px/1.55 "Times New Roman",serif}@media print{body{margin:16mm}.pair{break-inside:avoid}}</style></head><body><h1>' + esc(meta.name) + '</h1><p class="meta">Конвейер: ' + esc(pipelineTitle) + '<br>Вход: ' + esc((meta.input && meta.input.name) || '—') + ' · ' + ((meta.input && meta.input.chars) || 0) + ' ' + labChars((meta.input && meta.input.chars) || 0) + '</p>' + sections + '<script>window.onload=function(){window.print();};<\/script></body></html>');
     popup.document.close();
   }
 

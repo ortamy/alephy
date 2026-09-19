@@ -755,6 +755,8 @@ const Timeline = (function() {
   }
 
   function pluralize(n, one, two, five) {
+    /* Один источник плюрализации: js/plural.js (LabPluralWord). */
+    if (window.LabPluralWord) return LabPluralWord(n, one, two, five);
     n = Math.abs(n) % 100;
     var n1 = n % 10;
     if (n > 10 && n < 20) return five;

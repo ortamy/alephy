@@ -234,12 +234,13 @@ const Dashboard = (function() {
   function renderCounters(data, dictEntries, totalTerms) {
     var deltas = calculateCounterDeltas(data.researches);
     var researchMetrics = calculateResearchMetrics(data.researches);
+    var w = function(n, o, f, m) { return window.LabPluralWord ? LabPluralWord(n, o, f, m) : m; };
     var items = [
-      { num: data.roots.length, label: 'Корней', delta: deltas.snapshot, href: '#root-dictionary' },
-      { num: totalTerms, label: 'Терминов подмен', delta: deltas.snapshot, href: '#dictionaries' },
-      { num: data.researches.length, label: 'Исследований', delta: deltas.researches, href: '#researches' },
-      { num: dictEntries.length, label: 'Словарей', delta: deltas.snapshot, href: '#dictionaries' },
-      { num: data.heraldry.length, label: 'Империй/гербов', delta: deltas.snapshot, href: '#heraldry' }
+      { num: data.roots.length, label: w(data.roots.length, 'корень', 'корня', 'корней'), delta: deltas.snapshot, href: '#root-dictionary' },
+      { num: totalTerms, label: w(totalTerms, 'термин', 'термина', 'терминов') + ' подмен', delta: deltas.snapshot, href: '#dictionaries' },
+      { num: data.researches.length, label: w(data.researches.length, 'исследование', 'исследования', 'исследований'), delta: deltas.researches, href: '#researches' },
+      { num: dictEntries.length, label: w(dictEntries.length, 'словарь', 'словаря', 'словарей'), delta: deltas.snapshot, href: '#dictionaries' },
+      { num: data.heraldry.length, label: w(data.heraldry.length, 'империя/герб', 'империи/герба', 'империй/гербов'), delta: deltas.snapshot, href: '#heraldry' }
     ];
     return '<section class="dw-summary" aria-labelledby="dw-summary-title">' +
       '<div class="dw-summary-heading"><div><span class="dw-summary-kicker">Срез корпуса</span><h2 id="dw-summary-title">Сводка исследований</h2></div>' +

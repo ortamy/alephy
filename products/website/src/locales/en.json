@@ -693,6 +693,15 @@
       "typeMatchWord": "Matches",
       "typeMinorWord": "Partial match",
       "typeMissingWord": "Missing"
+    },
+    "dictionaries": {
+      "groupMain": "MAIN DICTIONARIES",
+      "groupSubstitutions": "SUBSTITUTION MAPS",
+      "of": "of",
+      "searchPlaceholder": "Search dictionaries…",
+      "sortAlpha": "Alphabetical",
+      "sortVolume": "By volume",
+      "title": "Dictionaries"
     }
   }
 }

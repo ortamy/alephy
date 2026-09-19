@@ -162,7 +162,7 @@
       await pace(context, 500); guard();
       var chunks = splitChunks(text, 40);
       if (!chunks.length) chunks = splitChunks(DEMO_SAMPLE, 40);
-      fire(0, 'done', 100, 'Прочитано ' + text.length + ' знаков');
+      fire(0, 'done', 100, 'Прочитано ' + text.length + ' ' + (window.LabPlural ? LabPlural(text.length, 'знак', 'знака', 'знаков') : text.length + ' знаков'));
 
       // Этап 2: разбор на фрагменты
       fire(1, 'active', 0, 'Разбираю на фрагменты…');

@@ -189,12 +189,7 @@ const PageController = (function() {
   }
 
   function pluralizeRoles(n) {
-    var mod100 = n % 100;
-    var mod10 = n % 10;
-    if (mod100 >= 11 && mod100 <= 19) return n + ' ролей';
-    if (mod10 === 1) return n + ' роль';
-    if (mod10 >= 2 && mod10 <= 4) return n + ' роли';
-    return n + ' ролей';
+    return window.LabPlural ? LabPlural(n, 'роль', 'роли', 'ролей') : n + ' ролей';
   }
 
   function agentStatusMarkup(status, withLabel) {
@@ -317,6 +312,196 @@ const PageController = (function() {
     });
   }
 
+  // ===== РЕЕСТР СЛОВАРЕЙ: группы, поиск, честные плюрали =====
+
+  var DICT_VIEW_KEY = 'alephy_dict_view';
+  var DICT_SORT_KEY = 'alephy_dict_sort';
+  var dictUiState = { view: '', sort: '', query: '' };
+
+  function dictT(key, fallback) {
+    return (window.AlephyI18n && window.AlephyI18n.t) ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  function dictPlural(n, one, few, many) {
+    return window.LabPlural ? LabPlural(n, one, few, many) : n + ' ' + many;
+  }
+
+  function dictReadView() {
+    if (dictUiState.view) return dictUiState.view;
+    var saved = '';
+    try { saved = localStorage.getItem(DICT_VIEW_KEY) || ''; } catch (e) { /* приватный режим */ }
+    if (saved === 'grid' || saved === 'list') { dictUiState.view = saved; return saved; }
+    dictUiState.view = (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) ? 'list' : 'grid';
+    return dictUiState.view;
+  }
+
+  function dictSaveView(view) {
+    dictUiState.view = view;
+    try { localStorage.setItem(DICT_VIEW_KEY, view); } catch (e) { /* приватный режим */ }
+  }
+
+  function dictReadSort() {
+    if (dictUiState.sort) return dictUiState.sort;
+    var saved = '';
+    try { saved = localStorage.getItem(DICT_SORT_KEY) || ''; } catch (e) { /* приватный режим */ }
+    dictUiState.sort = (saved === 'volume') ? 'volume' : 'alpha';
+    return dictUiState.sort;
+  }
+
+  function dictSaveSort(sort) {
+    dictUiState.sort = sort;
+    try { localStorage.setItem(DICT_SORT_KEY, sort); } catch (e) { /* приватный режим */ }
+  }
+
+  function dictEntry(key, title, description, count, icon, route, rootCount) {
+    var countHtml = count != null
+      ? dictPlural(count, 'термин', 'термина', 'терминов')
+      : dictPlural(rootCount, 'корень', 'корня', 'корней');
+    return {
+      key: key,
+      route: route,
+      icon: icon,
+      title: title,
+      desc: (description || '').split('---')[0].trim(),
+      volume: count != null ? count : rootCount,
+      countHtml: countHtml
+    };
+  }
+
+  function dictMarkup(entry, view) {
+    var href = '#dictionaries/' + encodeURIComponent(entry.route);
+    var desc = escapeHtml(entry.desc.length > 140 ? entry.desc.substring(0, 140) + '…' : entry.desc);
+    if (view === 'list') {
+      return '<a href="' + href + '" class="dict-list-row" data-key="' + escapeHtml(entry.key) + '">' +
+        '<span class="dict-icon-chip" aria-hidden="true"><i data-lucide="' + entry.icon + '"></i></span>' +
+        '<span class="dict-list-name">' + escapeHtml(entry.title) + '</span>' +
+        '<span class="dict-list-desc">' + desc + '</span>' +
+        '<span class="dict-count">' + entry.countHtml + '</span></a>';
+    }
+    return '<a href="' + href + '" class="dict-card" data-key="' + escapeHtml(entry.key) + '">' +
+      '<span class="dict-icon-chip" aria-hidden="true"><i data-lucide="' + entry.icon + '"></i></span>' +
+      '<span class="dict-name">' + escapeHtml(entry.title) + '</span>' +
+      '<span class="dict-count">' + entry.countHtml + '</span>' +
+      '<span class="dict-desc">' + desc + '</span></a>';
+  }
+
+  function dictSortEntries(entries, sort) {
+    var sorted = entries.slice();
+    if (sort === 'volume') {
+      sorted.sort(function(a, b) { return b.volume - a.volume || a.title.localeCompare(b.title, 'ru'); });
+    } else {
+      sorted.sort(function(a, b) { return a.title.localeCompare(b.title, 'ru'); });
+    }
+    return sorted;
+  }
+
+  function renderDictRegistry(container, data, keys) {
+    var view = dictReadView();
+    var sort = dictReadSort();
+    var query = dictUiState.query.trim().toLowerCase();
+
+    var entries = [
+      dictEntry('__root_dictionary', 'Корневой словарь',
+        'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.',
+        null, 'book-open', 'root-dictionary', 150),
+      dictEntry('__paleo_glossary', 'Палео-глоссарий',
+        'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.',
+        null, 'languages', 'paleo-glossary', 100)
+    ];
+    keys.forEach(function(key) {
+      var dict = data[key];
+      entries.push(dictEntry(key, dict.title || key, dict.description, (dict.terms || []).length, 'book-marked', key, 0));
+    });
+
+    var total = entries.length;
+    var filtered = query
+      ? entries.filter(function(e) {
+          return (e.title + ' ' + e.desc).toLowerCase().indexOf(query) !== -1;
+        })
+      : entries;
+
+    var SPECIAL = ['__root_dictionary', '__paleo_glossary'];
+    var groups = [
+      { label: dictT('lab.dictionaries.groupMain', 'Основные словари'), main: true },
+      { label: dictT('lab.dictionaries.groupSubstitutions', 'Карты подмен'), main: false }
+    ];
+    var sectionsHtml = '';
+    var shown = 0;
+    groups.forEach(function(group) {
+      var items = dictSortEntries(filtered.filter(function(e) {
+        return group.main ? SPECIAL.indexOf(e.key) !== -1 : SPECIAL.indexOf(e.key) === -1;
+      }), sort);
+      if (!items.length) return;
+      shown += items.length;
+      sectionsHtml += '<section class="dict-group">' +
+        '<header class="dict-group-head"><span class="dict-group-label">' + group.label + '</span>' +
+        '<span class="dict-group-rule" aria-hidden="true"></span>' +
+        '<span class="dict-group-count">' + dictPlural(items.length, 'словарь', 'словаря', 'словарей') + '</span></header>' +
+        '<div class="' + (view === 'list' ? 'dict-grid is-list' : 'dict-grid') + '">' +
+        items.map(function(e) { return dictMarkup(e, view); }).join('') + '</div></section>';
+    });
+
+    container.innerHTML = dictRegistryHtml(view, sectionsHtml, shown, total);
+    bindDictRegistry(container, data, keys);
+  }
+
+  function dictRegistryHtml(view, sectionsHtml, shown, total) {
+    var head = '<div class="research-page-head">' +
+      '<h1><i data-lucide="library" class="lab-icon" aria-hidden="true"></i>' +
+      dictT('lab.dictionaries.title', 'Словари') + '</h1>' +
+      '<p class="subtitle">Словарные карты подмен с ивритским соответствием и палео-формой.</p></div>';
+    var toolbar = '<div class="agent-toolbar-row dict-toolbar-row">' +
+      '<input type="search" class="lab-input agents-search" id="dict-registry-search" value="' + escapeHtml(dictUiState.query) + '" ' +
+      'placeholder="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '" ' +
+      'aria-label="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '">' +
+      '<select id="dict-sort" class="lab-input" aria-label="Сортировка" style="flex: 0 0 auto; width: auto;">' +
+      '<option value="alpha"' + (dictReadSort() === 'alpha' ? ' selected' : '') + '>' +
+      dictT('lab.dictionaries.sortAlpha', 'Алфавит') + '</option>' +
+      '<option value="volume"' + (dictReadSort() === 'volume' ? ' selected' : '') + '>' +
+      dictT('lab.dictionaries.sortVolume', 'По объёму') + '</option></select>' +
+      '<div class="agent-toolbar-actions">' +
+      '<span class="pipeline-count" data-dict-count aria-live="polite"><strong>' + shown + '</strong> ' +
+      dictT('lab.dictionaries.of', 'из') + ' ' + total + '</span>' +
+      '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+      '<button type="button" class="res-view-btn' + (view === 'grid' ? ' active' : '') + '" data-dict-view="grid" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+      '<button type="button" class="res-view-btn' + (view === 'list' ? ' active' : '') + '" data-dict-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+      '</div></div></div>';
+    return head + toolbar +
+      (sectionsHtml || '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>');
+  }
+
+  function bindDictRegistry(container, data, keys) {
+    container.querySelectorAll('[data-key]').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        var key = this.getAttribute('data-key');
+        var route = key === '__root_dictionary' ? 'root-dictionary' :
+          (key === '__paleo_glossary' ? 'paleo-glossary' : key);
+        if (window.LabRouter) LabRouter.navigate('dictionaries', [encodeURIComponent(route)]);
+      });
+    });
+    var search = container.querySelector('#dict-registry-search');
+    if (search) search.addEventListener('input', function() {
+      dictUiState.query = this.value;
+      renderDictRegistry(container, data, keys);
+      var nextSearch = container.querySelector('#dict-registry-search');
+      if (nextSearch) { nextSearch.focus(); nextSearch.setSelectionRange(dictUiState.query.length, dictUiState.query.length); }
+    });
+    var sortSelect = container.querySelector('#dict-sort');
+    if (sortSelect) sortSelect.addEventListener('change', function() {
+      dictSaveSort(this.value);
+      renderDictRegistry(container, data, keys);
+      var nextSort = container.querySelector('#dict-sort');
+      if (nextSort) nextSort.focus();
+    });
+    container.querySelectorAll('[data-dict-view]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        dictSaveView(this.getAttribute('data-dict-view'));
+        renderDictRegistry(container, data, keys);
+      });
+    });
+  }
+
   function renderDictionaries(container, data) {
     var state = pageState.dictionaries;
     var parsed = window.LabRouter && LabRouter.parseHash ? LabRouter.parseHash() : null;
@@ -328,6 +513,7 @@ const PageController = (function() {
     if (parsed && parsed.module === 'dictionaries') {
       state.key = routeKey;
       state.query = (parsed.params && parsed.params.q) || '';
+      dictUiState.query = state.query;
     }
     var keys = Object.keys(data);
     if (!keys.length) {
@@ -335,53 +521,7 @@ const PageController = (function() {
       return;
     }
     if (!state.key) {
-      var specialCards = [
-        '<a href="#" class="dict-card" data-key="__root_dictionary" style="animation-delay: 0ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/ui/book.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">Корневой словарь</div>' +
-            '<div class="dict-count">150 корней</div>' +
-          '</div>' +
-          '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.</p>' +
-          '</a>',
-        '<a href="#" class="dict-card" data-key="__paleo_glossary" style="animation-delay: 50ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/paleo/track.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">Палео-глоссарий</div>' +
-            '<div class="dict-count">100 слов</div>' +
-          '</div>' +
-          '<div class="dict-desc">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</div>' +
-          '</a>'
-      ].join('');
-      var dictCards = specialCards + keys.map(function(key, index) {
-        var dict = data[key];
-        var count = (dict.terms || []).length;
-        return '<a href="#" class="dict-card" data-key="' + escapeHtml(key) + '" style="animation-delay: ' + ((index + 2) * 50) + 'ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/ui/book.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">' + escapeHtml(dict.title || key) + '</div>' +
-            '<div class="dict-count">' + count + ' терминов</div>' +
-          '</div>' +
-          '<div class="dict-desc">' + escapeHtml((dict.description || '').split('---')[0].trim().substring(0, 100) + (dict.description && dict.description.length > 100 ? '...' : '')) + '</div>' +
-          '</a>';
-      }).join('');
-      container.innerHTML = '<div class="research-page-head">' +
-        '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Словари</h1>' +
-        '<p class="subtitle">Словарные карты подмен с ивритским соответствием и палео-формой.</p>' +
-        '</div>' +
-        '<div class="dict-grid" id="dict-grid">' + dictCards + '</div>';
-      var dictGrid = document.getElementById('dict-grid');
-      if (dictGrid) {
-        dictGrid.querySelectorAll('.dict-card').forEach(function(card) {
-          card.addEventListener('click', function(e) {
-            e.preventDefault();
-            var key = this.getAttribute('data-key');
-            var route = key === '__root_dictionary' ? 'root-dictionary' :
-              (key === '__paleo_glossary' ? 'paleo-glossary' : key);
-            if (window.LabRouter) LabRouter.navigate('dictionaries', [encodeURIComponent(route)]);
-          });
-        });
-      }
+      renderDictRegistry(container, data, keys);
       return;
     }
     if (state.key === '__root_dictionary') {
@@ -447,7 +587,7 @@ const PageController = (function() {
       '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение.</p>' + backBtn +
       '</div>' +
       '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-      '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">Корней</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
+      '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">' + (window.LabPluralWord ? LabPluralWord(150, 'корень', 'корня', 'корней') : 'Корней') + '</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
       '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
       '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
       '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
@@ -2261,7 +2401,7 @@ const PageController = (function() {
         container.innerHTML = '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Корневой словарь</h1>' +
           '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.</p>' +
           '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-          '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">Корней</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
+          '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">' + (window.LabPluralWord ? LabPluralWord(150, 'корень', 'корня', 'корней') : 'Корней') + '</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
           '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
           '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
           '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
@@ -2915,7 +3055,7 @@ const PageController = (function() {
         viewId = seg[2] ? 'course' : 'courses';
         if (seg[2] && window.AlephyCourses && window.AlephyCourses.list) {
           var course = window.AlephyCourses.list.filter(function(item) { return item.id === decodeURIComponent(seg[2]); })[0];
-          if (course) override = { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + course.lessons.length + ' уроков'] };
+          if (course) override = { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + (window.LabPlural ? LabPlural(course.lessons.length, 'урок', 'урока', 'уроков') : course.lessons.length + ' уроков')] };
         }
       }
     } else if (moduleId === 'states') {

@@ -44,7 +44,8 @@
   }
 
   function pluralize(count) {
-    return count === 1 ? 'блок' : 'блоков';
+    return window.LabPluralWord ? LabPluralWord(count, 'блок', 'блока', 'блоков')
+      : (count === 1 ? 'блок' : 'блоков');
   }
 
   function setStatus(container, message, type) {
@@ -63,7 +64,7 @@
     var blockCounter = container.querySelector('#prompt-generator-block-count');
     if (output) output.value = text;
     if (copyButton) copyButton.disabled = !text;
-    if (counter) counter.textContent = text.length + ' знаков';
+    if (counter) counter.textContent = window.LabPlural ? LabPlural(text.length, 'знак', 'знака', 'знаков') : text.length + ' знаков';
     if (blockCounter) blockCounter.textContent = assembly.length + ' ' + pluralize(assembly.length);
     return text;
   }
