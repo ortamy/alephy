@@ -571,7 +571,7 @@ const PageController = (function() {
       return;
     }
     if (state.key === '__paleo_glossary') {
-      renderPaleoGlossaryModule(container, data);
+      renderPaleoGlossaryModule(container, data, parsed);
       return;
     }
     var dictionary = data[state.key];
@@ -628,7 +628,7 @@ const PageController = (function() {
     if (window.RootDict) RootDict.init();
   }
 
-  function renderPaleoGlossaryModule(container, data) {
+  function renderPaleoGlossaryModule(container, data, parsed) {
     var partial = PaleoGlossary && PaleoGlossary.markup ? PaleoGlossary.markup('paleo-glossary') : '';
     var backBtn = '<div class="rg-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">' + escapeHtml(t('lab.paleoGlossary.back', 'Назад к словарям')) + '</button></div>';
     container.innerHTML = partial + backBtn;
