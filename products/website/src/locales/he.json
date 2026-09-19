@@ -693,6 +693,22 @@
       "typeMatchWord": "",
       "typeMinorWord": "",
       "typeMissingWord": ""
+    },
+    "rootDict": {
+      "back": "",
+      "filterImage": "",
+      "filterSubs": "",
+      "foundLabel": "",
+      "image": "",
+      "loadFailed": "",
+      "loadMore": "",
+      "loading": "",
+      "nothingFound": "",
+      "openEtymology": "",
+      "rootsLabel": "",
+      "searchLabel": "",
+      "searchPlaceholder": "",
+      "subs": ""
     }
   }
 }

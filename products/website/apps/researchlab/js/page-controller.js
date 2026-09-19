@@ -405,6 +405,12 @@ const PageController = (function() {
     return sorted;
   }
 
+  // Описание корневого словаря из данных хаба: единый источник для карточки
+  // реестра и динамической шапки (resolveHeroView → override.subtitle).
+  function rootDictionaryDescription() {
+    return 'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.';
+  }
+
   function renderDictRegistry(container, data, keys) {
     var view = dictReadView();
     var sort = dictReadSort();
@@ -412,7 +418,7 @@ const PageController = (function() {
 
     var entries = [
       dictEntry('__root_dictionary', 'Корневой словарь',
-        'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.',
+        rootDictionaryDescription(),
         null, 'book-open', 'root-dictionary', 150),
       dictEntry('__paleo_glossary', 'Палео-глоссарий',
         'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.',
@@ -613,16 +619,8 @@ const PageController = (function() {
   }
 
   function renderRootDictionaryModule(container, data) {
-    var backBtn = '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button>';
-    container.innerHTML = '<div class="research-page-head">' +
-      '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Корневой словарь</h1>' +
-      '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение.</p>' + backBtn +
-      '</div>' +
-      '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-      '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">' + (window.LabPluralWord ? LabPluralWord(150, 'корень', 'корня', 'корней') : 'Корней') + '</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
-      '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
-      '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
-      '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
+    var backBtn = '<div class="rd-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button></div>';
+    container.innerHTML = RootDict.markup() + backBtn;
     if (window.RootDict) RootDict.init();
   }
 
@@ -2382,6 +2380,9 @@ const PageController = (function() {
         window.ClubModule.render(container.querySelector('#club-app') || container, parsed);
       }
       if (moduleId === 'paleo-keyboard' && window.PaleoKey) PaleoKey.init();
+      if (moduleId === 'root-dictionary' && window.RootDict) {
+        window.RootDict.applyRoute(parsed);
+      }
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -2430,17 +2431,8 @@ const PageController = (function() {
         break;
 
       case 'root-dictionary':
-        container.innerHTML = '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Корневой словарь</h1>' +
-          '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.</p>' +
-          '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-          '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">' + (window.LabPluralWord ? LabPluralWord(150, 'корень', 'корня', 'корней') : 'Корней') + '</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
-          '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
-          '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
-          '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
+        container.innerHTML = RootDict.markup();
         container.dataset.loaded = '1';
-        applyQueryParam(parsed, 'rd-search',
-          function() { return !!window._roots; },
-          function(query) { RootsSearch.filter(query); });
         if (window.RootDict) {
           RootDict.init();
           RootDict.applyRoute(parsed);
@@ -3121,6 +3113,12 @@ const PageController = (function() {
       if (segWb && segWb[1] === 'run') viewId = 'run';
       else if (segWb && segWb[1] === 'project') viewId = 'project';
       // override задаётся в workbench.js (title конвейера / имя проекта)
+    } else if (moduleId === 'dictionaries') {
+      var segD = parsed && parsed.segments;
+      if (segD && decodeURIComponent(segD[1] || '') === 'root-dictionary') {
+        viewId = 'root-dictionary';
+        override = { kicker: 'АЛЕФИ · СЛОВАРИ · КОРНЕВОЙ', title: 'Корневой словарь', subtitle: rootDictionaryDescription() };
+      }
     } else if (moduleId === 'club') {
       viewId = parsed && parsed.segments && parsed.segments[1] === 'discussions' ? 'discussions' : 'club';
     }

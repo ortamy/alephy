@@ -704,6 +704,22 @@
       "title": "Dictionaries",
       "emptyHint": "Nothing found.",
       "reset": "Reset"
+    },
+    "rootDict": {
+      "back": "Back to dictionaries",
+      "filterImage": "with image",
+      "filterSubs": "with substitutions",
+      "foundLabel": "found",
+      "image": "Image",
+      "loadFailed": "Failed to load the dictionary. Make sure ResearchLab is opened via an HTTP server.",
+      "loadMore": "Show 24 more",
+      "loading": "Loading the dictionary…",
+      "nothingFound": "Nothing found.",
+      "openEtymology": "Open the etymology entry",
+      "rootsLabel": "roots",
+      "searchLabel": "Root search",
+      "searchPlaceholder": "אמן, AMN, believe…",
+      "subs": "Substitutions"
     }
   }
 }
