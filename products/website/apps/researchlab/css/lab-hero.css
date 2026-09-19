@@ -115,6 +115,28 @@
 /* Точка внутри чипа (легенда §6): цвет наследуется от чипа. */
 .lab-hero__chip-dot { flex: 0 0 auto; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: currentColor; }
 
+/* Чернильный заголовок шапки (titleTone: 'ink'): сериф тоном текста панели,
+   а не золотом (§5.1). */
+.lab-hero__title--ink { color: var(--text-on-dark); }
+
+/* Чип-действие в футере шапки (meta с action): кнопка вместо подписи. */
+.lab-hero__chip--action {
+  cursor: pointer;
+  background: transparent;
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.lab-hero__chip--action:hover,
+.lab-hero__chip--action:focus-visible {
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.lab-hero__chip--label {
+  border-color: transparent;
+  color: var(--text-muted-on-dark);
+}
+
 /* Глиф-чип шапки: квадрат hairline справа (glyph / glyphIcon в реестре TARGETS). */
 .lab-hero__glyph {
   position: relative;

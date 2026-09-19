@@ -395,6 +395,11 @@
             "kicker": "",
             "subtitle": "",
             "title": ""
+          },
+          "catalog": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
           }
         },
         "workbench": {
@@ -431,6 +436,11 @@
         "title": ""
       },
       "state-checker": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "tree-checker": {
         "kicker": "",
         "subtitle": "",
         "title": ""
@@ -619,6 +629,37 @@
       "stateError": "",
       "stateRunning": "",
       "stateSuccess": ""
+    },
+    "treeChecker": {
+      "again": "",
+      "answerLabel": "",
+      "confidence": "",
+      "copied": "",
+      "copy": "",
+      "copyFailed": "",
+      "dot": "",
+      "dotsLabel": "",
+      "finish": "",
+      "levelLabel": "",
+      "loadFailed": "",
+      "mdObservations": "",
+      "mdTitle": "",
+      "next": "",
+      "placeholder": "",
+      "prev": "",
+      "progressLabel": "",
+      "resultTitle": "",
+      "stateNew": "",
+      "stateSuccess": "",
+      "verdictHealthy": "",
+      "verdictHealthyText": "",
+      "verdictLabel": "",
+      "verdictRotten": "",
+      "verdictRottenText": "",
+      "verdictUnclear": "",
+      "verdictUnclearText": "",
+      "quickPreset": "",
+      "quickReset": ""
     }
   }
 }

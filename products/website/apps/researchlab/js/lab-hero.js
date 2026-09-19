@@ -26,14 +26,20 @@
     return result;
   }
 
-  /* Чип может быть строкой или { label, className, dot }.
+  /* Чип может быть строкой или { label, key, className, dot, action }.
+     key — i18n-ключ подписи, action — кликабельный чип (data-lab-action:
+     модуль слушает его делегированно внутри своего контейнера).
      dot — точка по легенде §6 для статусных чипов (агент: Активен / В разработке / Заглушка). */
   function metaChips(chips) {
     if (!chips || !chips.length) return '';
     return '<div class="lab-hero__meta">' + chips.map(function (c) {
-      var label = typeof c === 'object' ? c.label : c;
+      var label = typeof c === 'object' ? (c.key ? i18nText(c.key, c.label) : c.label) : c;
       var className = typeof c === 'object' && c.className ? ' ' + esc(c.className) : '';
       var dot = typeof c === 'object' && c.dot ? '<span class="lab-hero__chip-dot" aria-hidden="true"></span>' : '';
+      if (typeof c === 'object' && c.action) {
+        return '<button type="button" class="lab-hero__chip lab-hero__chip--action' + className + '"' +
+          ' data-lab-action="' + esc(c.action) + '">' + dot + esc(label) + '</button>';
+      }
       return '<span class="lab-hero__chip' + className + '">' + dot + esc(label) + '</span>';
     }).join('') + '</div>';
   }
@@ -42,10 +48,11 @@
      config: { kicker, title, subtitle, icon, meta:[] } */
   function heroHtml(config) {
     var titleId = config.titleId ? ' id="' + config.titleId + '"' : '';
+    var titleTone = config.titleTone === 'ink' ? ' lab-hero__title--ink' : '';
     return (
       '<div class="lab-hero__body">' +
         (config.kicker ? '<p class="lab-hero__kicker">' + esc(config.kicker) + '</p>' : '') +
-        '<h1 class="lab-hero__title"' + titleId + '>' +
+        '<h1 class="lab-hero__title' + titleTone + '"' + titleId + '>' +
           '<span class="lab-hero__title-main">' +
           (config.icon ? '<img class="lab-hero__icon" src="assets/icons/32/' + config.icon + '" alt="" aria-hidden="true">' : '') +
           esc(config.title) +
@@ -128,6 +135,17 @@
       title: 'Чекер стран',
       subtitle: 'Диагностика страны по восьми состояниям пространств: доминанта, распределение и вывод.',
       icon: 'ui/web.png'
+    },
+    'tree-checker': {
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ДЕРЕВО',
+      title: 'Чекер дерева',
+      subtitle: 'Проведите учение от семени до плодов: на каждом уровне зафиксируйте наблюдение и оцените, держится ли дерево.',
+      titleTone: 'ink',
+      meta: [
+        { label: 'Быстрая проверка:', className: 'lab-hero__chip--label' },
+        { key: 'lab.treeChecker.quickPreset', label: 'Троица', action: 'tree-preset' },
+        { key: 'lab.treeChecker.quickReset', label: 'Очистить', action: 'tree-reset' }
+      ]
     },
     'paleo-mechanics': {
       kicker: 'АЛЕФИ · ПАЛЕО-МЕХАНИКА',
@@ -552,6 +570,7 @@
       icon: config.icon || '',
       glyph: config.glyph || '',
       glyphIcon: config.glyphIcon || '',
+      titleTone: config.titleTone || '',
       badge: config.badge || null,
       meta: config.meta || []
     });

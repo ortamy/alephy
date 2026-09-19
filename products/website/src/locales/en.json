@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.29,
+    "coverage": 0.33,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -395,6 +395,11 @@
             "kicker": "",
             "subtitle": "",
             "title": ""
+          },
+          "catalog": {
+            "kicker": "",
+            "subtitle": "",
+            "title": ""
           }
         },
         "workbench": {
@@ -434,6 +439,11 @@
         "kicker": "ALEPHY · COUNTRY CHECKER",
         "subtitle": "Diagnosis of a country across the eight states of space: dominant state, distribution and conclusion.",
         "title": "Country checker"
+      },
+      "tree-checker": {
+        "kicker": "ALEPHY · CHECKERS · TREE",
+        "subtitle": "Take a teaching from seed to fruits: on every level record an observation and rate whether the tree holds.",
+        "title": "Tree checker"
       }
     },
     "nav": {
@@ -619,6 +629,37 @@
       "stateError": "Error",
       "stateRunning": "Diagnosing",
       "stateSuccess": "Done"
+    },
+    "treeChecker": {
+      "again": "Start over",
+      "answerLabel": "Observation",
+      "confidence": "interpretation",
+      "copied": "Markdown copied",
+      "copy": "Copy Markdown",
+      "copyFailed": "Copying unavailable",
+      "dot": "Level {n}: {name}",
+      "dotsLabel": "Tree levels",
+      "finish": "Finish",
+      "levelLabel": "Level {n} of 6",
+      "loadFailed": "Failed to load the tree checker: ",
+      "mdObservations": "Observations",
+      "mdTitle": "Tree checker",
+      "next": "Next",
+      "placeholder": "Record your observation…",
+      "prev": "Back",
+      "progressLabel": "Level {n} of 6 · {name}",
+      "resultTitle": "Tree",
+      "stateNew": "New",
+      "stateSuccess": "Done",
+      "verdictHealthy": "Holds",
+      "verdictHealthyText": "The tree holds: signs of emet are found on every level.",
+      "verdictLabel": "Level rating",
+      "verdictRotten": "Rotten spot",
+      "verdictRottenText": "The tree is rotten: key levels lead to Mitzraim, not to Shamaim.",
+      "verdictUnclear": "Needs checking",
+      "verdictUnclearText": "The tree needs further checking: some levels are mixed.",
+      "quickPreset": "Trinity",
+      "quickReset": "Clear"
     }
   }
 }

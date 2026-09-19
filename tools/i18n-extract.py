@@ -80,9 +80,11 @@ def source_files() -> list[Path]:
         lab / "js" / "video-lab.js",
         lab / "js" / "religionism-checker.js",
         lab / "js" / "state-checker.js",
+        lab / "js" / "tree-checker.js",
         lab / "pages" / "video-lab.html",
         lab / "pages" / "religionism-checker.html",
         lab / "pages" / "state-checker.html",
+        lab / "pages" / "tree-checker.html",
     ]
     for base in SCAN_DIRS:
         if not base.is_dir():
@@ -212,7 +214,9 @@ def scan_js(text: str, rel: str) -> tuple[dict[str, dict], int]:
             block = re.search(r"var " + registry + r"\s*=\s*\{(.*?)\n  \};", text, re.S)
             if not block:
                 raise ValueError(f"LabHero registry not found: {registry}")
-            for route in re.finditer(r"'([^']+)'\s*:\s*\{([^{}]*)\}", block.group(1)):
+            # Запись маршрута может содержать вложенные объекты (meta с чипами):
+            # границей служит закрывающая скобка записи на её отступе.
+            for route in re.finditer(r"'([^']+)'\s*:\s*\{(.*?)\n    \}", block.group(1), re.S):
                 for field in re.finditer(r"\b(kicker|title|subtitle):\s*'([^'\\]*)'", route.group(2)):
                     key = prefix + route.group(1).replace("/", ".") + "." + field.group(1)
                     remember(key, text.count("\n", 0, block.start()) + 1, field.group(2))
