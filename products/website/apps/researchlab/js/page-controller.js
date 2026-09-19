@@ -353,6 +353,16 @@ const PageController = (function() {
     try { localStorage.setItem(DICT_SORT_KEY, sort); } catch (e) { /* приватный режим */ }
   }
 
+  /* Состояние тулбара дублируется в hash (?q=&sort=&view=) для deep-link. */
+  function dictSyncHash() {
+    var params = [];
+    if (dictUiState.query) params.push('q=' + encodeURIComponent(dictUiState.query));
+    if (dictUiState.sort === 'volume') params.push('sort=' + dictUiState.sort);
+    if (dictUiState.view && dictUiState.view !== 'grid') params.push('view=' + dictUiState.view);
+    var hash = '#dictionaries' + (params.length ? '?' + params.join('&') : '');
+    history.replaceState(null, '', hash);
+  }
+
   function dictEntry(key, title, description, count, icon, route, rootCount) {
     var countHtml = count != null
       ? dictPlural(count, 'термин', 'термина', 'терминов')
@@ -454,11 +464,11 @@ const PageController = (function() {
       '<input type="search" class="lab-input agents-search" id="dict-registry-search" value="' + escapeHtml(dictUiState.query) + '" ' +
       'placeholder="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '" ' +
       'aria-label="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '">' +
-      '<select id="dict-sort" class="lab-input" aria-label="Сортировка" style="flex: 0 0 auto; width: auto;">' +
+      '<span class="dict-sort-wrap"><select id="dict-sort" class="lab-input dict-sort-select" aria-label="Сортировка">' +
       '<option value="alpha"' + (dictReadSort() === 'alpha' ? ' selected' : '') + '>' +
       dictT('lab.dictionaries.sortAlpha', 'Алфавит') + '</option>' +
       '<option value="volume"' + (dictReadSort() === 'volume' ? ' selected' : '') + '>' +
-      dictT('lab.dictionaries.sortVolume', 'По объёму') + '</option></select>' +
+      dictT('lab.dictionaries.sortVolume', 'По объёму') + '</option></select></span>' +
       '<div class="agent-toolbar-actions">' +
       '<span class="pipeline-count" data-dict-count aria-live="polite"><strong>' + shown + '</strong> ' +
       dictT('lab.dictionaries.of', 'из') + ' ' + total + '</span>' +
@@ -467,7 +477,15 @@ const PageController = (function() {
       '<button type="button" class="res-view-btn' + (view === 'list' ? ' active' : '') + '" data-dict-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
       '</div></div></div>';
     return head + toolbar +
-      (sectionsHtml || '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>');
+      (sectionsHtml || dictEmptyHtml());
+  }
+
+  function dictEmptyHtml() {
+    return '<div class="dict-empty" data-dict-empty>' +
+      '<span class="dict-empty-glyph" aria-hidden="true"><i data-lucide="search-x"></i></span>' +
+      '<p class="dict-empty-hint">' + dictT('lab.dictionaries.emptyHint', 'Ничего не найдено.') + '</p>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-dict-reset>' + dictT('lab.dictionaries.reset', 'Сбросить') + '</button>' +
+      '</div>';
   }
 
   function bindDictRegistry(container, data, keys) {
@@ -483,6 +501,7 @@ const PageController = (function() {
     var search = container.querySelector('#dict-registry-search');
     if (search) search.addEventListener('input', function() {
       dictUiState.query = this.value;
+      dictSyncHash();
       renderDictRegistry(container, data, keys);
       var nextSearch = container.querySelector('#dict-registry-search');
       if (nextSearch) { nextSearch.focus(); nextSearch.setSelectionRange(dictUiState.query.length, dictUiState.query.length); }
@@ -490,6 +509,7 @@ const PageController = (function() {
     var sortSelect = container.querySelector('#dict-sort');
     if (sortSelect) sortSelect.addEventListener('change', function() {
       dictSaveSort(this.value);
+      dictSyncHash();
       renderDictRegistry(container, data, keys);
       var nextSort = container.querySelector('#dict-sort');
       if (nextSort) nextSort.focus();
@@ -497,8 +517,17 @@ const PageController = (function() {
     container.querySelectorAll('[data-dict-view]').forEach(function(btn) {
       btn.addEventListener('click', function() {
         dictSaveView(this.getAttribute('data-dict-view'));
+        dictSyncHash();
         renderDictRegistry(container, data, keys);
       });
+    });
+    var resetBtn = container.querySelector('[data-dict-reset]');
+    if (resetBtn) resetBtn.addEventListener('click', function() {
+      dictUiState.query = '';
+      dictSyncHash();
+      renderDictRegistry(container, data, keys);
+      var nextSearch = container.querySelector('#dict-registry-search');
+      if (nextSearch) nextSearch.focus();
     });
   }
 
@@ -514,6 +543,9 @@ const PageController = (function() {
       state.key = routeKey;
       state.query = (parsed.params && parsed.params.q) || '';
       dictUiState.query = state.query;
+      if (parsed.params && parsed.params.sort === 'volume') dictUiState.sort = 'volume';
+      if (parsed.params && parsed.params.sort === 'alpha') dictUiState.sort = 'alpha';
+      if (parsed.params && (parsed.params.view === 'grid' || parsed.params.view === 'list')) dictUiState.view = parsed.params.view;
     }
     var keys = Object.keys(data);
     if (!keys.length) {

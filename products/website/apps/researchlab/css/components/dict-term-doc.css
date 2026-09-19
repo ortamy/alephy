@@ -116,6 +116,68 @@
 }
 .dict-list-row .dict-count { margin-left: auto; }
 
+/* ===== DICT SORT SELECT: 36px, стрелка и рамка по токенам (все темы) ===== */
+.dict-sort-wrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+.dict-sort-select {
+  height: 36px;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 0 calc(var(--space-4) + 14px) 0 var(--space-3);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13, 13px);
+  cursor: pointer;
+}
+.dict-sort-select:hover { border-color: var(--border-light); filter: none; }
+.dict-sort-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: var(--ring-focus, 0 0 0 2px rgb(var(--accent-gold-rgb, 184, 134, 11) / 0.25));
+}
+/* Шеврон через currentColor — наследует тему автоматически. */
+.dict-sort-wrap::after {
+  content: '';
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* ===== DICT EMPTY STATE: пунктир + глиф + подсказка + Сбросить ===== */
+.dict-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.dict-empty-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.dict-empty-glyph svg.lucide { width: 16px; height: 16px; }
+.dict-empty-hint { margin: 0; font: 500 var(--ui-13, 13px)/1.4 var(--font-ui); color: var(--text-muted); }
+
 /* ===== MOBILE: list по умолчанию при JS-переключателе ===== */
 @media (max-width: 640px) {
   .dict-toolbar-row { flex-wrap: wrap; }

@@ -701,7 +701,9 @@
       "searchPlaceholder": "Search dictionaries…",
       "sortAlpha": "Alphabetical",
       "sortVolume": "By volume",
-      "title": "Dictionaries"
+      "title": "Dictionaries",
+      "emptyHint": "Nothing found.",
+      "reset": "Reset"
     }
   }
 }
