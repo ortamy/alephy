@@ -415,6 +415,22 @@ const PageController = (function() {
     return 'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.';
   }
 
+  /* Объём словарей берётся из данных, а не из литералов: словари растут,
+     а карточка реестра не должна показывать устаревшее число. */
+  function dictSyncLiveCounts(container) {
+    [
+      { key: '__root_dictionary', url: 'data/roots/roots.json', plural: ['корень', 'корня', 'корней'] },
+      { key: '__paleo_glossary', url: 'data/paleo-glossary/roots.json', plural: ['слово', 'слова', 'слов'] }
+    ].forEach(function(target) {
+      fetchJson(target.url).then(function(data) {
+        var total = Array.isArray(data) ? data.length : 0;
+        if (!total) return;
+        var node = container.querySelector('[data-key="' + target.key + '"] .dict-count');
+        if (node) node.textContent = dictPlural(total, target.plural[0], target.plural[1], target.plural[2]);
+      }).catch(function() { /* счётчик остаётся резервным — экран не ломается */ });
+    });
+  }
+
   function renderDictRegistry(container, data, keys) {
     var view = dictReadView();
     var sort = dictReadSort();
@@ -423,7 +439,7 @@ const PageController = (function() {
     var entries = [
       dictEntry('__root_dictionary', 'Корневой словарь',
         rootDictionaryDescription(),
-        null, 'book-open', 'root-dictionary', 150),
+        null, 'book-open', 'root-dictionary', 329),
       dictEntry('__paleo_glossary', 'Палео-глоссарий',
         paleoGlossaryDescription(),
         null, 'languages', 'paleo-glossary', 100)
@@ -463,6 +479,7 @@ const PageController = (function() {
 
     container.innerHTML = dictRegistryHtml(view, sectionsHtml, shown, total);
     bindDictRegistry(container, data, keys);
+    dictSyncLiveCounts(container);
   }
 
   function dictRegistryHtml(view, sectionsHtml, shown, total) {
