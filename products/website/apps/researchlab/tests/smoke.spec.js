@@ -318,3 +318,82 @@ test.describe('paleo-keyboard keys', () => {
     await expect(page.locator('#pk-keys-count')).toHaveText('22');
   });
 });
+
+// ===== Параметризованные маршруты: рендер детали существует =====
+// Sample-id берутся из данных модулей (languages.json, timeline.json,
+// exposures/index.json, pages/checkers.html) и из реестра агентов в
+// page-controller.js — тест не расходится с источником.
+const labRoot = path.resolve(__dirname, '..');
+
+function readLabJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.resolve(labRoot, relativePath), 'utf8'));
+}
+
+function agentSlugsFromRegistry() {
+  const source = fs.readFileSync(path.resolve(labRoot, 'js', 'page-controller.js'), 'utf8');
+  const match = source.match(/var agentSlugs = \[(.*?)\];/s);
+  if (!match) throw new Error('Could not find agentSlugs registry in page-controller.js');
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
+}
+
+function checkerRoutesFromHub() {
+  const source = fs.readFileSync(path.resolve(labRoot, 'pages', 'checkers.html'), 'utf8');
+  return [...source.matchAll(/href="#([^"]+)"/g)].map((item) => item[1]);
+}
+
+const parameterizedSamples = (() => {
+  const languages = readLabJson('data/language-map/languages.json').languages;
+  const timelines = readLabJson('data/timeline.json');
+  const researches = readLabJson('data/exposures/index.json');
+  const agentSlugs = agentSlugsFromRegistry();
+  return [
+    { route: `language-map/${languages[0].id}`, anchor: '.language-map-detail', title: languages[0].name },
+    { route: `timeline/${timelines[0].id}`, anchor: `[data-timeline-id="${timelines[0].id}"]` },
+    { route: `ai-agents/${agentSlugs[0]}`, anchor: '#agent-detail-view' },
+    { route: 'dictionaries/root-dictionary', anchor: '#rd-search' },
+    { route: 'dictionaries/paleo-glossary', anchor: '#paleo-glossary-search' },
+    { route: `researches/case/${researches[0].slug}`, anchor: '.exposure-case-page' },
+    ...checkerRoutesFromHub().map((route) => ({ route, anchor: moduleAnchors[route] || null }))
+  ];
+})();
+
+test.describe('parameterized routes render detail', () => {
+  for (const sample of parameterizedSamples) {
+    test(`#${sample.route} открывает деталь без hero-ошибки и пустой панели`, async ({ page }) => {
+      const errors = [];
+      page.on('console', (message) => {
+        if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(`console: ${message.text()}`);
+      });
+      page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+      const moduleId = sample.route.split('/')[0];
+      await page.goto(`/#${sample.route}`, { waitUntil: 'domcontentloaded' });
+
+      // Заголовок детали живёт в шапке модуля (LabHero).
+      const heroTitle = page.locator(`#lab-hero-title-${moduleId}`);
+      await expect(heroTitle, `заголовок шапки на #${sample.route}`).toHaveCount(1, { timeout: SPINNER_BUDGET_MS });
+      await expect
+        .poll(() => heroTitle.textContent().then((text) => (text || '').trim()), { timeout: SPINNER_BUDGET_MS, message: `пустой заголовок шапки на #${sample.route}` })
+        .not.toBe('');
+      if (sample.title) await expect(heroTitle, `заголовок детали из данных на #${sample.route}`).toContainText(sample.title);
+
+      // Error-state модуля — это «модуль не загрузился», а не рендер детали.
+      await expect(page.locator('#labContent [data-module-error]'), `error-state на #${sample.route}`).toHaveCount(0);
+
+      // Корень лаба (#labContent) не должен остаться с пустой панелью модуля.
+      const panel = page.locator(`#labContent #${moduleId}.module.active`).first();
+      await expect(panel, `панель модуля #${sample.route}`).toBeVisible({ timeout: SPINNER_BUDGET_MS });
+      await expect
+        .poll(() => panel.evaluate((node) => node.children.length), { timeout: SPINNER_BUDGET_MS, message: `пустая панель #${sample.route}` })
+        .toBeGreaterThan(1);
+
+      if (sample.anchor) {
+        await expect(page.locator(`#labContent ${sample.anchor}`).first(), `узел детали ${sample.anchor} на #${sample.route}`)
+          .toBeAttached({ timeout: SPINNER_BUDGET_MS });
+      }
+
+      expect(errors, `uncaught errors on #${sample.route}`).toEqual([]);
+
+    });
+  }
+});

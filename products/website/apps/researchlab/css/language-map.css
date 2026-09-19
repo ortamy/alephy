@@ -23,8 +23,7 @@
 .language-map-head h1,
 .language-map-detail h1 { color: var(--text-primary); line-height: 1.15; margin-bottom: 10px; }
 .language-map-shell .subtitle,
-.language-map-detail-type,
-.language-map-future { color: var(--text-secondary); }
+.language-map-detail-type { color: var(--text-secondary); }
 
 /* ===== ТУЛБАР (§4.7): одна панель, search flex-1, селекты 36px, счётчик справа ===== */
 .language-map-toolbar {
@@ -344,6 +343,100 @@
     grid-row: 1 / 3;
     align-self: center;
   }
+}
+
+/* ===== Деталь языка: паспорт (hairline-строки) и связи (чипы-двери) ===== */
+.language-map-detail-panels {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  margin-top: 26px;
+}
+.language-map-passport-rows,
+.language-map-relation-rows { display: grid; gap: 8px; margin: 0; }
+
+/* Строка паспорта: hairline; отсутствующее поле — пунктир и «в исследовании» */
+.language-map-passport-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-light);
+}
+.language-map-passport-row.is-dashed { border-bottom-style: dashed; }
+.language-map-passport-label {
+  color: var(--text-secondary);
+  font-size: var(--ui-10, 10px);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.language-map-passport-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-14, 14px);
+}
+.language-map-passport-row.is-dashed .language-map-passport-value { color: var(--text-muted); }
+
+/* Точка статуса: палитра легенды §6 + метка уверенности текстом из данных */
+.language-map-status-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+.language-map-status-dot--fact { background: var(--accent-gold); }
+.language-map-status-dot--hypothesis { background: var(--text-muted); opacity: .6; }
+.language-map-status-dot--distortion { background: var(--accent-red); }
+
+/* Связи: чип-дверь (§4.3) или dashed-строка «в исследовании» */
+.language-map-relation-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-light);
+}
+.language-map-relation-row.is-dashed { border-bottom-style: dashed; }
+.language-map-relation-label {
+  color: var(--text-secondary);
+  font-size: var(--ui-10, 10px);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.language-map-relation-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.language-map-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  color: var(--text-primary);
+  font-size: var(--ui-12, 12px);
+  text-decoration: none;
+}
+.language-map-chip:hover,
+.language-map-chip:focus-visible { border-color: var(--accent-gold); }
+.language-map-relation-empty { color: var(--text-muted); font-size: var(--text-14, 14px); }
+
+/* Fallback «язык не найден»: пунктирная рамка (§4.6) и дверь назад */
+.language-map-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+}
+.language-map-not-found-text { margin: 0; color: var(--text-muted); }
+.language-map-detail-back { margin: 22px 0 0; }
+
+@media (max-width: 900px) {
+  .language-map-detail-panels { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {

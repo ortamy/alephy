@@ -2404,6 +2404,11 @@ const PageController = (function() {
       if (moduleId === 'paleo-glossary' && window.PaleoGlossary) {
         window.PaleoGlossary.applyParams(parsed);
       }
+      // Карта языков держит список и деталь в одном контейнере: переход
+      // на #language-map/<id> обязан перерисовать панель, иначе остаётся список.
+      if (moduleId === 'language-map' && window.LanguageMap) {
+        window.LanguageMap.init(container, parsed);
+      }
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
