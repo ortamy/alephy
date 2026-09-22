@@ -28,6 +28,7 @@
           <button type="button" id="cg-link-type" class="lab-example-chip cg-link-type"
                   aria-pressed="true" data-i18n="lab.clueGenerator.linkTypeCause">причина → следствие</button>
           <button type="button" id="cg-add-link" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.clueGenerator.addLink">+ Связь</button>
+          <span class="cg-link-hint" id="cg-link-hint" hidden></span>
         </div>
         <div id="cg-links" class="cg-links" aria-live="polite"></div>
       </section>
@@ -58,12 +59,6 @@
         <p class="lab-status" id="cg-status" role="status" aria-live="polite"></p>
       </section>
 
-      <section class="cg-section" aria-labelledby="cg-sec-saved">
-        <header class="cg-section-head">
-          <h2 class="cg-section-label" id="cg-sec-saved" data-i18n="lab.clueGenerator.secSaved">Сохранённые</h2>
-        </header>
-        <div id="cg-saved" class="cg-saved"></div>
-      </section>
     </section>
 
     <aside class="lab-panel cg-side" aria-labelledby="cg-scheme-title">
@@ -71,7 +66,16 @@
         <h2 class="lab-chapter-title" id="cg-scheme-title" data-i18n="lab.clueGenerator.schemeTitle">Схема</h2>
       </header>
       <div id="cg-scheme" class="cg-scheme" aria-live="polite"></div>
-      <button type="button" id="cg-build" class="lab-btn lab-btn-primary lab-btn-sm" data-i18n="lab.clueGenerator.build">Собрать цепочку</button>
+      <div class="cg-side-actions">
+        <button type="button" id="cg-build" class="lab-btn lab-btn-primary lab-btn-sm" data-i18n="lab.clueGenerator.build">Собрать цепочку</button>
+      </div>
+
+      <section class="cg-section" aria-labelledby="cg-sec-saved">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-saved" data-i18n="lab.clueGenerator.secSaved">Сохранённые</h2>
+        </header>
+        <div id="cg-saved" class="cg-saved"></div>
+      </section>
     </aside>
   </div>
 </section>

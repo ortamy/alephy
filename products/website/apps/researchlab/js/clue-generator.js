@@ -141,6 +141,27 @@
       }).join('');
       if (state.clues.some(function(clue) { return clue.id === previous; })) select.value = previous;
     });
+    // Второй селект по умолчанию — вторая улика: связь «А → Б» собирается сразу.
+    if (dom.linkTo && state.clues.length > 1 && dom.linkFrom && dom.linkTo.value === dom.linkFrom.value) {
+      dom.linkTo.value = state.clues[1].id;
+    }
+    updateLinkState();
+  }
+
+  // Валидация связи: нужны две улики и разные её концы.
+  function updateLinkState() {
+    if (!dom.linkFrom || !dom.linkTo) return;
+    var twoClues = state.clues.length > 1;
+    var sameClue = dom.linkFrom.value === dom.linkTo.value;
+    dom.linkTo.disabled = !twoClues;
+    if (dom.addLink) dom.addLink.disabled = !twoClues || sameClue;
+    if (dom.linkHint) {
+      var message = !twoClues
+        ? t('lab.clueGenerator.linkNeedTwo', 'Нужны две улики')
+        : (sameClue ? t('lab.clueGenerator.linkHint', 'Выберите разные улики') : '');
+      dom.linkHint.textContent = message;
+      dom.linkHint.hidden = !message;
+    }
   }
 
   function linkKindLabel(kind) {
@@ -462,6 +483,12 @@
       }
     });
 
+    scope.addEventListener('change', function(event) {
+      var target = event.target;
+      if (!target || !target.id) return;
+      if (target.id === 'cg-link-from' || target.id === 'cg-link-to') updateLinkState();
+    });
+
     // Drag&drop — мышь; клавиатурная альтернатива — кнопки ↑/↓.
     scope.addEventListener('dragstart', function(event) {
       var card = event.target.closest ? event.target.closest('.cg-card') : null;
@@ -486,6 +513,8 @@
       linkFrom: scope.querySelector('#cg-link-from'),
       linkTo: scope.querySelector('#cg-link-to'),
       linkType: scope.querySelector('#cg-link-type'),
+      linkHint: scope.querySelector('#cg-link-hint'),
+      addLink: scope.querySelector('#cg-add-link'),
       scheme: scope.querySelector('#cg-scheme'),
       saved: scope.querySelector('#cg-saved'),
       conclusion: scope.querySelector('#cg-conclusion'),
