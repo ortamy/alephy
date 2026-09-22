@@ -2963,6 +2963,14 @@ const PageController = (function() {
         }
         break;
 
+      case 'timescale-generator':
+        if (window.TimescaleGenerator) {
+          window.TimescaleGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор шкалы времени» не загрузился.');
+        }
+        break;
+
       case 'hypothesis-generator':
         if (window.HypothesisGenerator) {
           window.HypothesisGenerator.init(container);

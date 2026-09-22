@@ -219,6 +219,12 @@
       subtitle: 'Соберите рабочее поле, маршрут исследования или точный запрос к инструменту.',
       icon: 'crafts/hammer-and-chisel.png'
     },
+    'timescale-generator': {
+      kicker: 'АЛЕФИ · ГЕНЕРАТОР ШКАЛЫ',
+      title: 'Генератор шкалы времени',
+      subtitle: 'Диапазон, ленты и шаг оси: события по датам одной линией.',
+      icon: 'ui/clock.png'
+    },
     'hypothesis-generator': {
       kicker: 'АЛЕФИ · ГЕНЕРАТОР ГИПОТЕЗ',
       title: 'Генератор гипотез',

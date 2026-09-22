@@ -1,0 +1,78 @@
+<!-- Генератор шкалы времени: конструктор диапазона, лент и шага оси по языку таймлайнов.
+     Шапка — реестр LabHero; панели и empty-state — css/components/panels.css. -->
+<section class="ts-shell" aria-label="Генератор шкалы времени">
+  <div class="ts-layout">
+    <div class="ts-side">
+      <section class="lab-panel" aria-labelledby="ts-params-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">01</span>
+          <h2 class="lab-chapter-title" id="ts-params-title" data-i18n="lab.timescaleGenerator.panelParams">Параметры</h2>
+        </header>
+        <form id="ts-form" class="ts-form" novalidate>
+          <div class="ts-field">
+            <span class="ts-label" id="ts-range-label" data-i18n="lab.timescaleGenerator.rangeLabel">Диапазон</span>
+            <div class="ts-range" role="group" aria-labelledby="ts-range-label">
+              <input type="text" inputmode="numeric" id="ts-from" class="lab-input ts-mono" maxlength="6" autocomplete="off"
+                     aria-label="Начало диапазона" value="-3000"
+                     data-i18n-attr="aria-label:lab.timescaleGenerator.fromLabel">
+              <span class="ts-range-sep" aria-hidden="true">…</span>
+              <input type="text" inputmode="numeric" id="ts-to" class="lab-input ts-mono" maxlength="5" autocomplete="off"
+                     aria-label="Конец диапазона" value="-100"
+                     data-i18n-attr="aria-label:lab.timescaleGenerator.toLabel">
+              <button type="button" id="ts-zoom-out" class="ts-icon-btn" title="Уменьшить масштаб" aria-label="Уменьшить масштаб"
+                      data-i18n-attr="title:lab.timescaleGenerator.zoomOut;aria-label:lab.timescaleGenerator.zoomOut">−</button>
+              <button type="button" id="ts-zoom-in" class="ts-icon-btn" title="Увеличить масштаб" aria-label="Увеличить масштаб"
+                      data-i18n-attr="title:lab.timescaleGenerator.zoomIn;aria-label:lab.timescaleGenerator.zoomIn">+</button>
+            </div>
+            <p class="ts-note" data-i18n="lab.timescaleGenerator.rangeNote">Годы до н.э. — отрицательными.</p>
+          </div>
+          <div class="ts-field">
+            <span class="ts-label" id="ts-tapes-label" data-i18n="lab.timescaleGenerator.tapesLabel">Ленты</span>
+            <div id="ts-tapes" class="ts-tapes" role="group" aria-labelledby="ts-tapes-label"></div>
+          </div>
+          <div class="ts-field">
+            <span class="ts-label" id="ts-step-label" data-i18n="lab.timescaleGenerator.stepLabel">Шаг оси</span>
+            <div class="ts-step" role="group" aria-labelledby="ts-step-label">
+              <button type="button" class="lab-example-chip ts-step-chip" data-ts-step="1000" aria-pressed="false" data-i18n="lab.timescaleGenerator.stepMillennium">тысячелетие</button>
+              <button type="button" class="lab-example-chip ts-step-chip is-active" data-ts-step="100" aria-pressed="true" data-i18n="lab.timescaleGenerator.stepCentury">век</button>
+              <button type="button" class="lab-example-chip ts-step-chip" data-ts-step="50" aria-pressed="false" data-i18n="lab.timescaleGenerator.stepHalf">50 лет</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="lab-panel" aria-labelledby="ts-saved-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">02</span>
+          <h2 class="lab-chapter-title" id="ts-saved-title" data-i18n="lab.timescaleGenerator.panelSaved">Сохранённые</h2>
+        </header>
+        <div id="ts-saved" class="ts-saved"></div>
+      </section>
+    </div>
+
+    <section class="lab-panel ts-scale-panel" aria-labelledby="ts-scale-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">03</span>
+        <h2 class="lab-chapter-title" id="ts-scale-title" data-i18n="lab.timescaleGenerator.panelScale">Шкала</h2>
+        <span class="wb-badge" id="ts-badge" data-i18n="lab.timescaleGenerator.badgeEmpty">Ожидание</span>
+      </header>
+      <div class="ts-axis-scroll">
+        <div id="ts-axis" class="ts-axis" aria-live="polite"></div>
+      </div>
+      <section aria-labelledby="ts-window-title">
+        <header class="ts-section-head">
+          <h2 class="ts-section-label" id="ts-window-title" data-i18n="lab.timescaleGenerator.windowTitle">События в окне</h2>
+          <span class="ts-section-hint" id="ts-window-count"></span>
+        </header>
+        <div id="ts-window" class="ts-window"></div>
+        <button type="button" id="ts-more" class="lab-btn lab-btn-secondary lab-btn-sm" hidden data-i18n="lab.timescaleGenerator.showMore">Показать ещё</button>
+      </section>
+      <div class="ts-actions">
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-ts-action="copy" disabled data-i18n="lab.timescaleGenerator.actionsCopy">Копировать Markdown</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-ts-action="md" disabled data-i18n="lab.timescaleGenerator.downloadMd">Скачать .md</button>
+        <a class="ts-door" href="#timeline"><span data-i18n="lab.timescaleGenerator.actionsTape">В ленту</span> →</a>
+      </div>
+      <p class="lab-status" id="ts-status" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+</section>
