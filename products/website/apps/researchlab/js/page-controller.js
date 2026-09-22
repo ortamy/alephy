@@ -2621,32 +2621,12 @@ const PageController = (function() {
         break;
 
       case 'research-generator':
-        container.innerHTML = '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">Генератор исследований</h1>' +
-          '<p class="subtitle">Выберите тип исследования, укажите тему и получите основу в формате Markdown.</p>' +
-          '<form id="research-generator-form" class="research-generator-form" onsubmit="event.preventDefault(); PageController.generateResearch();">' +
-          '<div class="research-generator-fields">' +
-          '<label for="rg-type">Тип исследования</label>' +
-          '<select id="rg-type" class="lab-select">' +
-          '<option value="root">Корень</option><option value="term">Термин</option><option value="verse">Стих</option><option value="substitution">Подмена</option><option value="free">Свободная тема</option>' +
-          '</select>' +
-          '<label for="rg-topic">Тема</label>' +
-          '<input type="text" id="rg-topic" class="lab-input" placeholder="Например: חֶסֶד или подмена смысла слова «закон»" required>' +
-          '<button type="submit" class="lab-btn lab-btn-primary" id="rg-generate">Сгенерировать</button>' +
-          '</div>' +
-          '</form>' +
-          '<div id="rg-status" class="lab-alert lab-alert-info" role="status">Заполните тему и выберите тип исследования.</div>' +
-          '<div id="rg-export" class="export-bar research-generator-export" style="display:none">' +
-          '<span class="export-title">Экспорт</span>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="PageController.downloadResearchTxt()">Скачать TXT</button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="PageController.copyResearchMarkdown()">Копировать Markdown</button>' +
-          '</div>' +
-          '<section class="research-preview-wrap" aria-labelledby="rg-preview-title">' +
-          '<h2 id="rg-preview-title">Превью</h2>' +
-          '<div id="rg-preview" class="research-preview" aria-live="polite">' +
-          '<p class="research-preview-placeholder">Здесь появится оформленный шаблон исследования.</p>' +
-          '</div>' +
-          '</section>';
-        container.dataset.loaded = '1';
+        showSpinner(container, 'Загрузка конструктора…');
+        if (window.ResearchGenerator) {
+          window.ResearchGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор исследований» не загрузился.');
+        }
         break;
 
       // religionism-checker отдаётся fetch-веткой ниже: разметка живёт в
