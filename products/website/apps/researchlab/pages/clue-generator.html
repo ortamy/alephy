@@ -1,0 +1,77 @@
+<!-- Генератор улик: живая цепочка наблюдений. Шапка — реестр LabHero
+     (локального hero-дубля нет); панели и empty-state — css/components/panels.css. -->
+<section class="cg-shell" aria-label="Генератор улик">
+  <div class="cg-layout">
+    <section class="lab-panel cg-main" aria-label="Конструктор цепочки улик"
+             data-i18n-attr="aria-label:lab.clueGenerator.mainLabel">
+      <section class="cg-section" aria-labelledby="cg-sec-obs">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-obs" data-i18n="lab.clueGenerator.secObservations">Наблюдения</h2>
+          <span class="cg-section-hint" data-i18n="lab.clueGenerator.secObservationsHint">Перетащите или поднимите стрелками</span>
+        </header>
+        <div id="cg-list" class="cg-list"></div>
+        <p class="cg-sr" id="cg-order-live" role="status" aria-live="polite"></p>
+        <button type="button" id="cg-add" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.clueGenerator.addClue">+ Добавить улику</button>
+      </section>
+
+      <section class="cg-section" aria-labelledby="cg-sec-links">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-links" data-i18n="lab.clueGenerator.secLinks">Соединения</h2>
+          <span class="cg-section-hint" data-i18n="lab.clueGenerator.secLinksHint">Причина → следствие</span>
+        </header>
+        <div class="cg-link-builder">
+          <select id="cg-link-from" class="cg-select" aria-label="Улика А"
+                  data-i18n-attr="aria-label:lab.clueGenerator.linkFrom"></select>
+          <span class="cg-arrow" aria-hidden="true">→</span>
+          <select id="cg-link-to" class="cg-select" aria-label="Улика Б"
+                  data-i18n-attr="aria-label:lab.clueGenerator.linkTo"></select>
+          <button type="button" id="cg-link-type" class="lab-example-chip cg-link-type"
+                  aria-pressed="true" data-i18n="lab.clueGenerator.linkTypeCause">причина → следствие</button>
+          <button type="button" id="cg-add-link" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.clueGenerator.addLink">+ Связь</button>
+        </div>
+        <div id="cg-links" class="cg-links" aria-live="polite"></div>
+      </section>
+
+      <section class="cg-section" aria-labelledby="cg-sec-conclusion">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-conclusion" data-i18n="lab.clueGenerator.secConclusion">Вывод</h2>
+        </header>
+        <textarea id="cg-conclusion" class="lab-input cg-textarea" rows="3"
+                  placeholder="К чему ведёт цепочка…"
+                  aria-label="Финальный вывод"
+                  data-i18n-attr="placeholder:lab.clueGenerator.conclusionPlaceholder;aria-label:lab.clueGenerator.conclusionLabel"></textarea>
+      </section>
+
+      <section class="cg-section" aria-labelledby="cg-sec-actions">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-actions" data-i18n="lab.clueGenerator.secActions">Действия</h2>
+        </header>
+        <label class="cg-label" for="cg-case-name" data-i18n="lab.clueGenerator.caseNameLabel">Название кейса</label>
+        <input type="text" id="cg-case-name" class="lab-input" maxlength="120" autocomplete="off"
+               placeholder="Например: Подмена слова «закон»"
+               data-i18n-attr="placeholder:lab.clueGenerator.caseNamePlaceholder">
+        <div class="cg-action-row">
+          <button type="button" id="cg-save" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.clueGenerator.saveCase">Сохранить кейс</button>
+          <button type="button" id="cg-export-text" class="lab-btn lab-btn-secondary lab-btn-sm" disabled data-i18n="lab.clueGenerator.exportText">Экспорт текст</button>
+          <button type="button" id="cg-export-cards" class="lab-btn lab-btn-secondary lab-btn-sm" disabled data-i18n="lab.clueGenerator.exportCards">Экспорт карточки</button>
+        </div>
+        <p class="lab-status" id="cg-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="cg-section" aria-labelledby="cg-sec-saved">
+        <header class="cg-section-head">
+          <h2 class="cg-section-label" id="cg-sec-saved" data-i18n="lab.clueGenerator.secSaved">Сохранённые</h2>
+        </header>
+        <div id="cg-saved" class="cg-saved"></div>
+      </section>
+    </section>
+
+    <aside class="lab-panel cg-side" aria-labelledby="cg-scheme-title">
+      <header class="lab-chapter">
+        <h2 class="lab-chapter-title" id="cg-scheme-title" data-i18n="lab.clueGenerator.schemeTitle">Схема</h2>
+      </header>
+      <div id="cg-scheme" class="cg-scheme" aria-live="polite"></div>
+      <button type="button" id="cg-build" class="lab-btn lab-btn-primary lab-btn-sm" data-i18n="lab.clueGenerator.build">Собрать цепочку</button>
+    </aside>
+  </div>
+</section>

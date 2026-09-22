@@ -1,1 +1,329 @@
-.clue-page{max-width: var(--shell-page);margin:0 auto}.clue-layout{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,.8fr);gap:24px}.clue-workspace,.clue-side{background:var(--bg-secondary,#f7f1e5);border:1px solid var(--border-light,#d4c4a8);padding:22px;border-radius:4px}.clue-section-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;border-bottom:1px solid var(--border-light,#d4c4a8);margin-bottom:14px}.clue-section-head h2,.clue-side h2{font-family:'Cormorant Garamond',Georgia,serif}.clue-hint,.clue-empty{color:var(--text-muted,#756b5d);font-size:14px}.clue-list{display:grid;gap:12px}.clue-card{background:var(--bg-primary,#fffaf0);border:1px solid var(--border-light,#d4c4a8);padding:12px;cursor:grab}.clue-card.is-selected{border-color:var(--accent-gold);box-shadow:0 0 0 2px rgb(var(--accent-gold-rgb) / .15)}.clue-card-head{display:flex;align-items:center;gap:10px;margin-bottom:8px}.clue-drag{letter-spacing:-3px;color:var(--text-muted);cursor:grab}.clue-number{font-weight:bold;color:var(--accent-gold)}.clue-select{margin-left:auto;border:0;background:transparent;color:var(--accent-gold);cursor:pointer}.clue-text{width:100%;box-sizing:border-box;resize:vertical}.clue-actions,.clue-export,.clue-save{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.clue-link-row{display:grid;grid-template-columns:1fr 140px 1fr auto;gap:8px;margin-bottom:8px;align-items:center}.clue-link-row select,.clue-link-row input{min-width:0}.clue-side{position:sticky;top:20px;height:max-content}.clue-output{margin:18px 0}.clue-output-card{padding:12px;border-left:3px solid var(--accent-gold);background:var(--bg-primary);margin-bottom:5px}.clue-arrow{font-size:13px;color:var(--text-muted);padding:6px 0}.clue-conclusion{padding:14px;background:rgb(var(--accent-gold-rgb) / .12);border:1px solid var(--accent-gold)}.clue-cases{list-style:none;padding:0}.clue-cases li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border-light);padding:8px 0}.clue-cases button{border:0;background:transparent;color:var(--accent-gold);cursor:pointer;text-align:left}@media(max-width:760px){.clue-layout{grid-template-columns:1fr}.clue-side{position:static}.clue-link-row{grid-template-columns:1fr}.clue-link-row button{justify-self:start}}
+/* ============================================================
+   clue-generator.css — «Генератор улик»: живая цепочка наблюдений.
+   Канон: hairline-рамки, без теней; цвета — только токены tokens.css.
+   ============================================================ */
+
+.cg-shell {
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  padding: var(--space-3) 0 var(--space-8);
+}
+
+/* Панели одной высоты (stretch), правая — sticky схема */
+.cg-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.cg-main,
+.cg-side { min-width: 0; }
+
+.cg-side {
+  position: sticky;
+  top: calc(var(--header-compact) + var(--space-4));
+  align-self: start;
+}
+
+/* ===== Секции-лейблы: uppercase-микро + волосяная линия на всю ширину ===== */
+.cg-section + .cg-section { margin-top: var(--space-5); }
+
+.cg-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cg-section-label {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.cg-section-hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
+/* ===== Карточка улики ===== */
+.cg-list { display: grid; gap: var(--space-3); margin-bottom: var(--space-3); }
+
+.cg-card {
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+}
+
+.cg-card.is-selected { border-color: var(--accent-gold); }
+
+.cg-card-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.cg-drag {
+  color: var(--text-muted);
+  letter-spacing: -3px;
+  cursor: grab;
+}
+
+.cg-number {
+  color: var(--accent-gold);
+  font: 600 var(--ui-11)/1.3 var(--font-mono);
+  letter-spacing: var(--tracking-caps);
+}
+
+/* Radio-точка выбора: золотая заливка у выбранной карточки */
+.cg-radio {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color var(--motion-base), background-color var(--motion-base);
+}
+
+.cg-radio:hover,
+.cg-radio:focus-visible { border-color: var(--accent-gold); }
+
+.cg-radio[aria-pressed="true"] {
+  border-color: var(--accent-gold);
+  background: var(--accent-gold);
+}
+
+.cg-card-tools {
+  display: flex;
+  gap: var(--space-1);
+  margin-left: auto;
+}
+
+.cg-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: 16px/1 var(--font-ui);
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.cg-icon-btn:hover:not(:disabled),
+.cg-icon-btn:focus-visible { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+.cg-icon-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.cg-textarea {
+  width: 100%;
+  min-height: 72px;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.cg-textarea:focus { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+
+/* ===== Соединения: строка-связь и цепочка чипов ===== */
+.cg-link-builder {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.cg-select {
+  flex: 1 1 140px;
+  min-width: 0;
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.cg-select:focus { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+
+.cg-arrow { color: var(--text-muted); }
+
+.cg-link-type { flex: 0 0 auto; }
+
+.cg-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cg-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 100%;
+  padding: 2px var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.cg-link-chip span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cg-link-kind { color: var(--accent-gold); }
+
+/* ===== Действия ===== */
+.cg-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.cg-main .lab-input {
+  width: 100%;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.cg-main .lab-input:focus { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+
+.cg-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.cg-action-row .lab-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ===== Живая схема: цепочка чипами со стрелками ===== */
+.cg-scheme {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-bottom: var(--space-4);
+}
+
+.cg-chip {
+  max-width: 100%;
+  padding: 2px var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cg-scheme .cg-arrow { flex: 0 0 auto; }
+
+.cg-scheme-conclusion {
+  flex: 1 1 100%;
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--accent-gold);
+  color: var(--text-primary);
+  font: var(--text-md)/1.6 var(--font-serif);
+  overflow-wrap: anywhere;
+}
+
+.cg-scheme .lab-empty { flex: 1 1 100%; margin-bottom: 0; }
+
+/* ===== Сохранённые: hairline-строки ===== */
+.cg-saved { display: grid; }
+
+.cg-saved-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cg-saved-row:last-child { border-bottom: 0; }
+
+.cg-saved-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--text-md)/1.4 var(--font-serif);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--motion-base);
+}
+
+.cg-saved-open:hover,
+.cg-saved-open:focus-visible { color: var(--accent-gold); }
+
+.cg-saved-time {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font: var(--ui-11) var(--font-mono);
+  white-space: nowrap;
+}
+
+/* Скрытый live-регион для объявлений порядка (a11y) */
+.cg-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== Мобильный закон: стек, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .cg-shell { padding: 0 0 var(--space-7); }
+  .cg-layout { grid-template-columns: 1fr; }
+  .cg-side { position: static; }
+  .cg-section-hint { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cg-radio,
+  .cg-icon-btn,
+  .cg-saved-open { transition: none; }
+}
