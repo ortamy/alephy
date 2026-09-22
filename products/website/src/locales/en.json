@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.36,
+    "coverage": 0.35,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -312,7 +312,7 @@
         "title": ""
       },
       "states": {
-        "kicker": "",
+        "kicker": "ALEPHY · STATE MAP",
         "subtitle": "",
         "title": ""
       },
@@ -734,6 +734,30 @@
       "searchPlaceholder": "Paleo form, word or transliteration",
       "toRoot": "root",
       "wordsLabel": "words"
+    }
+  },
+  "states": {
+    "chapter": {
+      "cities": "Cities",
+      "examples": "Examples",
+      "meaning": "Meaning",
+      "openness": "Openness",
+      "paleo": "Paleo breakdown"
+    },
+    "detail": {
+      "badge": "interpretation",
+      "notFound": "State not found",
+      "openness": "openness"
+    },
+    "landscape": {
+      "empty": "No transition route is defined for this state yet.",
+      "label": "Landscape",
+      "open": "Open state",
+      "route": "Route",
+      "routesAria": "Transitions from the state"
+    },
+    "nav": {
+      "aria": "All states"
     }
   }
 }

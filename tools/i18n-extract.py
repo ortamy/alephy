@@ -82,6 +82,7 @@ def source_files() -> list[Path]:
         lab / "js" / "state-checker.js",
         lab / "js" / "tree-checker.js",
         lab / "js" / "checkers-comparator.js",
+        lab / "js" / "states.js",
         lab / "pages" / "video-lab.html",
         lab / "pages" / "religionism-checker.html",
         lab / "pages" / "state-checker.html",

@@ -23,7 +23,6 @@ const AlephyStates = (function() {
   // Состояние модуля
   let currentView = 'grid'; // 'grid' | 'landscape' | 'detail' | 'diagnostic'
   let currentStateId = null;
-  let selectedLandscapeTransitionId = null;
   // Состояние диагностики хранится отдельно от маршрута карты.
   let diagnosticState = {
     currentQuestion: 0,
@@ -36,6 +35,11 @@ const AlephyStates = (function() {
     var d = document.createElement('div');
     d.textContent = text == null ? '' : String(text);
     return d.innerHTML;
+  }
+
+  // Делегат i18n: литералы t('key', 'русский резерв') читает tools/i18n-extract.py.
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
   }
 
   function getLucideForState(stateId) {
@@ -229,25 +233,27 @@ const AlephyStates = (function() {
   }
 
   function attachLandscapeHandlers(container) {
-    // Выбор маршрута в ландшафте состояния.
-    container.querySelectorAll('.state-landscape-route').forEach(function(route) {
+    // Переходы ландшафта и кнопка маршрута ведут на целевое состояние.
+    container.querySelectorAll('.state-landscape-route, .state-landscape-open').forEach(function(route) {
       route.addEventListener('click', function() {
-        var targetId = this.getAttribute('data-to');
-        if (targetId) selectLandscapeTransition(container, targetId);
-      });
-    });
-
-    container.querySelectorAll('.state-landscape-open').forEach(function(button) {
-      button.addEventListener('click', function() {
         var targetId = this.getAttribute('data-to');
         if (targetId) openState(targetId);
       });
     });
 
-    var currentStep = container.querySelector('.state-landscape-contour-node.is-current');
-    if (currentStep && typeof currentStep.scrollIntoView === 'function') {
+    // Чип-навигация состояний под героем.
+    container.querySelectorAll('.state-nav-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        var id = this.getAttribute('data-state-id');
+        if (id) openState(id);
+      });
+    });
+
+    var activeChip = container.querySelector('.state-nav-chip.is-active');
+    if (activeChip && typeof activeChip.scrollIntoView === 'function') {
       requestAnimationFrame(function() {
-        currentStep.scrollIntoView({ block: 'nearest', inline: 'center', behavior: 'smooth' });
+        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        activeChip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
       });
     }
   }
@@ -297,29 +303,70 @@ const AlephyStates = (function() {
     '</div>';
   }
 
+  // ===== СЕКЦИИ-ГЛАВЫ: номер + uppercase-лейбл вместо сериф-заголовков =====
+  function chapterHead(index, label) {
+    return '<div class="state-chapter-head"><span class="state-chapter-index" aria-hidden="true">' + index + '</span><span class="state-chapter-label">' + escapeHtml(label) + '</span></div>';
+  }
+
+  // ===== ЧИП-НАВИГАЦИЯ СОСТОЯНИЙ =====
+  function renderStateNav(currentId) {
+    var sorted = states.slice().sort(function(a, b) {
+      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
+    });
+    return '<nav class="state-nav" aria-label="' + escapeHtml(t('states.nav.aria', 'Все состояния')) + '">' +
+      sorted.map(function(item) {
+        var active = item.id === currentId;
+        return '<button type="button" class="state-nav-chip' + (active ? ' is-active' : '') + '" data-state-id="' + escapeHtml(item.id) + '"' + (active ? ' aria-current="true"' : '') + '>' + escapeHtml(item.name) + '</button>';
+      }).join('') +
+    '</nav>';
+  }
+
   // ===== РЕНДЕР СТРАНИЦЫ СОСТОЯНИЯ =====
     function renderStateDetail(id) {
     var s = statesById[id];
-    if (!s) return '<div class="lab-alert lab-alert-error">Состояние не найдено</div>';
+    if (!s) return '<div class="lab-alert lab-alert-error">' + escapeHtml(t('states.detail.notFound', 'Состояние не найдено')) + '</div>';
 
-        // Шапка модуля подменяется на название состояния
+    var intensityPercent = s.intensity !== undefined ? Math.round(s.intensity * 100) : null;
+
+        // Динамический герой: кикер из реестра LabHero + имя состояния,
+    // чипы из данных (иврит, открытость) — механизм как у чекеров/агентов.
     if (window.LabHero && window.LabHero.setView) {
+      var heroMeta = [];
+      if (s.hebrew) heroMeta.push({ label: s.hebrew });
+      if (intensityPercent !== null) heroMeta.push({ label: t('states.detail.openness', 'открытость') + ' ' + intensityPercent + '%' });
+      if (s.olam) heroMeta.push({ label: s.olam, className: 'lab-hero__chip--label' });
       window.LabHero.setView('states', 'detail', {
-        kicker: 'АЛЕФИ · КАРТА СОСТОЯНИЙ',
+        kicker: t('lab.hero.states.kicker', 'АЛЕФИ · КАРТА СОСТОЯНИЙ') + ' · ' + String(s.name).toUpperCase(),
         title: s.name,
         subtitle: s.physics || '',
-        icon: 'ui/web.png'
+        icon: '',
+        glyph: Array.from(String(s.paleo || ''))[0] || '',
+        badge: { label: t('states.detail.badge', 'интерпретация') },
+        meta: heroMeta
       });
     }
 
-    var color = s.color || '#b8860b';
     var landscapeHtml = renderStateLandscape(s);
 
-    // Палео-разбор
+    // 01 Открытость: тонкий бар + mono-процент.
+    var intensityHtml = '';
+    if (intensityPercent !== null) {
+      var visualPercent = Math.max(5, intensityPercent);
+      intensityHtml = '<section class="state-detail-section">' +
+        chapterHead('01', t('states.chapter.openness', 'Открытость')) +
+        '<div class="state-openness">' +
+          '<span class="state-openness-label">' + escapeHtml(s.intensity_label || '') + '</span>' +
+          '<span class="state-openness-value">' + visualPercent + '%</span>' +
+          '<div class="state-intensity-bar"><div class="state-intensity-fill" style="width: ' + visualPercent + '%"></div></div>' +
+        '</div>' +
+      '</section>';
+    }
+
+    // 02 Палео-разбор: hairline-карточки глифов + caption muted слева.
     var paleoHtml = '';
     if (s.paleo_breakdown && s.paleo_breakdown.length) {
-      paleoHtml = '<div class="state-detail-section">' +
-        '<h3>Палео-разбор</h3>' +
+      paleoHtml = '<section class="state-detail-section">' +
+        chapterHead('02', t('states.chapter.paleo', 'Палео-разбор')) +
         '<div class="paleo-breakdown">';
       s.paleo_breakdown.forEach(function(p) {
         paleoHtml += '<div class="paleo-breakdown-item">' +
@@ -329,56 +376,32 @@ const AlephyStates = (function() {
         '</div>';
       });
       paleoHtml += '</div>' +
-        (s.paleo_meaning ? '<p style="text-align:center;font-style:italic;color:var(--text-muted);">' + escapeHtml(s.paleo_meaning) + '</p>' : '') +
-      '</div>';
+        (s.paleo_meaning ? '<p class="paleo-meaning-caption">' + escapeHtml(s.paleo_meaning) + '</p>' : '') +
+      '</section>';
     }
 
-    // «Смысл» дополняет короткое описание в шапке, а не повторяет его.
+    // 03 Смысл — дополняет короткое описание в шапке, а не повторяет его.
     var isMeaningDuplicate = normalizeText(s.meaning) === normalizeText(s.physics);
-    var meaningHtml = s.meaning && !isMeaningDuplicate ? '<div class="state-detail-section"><h3>Смысл</h3><p>' + escapeHtml(s.meaning) + '</p></div>' : '';
+    var meaningHtml = s.meaning && !isMeaningDuplicate ? '<section class="state-detail-section">' + chapterHead('03', t('states.chapter.meaning', 'Смысл')) + '<p>' + escapeHtml(s.meaning) + '</p></section>' : '';
 
-    // Примеры
+    // 04 Примеры
     var examplesHtml = '';
     if (s.examples && s.examples.length) {
-      examplesHtml = '<div class="state-detail-section">' +
-        '<h3>Примеры</h3>' +
+      examplesHtml = '<section class="state-detail-section">' +
+        chapterHead('04', t('states.chapter.examples', 'Примеры')) +
         '<div class="examples-list state-card-grid" role="list">' +
         s.examples.map(function(ex, index) {
           return '<div class="example-tag state-example-card" role="listitem"><span class="state-example-index" aria-hidden="true">' + String(index + 1).padStart(2, '0') + '</span><span>' + escapeHtml(ex) + '</span></div>';
         }).join('') +
-        '</div></div>';
+        '</div></section>';
     }
 
-    // Города в этом состоянии
+    // 05 Города в этом состоянии
     var citiesHtml = renderCitiesForState(id);
 
-    // Одна статичная метрика: визуальный минимум делает нулевую точку видимой.
-    var intensityHtml = '';
-    if (s.intensity !== undefined) {
-      var intensityPercent = Math.round(s.intensity * 100);
-      var visualPercent = Math.max(5, intensityPercent);
-      intensityHtml = '<div class="state-detail-section">' +
-        '<h3>Открытость</h3>' +
-        '<div class="state-card-intensity state-static-metric" style="max-width:300px;">' +
-          '<span>' + escapeHtml(s.intensity_label || '') + ' — ' + visualPercent + '%</span>' +
-          '<div class="state-intensity-bar">' +
-            '<div class="state-intensity-fill" style="width: ' + visualPercent + '%; background: ' + color + '"></div>' +
-          '</div>' +
-        '</div>' +
-      '</div>';
-    }
-
     return '<div class="states-page">' +
-      '<div class="states-controls">' +
-      '</div>' +
       '<div class="state-detail">' +
-        '<div class="state-detail-hero" style="border-bottom-color: ' + color + '33;">' +
-          '<span class="state-detail-hero-paleo">' + escapeHtml(s.paleo || '') + '</span>' +
-          '<h2>' + escapeHtml(s.name) + '</h2>' +
-          '<div class="hebrew" dir="rtl">' + escapeHtml(s.hebrew || '') + '</div>' +
-          '<div class="physics">' + escapeHtml(s.physics || '') + '</div>' +
-          '<div class="state-detail-olam"><span>Олам:</span> ' + escapeHtml(s.olam || '') + '</div>' +
-        '</div>' +
+        renderStateNav(id) +
         landscapeHtml +
         intensityHtml +
         paleoHtml +
@@ -407,6 +430,7 @@ const AlephyStates = (function() {
 
     return '<div class="states-page states-landscape-page">' +
       '<div class="states-controls"><button type="button" class="states-nav-btn states-nav-back" onclick="AlephyStates.openGrid()">Все состояния</button></div>' +
+      renderStateNav(firstState.id) +
       renderStateLandscape(firstState) +
     '</div>';
   }
@@ -416,60 +440,46 @@ const AlephyStates = (function() {
     var transitions = (state.transitions || []).filter(function(transition) {
       return statesById[transition.to];
     });
-    var landscapeTransitionId = transitions.some(function(transition) {
-      return transition.to === selectedLandscapeTransitionId;
-    }) ? selectedLandscapeTransitionId : (transitions[0] ? transitions[0].to : null);
-    var selectedTransition = transitions.find(function(transition) {
-      return transition.to === landscapeTransitionId;
-    });
-    var target = selectedTransition && statesById[selectedTransition.to];
-    var contour = states.slice().sort(function(a, b) {
-      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
-    });
+    var recommended = transitions[0] || null;
+    var target = recommended && statesById[recommended.to];
 
-    var routesHtml = transitions.map(function(transition, index) {
+    // Переходы — hairline-строки: стрелка + paleo-глифы + имя + подсказка действия.
+    var routesHtml = transitions.map(function(transition) {
       var routeTarget = statesById[transition.to];
-      var active = transition.to === landscapeTransitionId ? ' is-active' : '';
-      return '<button type="button" class="state-landscape-route' + active + '" data-to="' + escapeHtml(transition.to) + '" aria-pressed="' + (transition.to === landscapeTransitionId ? 'true' : 'false') + '">' +
-        '<span class="state-landscape-route-line" aria-hidden="true"><i></i></span>' +
-        '<span class="state-landscape-route-index">0' + (index + 1) + '</span>' +
+      var hint = transition.action || transition.label || '';
+      return '<button type="button" class="state-landscape-route" data-to="' + escapeHtml(transition.to) + '">' +
+        '<span class="state-landscape-route-arrow" aria-hidden="true">→</span>' +
         '<span class="state-landscape-route-paleo" aria-hidden="true">' + escapeHtml(routeTarget.paleo || '') + '</span>' +
-        '<span class="state-landscape-route-copy"><strong>' + escapeHtml(routeTarget.name) + '</strong><small>' + escapeHtml(transition.label || 'Открыть маршрут') + '</small></span>' +
+        '<span class="state-landscape-route-copy"><strong>' + escapeHtml(routeTarget.name) + '</strong>' +
+        (hint ? '<small>' + escapeHtml(hint) + '</small>' : '') +
+        '</span>' +
       '</button>';
     }).join('');
 
-    var routeDetailHtml = target ? '<div class="state-landscape-route-detail" aria-live="polite">' +
-      '<span class="state-landscape-route-kicker">Выбранный маршрут</span>' +
-      '<div class="state-landscape-route-chain"><strong>' + escapeHtml(state.name) + '</strong><span aria-hidden="true">↓</span><strong>' + escapeHtml(target.name) + '</strong>' +
-      (selectedTransition.label ? '<span class="state-landscape-route-label">' + escapeHtml(selectedTransition.label) + '</span>' : '') + '</div>' +
-      (selectedTransition.action ? '<p><b>Хук:</b> ' + escapeHtml(selectedTransition.action) + '</p>' : '') +
-      '<button type="button" class="state-landscape-open" data-to="' + escapeHtml(target.id) + '">Открыть состояние</button>' +
-    '</div>' : '<div class="state-landscape-route-detail is-empty">Для этого состояния пока не задан маршрут перехода.</div>';
-
-    return '<section class="state-landscape" style="--landscape-color: #8a613c;" aria-labelledby="state-landscape-title">' +
-      '<div class="state-landscape-head"><div><span class="state-landscape-kicker">ЛАНДШАФТ СОСТОЯНИЯ</span><h3 id="state-landscape-title">Пространство и доступные переходы</h3></div></div>' +
-      '<div class="state-landscape-stage">' +
-        '<div class="state-landscape-terrain" aria-hidden="true"><i></i><i></i><i></i></div>' +
-        '<div class="state-landscape-current"><span class="state-landscape-current-paleo" aria-hidden="true">' + escapeHtml(state.paleo || '') + '</span><span class="state-landscape-current-label">Текущее состояние</span><strong>' + escapeHtml(state.name) + '</strong><small>' + escapeHtml(state.intensity_label || '') + '</small></div>' +
+    // Рекомендуемый маршрут: чипы «Тоху → Шаанаим» + muted-подсказка + compact-кнопка справа.
+    var routeHtml = target ? '<div class="state-landscape-route-detail">' +
+      '<span class="state-landscape-route-kicker">' + escapeHtml(t('states.landscape.route', 'Маршрут')) + '</span>' +
+      '<div class="state-landscape-route-chain">' +
+        '<span class="state-landscape-chain-chip">' + escapeHtml(state.name) + '</span>' +
+        '<span class="state-landscape-chain-arrow" aria-hidden="true">→</span>' +
+        '<span class="state-landscape-chain-chip is-target">' + escapeHtml(target.name) + '</span>' +
       '</div>' +
-      '<section class="state-landscape-routes" aria-label="Переходы из состояния ' + escapeHtml(state.name) + '"><h4>Переходы</h4>' + routesHtml + '</section>' +
-      routeDetailHtml +
-      '<div class="state-landscape-contour" aria-label="Полный контур состояний">' + contour.map(function(item) {
-        var current = item.id === state.id ? ' is-current' : '';
-        return '<span class="state-landscape-contour-node' + current + '" title="' + escapeHtml(item.name) + '" style="--node-color: #8a613c"><i></i><small>' + escapeHtml(item.name) + '</small></span>';
-      }).join('') + '</div>' +
-    '</section>';
-  }
+      (recommended.action ? '<p class="state-landscape-route-hint">' + escapeHtml(recommended.action) + '</p>' : '') +
+      '<button type="button" class="state-landscape-open" data-to="' + escapeHtml(target.id) + '">' + escapeHtml(t('states.landscape.open', 'Открыть состояние')) + '</button>' +
+    '</div>' : '<div class="state-landscape-route-detail is-empty">' + escapeHtml(t('states.landscape.empty', 'Для этого состояния пока не задан маршрут перехода.')) + '</div>';
 
-  function selectLandscapeTransition(container, targetId) {
-    selectedLandscapeTransitionId = targetId;
-    var current = statesById[currentStateId];
-    var landscape = container.querySelector('.state-landscape');
-    if (!current || !landscape) return;
-    var replacement = document.createElement('div');
-    replacement.innerHTML = renderStateLandscape(current);
-    landscape.replaceWith(replacement.firstChild);
-    attachLandscapeHandlers(container);
+    return '<section class="state-landscape" aria-labelledby="state-landscape-title">' +
+      '<div class="state-landscape-head"><span class="state-landscape-kicker" id="state-landscape-title">' + escapeHtml(t('states.landscape.label', 'Ландшафт')) + '</span></div>' +
+      '<div class="state-landscape-stage">' +
+        '<div class="state-landscape-current">' +
+          '<span class="state-landscape-current-paleo" aria-hidden="true">' + escapeHtml(state.paleo || '') + '</span>' +
+          '<strong>' + escapeHtml(state.name) + '</strong>' +
+          '<small>' + escapeHtml(state.intensity_label || '') + '</small>' +
+        '</div>' +
+      '</div>' +
+      (routesHtml ? '<div class="state-landscape-routes" aria-label="' + escapeHtml(t('states.landscape.routesAria', 'Переходы из состояния')) + '">' + routesHtml + '</div>' : '') +
+      routeHtml +
+    '</section>';
   }
 
   // ===== ГОРОДА ДЛЯ СОСТОЯНИЯ =====
@@ -482,8 +492,8 @@ const AlephyStates = (function() {
       return '';
     }
 
-    return '<div class="state-detail-section">' +
-      '<h3>Города и страны в этом состоянии</h3>' +
+    return '<section class="state-detail-section">' +
+      chapterHead('05', t('states.chapter.cities', 'Города')) +
       '<div class="state-cities">' +
       matching.map(function(e) {
         return '<div class="state-city-card" role="button" tabindex="0" aria-label="Открыть запись картографии: ' + escapeHtml(e.name) + '" data-city-id="' + escapeHtml(e.id) + '">' +
@@ -493,7 +503,7 @@ const AlephyStates = (function() {
         '</div>';
       }).join('') +
       '</div>' +
-    '</div>';
+    '</section>';
   }
 
   // ===== ДИАГНОСТИКА =====
@@ -716,7 +726,6 @@ const AlephyStates = (function() {
     currentView = 'grid';
     currentStateId = null;
     diagnosticState.completed = false;
-    selectedLandscapeTransitionId = null;
     var container = document.getElementById('states');
     // Если уже на странице состояний, hashchange не возникает — рисуем сразу.
     if (container && states.length) {
@@ -729,7 +738,6 @@ const AlephyStates = (function() {
   function openLandscape() {
     currentView = 'landscape';
     currentStateId = null;
-    selectedLandscapeTransitionId = null;
     var container = document.getElementById('states');
     if (container && states.length) {
       renderView(container);
@@ -741,7 +749,6 @@ const AlephyStates = (function() {
   function openState(id) {
     currentView = 'detail';
     currentStateId = id;
-    selectedLandscapeTransitionId = null;
     LabRouter.navigate('states', null, { state: id });
   }
 

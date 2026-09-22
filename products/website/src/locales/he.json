@@ -724,5 +724,29 @@
       "toRoot": "",
       "wordsLabel": ""
     }
+  },
+  "states": {
+    "chapter": {
+      "cities": "",
+      "examples": "",
+      "meaning": "",
+      "openness": "",
+      "paleo": ""
+    },
+    "detail": {
+      "badge": "",
+      "notFound": "",
+      "openness": ""
+    },
+    "landscape": {
+      "empty": "",
+      "label": "",
+      "open": "",
+      "route": "",
+      "routesAria": ""
+    },
+    "nav": {
+      "aria": ""
+    }
   }
 }
