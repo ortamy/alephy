@@ -2963,6 +2963,14 @@ const PageController = (function() {
         }
         break;
 
+      case 'hypothesis-generator':
+        if (window.HypothesisGenerator) {
+          window.HypothesisGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор гипотез» не загрузился.');
+        }
+        break;
+
       case 'clue-generator':
         if (window.ClueGenerator) {
           window.ClueGenerator.init(container);

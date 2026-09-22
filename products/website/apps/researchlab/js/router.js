@@ -202,7 +202,7 @@ const LabRouter = (function() {
       'checkers', 'religionism-checker', 'etymology-checker', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
       'cartography', 'states', 'timeline', 'ai-agents', 'pipelines', 'agent-server', 'ed-chat', 'vision',
       'paleo-keyboard', 'admin-settings', 'analyzers', 'layer-analyzer', 'ai-analyzer', 'dialect-analyzer', 'state-analyzer', 'exposure-editor', 'clue-generator',
-      'video-lab', 'prompt-generator', 'board-generator', 'research-generator', 'davar-checker', 'tree-checker', 'board', 'name-decoder', 'linguistic-tensor',
+      'video-lab', 'prompt-generator', 'board-generator', 'research-generator', 'hypothesis-generator', 'davar-checker', 'tree-checker', 'board', 'name-decoder', 'linguistic-tensor',
       'club',
       // Маршруты разоблачений (обрабатываются в default-кейсе PageController через mdPaths)
       'exposure-dictionary', 'exposure-principles', 'exposure-distortions',

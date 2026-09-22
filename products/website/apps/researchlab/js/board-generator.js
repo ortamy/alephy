@@ -9,6 +9,7 @@
   var PAGE_PATH = 'pages/board-generator.html';
   var HISTORY_KEY = 'alephy_board_generator_history';
   var HISTORY_LIMIT = 5;
+  var PREFILL_KEY = 'alephy_board_generator_prefill';
   var pagePromise = null;
   var lastBoard = null;
 
@@ -287,6 +288,24 @@
     }
   }
 
+  // Префил из генератора гипотез: гипотезы приходят уликами доски.
+  function applyPrefill(scope) {
+    var raw = null;
+    try { raw = window.localStorage.getItem(PREFILL_KEY); } catch (error) { return; }
+    if (!raw) return;
+    try { window.localStorage.removeItem(PREFILL_KEY); } catch (error) { /* ignore */ }
+    var data = null;
+    try { data = JSON.parse(raw); } catch (error) { return; }
+    if (!data || typeof data !== 'object') return;
+    applyData(scope, {
+      title: data.title || '',
+      conclusion: data.conclusion || '',
+      evidence: Array.isArray(data.evidence) ? data.evidence : [],
+      attachments: Array.isArray(data.attachments) ? data.attachments : []
+    });
+    setStatus(scope, t('lab.boardGenerator.prefilled', 'Форма заполнена из генератора гипотез'), 'success');
+  }
+
   // ===== События =====
   function bind(scope) {
     if (scope.dataset.bgBound === '1') return;
@@ -367,6 +386,7 @@
       renderHistory(scope);
       renderPreview(scope);
       updateGenerateState(scope);
+      applyPrefill(scope);
     }).catch(function(error) {
       scope.innerHTML = '<div class="lab-alert lab-alert-error">' +
         esc(t('lab.boardGenerator.loadFailed', 'Не удалось загрузить конструктор: ')) + esc(error.message) + '</div>';
