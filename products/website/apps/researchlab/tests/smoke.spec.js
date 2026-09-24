@@ -375,6 +375,16 @@ const parameterizedSamples = (() => {
   ];
 })();
 
+test('substitution checker hero never titles «Расследование»', async ({ page }) => {
+  await page.goto('/#investigation', { waitUntil: 'domcontentloaded' });
+  const heroTitle = page.locator('#lab-hero-title-investigation');
+  await expect(heroTitle).toHaveCount(1, { timeout: SPINNER_BUDGET_MS });
+  await expect
+    .poll(() => heroTitle.textContent().then((text) => (text || '').trim()), { timeout: SPINNER_BUDGET_MS, message: 'пустой заголовок шапки чекера подмен' })
+    .not.toBe('Расследование');
+  await expect(heroTitle, 'заголовок героя чекера подмен').toContainText('Чекер подмен');
+});
+
 test.describe('parameterized routes render detail', () => {
   for (const sample of parameterizedSamples) {
     test(`#${sample.route} открывает деталь без hero-ошибки и пустой панели`, async ({ page }) => {

@@ -2559,10 +2559,14 @@ const PageController = (function() {
           '<div class="investigation-search-label-row"><label for="investigation-input">ОБЪЕКТ</label><span>Ctrl+Enter</span></div><div class="investigation-rule"></div>' +
           '<div class="investigation-search-row"><input type="search" id="investigation-input" class="lab-input" placeholder="חסד, милость, HSD..." autocomplete="off" required>' +
           '<button type="submit" class="lab-btn lab-btn-primary" id="investigation-submit"><i data-lucide="search" aria-hidden="true"></i>Расследовать</button></div>' +
-          '<div id="investigation-status" class="investigation-status" role="status" aria-live="polite"><span class="investigation-status-dot"></span><span>Данные загружаются из словаря корней и словарей подмен.</span></div></form>' +
-          '<div id="investigation-result" class="investigation-result" aria-live="polite"></div>';
+          '<div id="investigation-status" class="investigation-status is-busy" role="status" aria-live="polite"><span class="investigation-status-chip"><span class="investigation-status-dot"></span><span data-investigation-status-text>Загрузка…</span></span><span class="investigation-status-stages" hidden aria-label="Стадии">словари → подмены → свидетельства</span><span class="investigation-status-examples"><button type="button" class="lab-example-chip" data-investigation-example="тол">тол</button><button type="button" class="lab-example-chip" data-investigation-example="милость">милость</button><button type="button" class="lab-example-chip" data-investigation-example="hsd">hsd</button><button type="button" class="lab-example-chip" data-investigation-example="господь">господь</button></span></div></form>' +
+          '<div id="investigation-result" class="investigation-result is-visible" aria-live="polite"></div>';
         container.dataset.loaded = '1';
-        if (window.Investigation) Investigation.init();
+        if (window.Investigation) {
+          Investigation.init();
+          var initialResult = document.getElementById('investigation-result');
+          if (initialResult) initialResult.innerHTML = Investigation.emptyChapters();
+        }
         break;
 
       case 'board':

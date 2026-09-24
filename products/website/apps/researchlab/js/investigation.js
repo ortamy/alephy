@@ -43,10 +43,10 @@ const Investigation = (function() {
   /* The evidence table is deliberately small: it is a readable parallel witness,
      while the searched object and its provenance always come from the JSON data. */
   var EVIDENCE = [
-    { ref: 'Берешит 1:1', note: 'Имя и действие в начале повествования.', tm: 'בְּרֵאשִׁית בָּרָא אֱלֹהִים', lxx: 'Ἐν ἀρχῇ ἐποίησεν ὁ θεός', synodal: 'В начале сотворил Бог' },
-    { ref: 'Берешит 1:3', note: 'Речь как действие, а не отвлечённая формула.', tm: 'וַיֹּאמֶר אֱלֹהִים יְהִי־אוֹר', lxx: 'καὶ εἶπεν ὁ θεός γενηθήτω φῶς', synodal: 'И сказал Бог: да будет свет' },
-    { ref: 'Шмот 20:2', note: 'Имя и освобождение переданы разными слоями текста.', tm: 'אָנֹכִי יְהוָה אֱלֹהֶיךָ אֲשֶׁר הוֹצֵאתִיךָ', lxx: 'ἐγώ εἰμι κύριος ὁ θεός σου ὁ ἐξαγαγών σε', synodal: 'Я Господь, Бог твой, Который вывел тебя' },
-    { ref: 'Теилим 23:1', note: 'Образ пастыря превращается в титульную формулу.', tm: 'יְהוָה רֹעִי לֹא אֶחְסָר', lxx: 'κύριος ποιμαίνει με καὶ οὐδέν με ὑστερήσει', synodal: 'Господь — Пастырь мой; я ни в чём не буду нуждаться' }
+    { ref: 'Берешит 1:1', href: '#scripture-reader?book=bereshit&verse=1', note: 'Имя и действие в начале повествования.', tm: 'בְּרֵאשִׁית בָּרָא אֱלֹהִים', lxx: 'Ἐν ἀρχῇ ἐποίησεν ὁ θεός', synodal: 'В начале сотворил Бог' },
+    { ref: 'Берешит 1:3', href: '#scripture-reader?book=bereshit&verse=3', note: 'Речь как действие, а не отвлечённая формула.', tm: 'וַיֹּאמֶר אֱלֹהִים יְהִי־אוֹר', lxx: 'καὶ εἶπεν ὁ θεός γενηθήτω φῶς', synodal: 'И сказал Бог: да будет свет' },
+    { ref: 'Шмот 20:2', href: '#scripture-reader?book=shmot&verse=2', note: 'Имя и освобождение переданы разными слоями текста.', tm: 'אָנֹכִי יְהוָה אֱלֹהֶיךָ אֲשֶׁר הוֹצֵאתִיךָ', lxx: 'ἐγώ εἰμι κύριος ὁ θεός σου ὁ ἐξαγαγών σε', synodal: 'Я Господь, Бог твой, Который вывел тебя' },
+    { ref: 'Теилим 23:1', href: '#scripture-reader?book=tehillim&verse=1', note: 'Образ пастыря превращается в титульную формулу.', tm: 'יְהוָה רֹעִי לֹא אֶחְסָר', lxx: 'κύριος ποιμαίνει με καὶ οὐδέν με ὑστερήσει', synodal: 'Господь — Пастырь мой; я ни в чём не буду нуждаться' }
   ];
 
   function esc(value) {
@@ -66,17 +66,26 @@ const Investigation = (function() {
   function setStatus(text, type) {
     var status = document.getElementById('investigation-status');
     if (!status) return;
-    var label = status.querySelector('span:last-child') || status;
+    var label = status.querySelector('[data-investigation-status-text]') || status;
     label.textContent = text;
     status.className = 'investigation-status' + (type ? ' is-' + type : '');
+  }
+
+  function setStages(visible) {
+    var stages = document.querySelector('#investigation-status .investigation-status-stages');
+    if (stages) stages.hidden = !visible;
+  }
+
+  function tr(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
   }
 
   function setHero(dossier) {
     if (!dossier || !window.LabHero || !window.LabHero.setView) return;
     window.LabHero.setView('investigation', 'detail', {
-      kicker: 'АЛЕФИ · РАССЛЕДОВАНИЕ · ' + dossier.query,
-      title: 'Дело: ' + dossier.query,
-      subtitle: 'Вывод: ' + (dossier.term && dossier.term.restored || dossier.root && dossier.root.meaning || 'связь восстановлена.'),
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ПОДМЕНЫ · ' + dossier.query,
+      title: 'Чекер подмен',
+      subtitle: 'Метод «Расследование»: ' + (dossier.term && dossier.term.restored || dossier.root && dossier.root.meaning || 'связь восстановлена.'),
       titleTone: 'ink',
       meta: [
         { label: 'Источник: ' + (dossier.category || 'словарь'), className: 'lab-hero__chip--label' },
@@ -103,11 +112,20 @@ const Investigation = (function() {
       state.roots = Array.isArray(data[0]) ? data[0] : [];
       state.dictionaries = data[1] || {};
       state.ready = true;
-      setStatus('Готово. Попробуйте «חסד», «милость», «HSD» или «Господь».', 'ready');
+      setStatus('Готово', 'ready');
       return state;
     }).catch(function(error) {
       setStatus('Не удалось загрузить материалы досье: ' + error.message, 'error');
       throw error;
+    });
+
+    form.addEventListener('click', function(event) {
+      var chip = event.target.closest('[data-investigation-example]');
+      if (!chip) return;
+      var exampleInput = document.getElementById('investigation-input');
+      if (!exampleInput) return;
+      exampleInput.value = chip.getAttribute('data-investigation-example') || '';
+      exampleInput.focus();
     });
   }
 
@@ -162,6 +180,30 @@ const Investigation = (function() {
     return { paleo: data[0], name: data[1], meaning: fromRoot || data[2] };
   }
 
+  var CHAPTERS = [
+    ['01', 'Происхождение', 'Слово до перевода: буква как образ и действие.'],
+    ['02', 'Цепочка подмен', 'Нажмите на точку, чтобы раскрыть этап передачи смысла.'],
+    ['03', 'Кто создал', 'Не один автор, а несколько слоёв, закрепивших новую форму.'],
+    ['04', 'Что потеряно', 'Сравнение предметного образа с отвлечённой формулой.'],
+    ['05', 'Доказательства', 'Раскройте стих, чтобы увидеть три параллельных слоя текста.']
+  ];
+
+  function renderEmptyChapters() {
+    return CHAPTERS.map(function(chapter, index) {
+      return '<section class="investigation-section investigation-empty-chapter" style="--section-delay:' + (index * 60) + 'ms">' +
+        '<div class="investigation-section-head"><span class="investigation-index">' + chapter[0] + '</span><div><h2>' + chapter[1] + '</h2><p>Здесь появится: ' + chapter[2] + '</p></div></div>' +
+        '<div class="investigation-chapter-empty"><span class="investigation-chapter-glyph" aria-hidden="true">◇</span><span>Ожидаем данные расследования</span></div></section>';
+    }).join('');
+  }
+
+  function renderLoadingChapters() {
+    return CHAPTERS.map(function(chapter, index) {
+      return '<section class="investigation-section investigation-loading-chapter" style="--section-delay:' + (index * 60) + 'ms">' +
+        '<div class="investigation-section-head"><span class="investigation-index">' + chapter[0] + '</span><div><h2>' + chapter[1] + '</h2><p>Здесь появится: ' + chapter[2] + '</p></div></div>' +
+        '<div class="investigation-chapter-skeleton" aria-hidden="true"><span></span><span></span><span></span></div></section>';
+    }).join('');
+  }
+
   function renderOrigin(dossier) {
     var term = dossier.term;
     var root = dossier.root;
@@ -179,7 +221,7 @@ const Investigation = (function() {
       '<div class="investigation-section-head"><span class="investigation-index">01</span><div><h2>Происхождение</h2><p>Слово до перевода: буква как образ и действие.</p></div></div>' +
       '<div class="investigation-origin-grid"><div class="investigation-origin-word"><span class="investigation-label">Объект</span><strong>' + esc(term.word || dossier.query) + '</strong><span class="hebrew investigation-hebrew">' + esc(hebrew) + '</span><span class="investigation-translit">' + esc(root ? root.translit : '') + '</span></div>' +
       '<div class="investigation-paleo-row" dir="rtl">' + letters + '</div></div>' +
-      '<div class="investigation-origin-note"><span class="investigation-label">Восстановленное значение</span>' + esc(term.restored || (root && root.meaning) || '—') + '</div>' +
+      '<div class="investigation-origin-note"><span class="investigation-label">Восстановленное значение</span>' + esc(term.restored || (root && root.meaning) || '—') + (root ? '' : '<small class="investigation-muted-note">не найдено в словарях</small>') + '</div>' +
     '</section>';
   }
 
@@ -236,10 +278,9 @@ return '<button class="investigation-creator" type="button" data-creator-index="
     '</section>';
   }
 
-      '<div class="investigation-section-head"><span class="investigation-index">01</span><div><h2>Происхождение</h2><p>Слово до перевода: буква как образ и действие.</p></div><span class="investigation-head-line" aria-hidden="true"></span></div>' +
   function renderEvidence() {
     var rows = EVIDENCE.map(function(item, index) {
-      return '<div class="investigation-evidence-row" data-evidence-index="' + index + '"><button type="button" class="investigation-evidence-trigger" aria-expanded="false"><span class="investigation-evidence-ref">' + esc(item.ref) + '</span><span class="investigation-evidence-note">' + esc(item.note) + '</span><span class="investigation-evidence-plus" aria-hidden="true" data-evidence-href="#scripture-reader/genesis/1"><i data-lucide="door-open"></i></span></button><div class="investigation-evidence-detail" hidden><div><span>ТМ</span><p class="hebrew" dir="rtl">' + esc(item.tm) + '</p></div><div><span>LXX</span><p>' + esc(item.lxx) + '</p></div><div><span>Синодальный</span><p>' + esc(item.synodal) + '</p></div></div></div>';
+      return '<div class="investigation-evidence-row" data-evidence-index="' + index + '"><button type="button" class="investigation-evidence-trigger" aria-expanded="false"><span class="investigation-evidence-ref">' + esc(item.ref) + '</span><span class="investigation-evidence-note">' + esc(item.note) + '</span><span class="investigation-evidence-plus" aria-hidden="true" data-evidence-href="' + esc(item.href) + '"><i data-lucide="door-open"></i></span></button><div class="investigation-evidence-detail" hidden><div><span>ТМ</span><p class="hebrew" dir="rtl">' + esc(item.tm) + '</p></div><div><span>LXX</span><p>' + esc(item.lxx) + '</p></div><div><span>Синодальный</span><p>' + esc(item.synodal) + '</p></div></div></div>';
     }).join('');
     return '<section class="investigation-section dossier-evidence" style="--section-delay:360ms">' +
       '<div class="investigation-section-head"><span class="investigation-index">05</span><div><h2>Доказательства</h2><p>Раскройте стих, чтобы увидеть три параллельных слоя текста.</p></div></div>' +
@@ -277,7 +318,12 @@ return '<button class="investigation-creator" type="button" data-creator-index="
       var evidence = event.target.closest('.investigation-evidence-trigger');
       if (evidence) {
         var door = event.target.closest('[data-evidence-href]');
-        if (door && window.LabRouter) { event.preventDefault(); LabRouter.navigate('scripture-reader', ['genesis', '1']); return; }
+        if (door && window.LabRouter) {
+          event.preventDefault();
+          var doorHref = door.getAttribute('data-evidence-href') || '';
+          if (doorHref.charAt(0) === '#') window.location.hash = doorHref.slice(1);
+          return;
+        }
         var row = evidence.closest('.investigation-evidence-row');
         var detail = row.querySelector('.investigation-evidence-detail');
         var expanded = evidence.getAttribute('aria-expanded') !== 'true';
@@ -291,15 +337,17 @@ return '<button class="investigation-creator" type="button" data-creator-index="
   function render(dossier) {
     var result = document.getElementById('investigation-result');
     if (!result) return;
-    result.innerHTML = '<div class="investigation-case-meta"><span>ДОСЬЕ ' + esc(dossier.query) + '</span><span>' + esc(dossier.category) + '</span></div>' +
+    result.innerHTML = '<div class="investigation-case-meta"><span>ДОСЬЕ ' + esc(dossier.query) + '</span><span>' + esc(dossier.category || tr('lab.investigation.sources', 'источники')) + '</span></div>' +
       renderOrigin(dossier) + renderTimeline(dossier) + renderCreators(dossier) + renderLost(dossier) + renderEvidence();
     result.classList.add('is-visible');
     bindResult();
+    if (window.LabIcons) window.LabIcons.sync();
   }
 
   function investigate() {
     var input = document.getElementById('investigation-input');
     var button = document.getElementById('investigation-submit');
+    var result = document.getElementById('investigation-result');
     if (!input) return;
     var query = input.value.trim();
     if (!query) return;
@@ -309,23 +357,31 @@ return '<button class="investigation-creator" type="button" data-creator-index="
     }
     var dossier = find(query);
     if (!dossier) {
-      setStatus('Совпадение не найдено. Попробуйте корень, транслитерацию или термин из словаря.', 'error');
-      var result = document.getElementById('investigation-result');
-      if (result) result.innerHTML = '<div class="investigation-empty"><strong>Улика не обнаружена</strong><p>Например: חסד, HSD, милость, תורה или закон.</p></div>';
+      setStatus(tr('lab.investigation.notFound', 'Совпадение не найдено. Повторите запрос или проверьте написание.'), 'error');
+      setStages(false);
+      if (result) {
+        result.innerHTML = '<div class="investigation-error" role="alert"><strong>Слово не найдено</strong><p>Проверьте написание или попробуйте корень, транслитерацию или термин из словаря.</p><button type="button" class="lab-btn lab-btn-secondary" data-investigation-retry>Повторить</button></div>' + renderEmptyChapters();
+        result.classList.add('is-visible');
+        var retry = result.querySelector('[data-investigation-retry]');
+        if (retry) retry.addEventListener('click', function() { input.focus(); });
+      }
       return;
     }
     if (button) button.disabled = true;
-    setStatus('Собираю досье из словарей…', 'busy');
+    if (result) { result.innerHTML = renderLoadingChapters(); result.classList.add('is-visible'); }
+    setStages(true);
+    setStatus('Собираю досье…', 'busy');
     window.setTimeout(function() {
       state.current = dossier;
       render(dossier);
       setHero(dossier);
-      setStatus('Досье собрано: найдено в ' + (dossier.category || 'источниках') + '.', 'ready');
+      setStages(false);
+      setStatus('Досье собрано', 'ready');
       if (button) button.disabled = false;
     }, 180);
   }
 
-  return { init: init, investigate: investigate };
+  return { init: init, investigate: investigate, emptyChapters: renderEmptyChapters };
 })();
 
 window.Investigation = Investigation;

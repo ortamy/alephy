@@ -268,10 +268,11 @@
       icon: 'scribe/scroll.png'
     },
     'investigation': {
-      kicker: 'АЛЕФИ · РАССЛЕДОВАНИЕ',
-      title: 'Расследование',
-      subtitle: 'Пошаговое движение от наблюдения к источнику, сдвигу и восстановленному выводу.',
-      icon: 'ui/question.png'
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ПОДМЕНЫ',
+      title: 'Чекер подмен',
+      subtitle: 'Метод «Расследование»: увидьте цепочку смысловых подмен.',
+      icon: 'ui/question.png',
+      glyphIcon: 'search'
     },
     'religionisms': {
       kicker: 'АЛЕФИ · РЕЛИГИОНИЗМЫ',
