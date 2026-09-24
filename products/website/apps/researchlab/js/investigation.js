@@ -66,8 +66,24 @@ const Investigation = (function() {
   function setStatus(text, type) {
     var status = document.getElementById('investigation-status');
     if (!status) return;
-    status.textContent = text;
+    var label = status.querySelector('span:last-child') || status;
+    label.textContent = text;
     status.className = 'investigation-status' + (type ? ' is-' + type : '');
+  }
+
+  function setHero(dossier) {
+    if (!dossier || !window.LabHero || !window.LabHero.setView) return;
+    window.LabHero.setView('investigation', 'detail', {
+      kicker: 'АЛЕФИ · РАССЛЕДОВАНИЕ · ' + dossier.query,
+      title: 'Дело: ' + dossier.query,
+      subtitle: 'Вывод: ' + (dossier.term && dossier.term.restored || dossier.root && dossier.root.meaning || 'связь восстановлена.'),
+      titleTone: 'ink',
+      meta: [
+        { label: 'Источник: ' + (dossier.category || 'словарь'), className: 'lab-hero__chip--label' },
+        { label: 'досье собрано', className: 'investigation-hero-ready', dot: true },
+        { label: 'Уверенность: высокая', className: 'investigation-hero-confidence' }
+      ]
+    });
   }
 
   function init() {
@@ -194,12 +210,12 @@ const Investigation = (function() {
   function renderCreators(dossier) {
     var related = dossier.related;
     var people = [
-      { name: 'Носитель языка', role: 'исходный слой', icon: 'paleo/track.png', text: 'Сохраняет образ в живом слове и контексте.' },
-      { name: 'Переводчик', role: 'переход между системами', icon: 'scribe/scroll.png', text: 'Выбирает ближайший эквивалент и тем самым задаёт направление чтения.' },
-      { name: 'Редактор традиции', role: 'закрепление формулы', icon: 'crafts/hammer-and-chisel.png', text: 'Повторение в корпусе превращает выбор в привычную формулу.' }
+      { name: 'Носитель языка', role: 'исходный слой', icon: 'users', text: 'Сохраняет образ в живом слове и контексте.' },
+      { name: 'Переводчик', role: 'переход между системами', icon: 'languages', text: 'Выбирает ближайший эквивалент и тем самым задаёт направление чтения.' },
+      { name: 'Редактор традиции', role: 'закрепление формулы', icon: 'pen-line', text: 'Повторение в корпусе превращает выбор в привычную формулу.' }
     ];
     var cards = people.map(function(person, index) {
-return '<button class="investigation-creator" type="button" data-creator-index="' + index + '" aria-expanded="false"><span class="investigation-portrait"><img src="assets/icons/32/' + person.icon + '" width="32" height="32" alt="" onerror="this.style.display=\'none\'"></span><span><strong>' + esc(person.name) + '</strong><small>' + esc(person.role) + '</small></span><span class="investigation-creator-chevron" aria-hidden="true">+</span><span class="investigation-creator-detail">' + esc(person.text) + '</span></button>';
+return '<button class="investigation-creator" type="button" data-creator-index="' + index + '" aria-expanded="false"><span class="investigation-portrait"><i data-lucide="' + esc(person.icon) + '" width="20" height="20" aria-hidden="true"></i></span><span><strong>' + esc(person.name) + '</strong><small>' + esc(person.role) + '</small></span><span class="investigation-creator-chevron" aria-hidden="true">+</span><span class="investigation-creator-detail">' + esc(person.text) + '</span></button>';
     }).join('');
     return '<section class="investigation-section dossier-creators" style="--section-delay:220ms">' +
       '<div class="investigation-section-head"><span class="investigation-index">03</span><div><h2>Кто создал</h2><p>Не один автор, а несколько слоёв, закрепивших новую форму.</p></div></div>' +
@@ -220,9 +236,10 @@ return '<button class="investigation-creator" type="button" data-creator-index="
     '</section>';
   }
 
+      '<div class="investigation-section-head"><span class="investigation-index">01</span><div><h2>Происхождение</h2><p>Слово до перевода: буква как образ и действие.</p></div><span class="investigation-head-line" aria-hidden="true"></span></div>' +
   function renderEvidence() {
     var rows = EVIDENCE.map(function(item, index) {
-      return '<div class="investigation-evidence-row" data-evidence-index="' + index + '"><button type="button" class="investigation-evidence-trigger" aria-expanded="false"><span class="investigation-evidence-ref">' + esc(item.ref) + '</span><span class="investigation-evidence-note">' + esc(item.note) + '</span><span class="investigation-evidence-plus" aria-hidden="true">+</span></button><div class="investigation-evidence-detail" hidden><div><span>ТМ</span><p class="hebrew" dir="rtl">' + esc(item.tm) + '</p></div><div><span>LXX</span><p>' + esc(item.lxx) + '</p></div><div><span>Синодальный</span><p>' + esc(item.synodal) + '</p></div></div></div>';
+      return '<div class="investigation-evidence-row" data-evidence-index="' + index + '"><button type="button" class="investigation-evidence-trigger" aria-expanded="false"><span class="investigation-evidence-ref">' + esc(item.ref) + '</span><span class="investigation-evidence-note">' + esc(item.note) + '</span><span class="investigation-evidence-plus" aria-hidden="true" data-evidence-href="#scripture-reader/genesis/1"><i data-lucide="door-open"></i></span></button><div class="investigation-evidence-detail" hidden><div><span>ТМ</span><p class="hebrew" dir="rtl">' + esc(item.tm) + '</p></div><div><span>LXX</span><p>' + esc(item.lxx) + '</p></div><div><span>Синодальный</span><p>' + esc(item.synodal) + '</p></div></div></div>';
     }).join('');
     return '<section class="investigation-section dossier-evidence" style="--section-delay:360ms">' +
       '<div class="investigation-section-head"><span class="investigation-index">05</span><div><h2>Доказательства</h2><p>Раскройте стих, чтобы увидеть три параллельных слоя текста.</p></div></div>' +
@@ -259,6 +276,8 @@ return '<button class="investigation-creator" type="button" data-creator-index="
       }
       var evidence = event.target.closest('.investigation-evidence-trigger');
       if (evidence) {
+        var door = event.target.closest('[data-evidence-href]');
+        if (door && window.LabRouter) { event.preventDefault(); LabRouter.navigate('scripture-reader', ['genesis', '1']); return; }
         var row = evidence.closest('.investigation-evidence-row');
         var detail = row.querySelector('.investigation-evidence-detail');
         var expanded = evidence.getAttribute('aria-expanded') !== 'true';
@@ -300,6 +319,7 @@ return '<button class="investigation-creator" type="button" data-creator-index="
     window.setTimeout(function() {
       state.current = dossier;
       render(dossier);
+      setHero(dossier);
       setStatus('Досье собрано: найдено в ' + (dossier.category || 'источниках') + '.', 'ready');
       if (button) button.disabled = false;
     }, 180);

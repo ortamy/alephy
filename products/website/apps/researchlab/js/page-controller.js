@@ -2555,20 +2555,14 @@ const PageController = (function() {
         break;
 
       case 'investigation':
-        container.innerHTML = '<header class="section-hero">' +
-          '<div class="section-hero-watermark" aria-hidden="true">𐤀 𐤁 𐤂 𐤃 𐤄 𐤅</div>' +
-          '<div class="section-hero-kicker">АЛЕФИ · ЧЕКЕР ПОДМЕН</div>' +
-          '<h1><img src="assets/icons/32/ui/question.png" class="lab-icon" alt="">Чекер подмен</h1>' +
-          '<p class="section-hero-lead">Введите слово, корень или перевод. Сопоставьте происхождение, цепочку подмен и текстовые свидетельства.</p>' +
-        '</header>' +
-          '<form id="investigation-form" class="investigation-search" onsubmit="event.preventDefault(); Investigation.investigate();">' +
-          '<label for="investigation-input">Объект расследования</label>' +
+        container.innerHTML = '<form id="investigation-form" class="investigation-search" onsubmit="event.preventDefault(); Investigation.investigate();">' +
+          '<div class="investigation-search-label-row"><label for="investigation-input">ОБЪЕКТ</label><span>Ctrl+Enter</span></div><div class="investigation-rule"></div>' +
           '<div class="investigation-search-row"><input type="search" id="investigation-input" class="lab-input" placeholder="חסד, милость, HSD..." autocomplete="off" required>' +
-          '<button type="submit" class="lab-btn lab-btn-primary" id="investigation-submit"><img src="assets/icons/32/ui/question.png" width="24" height="24" alt="">Расследовать</button></div>' +
-          '<div id="investigation-status" class="investigation-status" role="status" aria-live="polite">Данные загружаются из словаря корней и словарей подмен.</div>' +
-          '</form>' +
+          '<button type="submit" class="lab-btn lab-btn-primary" id="investigation-submit"><i data-lucide="search" aria-hidden="true"></i>Расследовать</button></div>' +
+          '<div id="investigation-status" class="investigation-status" role="status" aria-live="polite"><span class="investigation-status-dot"></span><span>Данные загружаются из словаря корней и словарей подмен.</span></div></form>' +
           '<div id="investigation-result" class="investigation-result" aria-live="polite"></div>';
         container.dataset.loaded = '1';
+        if (window.Investigation) Investigation.init();
         break;
 
       case 'board':
