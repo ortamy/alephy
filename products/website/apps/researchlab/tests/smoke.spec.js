@@ -73,6 +73,11 @@ test('timeline hub cards open a full feed and return to catalog', async ({ page 
   await card.click();
   await expect(page).toHaveURL(new RegExp(`#timeline/${id}$`));
   await expect(page.locator('.tl-detail')).toBeVisible();
+  await expect(page.locator('.tl-detail-events')).toHaveAttribute('role', 'list');
+  await page.locator('.tl-detail-search').fill('несуществующий запрос');
+  await expect(page.locator('.tl-detail-empty')).toBeVisible();
+  await page.locator('[data-action=reset-search]').click();
+  await expect(page.locator('.tl-detail-event:visible')).not.toHaveCount(0);
   await page.locator('.tl-detail-back').click();
   await expect(page).toHaveURL(/#timeline$/);
   await expect(page.locator('.tl-toolbar')).toBeVisible();

@@ -1,11 +1,11 @@
 /**
- * timeline.js — Палео-таймлайн (каталог-аккордеон хронологических лент)
+ * timeline.js — Палео-таймлайн (каталог лент-«дверей»)
  *
  * Маршруты:
  *   #timeline                     — каталог: сетка карточек-паспортов + тулбар;
- *   #timeline/<id>                — каталог с раскрытой полосой ленты (аккордеон);
- *   #timeline/<id>/event/<idx>    — раскрытая полоса + подсветка строки события;
- *   #timeline/<id>/full           — полный вид ленты (поиск, ось, sticky-мини-ось);
+ *   #timeline/<id>                — полная лента (поиск, ось, sticky-мини-ось);
+ *   #timeline/<id>/event/<idx>    — совместимая ссылка на событие полной ленты;
+ *   #timeline/<id>/full           — совместимый URL полного вида ленты;
  *   #timeline/compare/<idA>/<idB> — сводная хронология двух датированных лент.
  *
  * Схема ленты: { id, title, paleoIcon, description, era, events: [...] }
@@ -50,6 +50,36 @@ const Timeline = (function() {
     interpretation: 'Интерпретация',
     hypothesis: 'Гипотеза'
   };
+
+  var SOURCE_LABELS = {
+    'data/paleo-linguistics/proto-canaanite.json': 'Прото-ханаанский корпус',
+    'data/paleo-linguistics/phoenician.json': 'Финикийский корпус',
+    'data/paleo-linguistics/paleo-hebrew.json': 'Палео-еврейский корпус',
+    'data/paleo-linguistics/akkadian.json': 'Аккадский корпус',
+    'data/paleo-linguistics/aramaic.json': 'Арамейский корпус',
+    'data/paleo-linguistics/eblaite.json': 'Эблаитский корпус',
+    'data/paleo-linguistics/ugaritic.json': 'Угаритский корпус',
+    'data/paleo-linguistics/languages.json': 'Палеолингвистические данные',
+    'data/witnesses.json': 'Свидетельства о письменности',
+    'data/qumran-books.json': 'Куманские рукописи',
+    'content/tanakh/archive/paleo-hebrew.md': 'Материалы по палео-еврейскому письму',
+    'docs/04-STANDARD/PALEO-STANDARD.md': 'Палеографический стандарт',
+    'docs/04-STANDARD/TERMINOLOGY.md': 'Стандарт терминологии',
+    'docs/06-METHODOLOGY/CULTURAL-MATRICES.md': 'Матрицы культурных процессов',
+    'docs/06-METHODOLOGY/PRINCIPLES.md': 'Методологические принципы',
+    'docs/06-METHODOLOGY/STATES.md': 'Методология состояний',
+    'docs/06-METHODOLOGY/TRANSLATION.md': 'Методология перевода',
+    'docs/07-MECHANICS/SHIN-TOOTH.md': 'Механика шин-зуба'
+  };
+
+  function sourceLabel(path) {
+    if (!path) return '';
+    if (SOURCE_LABELS[path]) return SOURCE_LABELS[path];
+    var parts = String(path).replace(/\\/g, '/').split('/');
+    var name = parts[parts.length - 1] || path;
+    return name.replace(/\.(json|md)$/i, '').replace(/[-_]+/g, ' ')
+      .replace(/^\w/, function(ch) { return ch.toUpperCase(); }) || 'Исследовательский материал';
+  }
 
   function escapeHtml(text) {
     var d = document.createElement('div');
@@ -251,7 +281,7 @@ const Timeline = (function() {
 
   function cardHtml(tl) {
     var count = (tl.events || []).length;
-    return '<article class="tl-card" data-timeline-id="' + escapeHtml(tl.id) + '" data-era="' + escapeHtml(tl.era) + '" role="link" tabindex="0" aria-label="' + escapeHtml(tl.title) + ' ? ??????? ?????">' +
+    return '<article class="tl-card" data-timeline-id="' + escapeHtml(tl.id) + '" data-era="' + escapeHtml(tl.era) + '" role="link" tabindex="0" aria-label="' + escapeHtml(tl.title) + ' — открыть полную ленту">' +
       '<span class="tl-card-head">' +
         '<span class="tl-card-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(tl.paleoIcon) + '</span>' +
         '<span class="tl-card-title">' + escapeHtml(tl.title) + '</span>' +
@@ -388,20 +418,31 @@ const Timeline = (function() {
     return strip;
   }
 
-  // Микро-ось: точки по sortKey (недатированные ленты — равномерно по индексу),
-  // цвет точки = kind, тултип = «дата — название».
-  function axisDotsHtml(events) {
+  function axisDotsHtml(events, side) {
+    side = side || 'a';
     var dated = isDatedList(events);
     var min = dated ? events[0].sortKey : 0;
     var span = dated ? events[events.length - 1].sortKey - min : 0;
     return events.map(function(ev, idx) {
-      var kind = KIND_LABELS[ev.kind] ? ev.kind : 'event';
       var pos = events.length > 1 ? Math.round(idx / (events.length - 1) * 1000) / 10 : 0;
       if (dated && span > 0) pos = Math.round((ev.sortKey - min) / span * 1000) / 10;
-      var label = (ev.date || '') + ' — ' + (ev.title || '');
-      return '<button class="tl-axis-dot tl-status-dot--' + kind + '" type="button" data-event-idx="' + idx + '"' +
-        ' style="--tl-pos: ' + pos + '%" title="' + escapeHtml(label) + '" aria-label="' + escapeHtml(label) + '"></button>';
+      var label = (ev.title || '') + ' · ' + (ev.date || '');
+      return '<span class="tl-axis-dot-wrap" data-tooltip="' + escapeHtml(label) + '">' +
+        '<button class="tl-axis-dot tl-axis-dot--' + side + '" type="button" data-event-idx="' + idx + '"' +
+        ' style="--tl-pos: ' + pos + '%" aria-label="' + escapeHtml(label) + '"></button></span>';
     }).join('');
+  }
+
+  function axisFrameHtml(eventsA, eventsB) {
+    var all = eventsB ? eventsA.concat(eventsB) : eventsA;
+    var dates = isDatedList(all) ? all.map(function(e) { return e.date; }).filter(Boolean) : [];
+    var range = dates.length ? (dates[0] === dates[dates.length - 1] ? dates[0] : dates[0] + ' — ' + dates[dates.length - 1]) : 'Диапазон не задан';
+    return '<div class="tl-axis-range"><span>' + escapeHtml(range) + '</span><span class="tl-axis-ticks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>' +
+      '<div class="tl-axis-lanes">' +
+        '<div class="tl-axis" role="group" aria-label="События ленты А"><span class="tl-axis-track" aria-hidden="true"></span>' + axisDotsHtml(eventsA, 'a') + '</div>' +
+        (eventsB ? '<div class="tl-axis tl-axis--b" role="group" aria-label="События ленты Б"><span class="tl-axis-track" aria-hidden="true"></span>' + axisDotsHtml(eventsB, 'b') + '</div>' : '') +
+      '</div>' +
+      (eventsB ? '<div class="tl-axis-legend"><span class="tl-axis-legend-chip tl-axis-legend-chip--a">А · золото</span><span class="tl-axis-legend-chip tl-axis-legend-chip--b">Б · коричневый</span></div>' : '');
   }
 
   // Строка события в полосе: дата (фикс, muted) + статус-точка + заголовок (ellipsis).
@@ -484,7 +525,7 @@ const Timeline = (function() {
     // мета-строка, тулбар поиска, мини-ось и события.
     timelineContainer.innerHTML =
       '<section class="tl-detail" aria-label="Таймлайн: ' + escapeHtml(timeline.title) + '">' +
-        '<div class="tl-detail-toolbar"><button class="tl-detail-back" type="button">? ????????</button><button class="tl-detail-link" type="button">? ??????</button></div>' +
+        '<div class="tl-detail-toolbar"><button class="tl-detail-back" type="button">← К каталогу</button><button class="tl-detail-link" type="button" data-no-icon aria-label="Скопировать ссылку с текущим состоянием"><i data-lucide="link" aria-hidden="true"></i><span>Ссылка</span></button></div>' +
         '<div class="tl-detail-meta tl-meta-line">' +
           '<span class="tl-detail-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(timeline.paleoIcon) + '</span>' +
           '<span class="meta-sep">·</span>' +
@@ -496,11 +537,11 @@ const Timeline = (function() {
           '<span class="tl-detail-count" aria-live="polite">' + total + ' из ' + total + '</span>' +
         '</div>' +
         '<div class="tl-axis-scroll tl-detail-axis">' +
-          '<div class="tl-axis" role="group" aria-label="Мини-ось событий">' +
-            '<span class="tl-axis-track" aria-hidden="true"></span>' + axisDotsHtml(events) +
-          '</div>' +
+          '<div class="tl-axis-caption">События на оси · ' + total + '</div>' +
+          axisFrameHtml(events) +
         '</div>' +
         '<div class="tl-detail-events" role="list" aria-label="События таймлайна">' + eventsHtml + '</div>' +
+        '<div class="tl-detail-empty" role="status" hidden>По вашему запросу событий не найдено. <button type="button" data-action="reset-search">Сбросить поиск</button></div>' +
       '</section>';
 
     // Шапка модуля подменяется на динамический заголовок таймлайна — ПОСЛЕ
@@ -527,8 +568,9 @@ const Timeline = (function() {
     var detailDots = timelineContainer.querySelectorAll('.tl-detail-axis .tl-axis-dot');
     var detailCount = timelineContainer.querySelector('.tl-detail-count');
     var detailSearch = timelineContainer.querySelector('.tl-detail-search');
-    if (detailSearch) detailSearch.addEventListener('input', function() {
-      var query = detailSearch.value.trim().toLowerCase();
+    var detailEmpty = timelineContainer.querySelector('.tl-detail-empty');
+    function filterDetailEvents() {
+      var query = detailSearch ? detailSearch.value.trim().toLowerCase() : '';
       var shown = 0;
       detailRows.forEach(function(row) {
         var match = !query || row.textContent.toLowerCase().indexOf(query) !== -1;
@@ -540,6 +582,14 @@ const Timeline = (function() {
         var row = timelineContainer.querySelector('.tl-detail-event[data-event-idx="' + dot.getAttribute('data-event-idx') + '"]');
         dot.hidden = !!(row && row.hidden);
       });
+      if (detailEmpty) detailEmpty.hidden = shown !== 0;
+    }
+    if (detailSearch) detailSearch.addEventListener('input', filterDetailEvents);
+    var resetSearch = timelineContainer.querySelector('[data-action="reset-search"]');
+    if (resetSearch) resetSearch.addEventListener('click', function() {
+      detailSearch.value = '';
+      filterDetailEvents();
+      detailSearch.focus();
     });
     detailDots.forEach(function(dot) {
       dot.addEventListener('click', function() {
@@ -547,16 +597,20 @@ const Timeline = (function() {
         if (!row) return;
         detailRows.forEach(function(el) { el.classList.remove('is-focus', 'tl-event-highlight'); });
         row.classList.add('is-focus', 'tl-event-highlight');
+        detailDots.forEach(function(el) { el.setAttribute('aria-current', 'false'); });
+        dot.setAttribute('aria-current', 'true');
+        row.setAttribute('tabindex', '-1');
+        row.focus({ preventScroll: true });
         row.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
       });
     });
 
     var linkButton = timelineContainer.querySelector('.tl-detail-link');
-    if (linkButton) linkButton.addEventListener('click', function() { copyDeepLink('#timeline/' + timeline.id); });
+    if (linkButton) linkButton.addEventListener('click', function() { copyDeepLink(location.hash || '#timeline/' + timeline.id); });
 
     var backButton = timelineContainer.querySelector('.tl-detail-back');
     if (backButton) backButton.addEventListener('click', function() {
-      // Возврат в каталог с раскрытой карточкой этой ленты.
+      // Возврат в базовый каталог таймлайнов.
       location.hash = '#timeline';
     });
 
@@ -612,7 +666,7 @@ const Timeline = (function() {
     var others = getDatedTimelines(excludeId);
     if (!others.length) return '';
     return '<div class="tl-compare-launch">' +
-      '<span class="tl-compare-label">Сравнить с:</span>' +
+      '<span class="tl-compare-label">СРАВНЕНИЕ</span>' +
       '<select class="tl-compare-select" data-compare-of="' + escapeHtml(excludeId) + '" aria-label="Лента для сравнения">' +
         '<option value="">— выберите ленту —</option>' +
         others.map(function(tl) {
@@ -645,7 +699,7 @@ const Timeline = (function() {
 
     headHtml +=
       '<div class="tl-compare-launch">' +
-        '<span class="tl-compare-label">' + (timelineB ? 'Вторая лента:' : 'Сравнить с:') + '</span>' +
+        '<span class="tl-compare-label">СРАВНЕНИЕ</span>' +
         '<select class="tl-compare-select" aria-label="Вторая лента для сравнения">' +
           '<option value="">— выберите ленту —</option>' +
           datedOthers.map(function(tl) {
@@ -684,6 +738,7 @@ const Timeline = (function() {
     }
 
     timelineContainer.innerHTML = headHtml +
+      (timelineB ? '<div class="tl-compare-axis tl-detail-axis">' + axisFrameHtml(sortedEvents(timelineA), sortedEvents(timelineB)) + '</div>' : '') +
       '<div class="tl-detail-events" role="list" aria-label="Сводная хронология">' + rowsHtml + '</div>' +
       '</section>';
 
@@ -714,6 +769,20 @@ const Timeline = (function() {
     var swapBtn = timelineContainer.querySelector('.tl-compare-swap');
     if (swapBtn) swapBtn.addEventListener('click', function() {
       location.hash = '#timeline/compare/' + idB + '/' + idA;
+    });
+
+    timelineContainer.querySelectorAll('.tl-compare-axis .tl-axis-dot').forEach(function(dot) {
+      dot.addEventListener('click', function() {
+        var idx = parseInt(dot.getAttribute('data-event-idx'), 10);
+        var side = dot.classList.contains('tl-axis-dot--b') ? 'b' : 'a';
+        var target = side === 'b' ? timelineB : timelineA;
+        if (!target || isNaN(idx)) return;
+        var row = timelineContainer.querySelector('.tl-compare-event[data-side="' + side + '"][data-href="#timeline/' + target.id + '/event/' + idx + '"]');
+        if (!row) return;
+        row.setAttribute('tabindex', '-1');
+        row.focus({ preventScroll: true });
+        row.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+      });
     });
 
     // Строка сводной хронологии ведёт к событию в исходной ленте.
@@ -773,7 +842,7 @@ const Timeline = (function() {
     var kind = KIND_LABELS[event && event.kind] ? event.kind : 'event';
     var conf = CONFIDENCE_LABELS[event && event.confidence] ? event.confidence : null;
     var sourceHtml = event && event.source
-      ? '<div class="tl-event-source">Источник: ' + escapeHtml(event.source) + '</div>'
+      ? '<div class="tl-event-source">Источник · ' + escapeHtml(sourceLabel(event.source)) + '</div>'
       : '';
     // Кросс-ссылки на связанные события/модули: только внутренние hash-адреса.
     var linksHtml = (event && event.links && event.links.length)
@@ -787,7 +856,7 @@ const Timeline = (function() {
       : '';
     return '<article class="tl-detail-event" data-event-idx="' + index + '" style="--tl-event-index:' + index + '" role="listitem">' +
       '<div class="tl-event-row-inner">' +
-        '<span class="tl-status-dot tl-status-dot--' + kind + '" aria-label="' + KIND_LABELS[kind] + '"></span>' +
+        '<span class="tl-status-dot tl-status-dot--gold" aria-label="Событие текущей ленты"></span>' +
         '<div class="tl-detail-event-main">' +
           '<div class="tl-detail-event-date">' + escapeHtml(event.date) + confidenceHtml + '</div>' +
           '<h3 class="tl-detail-event-title">' + escapeHtml(event.title) + '</h3>' +
@@ -796,8 +865,8 @@ const Timeline = (function() {
           linksHtml +
         '</div>' +
         '<div class="tl-event-actions">' +
-          '<button class="tl-event-action-btn" type="button" data-action="open" data-event-idx="' + index + '" title="Открыть событие">›</button>' +
-          '<button class="tl-event-action-btn" type="button" data-action="copy" data-event-idx="' + index + '" title="Копировать ссылку">⎘</button>' +
+          '<button class="tl-event-action-btn" type="button" data-action="open" data-event-idx="' + index + '" title="Открыть событие" aria-label="Открыть событие: ' + escapeHtml(event.title) + '">›</button>' +
+          '<button class="tl-event-action-btn" type="button" data-action="copy" data-event-idx="' + index + '" title="Копировать ссылку" aria-label="Копировать ссылку на событие: ' + escapeHtml(event.title) + '">⎘</button>' +
         '</div>' +
       '</div>' +
     '</article>';
@@ -818,7 +887,7 @@ const Timeline = (function() {
       renderCatalog(timelineContainer, timelineItems, {});
       return;
     }
-    // ?????? ??? ?????: #timeline/<id> ? ??????????? /full.
+    // Полыйй вид лентыы: #timeline/<id> и совместимым #timeline/<id>/full.
     if (!segments[2] || segments[2] === 'full') {
       renderDetail(id);
       return;

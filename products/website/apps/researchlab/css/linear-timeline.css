@@ -122,7 +122,7 @@
   .tl-filters::-webkit-scrollbar { display: none; }
 }
 
-/* ===== INLINE ACTIONS: действия на hover строк событий ===== */
+/* ===== INLINE ACTIONS: действия событий ===== */
 .tl-detail-event {
   position: relative;
 }
@@ -132,7 +132,7 @@
   align-items: flex-start;
   gap: 10px;
   position: relative;
-  padding-right: 72px; /* место для действий */
+  padding-right: 88px; /* место для двух 40px действий и зазора */
 }
 
 .tl-detail-event .tl-status-dot {
@@ -150,12 +150,13 @@
   right: 0;
   top: 50%;
   transform: translateY(-50%);
-  display: none;
+  display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.tl-detail-event:hover .tl-event-actions {
+.tl-detail-event:hover .tl-event-actions,
+.tl-detail-event:focus-within .tl-event-actions {
   display: flex;
 }
 
@@ -163,8 +164,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   font-family: var(--font-ui);
   font-size: var(--ui-11);
