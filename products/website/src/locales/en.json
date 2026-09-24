@@ -167,9 +167,9 @@
         "title": ""
       },
       "davar-checker": {
-        "kicker": "",
-        "subtitle": "",
-        "title": ""
+        "kicker": "ALEPHY · CHECKERS · EMBODIMENT",
+        "subtitle": "Check whether a word points to a construct with a physical equivalent or remains an empty sound.",
+        "title": "Embodiment checker"
       },
       "dialect-analyzer": {
         "kicker": "",
