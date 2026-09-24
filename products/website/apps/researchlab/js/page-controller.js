@@ -2501,10 +2501,7 @@ const PageController = (function() {
         break;
 
       case 'etymology-checker':
-        container.innerHTML = '<h1><img src="assets/icons/32/archaeology/testtube.svg" class="lab-icon" alt="">Чекер этимологии</h1>' +
-          '<p class="subtitle">Проверь слово на соответствие палео-корням, образам и карте утрат</p>' +
-          '<div class="search-wrap"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите..." onkeydown="if(event.key===\'Enter\')EtymologyLab.analyze()"><button class="lab-btn lab-btn-primary" onclick="EtymologyLab.analyze()">Разобрать</button></div>' +
-          '<div id="el-results"></div>';
+        container.innerHTML = '<section class="el-shell" aria-labelledby="el-title"><p class="el-microlabel" id="el-title">СЛОВО</p><form id="el-form" class="el-input-panel"><div class="el-rule"></div><div class="el-input-row"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите или транслите" autocomplete="off"><button class="lab-btn lab-btn-primary" type="submit">Разобрать</button><span class="el-hint">Ctrl+Enter</span></div><div class="el-examples" aria-label="Примеры слов"></div></form><div id="el-results" class="el-results" aria-live="polite"></div></section>';
         container.dataset.loaded = '1';
         if (window.EtyLab || window.EtymologyLab) (window.EtyLab || window.EtymologyLab).init();
         break;

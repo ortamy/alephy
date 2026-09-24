@@ -1,64 +1,31 @@
-/* Etymology Lab Styles */
-
-.el-input-section { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; padding: 24px; margin-bottom: 24px; }
-.el-input-section .el-hint { font-size: 14px; color: var(--text-muted); margin-bottom: 12px; }
-.el-input-section .el-examples { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.el-input-section .el-examples .example-chip { padding: 4px 12px; border: 1px solid var(--border-light); border-radius: 12px; font-size: 14px; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; background: var(--bg-primary); }
-.el-input-section .el-examples .example-chip:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
-
-.el-result { display: none; }
-.el-result.show { display: block; animation: elFadeIn var(--dur-2) ease; }
-@keyframes elFadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-.el-word-header { background: var(--bg-card); border: 1px solid var(--border-gold); border-radius: 6px; padding: 24px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
-.el-word-header .el-word-heb { font-size: 48px; font-family: 'Times New Roman', serif; line-height: 1; color: var(--accent-gold); }
-.el-word-header .el-word-info { flex: 1; }
-.el-word-header .el-word-info .el-word-translit { font-family: monospace; font-size: 16px; color: var(--text-muted); }
-.el-word-header .el-word-info .el-word-meaning { font-size: 18px; color: var(--text-primary); margin-top: 4px; }
-.el-word-header .el-word-paleo { font-size: 32px; letter-spacing: 6px; color: var(--accent-gold); }
-
-.el-section { background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; padding: 20px; margin-bottom: 16px; }
-.el-section-title { font-family: var(--font-heading); font-size: 18px; font-weight: 600; font-style: normal; color: var(--accent-gold); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light); }
-
-.el-letter-breakdown { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
-.el-letter-box { text-align: center; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 6px; padding: 14px 10px; min-width: 90px; transition: all 0.2s; }
-.el-letter-box:hover { border-color: var(--accent-gold); }
-.el-letter-box .ell-paleo { font-size: 36px; font-family: 'Times New Roman', serif; line-height: 1.2; color: var(--accent-gold); }
-.el-letter-box .ell-heb { font-size: 24px; font-family: 'Times New Roman', serif; }
-.el-letter-box .ell-name { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
-.el-letter-box .ell-image { font-size: 24px; display: block; margin-top: 4px; }
-.el-letter-box .ell-meaning { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-.el-substitution-table { width: 100%; border-collapse: collapse; }
-.el-substitution-table th, .el-substitution-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 15px; }
-.el-substitution-table th { background: var(--bg-primary); font-family: var(--font-heading); font-weight: 600; }
-.el-substitution-table .sub-red { color: var(--accent-red); }
-.el-substitution-table .sub-green { color: #2a6a2a; font-weight: 600; }
-
-.el-root-card { background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 4px; padding: 16px; margin-top: 12px; }
-.el-root-card .el-root-heb { font-size: 28px; font-family: 'Times New Roman', serif; color: var(--accent-gold); }
-.el-root-card .el-root-meaning { font-size: 16px; color: var(--text-secondary); margin-top: 4px; }
-
-.el-loss-map { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
-.el-loss-layer { flex: 1 1 150px; min-width: 130px; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 4px; padding: 12px; }
-.el-loss-label { color: var(--accent-gold); font-family: var(--font-heading); font-weight: 600; margin-bottom: 6px; }
-.el-loss-value { color: var(--text-primary); font-weight: 600; min-height: 22px; }
-.el-loss-note { color: var(--text-muted); font-size: 12px; line-height: 1.4; margin-top: 7px; }
-.el-loss-arrow { align-self: center; color: var(--accent-gold); font-size: 20px; }
-
-.el-checker-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-.el-checker-actions .lab-btn { cursor: pointer; }
-.el-checker-output { margin-top: 12px; padding: 12px 14px; border-left: 3px solid var(--border-light); background: var(--bg-primary); line-height: 1.5; }
-.el-checker-output ul { margin: 8px 0 0 20px; }
-.el-checker-ok { border-left-color: #2a6a2a; color: #2a6a2a; }
-.el-checker-warn { border-left-color: var(--accent-red); color: var(--accent-red); }
-.el-checker-translation { border-left-color: var(--accent-gold); }
-.el-translation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.el-translation-grid > div { display: flex; flex-direction: column; gap: 4px; }
-.el-compare-label { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-.el-translation-diff { color: var(--text-secondary); margin: 12px 0 0; }
-
-@media (max-width: 640px) {
-  .el-loss-arrow { display: none; }
-  .el-translation-grid { grid-template-columns: 1fr; }
-}
+/* Etymology checker: all sections exist from first frame, hairline canon. */
+.el-shell { width: 100%; }
+.el-microlabel, .el-section-label, .el-visual-panel h3 { color: var(--text-secondary); font-family: var(--font-mono); font-size: var(--ui-11); font-weight: 700; letter-spacing: var(--tracking-caps); text-transform: uppercase; }
+.el-microlabel { margin: 0 0 var(--space-3); }
+.el-input-panel, .el-section { width: 100%; padding: var(--space-6); border: 1px solid var(--border-light); border-radius: 0; background: var(--bg-card); box-shadow: none; }
+.el-input-panel { margin-bottom: var(--space-4); }
+.el-rule { height: 1px; margin-bottom: var(--space-4); background: var(--border-light); }
+.el-input-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: var(--space-3); align-items: center; }
+.el-input-row .lab-input { min-width: 0; }
+.el-hint { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--ui-11); white-space: nowrap; }
+.el-examples { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+.el-chip { padding: 3px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); cursor: pointer; font: inherit; }
+.el-chip:hover, .el-chip:focus-visible { border-color: var(--accent-gold); color: var(--text-gold); }
+.el-results { display: grid; gap: var(--space-4); }
+.el-section-head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+.el-section-num { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-xs); }
+.el-section-head::after { content: ''; flex: 1; height: 1px; background: var(--border-light); }
+.el-empty { display: grid; min-height: 116px; place-items: center; align-content: center; gap: var(--space-2); border: 1px dashed var(--border-light); color: var(--text-muted); text-align: center; }
+.el-empty svg { color: var(--text-muted); }
+.el-word-header { display: flex; align-items: center; gap: var(--space-4); flex-wrap: wrap; padding: var(--space-4); border: 1px solid var(--border-light); }
+.el-word-heb { font-size: 2rem; color: var(--text-primary); }
+.el-word-info { flex: 1; }.el-word-translit { color: var(--text-muted); font-family: monospace; }.el-word-meaning { color: var(--text-primary); }.el-word-paleo { color: var(--text-primary); font-size: 1.5rem; }
+.el-letter-breakdown { display: flex; gap: var(--space-2); flex-wrap: wrap; justify-content: flex-start; }
+.el-letter-box { flex: 1 1 110px; min-width: 100px; padding: var(--space-3); border: 1px solid var(--border-light); text-align: left; }
+.ell-paleo, .ell-heb { font-family: 'Times New Roman', serif; }.ell-paleo { font-size: 2rem; }.ell-heb { font-size: 1.25rem; }.ell-name { color: var(--text-secondary); }.ell-meaning { color: var(--text-muted); font-size: var(--text-xs); }
+.el-root-card { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) 0; border-top: 1px solid var(--border-light); }.el-root-heb { font-family: 'Times New Roman', serif; font-size: 1.5rem; }.el-root-meaning { color: var(--text-secondary); }
+.el-substitution-table { width: 100%; border-collapse: collapse; }.el-substitution-table th, .el-substitution-table td { padding: var(--space-2); border-bottom: 1px solid var(--border-light); text-align: left; }.el-substitution-table .sub-red { color: var(--accent-red); }.el-substitution-table .sub-green { color: var(--text-primary); font-family: var(--font-heading); }
+.el-loss-map { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }.el-loss-layer { padding: var(--space-3); border: 1px solid var(--border-light); }.el-loss-label { color: var(--text-primary); font-family: var(--font-heading); font-weight: 600; }.el-loss-value { color: var(--text-secondary); margin-top: var(--space-2); }.el-loss-note, .el-checker-output { color: var(--text-muted); font-size: var(--text-sm); }.el-loss-arrow { display: none; }
+.el-visual-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--space-3); }.el-visual-panel { padding: var(--space-4); border: 1px solid var(--border-light); }.el-visual-panel h3 { margin: 0 0 var(--space-3); }.el-visual-panel .lab-btn { margin-bottom: var(--space-3); }.el-visual-panel .lab-select { min-height: 36px; margin-bottom: var(--space-3); }.el-checker-output { min-height: 80px; padding: var(--space-3); border: 1px dashed var(--border-light); }.el-checker-ok, .el-checker-warn, .el-checker-translation { border-style: solid; border-left: 0; }.el-error { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border-light); color: var(--accent-red); }.el-error button { margin-left: auto; }
+@media (prefers-reduced-motion: reduce) { .el-result { animation: none; } }
+@media (max-width: 640px) { .el-input-row, .el-visual-grid { grid-template-columns: 1fr; }.el-hint { text-align: right; }.el-loss-map { grid-template-columns: 1fr 1fr; }.el-section, .el-input-panel { padding: var(--space-4); } }
