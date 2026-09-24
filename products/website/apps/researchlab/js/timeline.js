@@ -1,4 +1,4 @@
-﻿/**
+/**
  * timeline.js — Палео-таймлайн (каталог-аккордеон хронологических лент)
  *
  * Маршруты:
@@ -238,22 +238,20 @@ const Timeline = (function() {
     if (counter) counter.textContent = list.length + ' из ' + timelineItems.length;
 
     grid.querySelectorAll('.tl-card').forEach(function(card) {
-      card.addEventListener('click', function() { toggleCard(grid, card); });
+      card.addEventListener('click', function(event) {
+        var era = event.target.closest('.tl-card-era');
+        if (era) { event.stopPropagation(); catalogState.era = card.getAttribute('data-era'); renderCatalog(container, timelineItems, {}); return; }
+        location.hash = '#timeline/' + card.getAttribute('data-timeline-id');
+      });
+      card.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); location.hash = '#timeline/' + card.getAttribute('data-timeline-id'); }
+      });
     });
-
-    var openCard = catalogState.openId
-      ? grid.querySelector('.tl-card[data-timeline-id="' + catalogState.openId + '"]')
-      : null;
-    if (openCard) openStrip(grid, openCard, { focusIdx: catalogState.focusIdx, animate: false });
   }
 
-  // Карточка-паспорт: глиф-чип, заголовок, бейдж событий, описание ≤2 строк,
-  // футер с диапазоном дат, эрой и стрелкой.
   function cardHtml(tl) {
     var count = (tl.events || []).length;
-    return '<button class="tl-card" type="button" data-timeline-id="' + escapeHtml(tl.id) + '"' +
-      ' aria-expanded="false" aria-controls="tl-strip-' + escapeHtml(tl.id) + '"' +
-      ' aria-label="' + escapeHtml(tl.title) + ' — ' + count + ' ' + pluralize(count, 'событие', 'события', 'событий') + '">' +
+    return '<article class="tl-card" data-timeline-id="' + escapeHtml(tl.id) + '" data-era="' + escapeHtml(tl.era) + '" role="link" tabindex="0" aria-label="' + escapeHtml(tl.title) + ' ? ??????? ?????">' +
       '<span class="tl-card-head">' +
         '<span class="tl-card-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(tl.paleoIcon) + '</span>' +
         '<span class="tl-card-title">' + escapeHtml(tl.title) + '</span>' +
@@ -265,7 +263,7 @@ const Timeline = (function() {
         '<span class="tl-card-era">' + escapeHtml(ERAS[tl.era] || 'Хронология') + '</span>' +
         '<span class="tl-card-arrow" aria-hidden="true">→</span>' +
       '</span>' +
-    '</button>';
+    '</article>';
   }
 
   // Аккордеон: раскрыта одна полоса; клик по открытой карточке сворачивает её.
@@ -486,7 +484,7 @@ const Timeline = (function() {
     // мета-строка, тулбар поиска, мини-ось и события.
     timelineContainer.innerHTML =
       '<section class="tl-detail" aria-label="Таймлайн: ' + escapeHtml(timeline.title) + '">' +
-        '<button class="tl-detail-back" type="button">К каталогу таймлайнов</button>' +
+        '<div class="tl-detail-toolbar"><button class="tl-detail-back" type="button">? ????????</button><button class="tl-detail-link" type="button">? ??????</button></div>' +
         '<div class="tl-detail-meta tl-meta-line">' +
           '<span class="tl-detail-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(timeline.paleoIcon) + '</span>' +
           '<span class="meta-sep">·</span>' +
@@ -553,10 +551,13 @@ const Timeline = (function() {
       });
     });
 
+    var linkButton = timelineContainer.querySelector('.tl-detail-link');
+    if (linkButton) linkButton.addEventListener('click', function() { copyDeepLink('#timeline/' + timeline.id); });
+
     var backButton = timelineContainer.querySelector('.tl-detail-back');
     if (backButton) backButton.addEventListener('click', function() {
       // Возврат в каталог с раскрытой карточкой этой ленты.
-      location.hash = '#timeline/' + timeline.id;
+      location.hash = '#timeline';
     });
 
     // Пикер сравнения: выбор второй ленты → #timeline/compare/<A>/<B>.
@@ -817,8 +818,8 @@ const Timeline = (function() {
       renderCatalog(timelineContainer, timelineItems, {});
       return;
     }
-    // Полный вид ленты: #timeline/<id>/full
-    if (segments[2] === 'full') {
+    // ?????? ??? ?????: #timeline/<id> ? ??????????? /full.
+    if (!segments[2] || segments[2] === 'full') {
       renderDetail(id);
       return;
     }

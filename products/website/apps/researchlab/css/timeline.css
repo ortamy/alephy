@@ -162,7 +162,7 @@
   transition: background var(--motion-base), border-color var(--motion-base);
 }
 
-.tl-card:hover { background: var(--bg-tertiary, #f5edd5); }
+.tl-card:hover { background: var(--bg-tertiary, #f5edd5); border-color: var(--accent-gold); }
 
 .tl-card:focus-visible { outline: var(--focus-outline); outline-offset: 2px; }
 
@@ -1059,3 +1059,5 @@
     max-width: calc(100% - 54px);
   }
 }
+.tl-detail-link { display: inline-flex; align-items: center; gap: 0.35rem; margin-left: auto; }
+@media (max-width: 640px) { .tl-grid { grid-template-columns: 1fr; } .tl-card { min-height: 0; } }

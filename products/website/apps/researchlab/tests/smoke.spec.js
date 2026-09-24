@@ -65,6 +65,19 @@ async function checkRoute(page, route, projectName) {
   await client.detach();
 }
 
+test('timeline hub cards open a full feed and return to catalog', async ({ page }) => {
+  await page.goto('/#timeline', { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tl-card').first();
+  await expect(card).toBeVisible();
+  const id = await card.getAttribute('data-timeline-id');
+  await card.click();
+  await expect(page).toHaveURL(new RegExp(`#timeline/${id}$`));
+  await expect(page.locator('.tl-detail')).toBeVisible();
+  await page.locator('.tl-detail-back').click();
+  await expect(page).toHaveURL(/#timeline$/);
+  await expect(page.locator('.tl-toolbar')).toBeVisible();
+});
+
 test.describe('registered routes', () => {
   for (const route of routesToCheck) {
     test(`route #${route} renders without uncaught errors`, async ({ browser }, testInfo) => {
