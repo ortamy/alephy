@@ -4,11 +4,14 @@
 .investigation-kicker { color:var(--accent-gold); font:600 11px/1.2 var(--font-mono); letter-spacing:2px; margin-bottom:4px; }
 .investigation-stamp { flex:0 0 72px; border:1px solid var(--accent-gold); color:var(--accent-gold); font:600 11px/1.2 var(--font-mono); letter-spacing:2px; padding:8px; text-align:center; transform:rotate(3deg); opacity:.85; }
 .investigation-stamp strong { display:block; font-size:25px; line-height:1.1; margin-top:3px; }
-.investigation-search { padding:18px 20px; background:var(--bg-card); border:1px solid var(--border-light); border-left:0; box-shadow:none; }
+.investigation-search { padding:18px 20px; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); box-shadow:none; }
 .investigation-search-label-row { display:flex; justify-content:space-between; gap:12px; color:var(--text-secondary); font:700 11px var(--font-mono); letter-spacing:var(--tracking-caps); text-transform:uppercase; }
 .investigation-search-label-row span { color:var(--text-muted); font:400 12px var(--font-mono); }
 .investigation-rule { height:1px; margin:10px 0 16px; background:var(--border-light); }
 .investigation-search-row .lab-btn i { width:18px; height:18px; }
+.investigation-search-row { display:flex; align-items:center; gap:12px; }
+.investigation-search-row .lab-input { flex:1 1 auto; min-width:0; }
+.investigation-search-row .lab-btn { flex:0 0 auto; margin-left:auto; }
 .investigation-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px; min-height:24px; padding-top:8px; color:var(--text-muted); font-size:14px; }
 .investigation-status-chip { display:inline-flex; align-items:center; gap:7px; min-height:24px; padding:2px 10px; border:1px solid var(--border-light); border-radius:var(--radius-pill); color:var(--text-muted); font:600 11px/1 var(--font-mono); letter-spacing:.06em; }
 .investigation-status-dot { width:7px; height:7px; border-radius:50%; background:currentColor; }
@@ -16,9 +19,8 @@
 .investigation-status.is-error .investigation-status-dot { background:var(--accent-red); }
 .investigation-status-examples { display:inline-flex; flex-wrap:wrap; gap:var(--space-2); }
 .investigation-section { box-shadow:none; }
-.investigation-section::before { box-shadow:0 0 0 3px var(--bg-card); }
 .investigation-section h2 { color:var(--text-primary); }
-.investigation-origin-note, .investigation-loss-node { background:var(--bg-card); border:1px solid var(--border-light); border-left:0; }
+.investigation-origin-note, .investigation-loss-node { background:var(--bg-card); border:1px solid var(--border-light); }
 .investigation-timeline, .investigation-timeline-details { background:var(--bg-card); color:var(--text-primary); border-color:var(--border-light); }
 .investigation-timeline::before { background:var(--border-light); }
 .investigation-timeline-point { color:var(--text-secondary); }
@@ -31,14 +33,15 @@
 .investigation-result { position:relative; display:none; padding-top:20px; }
 .investigation-result.is-visible { display:block; }
 .investigation-case-meta { display:flex; justify-content:space-between; gap:16px; color:var(--text-muted); font:600 11px/1.4 var(--font-mono); letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid var(--border-light); padding-bottom:9px; margin-bottom:10px; }
-.investigation-section { position:relative; margin:20px 0 0; padding:22px; background:var(--bg-card); border:1px solid var(--border-light); box-shadow:none; opacity:0; transform:translateY(10px); animation:investigationFadeIn var(--dur-2) ease-out forwards; animation-delay:var(--section-delay); }
-.investigation-section::before { content:''; position:absolute; left:-7px; top:28px; width:11px; height:11px; background:var(--accent-gold); border-radius:50%; box-shadow:0 0 0 3px var(--bg-primary); }
-.investigation-section::after { content:''; position:absolute; left:-2px; top:39px; height:calc(100% + 20px); border-left:1px solid var(--border-light); z-index:0; }
-.investigation-section:last-child::after { display:none; }
+.investigation-section { position:relative; margin:24px 0 0; padding:22px; background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-md); box-shadow:none; opacity:0; transform:translateY(10px); animation:investigationFadeIn var(--dur-2) ease-out forwards; animation-delay:var(--section-delay); }
+/* (Полиш 2) Рельсы нет: секции — панели без левой линии и золотых точек. */
 .investigation-section-head { position:relative; z-index:1; display:flex; flex-wrap:wrap; gap:13px; align-items:flex-start; margin-bottom:16px; padding-bottom:14px; border-bottom:1px solid var(--border-light); }
 .investigation-index { flex:0 0 auto; color:var(--accent-gold); font:600 12px/1 var(--font-mono); padding-top:5px; }
 .investigation-section h2 { font:600 27px/1.1 var(--font-heading); margin-bottom:3px; }
 .investigation-section-head p { color:var(--text-muted); font-size:15px; line-height:1.45; }
+/* (Полиш 4) Одна линия во всю ширину — border-bottom у .investigation-section-head;
+   короткое подчёркивание h2 из layout.css (.module h2:not(:last-child)) гасим. */
+section.investigation-section .investigation-section-head h2 { border-bottom:0; padding-bottom:0; margin-bottom:3px; }
 .investigation-label { display:block; color:var(--text-muted); font:600 10px/1.3 var(--font-mono); letter-spacing:1.3px; text-transform:uppercase; margin-bottom:6px; }
 .investigation-origin-grid { display:grid; grid-template-columns:minmax(180px, .7fr) 1.5fr; gap:20px; align-items:center; }
 .investigation-origin-word { border-right:1px solid var(--border-light); padding-right:20px; }
@@ -106,7 +109,7 @@
 .investigation-evidence-detail div { min-width:0; }
 .investigation-evidence-detail span { color:var(--text-muted); font:600 11px var(--font-mono); }
 .investigation-evidence-detail p { margin-top:4px; color:var(--text-secondary); font-size:15px; line-height:1.45; overflow-wrap:anywhere; }
-.investigation-empty { margin-top:20px; padding:28px; border:1px dashed var(--accent-gold); color:var(--text-secondary); background:var(--bg-secondary); }
+.investigation-empty { margin-top:20px; padding:28px; border:1px dashed var(--accent-gold); border-radius:var(--radius-md); color:var(--text-secondary); background:var(--bg-secondary); }
 .investigation-empty strong { display:block; color:var(--accent-gold); font:600 22px var(--font-heading); }
 .investigation-empty p { margin-top:6px; }
 @keyframes investigationFadeIn { to { opacity:1; transform:translateY(0); } }
@@ -116,9 +119,8 @@
   .investigation-heading { gap:12px; }
   .investigation-stamp { flex-basis:58px; }
   .investigation-search-row { flex-direction:column; }
-/* Manuscript canon overrides: rail and numbered spine remain, surfaces are flat. */
+/* Manuscript canon overrides: surfaces are flat, panels keep their full hairline frame. */
 .investigation-search, .investigation-section, .investigation-timeline, .investigation-timeline-details, .investigation-creator, .investigation-loss-node, .investigation-evidence-detail { box-shadow:none; }
-.investigation-section { border-left:0; }
 .investigation-section-head { gap:var(--space-3); }
 .investigation-section-head h2 { color:var(--text-primary); }
 .investigation-timeline { border-top:0; }
@@ -151,7 +153,7 @@
 
 /* Investigation full rollout: five chapters remain visible in every state. */
 .investigation-status-stages { color:var(--text-muted); font:600 10px var(--font-mono); letter-spacing:.08em; text-transform:uppercase; }
-.investigation-chapter-empty { display:flex; align-items:center; gap:10px; min-height:72px; padding:14px 0; color:var(--text-muted); border:1px dashed var(--border-light); font:12px var(--font-mono); }
+.investigation-chapter-empty { display:flex; align-items:center; gap:10px; min-height:72px; padding:14px 0; color:var(--text-muted); border:1px dashed var(--border-light); border-radius:var(--radius-md); font:12px var(--font-mono); }
 .investigation-chapter-glyph { color:var(--accent-gold); font:22px var(--font-hebrew); }
 .investigation-empty-chapter { border-style:dashed; }
 .investigation-loading-chapter { border-style:solid; }
@@ -161,15 +163,15 @@
 .investigation-chapter-skeleton span:nth-child(2) { width:94%; }
 .investigation-chapter-skeleton span:nth-child(3) { width:58%; }
 @keyframes investigationSkeleton { to { opacity:.45; } }
-.investigation-error { margin:20px 0; padding:16px; border:1px solid var(--border-light); color:var(--text-secondary); background:var(--bg-card); }
+.investigation-error { margin:20px 0; padding:16px; border:1px solid var(--border-light); border-radius:var(--radius-md); color:var(--text-secondary); background:var(--bg-card); }
 .investigation-error strong { display:block; color:var(--text-primary); font:600 20px var(--font-heading); }
 .investigation-error p { margin:6px 0 12px; }
 .investigation-muted-note { display:block; margin-top:5px; color:var(--text-muted); font:11px var(--font-mono); }
 .investigation-section { box-shadow:none; }
 .investigation-origin-note, .investigation-loss-node { background:var(--bg-card); border:1px solid var(--border-light); }
+/* (Полиш 3) Радиус карточки реестра — у всех панелей досье; прямые углы только у волосяных линий. */
+.investigation-origin-note, .investigation-loss-node, .investigation-timeline, .investigation-timeline-details, .investigation-creator, .investigation-portrait, .investigation-evidence-detail { border-radius:var(--radius-md); }
 @media (max-width:760px) {
   .investigation-status-stages { width:100%; }
-  .investigation-section { border-left:1px solid var(--border-light); }
-  .investigation-section::after { left:2px; }
 }
 @media (prefers-reduced-motion:reduce) { .investigation-section, .investigation-letter, .investigation-evidence-plus, .investigation-chapter-skeleton span { animation:none; transition:none; } }
