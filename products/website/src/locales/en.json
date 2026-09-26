@@ -112,9 +112,9 @@
         "title": ""
       },
       "ai-agents": {
-        "kicker": "",
-        "subtitle": "",
-        "title": ""
+        "kicker": "ALEPHY · AGENTS",
+        "subtitle": "Research roles for collecting, checking, and connecting material.",
+        "title": "AI Agents"
       },
       "ai-analyzer": {
         "kicker": "",
@@ -492,6 +492,11 @@
     },
     "agents": {
       "back": "Back to agents",
+      "status": {
+        "active": "Active",
+        "dev": "In development",
+        "stub": "Stub"
+      },
       "links": {
         "browse": "Browse pipelines",
         "empty": "The agent is not part of any chain",

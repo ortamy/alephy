@@ -53,17 +53,14 @@
 .tool-card .tool-badge.beta { background: var(--bg-dark); color: var(--text-muted); }
 .tool-card .tool-badge.model { background: var(--accent-gold); color: #2c1810; }
 /* ===== AI-AGENTS REGISTRY (DESIGN-SYSTEM §4: тулбар, группы, паспорта) ===== */
-/* Тулбар §4.7: две строки во всю ширину плашки, без центрирования.
-   Строка 1 — поиск на всю ширину (flex) + «Карта агентов» справа;
-   строка 2 — чипы статусов слева, счётчик и тумблер вида справа. */
-.agent-controls-panel { display: flex; flex-direction: column; align-items: stretch; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); }
+/* Тулбар §4.7: одна строка — поиск слева; чипы, счётчик, тумблер и карта справа. */
+.agent-controls-panel { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); overflow: hidden; }
 .agent-controls-panel[hidden] { display: none; }
-.agent-toolbar-row { display: flex; align-items: center; flex-wrap: nowrap; gap: var(--space-2); width: 100%; min-width: 0; }
-.agent-toolbar-row--filters { flex-wrap: wrap; }
-.agent-toolbar-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-left: auto; }
-.agents-search { flex: 1 1 auto; min-width: 0; }
-.agent-toolbar-map { flex: 0 0 auto; }
-.agent-filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.agent-toolbar-row { display: contents; }
+.agents-search { flex: 1 1 220px; min-width: 0; order: 1; }
+.agent-filter-chips { display: flex; align-items: center; flex: 0 1 auto; flex-wrap: nowrap; gap: 6px; min-width: 0; max-width: 100%; overflow-x: auto; order: 2; }
+.agent-toolbar-actions { display: flex; align-items: center; flex: 0 0 auto; flex-wrap: nowrap; gap: 10px; order: 3; }
+.agent-toolbar-map { flex: 0 0 auto; order: 4; }
 .agent-list-view[hidden], .agent-map-view[hidden], .agent-detail-view[hidden] { display: none; }
 
 /* Группы по роли: uppercase-лейбл + hairline + бейдж-счётчик (как hub «Обучения»). */
@@ -89,7 +86,7 @@
 
 /* Паспорт-цепочка: иконка-чип 32 + сериф-имя + статус-точка; описание ellipsis ×2; модель mono. */
 .agent-list-card { appearance: none; width: 100%; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
-.agent-role-card { display: flex; flex-direction: column; gap: var(--space-2); min-height: 140px; box-sizing: border-box; padding: var(--space-3) var(--space-4); background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-8); transition: border-color var(--motion-fast); }
+.agent-role-card { display: flex; flex-direction: column; gap: var(--space-2); min-height: 140px; box-sizing: border-box; padding: var(--space-3) var(--space-4); background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-8); box-shadow: none; transition: border-color var(--motion-fast); }
 .agent-role-card:hover { border-color: var(--accent-gold); }
 .agent-role-card:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
 .agent-role-head { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
@@ -99,7 +96,7 @@
 .agent-role-name { flex: 1 1 auto; min-width: 0; font-family: var(--font-heading); font-size: 16px; font-weight: 600; line-height: 1.3; color: var(--text-primary); }
 .agent-role-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 0; color: var(--text-secondary); font-size: var(--text-14); line-height: 1.5; }
 .agent-role-foot { display: flex; align-items: center; gap: var(--space-2); margin-top: auto; }
-.agent-role-foot .agent-status { margin-left: auto; }
+.agent-role-head .agent-status { margin-left: auto; }
 .agent-model-chip { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 var(--ui-11)/1.5 var(--font-mono); white-space: nowrap; }
 
 /* Статусы §6: Активен — золотая точка; В разработке — нейтральный; Заглушка — muted. */
@@ -126,11 +123,10 @@
 /* Mobile §5.3: одна колонка, края = края шапки, строки тулбара стекуются. */
 @media (max-width: 560px) {
   .agent-controls-panel { padding: var(--space-2) var(--space-3); }
-  .agent-toolbar-row { flex-wrap: wrap; }
   .agents-search { flex: 1 1 100%; }
-  .agent-toolbar-map { width: 100%; justify-content: center; }
-  .agent-toolbar-actions { margin-left: 0; width: 100%; justify-content: space-between; }
-  .agent-filter-chips { width: 100%; }
+  .agent-filter-chips { width: 100%; order: 2; overflow-x: auto; }
+  .agent-toolbar-actions { width: 100%; justify-content: space-between; order: 3; }
+  .agent-toolbar-map { flex: 1 1 100%; justify-content: center; order: 4; }
   .agent-group-body { grid-template-columns: 1fr; }
   .agent-list-row { flex-wrap: wrap; }
   .agent-list-row-desc { flex: 1 1 100%; order: 5; }

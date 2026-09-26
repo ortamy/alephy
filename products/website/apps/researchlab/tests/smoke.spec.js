@@ -65,6 +65,25 @@ async function checkRoute(page, route, projectName) {
   await client.detach();
 }
 
+test('agent registry keeps every icon chip populated and cards light', async ({ page }) => {
+  await page.goto('/#ai-agents', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#ai-agents .agent-list-card').first()).toBeVisible();
+  const violations = await page.locator('#ai-agents').evaluate((root) => {
+    const isDark = (value) => {
+      const match = value.match(/\d+/g);
+      if (!match) return false;
+      const [r, g, b] = match.map(Number);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 96;
+    };
+    return {
+      emptyIcons: Array.from(root.querySelectorAll('.agent-icon-chip')).filter((chip) => !chip.querySelector('svg')).length,
+      darkCards: Array.from(root.querySelectorAll('.agent-role-card')).filter((card) => isDark(getComputedStyle(card).backgroundColor)).length
+    };
+  });
+  expect(violations.emptyIcons).toBe(0);
+  expect(violations.darkCards).toBe(0);
+});
+
 test('timeline hub cards open a full feed and return to catalog', async ({ page }) => {
   await page.goto('/#timeline', { waitUntil: 'domcontentloaded' });
   const card = page.locator('.tl-card').first();

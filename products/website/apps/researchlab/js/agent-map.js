@@ -307,9 +307,7 @@
       var id = card.dataset.agentId;
       var settings = state.settings[id];
       if (!settings) return;
-      var role = card.querySelector('.agent-list-role');
       var model = card.querySelector('.agent-list-model');
-      if (role) role.textContent = settings.role;
       if (model) model.textContent = settings.model;
       card.classList.toggle('is-inactive', !settings.active);
     });

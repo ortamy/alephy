@@ -162,7 +162,10 @@ const PageController = (function() {
       { icon: 'ui/link', name: 'Связной', desc: 'Связывает разрозненные исследования в единую сеть.', model: 'Claude Sonnet 4', cat: 'Оркестрация' }
     ];
     var agentSlugs = ['orchestrator', 'researcher', 'exposer', 'collector', 'critic', 'semitologist', 'comparator', 'editor', 'paleo-translator', 'frontend-developer', 'ai-engineer', 'verifier', 'technical-writer', 'code-reviewer', 'flow-architect', 'liaison'];
-    agents.forEach(function(agent, index) { agent.id = agentSlugs[index] || ('agent-' + index); });
+    agents.forEach(function(agent, index) {
+      agent.id = agentSlugs[index] || ('agent-' + index);
+      if (agent.model === '—') agent.model = '';
+    });
     return agents;
   }
 
@@ -170,6 +173,7 @@ const PageController = (function() {
   var AGENT_VIEW_KEY = 'alephy_agents_view';
   var AGENT_GROUPS = ['Оркестрация', 'Исследование', 'Контроль качества', 'Документация', 'Разработка'];
   var AGENT_STATUSES = { active: 'Активен', dev: 'В разработке', stub: 'Заглушка' };
+  var AGENT_STATUS_I18N = { active: 'lab.agents.status.active', dev: 'lab.agents.status.dev', stub: 'lab.agents.status.stub' };
   var AGENT_ICONS = {
     orchestrator: 'workflow', researcher: 'flask-conical', exposer: 'search-x', collector: 'folder-output',
     critic: 'gavel', semitologist: 'book-open-text', comparator: 'scale', editor: 'pen-line',
@@ -185,7 +189,18 @@ const PageController = (function() {
   }
 
   function getAgentIcon(agent) {
-    return AGENT_ICONS[agent.id] || 'bot';
+    var categoryIcons = {
+      'Оркестрация': 'workflow',
+      'Исследование': 'search',
+      'Контроль качества': 'shield',
+      'Документация': 'file-text',
+      'Разработка': 'code-2'
+    };
+    return categoryIcons[agent.cat] || AGENT_ICONS[agent.id] || 'bot';
+  }
+
+  function agentT(key, fallback) {
+    return (window.AlephyI18n && window.AlephyI18n.t) ? window.AlephyI18n.t(key, fallback) : fallback;
   }
 
   function pluralizeRoles(n) {
@@ -194,8 +209,9 @@ const PageController = (function() {
 
   function agentStatusMarkup(status, withLabel) {
     var cls = 'agent-status agent-status--' + status + (withLabel ? '' : ' agent-status--dot');
+    var statusLabel = agentT(AGENT_STATUS_I18N[status], AGENT_STATUSES[status]);
     return '<span class="' + cls + '"><span class="agent-status-dot" aria-hidden="true"></span>' +
-      (withLabel ? '<span class="agent-status-label">' + AGENT_STATUSES[status] + '</span>' : '') + '</span>';
+      (withLabel ? '<span class="agent-status-label">' + statusLabel + '</span>' : '') + '</span>';
   }
 
   function filterAgents(agents, state) {
@@ -206,16 +222,14 @@ const PageController = (function() {
       return true;
     });
   }
-
   function renderAgentCard(a) {
     var status = getAgentStatus(a);
     var model = status === 'stub' ? 'без модели' : a.model;
     return '<button type="button" class="agent-list-card agent-role-card" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '">' +
       '<span class="agent-role-head"><span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + getAgentIcon(a) + '"></i></span>' +
-      '<span class="agent-role-name">' + a.name + '</span></span>' +
+      '<span class="agent-role-name">' + a.name + '</span>' + agentStatusMarkup(status, true) + '</span>' +
       '<span class="agent-role-desc">' + a.desc + '</span>' +
-      '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span>' +
-      '<span class="agent-list-role" hidden>' + a.cat + '</span>' + agentStatusMarkup(status, true) + '</span></button>';
+      '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span></span></button>';
   }
 
   function renderAgentRow(a) {
@@ -226,7 +240,6 @@ const PageController = (function() {
       '<span class="agent-list-row-name">' + a.name + '</span>' +
       '<span class="agent-list-row-desc">' + a.desc + '</span>' +
       '<span class="agent-model-chip agent-list-model">' + model + '</span>' +
-      '<span class="agent-list-role" hidden>' + a.cat + '</span>' +
       '<span class="agent-list-row-status">' + agentStatusMarkup(status, true) + '</span></button>';
   }
 
@@ -2679,11 +2692,8 @@ const PageController = (function() {
         try { agentsUiState.view = localStorage.getItem(AGENT_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { agentsUiState.view = 'cards'; }
         agentsUiState.status = 'all';
         agentsUiState.query = '';
-        var agentsToolbar = '<div class="agent-toolbar-row agent-toolbar-row--search">' +
+        var agentsToolbar = '<div class="agent-toolbar-row">' +
           '<input type="search" class="lab-input agents-search" data-agents-search placeholder="Поиск по ролям…" aria-label="Поиск по агентам">' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-map" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
-          '</div>' +
-          '<div class="agent-toolbar-row agent-toolbar-row--filters">' +
           '<div class="agent-filter-chips" role="group" aria-label="Фильтр по статусу">' +
           '<button type="button" class="pipeline-chip active" data-agent-status="all">Все</button>' +
           '<button type="button" class="pipeline-chip" data-agent-status="active">Активен</button>' +
@@ -2694,13 +2704,15 @@ const PageController = (function() {
           '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'cards' ? ' active' : '') + '" data-agents-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'list' ? ' active' : '') + '" data-agents-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button></div>' +
-          '</div></div>';
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-map" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
+          '</div>';
         container.innerHTML = '<section class="agent-controls-panel" aria-label="Управление агентами">' + agentsToolbar + '</section>' +
           '<div class="agent-list-view' + (agentsUiState.view === 'list' ? ' is-list-view' : '') + '">' + renderAgentGroups(agents, agentsUiState).html + '</div>' +
           '<div id="agent-detail-view" class="agent-detail-view" hidden></div>' +
           '<div id="agent-map-view" class="agent-map-view" hidden></div>';
         updateAgentsCount(container, getAgentMapData().length);
         initAgentsToolbar(container);
+        if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
         container.dataset.loaded = '1';
         if (parsed && parsed.segments && parsed.segments[1]) {
           renderAgentDetail(container, parsed.segments[1]);
