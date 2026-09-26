@@ -26,12 +26,21 @@
     return result;
   }
 
+  /* Чип может быть строкой или { label, key, className, dot, action }.
+     key — i18n-ключ подписи, action — кликабельный чип (data-lab-action:
+     модуль слушает его делегированно внутри своего контейнера).
+     dot — точка по легенде §6 для статусных чипов (агент: Активен / В разработке / Заглушка). */
   function metaChips(chips) {
     if (!chips || !chips.length) return '';
     return '<div class="lab-hero__meta">' + chips.map(function (c) {
-      var label = typeof c === 'object' ? c.label : c;
+      var label = typeof c === 'object' ? (c.key ? i18nText(c.key, c.label) : c.label) : c;
       var className = typeof c === 'object' && c.className ? ' ' + esc(c.className) : '';
-      return '<span class="lab-hero__chip' + className + '">' + esc(label) + '</span>';
+      var dot = typeof c === 'object' && c.dot ? '<span class="lab-hero__chip-dot" aria-hidden="true"></span>' : '';
+      if (typeof c === 'object' && c.action) {
+        return '<button type="button" class="lab-hero__chip lab-hero__chip--action' + className + '"' +
+          ' data-lab-action="' + esc(c.action) + '">' + dot + esc(label) + '</button>';
+      }
+      return '<span class="lab-hero__chip' + className + '">' + dot + esc(label) + '</span>';
     }).join('') + '</div>';
   }
 
@@ -39,19 +48,24 @@
      config: { kicker, title, subtitle, icon, meta:[] } */
   function heroHtml(config) {
     var titleId = config.titleId ? ' id="' + config.titleId + '"' : '';
+    var titleTone = config.titleTone === 'ink' ? ' lab-hero__title--ink' : '';
     return (
       '<div class="lab-hero__body">' +
         (config.kicker ? '<p class="lab-hero__kicker">' + esc(config.kicker) + '</p>' : '') +
-        '<h1 class="lab-hero__title"' + titleId + '>' +
+        '<h1 class="lab-hero__title' + titleTone + '"' + titleId + '>' +
           '<span class="lab-hero__title-main">' +
           (config.icon ? '<img class="lab-hero__icon" src="assets/icons/32/' + config.icon + '" alt="" aria-hidden="true">' : '') +
           esc(config.title) +
           '</span>' +
         '</h1>' +
         (config.badge ? '<span class="lab-hero__badge ' + esc(config.badge.className || '') + '">' + esc(config.badge.label) + '</span>' : '') +
-        (config.subtitle ? '<p class="lab-hero__subtitle">' + esc(config.subtitle) + '</p>' : '') +
+        (config.subtitle ? '<p class="lab-hero__subtitle' + (config.subtitleClass ? ' ' + esc(config.subtitleClass) : '') + '">' + esc(config.subtitle) + '</p>' : '') +
         metaChips(config.meta) +
-      '</div>'
+      '</div>' +
+      // Глиф-чип справа: квадрат hairline, палео-глиф тоном шапки (§5.1).
+      (config.glyphIcon
+        ? '<span class="lab-hero__glyph" aria-hidden="true"><i data-lucide="' + esc(config.glyphIcon) + '"></i></span>'
+        : (config.glyph ? '<span class="lab-hero__glyph" aria-hidden="true">' + esc(config.glyph) + '</span>' : ''))
     );
   }
 
@@ -93,9 +107,9 @@
       icon: 'scribe/scrolls.png'
     },
     'root-dictionary': {
-      kicker: 'АЛЕФИ · КОРНЕВОЙ СЛОВАРЬ',
+      kicker: 'АЛЕФИ · СЛОВАРИ · КОРНЕВОЙ',
       title: 'Корневой словарь',
-      subtitle: 'Поиск по корням иврита: форма, значение и восстановленная физика слова.',
+      subtitle: 'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.',
       icon: 'ui/book.png'
     },
     'heraldry': {
@@ -115,6 +129,23 @@
       title: 'Карта состояний',
       subtitle: 'Наблюдение за состояниями системы и переходами между ними.',
       icon: 'ui/web.png'
+    },
+    'state-checker': {
+      kicker: 'АЛЕФИ · ЧЕКЕР СТРАН',
+      title: 'Чекер стран',
+      subtitle: 'Диагностика страны по восьми состояниям пространств: доминанта, распределение и вывод.',
+      icon: 'ui/web.png'
+    },
+    'tree-checker': {
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ДЕРЕВО',
+      title: 'Чекер дерева',
+      subtitle: 'Проведите учение от семени до плодов: на каждом уровне зафиксируйте наблюдение и оцените, держится ли дерево.',
+      titleTone: 'ink',
+      meta: [
+        { label: 'Быстрая проверка:', className: 'lab-hero__chip--label' },
+        { key: 'lab.treeChecker.quickPreset', label: 'Троица', action: 'tree-preset' },
+        { key: 'lab.treeChecker.quickReset', label: 'Очистить', action: 'tree-reset' }
+      ]
     },
     'paleo-mechanics': {
       kicker: 'АЛЕФИ · ПАЛЕО-МЕХАНИКА',
@@ -140,6 +171,12 @@
       subtitle: 'Сборка точного исследовательского запроса из фрагментов, методов и ограничений.',
       icon: 'ui/question.png'
     },
+    'video-lab': {
+      kicker: 'АЛЕФИ · ГЕНЕРАТОРЫ · ВИЗУАЛИЗАЦИЯ',
+      title: 'Генератор видео-образов',
+      subtitle: 'Визуализируй механику слова: буквы, состояния и переходы в движении.',
+      glyphIcon: 'clapperboard'
+    },
     'board': {
       kicker: 'АЛЕФИ · ИССЛЕДОВАТЕЛЬСКАЯ ДОСКА',
       title: 'Исследовательская доска',
@@ -159,8 +196,8 @@
       icon: 'ui/question.png'
     },
     'davar-checker': {
-      kicker: 'АЛЕФИ · ЧЕКЕРЫ',
-      title: 'Чекеры',
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ВОПЛОЩЕНИЕ',
+      title: 'Чекер воплощения',
       subtitle: 'Проверка слова: обозначает ли оно конструкцию с физическим эквивалентом или остаётся пустым звуком.',
       icon: 'ui/question.png'
     },
@@ -181,6 +218,18 @@
       title: 'Генераторы',
       subtitle: 'Соберите рабочее поле, маршрут исследования или точный запрос к инструменту.',
       icon: 'crafts/hammer-and-chisel.png'
+    },
+    'timescale-generator': {
+      kicker: 'АЛЕФИ · ГЕНЕРАТОР ШКАЛЫ',
+      title: 'Генератор шкалы времени',
+      subtitle: 'Диапазон, ленты и шаг оси: события по датам одной линией.',
+      icon: 'ui/clock.png'
+    },
+    'hypothesis-generator': {
+      kicker: 'АЛЕФИ · ГЕНЕРАТОР ГИПОТЕЗ',
+      title: 'Генератор гипотез',
+      subtitle: 'Альтернативные чтения объекта с открытым тестом на опровержение.',
+      icon: 'ui/diff.png'
     },
     'clue-generator': {
       kicker: 'АЛЕФИ · ГЕНЕРАТОР УЛИК',
@@ -219,10 +268,11 @@
       icon: 'scribe/scroll.png'
     },
     'investigation': {
-      kicker: 'АЛЕФИ · РАССЛЕДОВАНИЕ',
-      title: 'Расследование',
-      subtitle: 'Пошаговое движение от наблюдения к источнику, сдвигу и восстановленному выводу.',
-      icon: 'ui/question.png'
+      kicker: 'АЛЕФИ · ЧЕКЕРЫ · ПОДМЕНЫ',
+      title: 'Чекер подмен',
+      subtitle: 'Метод «Расследование»: увидьте цепочку смысловых подмен.',
+      icon: 'ui/question.png',
+      glyphIcon: 'search'
     },
     'religionisms': {
       kicker: 'АЛЕФИ · РЕЛИГИОНИЗМЫ',
@@ -453,15 +503,24 @@
     return element;
   }
 
-  // Для модулей без статической записи шапка не маскируется под route-id.
+  /* Модуль без записи в TARGETS получает генерический герой из имени маршрута:
+     служебный текст («нет записи») пользователю не показывается никогда,
+     о пропуске сообщаем только в консоль. */
+  function routeLabel(moduleId) {
+    var words = String(moduleId || '').replace(/[-_/]+/g, ' ').replace(/\s+/g, ' ').trim().split(' ');
+    return words.map(function (word) {
+      return word ? word.charAt(0).toLocaleUpperCase('ru-RU') + word.slice(1) : word;
+    }).join(' ');
+  }
+
   function fallbackConfig(moduleId) {
-    if (typeof console !== 'undefined' && console.error) {
-      console.error('[LabHero] нет TARGETS для маршрута «' + moduleId + '»');
+    if (typeof console !== 'undefined' && console.warn) {
+      console.warn('[LabHero] нет TARGETS для маршрута «' + moduleId + '» — собран генерический герой');
     }
     return {
-      kicker: 'АЛЕФИ · ОШИБКА ШАПКИ',
-      title: 'Нет записи шапки',
-      subtitle: 'Маршрут «' + moduleId + '» не зарегистрирован в LabHero.TARGETS.'
+      kicker: 'АЛЕФИ',
+      title: i18nText('lab.nav.' + moduleId, routeLabel(moduleId)),
+      subtitle: ''
     };
   }
 
@@ -520,7 +579,11 @@
       kicker: config.kicker || '',
       title: config.title || '',
       subtitle: config.subtitle || '',
+      subtitleClass: config.subtitleClass || '',
       icon: config.icon || '',
+      glyph: config.glyph || '',
+      glyphIcon: config.glyphIcon || '',
+      titleTone: config.titleTone || '',
       badge: config.badge || null,
       meta: config.meta || []
     });

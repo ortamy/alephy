@@ -115,7 +115,9 @@ const PageController = (function() {
     try {
       if (moduleId === 'paleo-builder' && window.PaleoBuilder) window.PaleoBuilder.init(container);
       if (moduleId === 'video-lab' && window.VideoLab) window.VideoLab.init(container);
-      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init();
+      if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
+      if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
+      if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init(container);
       if (window.RevealObserver) window.RevealObserver.scan(container);
     } catch (error) {
       console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
@@ -143,16 +145,16 @@ const PageController = (function() {
   function getAgentMapData() {
     var agents = [
       { icon: 'ui/arrows', name: 'Оркестратор', desc: 'Оркестратор — получает запрос, разбивает его на подзадачи и распределяет их между агентами.', model: 'ALEPHY', cat: 'Оркестрация', featured: true },
-      { icon: 'archaeology/testtube', name: 'Исследователь', desc: 'Разбирает корни, стихи, термины.', model: 'Claude Sonnet 4', cat: 'Исследователь' },
-      { icon: 'ui/question', name: 'Разоблачитель', desc: 'Ищет подмены в переводах, сравнивает LXX и Синодальный.', model: 'GPT-4o', cat: 'Исследователь' },
+      { icon: 'archaeology/testtube', name: 'Исследователь', desc: 'Разбирает корни, стихи, термины.', model: 'Claude Sonnet 4', cat: 'Исследование' },
+      { icon: 'ui/question', name: 'Разоблачитель', desc: 'Ищет подмены в переводах, сравнивает LXX и Синодальный.', model: 'GPT-4o', cat: 'Исследование' },
       { icon: 'scribe/scrolls', name: 'Сборщик', desc: 'Объединяет результаты в единый отчёт.', model: 'Claude Haiku 3.5', cat: 'Оркестрация' },
       { icon: 'ui/scales', name: 'Критик', desc: 'Проверяет разбор на соответствие методологии.', model: 'Claude Sonnet 4', cat: 'Контроль качества' },
-      { icon: 'seals/ring', name: 'Семитолог', desc: 'Авто-вывод не выполняется: требуется ручная сверка параллелей по словарям (заглушка).', model: '—', cat: 'Исследователь' },
-      { icon: 'scribe/scroll', name: 'Компаратор', desc: 'Сравнение свидетелей требует внешних источников; авто-вывод не выполняется (заглушка).', model: '—', cat: 'Исследователь' },
+      { icon: 'seals/ring', name: 'Семитолог', desc: 'Авто-вывод не выполняется: требуется ручная сверка параллелей по словарям (заглушка).', model: '—', cat: 'Исследование' },
+      { icon: 'scribe/scroll', name: 'Компаратор', desc: 'Сравнение свидетелей требует внешних источников; авто-вывод не выполняется (заглушка).', model: '—', cat: 'Исследование' },
       { icon: 'ui/keyboard', name: 'Редактор', desc: 'Приводит черновик к стилю проекта.', model: 'Claude Haiku 3.5', cat: 'Документация' },
-      { icon: 'scribe/scroll', name: 'Переводчик палео-иврита', desc: 'Переводит букву через палео-образ к физическому смыслу.', model: 'Claude Sonnet 4', cat: 'Исследователь' },
-      { icon: 'crafts/hammer-and-chisel', name: 'Фронтенд-разработчик', desc: 'Заглушка: генерация интерфейсов появится после подключения LLM-движка.', model: '—', cat: 'Разработчик' },
-      { icon: 'ui/settings', name: 'AI-инженер', desc: 'Заглушка: подготовка задач для LLM-инженера после подключения модели.', model: '—', cat: 'Разработчик' },
+      { icon: 'scribe/scroll', name: 'Переводчик палео-иврита', desc: 'Переводит букву через палео-образ к физическому смыслу.', model: 'Claude Sonnet 4', cat: 'Исследование' },
+      { icon: 'crafts/hammer-and-chisel', name: 'Фронтенд-разработчик', desc: 'Заглушка: генерация интерфейсов появится после подключения LLM-движка.', model: '—', cat: 'Разработка' },
+      { icon: 'ui/settings', name: 'AI-инженер', desc: 'Заглушка: подготовка задач для LLM-инженера после подключения модели.', model: '—', cat: 'Разработка' },
       { icon: 'ui/scales', name: 'Проверяющий', desc: 'Валидирует код, данные и исследовательские гипотезы.', model: 'Claude Sonnet 4', cat: 'Контроль качества' },
       { icon: 'scribe/scroll', name: 'Технический писатель', desc: 'Заглушка: оформление документации после подключения LLM.', model: '—', cat: 'Документация' },
       { icon: 'ui/scales', name: 'Ревьюер кода', desc: 'Заглушка: авто-ревью кода появится после подключения LLM.', model: '—', cat: 'Контроль качества' },
@@ -160,9 +162,147 @@ const PageController = (function() {
       { icon: 'ui/link', name: 'Связной', desc: 'Связывает разрозненные исследования в единую сеть.', model: 'Claude Sonnet 4', cat: 'Оркестрация' }
     ];
     var agentSlugs = ['orchestrator', 'researcher', 'exposer', 'collector', 'critic', 'semitologist', 'comparator', 'editor', 'paleo-translator', 'frontend-developer', 'ai-engineer', 'verifier', 'technical-writer', 'code-reviewer', 'flow-architect', 'liaison'];
-    agents.forEach(function(agent, index) { agent.id = agentSlugs[index] || ('agent-' + index); });
+    agents.forEach(function(agent, index) {
+      agent.id = agentSlugs[index] || ('agent-' + index);
+      if (agent.model === '—') agent.model = '';
+    });
     return agents;
   }
+
+  // Честный статус заглушек (§6): без модели → «Заглушка», featured → «Активен», остальные «В разработке».
+  var AGENT_VIEW_KEY = 'alephy_agents_view';
+  var AGENT_GROUPS = ['Оркестрация', 'Исследование', 'Контроль качества', 'Документация', 'Разработка'];
+  var AGENT_STATUSES = { active: 'Активен', dev: 'В разработке', stub: 'Заглушка' };
+  var AGENT_STATUS_I18N = { active: 'lab.agents.status.active', dev: 'lab.agents.status.dev', stub: 'lab.agents.status.stub' };
+  var AGENT_ICONS = {
+    orchestrator: 'workflow', researcher: 'flask-conical', exposer: 'search-x', collector: 'folder-output',
+    critic: 'gavel', semitologist: 'book-open-text', comparator: 'scale', editor: 'pen-line',
+    'paleo-translator': 'languages', 'frontend-developer': 'braces', 'ai-engineer': 'cpu', verifier: 'shield-check',
+    'technical-writer': 'book-open', 'code-reviewer': 'git-pull-request', 'flow-architect': 'network', liaison: 'link'
+  };
+  var agentsUiState = { view: 'cards', status: 'all', query: '' };
+
+  function getAgentStatus(agent) {
+    if (agent.featured) return 'active';
+    if (!agent.model || agent.model === '—') return 'stub';
+    return 'dev';
+  }
+
+  function getAgentIcon(agent) {
+    var categoryIcons = {
+      'Оркестрация': 'workflow',
+      'Исследование': 'search',
+      'Контроль качества': 'shield',
+      'Документация': 'file-text',
+      'Разработка': 'code-2'
+    };
+    return categoryIcons[agent.cat] || AGENT_ICONS[agent.id] || 'bot';
+  }
+
+  function agentT(key, fallback) {
+    return (window.AlephyI18n && window.AlephyI18n.t) ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  function pluralizeRoles(n) {
+    return window.LabPlural ? LabPlural(n, 'роль', 'роли', 'ролей') : n + ' ролей';
+  }
+
+  function agentStatusMarkup(status, withLabel) {
+    var cls = 'agent-status agent-status--' + status + (withLabel ? '' : ' agent-status--dot');
+    var statusLabel = agentT(AGENT_STATUS_I18N[status], AGENT_STATUSES[status]);
+    return '<span class="' + cls + '"><span class="agent-status-dot" aria-hidden="true"></span>' +
+      (withLabel ? '<span class="agent-status-label">' + statusLabel + '</span>' : '') + '</span>';
+  }
+
+  function filterAgents(agents, state) {
+    var query = state.query.trim().toLowerCase();
+    return agents.filter(function(agent) {
+      if (state.status !== 'all' && getAgentStatus(agent) !== state.status) return false;
+      if (query && (agent.name + ' ' + agent.desc + ' ' + (agent.model || '')).toLowerCase().indexOf(query) === -1) return false;
+      return true;
+    });
+  }
+  function renderAgentCard(a) {
+    var status = getAgentStatus(a);
+    var model = status === 'stub' ? 'без модели' : a.model;
+    return '<button type="button" class="agent-list-card agent-role-card" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '">' +
+      '<span class="agent-role-head"><span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + getAgentIcon(a) + '"></i></span>' +
+      '<span class="agent-role-name">' + a.name + '</span>' + agentStatusMarkup(status, true) + '</span>' +
+      '<span class="agent-role-desc">' + a.desc + '</span>' +
+      '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span></span></button>';
+  }
+
+  function renderAgentRow(a) {
+    var status = getAgentStatus(a);
+    var model = status === 'stub' ? 'без модели' : a.model;
+    return '<button type="button" class="agent-list-card agent-list-row" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '">' +
+      '<span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + getAgentIcon(a) + '"></i></span>' +
+      '<span class="agent-list-row-name">' + a.name + '</span>' +
+      '<span class="agent-list-row-desc">' + a.desc + '</span>' +
+      '<span class="agent-model-chip agent-list-model">' + model + '</span>' +
+      '<span class="agent-list-row-status">' + agentStatusMarkup(status, true) + '</span></button>';
+  }
+
+  function renderAgentGroups(agents, state) {
+    var itemMarkup = state.view === 'list' ? renderAgentRow : renderAgentCard;
+    var sections = [];
+    var total = 0;
+    AGENT_GROUPS.forEach(function(cat) {
+      var items = agents.filter(function(a) { return a.cat === cat; });
+      if (!items.length) return;
+      total += items.length;
+      sections.push('<section class="agent-group" data-agent-group="' + cat + '">' +
+        '<header class="agent-group-head"><span class="agent-group-label">' + cat + '</span>' +
+        '<span class="agent-group-rule" aria-hidden="true"></span>' +
+        '<span class="agent-group-count">' + pluralizeRoles(items.length) + '</span></header>' +
+        '<div class="agent-group-body' + (state.view === 'list' ? ' is-list' : '') + '">' +
+        items.map(itemMarkup).join('') + '</div></section>');
+    });
+    return { html: sections.join(''), total: total };
+  }
+
+  function updateAgentsCount(container, shown) {
+    var count = container.querySelector('[data-agents-count]');
+    if (count) count.innerHTML = '<strong>' + shown + '</strong> из ' + getAgentMapData().length;
+  }
+
+  function refreshAgentsList(container) {
+    var list = container.querySelector('.agent-list-view');
+    if (!list) return;
+    var result = renderAgentGroups(filterAgents(getAgentMapData(), agentsUiState), agentsUiState);
+    var empty = '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>';
+    list.innerHTML = (result.html || empty);
+    list.classList.toggle('is-list-view', agentsUiState.view === 'list');
+    updateAgentsCount(container, result.total);
+    if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
+  }
+
+  function initAgentsToolbar(container) {
+    container.querySelectorAll('[data-agent-status]').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        agentsUiState.status = chip.dataset.agentStatus;
+        container.querySelectorAll('[data-agent-status]').forEach(function(other) { other.classList.toggle('active', other === chip); });
+        refreshAgentsList(container);
+      });
+    });
+    var search = container.querySelector('[data-agents-search]');
+    if (search) search.addEventListener('input', function() {
+      agentsUiState.query = this.value;
+      refreshAgentsList(container);
+    });
+    container.querySelectorAll('[data-agents-view]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        agentsUiState.view = btn.dataset.agentsView;
+        try { localStorage.setItem(AGENT_VIEW_KEY, agentsUiState.view); } catch (error) { /* приватный режим */ }
+        container.querySelectorAll('[data-agents-view]').forEach(function(other) { other.classList.toggle('active', other === btn); });
+        refreshAgentsList(container);
+      });
+    });
+    container.querySelector('[data-agent-map-open]').addEventListener('click', function() {
+      if (window.AgentMap) window.AgentMap.open();
+    });
+  }
+
 
   // ===== JSON-СТРАНИЦЫ (словари, методология, палео-механика) =====
 
@@ -185,6 +325,252 @@ const PageController = (function() {
     });
   }
 
+  // ===== РЕЕСТР СЛОВАРЕЙ: группы, поиск, честные плюрали =====
+
+  var DICT_VIEW_KEY = 'alephy_dict_view';
+  var DICT_SORT_KEY = 'alephy_dict_sort';
+  var dictUiState = { view: '', sort: '', query: '' };
+
+  function dictT(key, fallback) {
+    return (window.AlephyI18n && window.AlephyI18n.t) ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  function dictPlural(n, one, few, many) {
+    return window.LabPlural ? LabPlural(n, one, few, many) : n + ' ' + many;
+  }
+
+  function dictReadView() {
+    if (dictUiState.view) return dictUiState.view;
+    var saved = '';
+    try { saved = localStorage.getItem(DICT_VIEW_KEY) || ''; } catch (e) { /* приватный режим */ }
+    if (saved === 'grid' || saved === 'list') { dictUiState.view = saved; return saved; }
+    dictUiState.view = (window.matchMedia && window.matchMedia('(max-width: 640px)').matches) ? 'list' : 'grid';
+    return dictUiState.view;
+  }
+
+  function dictSaveView(view) {
+    dictUiState.view = view;
+    try { localStorage.setItem(DICT_VIEW_KEY, view); } catch (e) { /* приватный режим */ }
+  }
+
+  function dictReadSort() {
+    if (dictUiState.sort) return dictUiState.sort;
+    var saved = '';
+    try { saved = localStorage.getItem(DICT_SORT_KEY) || ''; } catch (e) { /* приватный режим */ }
+    dictUiState.sort = (saved === 'volume') ? 'volume' : 'alpha';
+    return dictUiState.sort;
+  }
+
+  function dictSaveSort(sort) {
+    dictUiState.sort = sort;
+    try { localStorage.setItem(DICT_SORT_KEY, sort); } catch (e) { /* приватный режим */ }
+  }
+
+  /* Состояние тулбара дублируется в hash (?q=&sort=&view=) для deep-link. */
+  function dictSyncHash() {
+    var params = [];
+    if (dictUiState.query) params.push('q=' + encodeURIComponent(dictUiState.query));
+    if (dictUiState.sort === 'volume') params.push('sort=' + dictUiState.sort);
+    if (dictUiState.view && dictUiState.view !== 'grid') params.push('view=' + dictUiState.view);
+    var hash = '#dictionaries' + (params.length ? '?' + params.join('&') : '');
+    history.replaceState(null, '', hash);
+  }
+
+  function dictEntry(key, title, description, count, icon, route, rootCount) {
+    var countHtml = count != null
+      ? dictPlural(count, 'термин', 'термина', 'терминов')
+      : dictPlural(rootCount, 'корень', 'корня', 'корней');
+    return {
+      key: key,
+      route: route,
+      icon: icon,
+      title: title,
+      desc: (description || '').split('---')[0].trim(),
+      volume: count != null ? count : rootCount,
+      countHtml: countHtml
+    };
+  }
+
+  function dictMarkup(entry, view) {
+    var href = '#dictionaries/' + encodeURIComponent(entry.route);
+    var desc = escapeHtml(entry.desc.length > 140 ? entry.desc.substring(0, 140) + '…' : entry.desc);
+    if (view === 'list') {
+      return '<a href="' + href + '" class="dict-list-row" data-key="' + escapeHtml(entry.key) + '">' +
+        '<span class="dict-icon-chip" aria-hidden="true"><i data-lucide="' + entry.icon + '"></i></span>' +
+        '<span class="dict-list-name">' + escapeHtml(entry.title) + '</span>' +
+        '<span class="dict-list-desc">' + desc + '</span>' +
+        '<span class="dict-count">' + entry.countHtml + '</span></a>';
+    }
+    return '<a href="' + href + '" class="dict-card" data-key="' + escapeHtml(entry.key) + '">' +
+      '<span class="dict-icon-chip" aria-hidden="true"><i data-lucide="' + entry.icon + '"></i></span>' +
+      '<span class="dict-name">' + escapeHtml(entry.title) + '</span>' +
+      '<span class="dict-count">' + entry.countHtml + '</span>' +
+      '<span class="dict-desc">' + desc + '</span></a>';
+  }
+
+  function dictSortEntries(entries, sort) {
+    var sorted = entries.slice();
+    if (sort === 'volume') {
+      sorted.sort(function(a, b) { return b.volume - a.volume || a.title.localeCompare(b.title, 'ru'); });
+    } else {
+      sorted.sort(function(a, b) { return a.title.localeCompare(b.title, 'ru'); });
+    }
+    return sorted;
+  }
+
+  // Описание корневого словаря из данных хаба: единый источник для карточки
+  // реестра и динамической шапки (resolveHeroView → override.subtitle).
+  function rootDictionaryDescription() {
+    return 'Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.';
+  }
+
+  function paleoGlossaryDescription() {
+    return 'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.';
+  }
+
+  /* Объём словарей берётся из данных, а не из литералов: словари растут,
+     а карточка реестра не должна показывать устаревшее число. */
+  function dictSyncLiveCounts(container) {
+    [
+      { key: '__root_dictionary', url: 'data/roots/roots.json', plural: ['корень', 'корня', 'корней'] },
+      { key: '__paleo_glossary', url: 'data/paleo-glossary/roots.json', plural: ['слово', 'слова', 'слов'] }
+    ].forEach(function(target) {
+      fetchJson(target.url).then(function(data) {
+        var total = Array.isArray(data) ? data.length : 0;
+        if (!total) return;
+        var node = container.querySelector('[data-key="' + target.key + '"] .dict-count');
+        if (node) node.textContent = dictPlural(total, target.plural[0], target.plural[1], target.plural[2]);
+      }).catch(function() { /* счётчик остаётся резервным — экран не ломается */ });
+    });
+  }
+
+  function renderDictRegistry(container, data, keys) {
+    var view = dictReadView();
+    var sort = dictReadSort();
+    var query = dictUiState.query.trim().toLowerCase();
+
+    var entries = [
+      dictEntry('__root_dictionary', 'Корневой словарь',
+        rootDictionaryDescription(),
+        null, 'book-open', 'root-dictionary', 329),
+      dictEntry('__paleo_glossary', 'Палео-глоссарий',
+        paleoGlossaryDescription(),
+        null, 'languages', 'paleo-glossary', 100)
+    ];
+    keys.forEach(function(key) {
+      var dict = data[key];
+      entries.push(dictEntry(key, dict.title || key, dict.description, (dict.terms || []).length, 'book-marked', key, 0));
+    });
+
+    var total = entries.length;
+    var filtered = query
+      ? entries.filter(function(e) {
+          return (e.title + ' ' + e.desc).toLowerCase().indexOf(query) !== -1;
+        })
+      : entries;
+
+    var SPECIAL = ['__root_dictionary', '__paleo_glossary'];
+    var groups = [
+      { label: dictT('lab.dictionaries.groupMain', 'Основные словари'), main: true },
+      { label: dictT('lab.dictionaries.groupSubstitutions', 'Карты подмен'), main: false }
+    ];
+    var sectionsHtml = '';
+    var shown = 0;
+    groups.forEach(function(group) {
+      var items = dictSortEntries(filtered.filter(function(e) {
+        return group.main ? SPECIAL.indexOf(e.key) !== -1 : SPECIAL.indexOf(e.key) === -1;
+      }), sort);
+      if (!items.length) return;
+      shown += items.length;
+      sectionsHtml += '<section class="dict-group">' +
+        '<header class="dict-group-head"><span class="dict-group-label">' + group.label + '</span>' +
+        '<span class="dict-group-rule" aria-hidden="true"></span>' +
+        '<span class="dict-group-count">' + dictPlural(items.length, 'словарь', 'словаря', 'словарей') + '</span></header>' +
+        '<div class="' + (view === 'list' ? 'dict-grid is-list' : 'dict-grid') + '">' +
+        items.map(function(e) { return dictMarkup(e, view); }).join('') + '</div></section>';
+    });
+
+    container.innerHTML = dictRegistryHtml(view, sectionsHtml, shown, total);
+    bindDictRegistry(container, data, keys);
+    dictSyncLiveCounts(container);
+  }
+
+  function dictRegistryHtml(view, sectionsHtml, shown, total) {
+    var head = '<div class="research-page-head">' +
+      '<h1><i data-lucide="library" class="lab-icon" aria-hidden="true"></i>' +
+      dictT('lab.dictionaries.title', 'Словари') + '</h1>' +
+      '<p class="subtitle">Словарные карты подмен с ивритским соответствием и палео-формой.</p></div>';
+    var toolbar = '<div class="agent-toolbar-row dict-toolbar-row">' +
+      '<input type="search" class="lab-input agents-search" id="dict-registry-search" value="' + escapeHtml(dictUiState.query) + '" ' +
+      'placeholder="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '" ' +
+      'aria-label="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '">' +
+      '<span class="dict-sort-wrap"><select id="dict-sort" class="lab-input dict-sort-select" aria-label="Сортировка">' +
+      '<option value="alpha"' + (dictReadSort() === 'alpha' ? ' selected' : '') + '>' +
+      dictT('lab.dictionaries.sortAlpha', 'Алфавит') + '</option>' +
+      '<option value="volume"' + (dictReadSort() === 'volume' ? ' selected' : '') + '>' +
+      dictT('lab.dictionaries.sortVolume', 'По объёму') + '</option></select></span>' +
+      '<div class="agent-toolbar-actions">' +
+      '<span class="pipeline-count" data-dict-count aria-live="polite"><strong>' + shown + '</strong> ' +
+      dictT('lab.dictionaries.of', 'из') + ' ' + total + '</span>' +
+      '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+      '<button type="button" class="res-view-btn' + (view === 'grid' ? ' active' : '') + '" data-dict-view="grid" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+      '<button type="button" class="res-view-btn' + (view === 'list' ? ' active' : '') + '" data-dict-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+      '</div></div></div>';
+    return head + toolbar +
+      (sectionsHtml || dictEmptyHtml());
+  }
+
+  function dictEmptyHtml() {
+    return '<div class="dict-empty" data-dict-empty>' +
+      '<span class="dict-empty-glyph" aria-hidden="true"><i data-lucide="search-x"></i></span>' +
+      '<p class="dict-empty-hint">' + dictT('lab.dictionaries.emptyHint', 'Ничего не найдено.') + '</p>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-dict-reset>' + dictT('lab.dictionaries.reset', 'Сбросить') + '</button>' +
+      '</div>';
+  }
+
+  function bindDictRegistry(container, data, keys) {
+    container.querySelectorAll('[data-key]').forEach(function(card) {
+      card.addEventListener('click', function(e) {
+        e.preventDefault();
+        var key = this.getAttribute('data-key');
+        var route = key === '__root_dictionary' ? 'root-dictionary' :
+          (key === '__paleo_glossary' ? 'paleo-glossary' : key);
+        if (window.LabRouter) LabRouter.navigate('dictionaries', [encodeURIComponent(route)]);
+      });
+    });
+    var search = container.querySelector('#dict-registry-search');
+    if (search) search.addEventListener('input', function() {
+      dictUiState.query = this.value;
+      dictSyncHash();
+      renderDictRegistry(container, data, keys);
+      var nextSearch = container.querySelector('#dict-registry-search');
+      if (nextSearch) { nextSearch.focus(); nextSearch.setSelectionRange(dictUiState.query.length, dictUiState.query.length); }
+    });
+    var sortSelect = container.querySelector('#dict-sort');
+    if (sortSelect) sortSelect.addEventListener('change', function() {
+      dictSaveSort(this.value);
+      dictSyncHash();
+      renderDictRegistry(container, data, keys);
+      var nextSort = container.querySelector('#dict-sort');
+      if (nextSort) nextSort.focus();
+    });
+    container.querySelectorAll('[data-dict-view]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        dictSaveView(this.getAttribute('data-dict-view'));
+        dictSyncHash();
+        renderDictRegistry(container, data, keys);
+      });
+    });
+    var resetBtn = container.querySelector('[data-dict-reset]');
+    if (resetBtn) resetBtn.addEventListener('click', function() {
+      dictUiState.query = '';
+      dictSyncHash();
+      renderDictRegistry(container, data, keys);
+      var nextSearch = container.querySelector('#dict-registry-search');
+      if (nextSearch) nextSearch.focus();
+    });
+  }
+
   function renderDictionaries(container, data) {
     var state = pageState.dictionaries;
     var parsed = window.LabRouter && LabRouter.parseHash ? LabRouter.parseHash() : null;
@@ -196,6 +582,10 @@ const PageController = (function() {
     if (parsed && parsed.module === 'dictionaries') {
       state.key = routeKey;
       state.query = (parsed.params && parsed.params.q) || '';
+      dictUiState.query = state.query;
+      if (parsed.params && parsed.params.sort === 'volume') dictUiState.sort = 'volume';
+      if (parsed.params && parsed.params.sort === 'alpha') dictUiState.sort = 'alpha';
+      if (parsed.params && (parsed.params.view === 'grid' || parsed.params.view === 'list')) dictUiState.view = parsed.params.view;
     }
     var keys = Object.keys(data);
     if (!keys.length) {
@@ -203,53 +593,7 @@ const PageController = (function() {
       return;
     }
     if (!state.key) {
-      var specialCards = [
-        '<a href="#" class="dict-card" data-key="__root_dictionary" style="animation-delay: 0ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/ui/book.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">Корневой словарь</div>' +
-            '<div class="dict-count">150 корней</div>' +
-          '</div>' +
-          '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.</p>' +
-          '</a>',
-        '<a href="#" class="dict-card" data-key="__paleo_glossary" style="animation-delay: 50ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/paleo/track.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">Палео-глоссарий</div>' +
-            '<div class="dict-count">100 слов</div>' +
-          '</div>' +
-          '<div class="dict-desc">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</div>' +
-          '</a>'
-      ].join('');
-      var dictCards = specialCards + keys.map(function(key, index) {
-        var dict = data[key];
-        var count = (dict.terms || []).length;
-        return '<a href="#" class="dict-card" data-key="' + escapeHtml(key) + '" style="animation-delay: ' + ((index + 2) * 50) + 'ms">' +
-          '<div class="dict-card-top">' +
-            '<img src="assets/icons/32/ui/book.png" class="dict-icon" alt="">' +
-            '<div class="dict-name">' + escapeHtml(dict.title || key) + '</div>' +
-            '<div class="dict-count">' + count + ' терминов</div>' +
-          '</div>' +
-          '<div class="dict-desc">' + escapeHtml((dict.description || '').split('---')[0].trim().substring(0, 100) + (dict.description && dict.description.length > 100 ? '...' : '')) + '</div>' +
-          '</a>';
-      }).join('');
-      container.innerHTML = '<div class="research-page-head">' +
-        '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Словари</h1>' +
-        '<p class="subtitle">Словарные карты подмен с ивритским соответствием и палео-формой.</p>' +
-        '</div>' +
-        '<div class="dict-grid" id="dict-grid">' + dictCards + '</div>';
-      var dictGrid = document.getElementById('dict-grid');
-      if (dictGrid) {
-        dictGrid.querySelectorAll('.dict-card').forEach(function(card) {
-          card.addEventListener('click', function(e) {
-            e.preventDefault();
-            var key = this.getAttribute('data-key');
-            var route = key === '__root_dictionary' ? 'root-dictionary' :
-              (key === '__paleo_glossary' ? 'paleo-glossary' : key);
-            if (window.LabRouter) LabRouter.navigate('dictionaries', [encodeURIComponent(route)]);
-          });
-        });
-      }
+      renderDictRegistry(container, data, keys);
       return;
     }
     if (state.key === '__root_dictionary') {
@@ -257,7 +601,7 @@ const PageController = (function() {
       return;
     }
     if (state.key === '__paleo_glossary') {
-      renderPaleoGlossaryModule(container, data);
+      renderPaleoGlossaryModule(container, data, parsed);
       return;
     }
     var dictionary = data[state.key];
@@ -309,38 +653,27 @@ const PageController = (function() {
   }
 
   function renderRootDictionaryModule(container, data) {
-    var backBtn = '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button>';
-    container.innerHTML = '<div class="research-page-head">' +
-      '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Корневой словарь</h1>' +
-      '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение.</p>' + backBtn +
-      '</div>' +
-      '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-      '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">Корней</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
-      '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
-      '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
-      '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
+    var backBtn = '<div class="rd-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button></div>';
+    container.innerHTML = RootDict.markup() + backBtn;
     if (window.RootDict) RootDict.init();
   }
 
-  function renderPaleoGlossaryModule(container, data) {
-    var backBtn = '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button>';
-    container.innerHTML = '<div class="research-page-head">' +
-      '<div class="paleo-glossary-head">' +
-      '<div class="paleo-glossary-icon" aria-hidden="true">𐤌</div>' +
-      '<div><p class="paleo-glossary-kicker">АЛЕФИ · СЛОВАРИ</p><h1>Палео-глоссарий</h1>' +
-      '<p class="subtitle">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</p></div>' +
-      '</div>' + backBtn +
-      '</div>' +
-      '<div class="paleo-glossary-controls">' +
-      '<label class="paleo-glossary-search">Поиск<input id="paleo-glossary-search" class="lab-input" type="search" placeholder="Палео-форма, слово или транслитерация" autocomplete="off"></label>' +
-      '<label>Корень<select id="paleo-glossary-root" class="lab-input"><option value="all">Все корни</option></select></label>' +
-      '</div>' +
-      '<div id="paleo-glossary-meta" class="paleo-glossary-meta" aria-live="polite"></div>' +
-      '<div id="paleo-glossary-grid" class="paleo-glossary-grid"></div>' +
-      '<nav id="paleo-glossary-pagination" class="paleo-glossary-pagination" aria-label="Страницы глоссария"></nav>';
-    if (window.PaleoGlossary) window.PaleoGlossary.init(container);
+  function renderPaleoGlossaryModule(container, data, parsed) {
+    var partial = PaleoGlossary && PaleoGlossary.markup ? PaleoGlossary.markup('paleo-glossary') : '';
+    var backBtn = '<div class="rg-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">' + escapeHtml(t('lab.paleoGlossary.back', 'Назад к словарям')) + '</button></div>';
+    container.innerHTML = partial + backBtn;
+    applyHashFromParsed(container, parsed);
+    if (window.PaleoGlossary) window.PaleoGlossary.init(container, parsed);
   }
 
+  function applyHashFromParsed(container, parsed) {
+    if (!container || !parsed) return;
+    var params = (parsed && parsed.params) || {};
+    var qField = container.querySelector('[data-t="q"]');
+    var rootField = container.querySelector('[data-t="root"]');
+    if (qField && qField.value !== params.q) qField.value = params.q || '';
+    if (rootField) rootField.value = String(params.root || 'all');
+  }
   function renderInlineMarkdown(text) {
     if (typeof marked !== 'undefined' && marked.parseInline) {
       return marked.parseInline(text || '');
@@ -377,7 +710,7 @@ const PageController = (function() {
       'Алеф': '𐤀', 'Бет': '𐤁', 'Гимель': '𐤂', 'Далет': '𐤃', 'Вав': '𐤅',
       'Хей': '𐤄', 'Заин': '𐤆', 'Хет': '𐤇', 'Тет': '𐤈', 'Йод': '𐤉',
       'Каф': '𐤊', 'Ламед': '𐤋', 'Мем': '𐤌', 'Нун': '𐤍', 'Самех': '𐤎',
-      'Аин': '𐤏', 'Пей': '𐤐', 'Цади': '𐤑', 'Коф': '𐤒', 'Реш': '𐤓',
+      'Аин': '𐤏', 'Айн': '𐤏', 'Пей': '𐤐', 'Цади': '𐤑', 'Коф': '𐤒', 'Реш': '𐤓',
       'Шин': '𐤔', 'Тав': '𐤕'
     };
     return glyphs[letterName] || '';
@@ -394,36 +727,44 @@ const PageController = (function() {
     var exampleText = fields['Пример в слове'] || '';
     var comparisonText = fields['Сравнение с греческой подменой'] || '';
     var steps = fields.steps || [];
-    var cards = [
-      '<article class="paleo-module paleo-module-image">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/paleo/track.png" alt=""><h2>Образ</h2></div>' +
-        '<p class="paleo-module-lead">' + renderInlineMarkdown(image) + '</p>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-function">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/archaeology/testtube.svg" alt=""><h2>Функция</h2></div>' +
-        '<div class="paleo-module-copy">' + renderInlineMarkdown(functionText) + '</div>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-example">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/ui/book.png" alt=""><h2>Пример в слове</h2></div>' +
-        '<div class="paleo-word-display" lang="hbo">' + escapeHtml(paleoWord) + '</div>' +
-        '<div class="paleo-assembly"><span>Сборка</span><strong lang="hbo">' + escapeHtml(paleoAssembly) + '</strong></div>' +
-        '<p class="paleo-module-copy">' + renderInlineMarkdown(exampleText) + '</p>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-steps">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/crafts/hammer-and-chisel.png" alt=""><h2>Как работает</h2></div>' +
-        '<ol class="paleo-steps">' + steps.map(function(step, index) {
-          return '<li class="paleo-step"><span>' + (index + 1) + '</span><div>' + renderInlineMarkdown(step) + '</div></li>';
-        }).join('') + '</ol>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-comparison">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/ui/scales.png" alt=""><h2>Сравнение с греческой подменой</h2></div>' +
-        '<div class="paleo-comparison-copy">' + renderInlineMarkdown(comparisonText) + '</div>' +
-      '</article>'
-    ].join('');
+    var title = documentData.title || 'Документ';
+    // Пять разрозненных карточек свёрнуты в один манускрипт:
+    // рельс с глифом + колонка блоков, разделённых hairline.
+    var blocks = [
+      { label: 'Функция', body: renderInlineMarkdown(functionText) },
+      {
+        label: 'Как работает',
+        body: steps.length
+          ? '<ol class="mech-steps">' + steps.map(function(step) {
+            return '<li>' + renderInlineMarkdown(step) + '</li>';
+          }).join('') + '</ol>'
+          : '<p>' + escapeHtml('Шаги не указаны.') + '</p>'
+      },
+      { label: 'Пример в слове', body: renderInlineMarkdown(exampleText) }
+    ];
+    if (comparisonText) {
+      blocks.push({ label: 'Сравнение с греческой подменой', note: true, body: renderInlineMarkdown(comparisonText) });
+    }
 
-    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page"><div class="paleo-mechanics-actions">' + backBtn + '</div>' +
-      '<div class="research-controls"><label>Документ<select id="research-paleo-mechanics-select" class="lab-input">' + options + '</select></label></div>' +
-      '<div class="paleo-mechanics-modules">' + cards + '</div></div>';
+    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
+      '<div class="mech-bar">' + backBtn +
+        '<label class="mech-field"><span>Документ</span>' +
+        '<select id="research-paleo-mechanics-select" class="lab-input">' + options + '</select></label>' +
+      '</div>' +
+      '<article class="mech-sheet">' +
+        '<header class="mech-head"><span class="mech-kicker">Палео-механика</span><h2>' + escapeHtml(title) + '</h2></header>' +
+        '<div class="mech-layout">' +
+          '<div class="mech-rail">' +
+            '<p class="mech-glyph" lang="hbo">' + escapeHtml(paleoWord) + '</p>' +
+            '<p class="mech-assembly"><span class="mech-label">Сборка</span><b lang="hbo">' + escapeHtml(paleoAssembly) + '</b></p>' +
+            '<p class="mech-image"><span class="mech-label">Образ</span><b>' + escapeHtml(image) + '</b></p>' +
+          '</div>' +
+          '<div class="mech-blocks">' + blocks.map(function(block) {
+            return '<section class="mech-block' + (block.note ? ' mech-block--note' : '') + '">' +
+              '<h3>' + escapeHtml(block.label) + '</h3>' + block.body + '</section>';
+          }).join('') + '</div>' +
+        '</div>' +
+      '</article></div>';
 
     var select = document.getElementById('research-paleo-mechanics-select');
     if (select) select.addEventListener('change', function() {
@@ -434,6 +775,112 @@ const PageController = (function() {
       PageController.pageState['paleo-mechanics'].key = this.value;
       renderDocumentPage(container, 'paleo-mechanics', PageController.jsonCache['paleo-mechanics']);
     });
+  }
+  // Заголовок знака смешивает имя, палео-написание и глоссу — разбираем его
+  // на части, иначе строка реестра остаётся нечитаемой.
+  function splitPaleoSignTitle(rawTitle) {
+    var raw = String(rawTitle || '').trim();
+    var match = raw.match(/^(.+?)\s*\(([^)]*)\)\s*(?:[\u2014\u2013-]\s*(.*))?$/);
+    if (!match) return { name: raw, variants: [], gloss: '' };
+    return {
+      name: match[1].trim(),
+      variants: match[2].split('/').map(function(part) { return part.trim(); }).filter(Boolean),
+      gloss: (match[3] || '').trim()
+    };
+  }
+
+  // Первая строка описания в предложениях, обрезанная по границе слова.
+  function paleoSignSummary(description) {
+    return safeDocSummary(description);
+  }
+
+  // Обрезка описания по границе слова: реестр не должен показывать «висячие» буквы.
+  function safeDocSummary(description) {
+    var text = String(description || '').split('---')[0].replace(/\s+/g, ' ').trim();
+    if (text.length <= 110) return text;
+    var cut = text.lastIndexOf(' ', 110);
+    return text.slice(0, cut > 56 ? cut : 110).replace(/[\s,;:—–-]+$/, '') + '…';
+  }
+
+  // ===== РЕЕСТР ЗНАКОВ =====
+  // 22 одинаковые карточки заменены плоским реестром: реальный глиф,
+  // имя с транслитом, глосса и одна строка функции. Без рамок и теней.
+  function renderPaleoMechanicsIndex(container, keys, data) {
+    var rows = keys.map(function(key) {
+      var doc = data[key] || {};
+      var sign = splitPaleoSignTitle(doc.title || key);
+      var translit = sign.variants[sign.variants.length - 1] || '';
+      var glyph = getPaleoGlyph(sign.name) || sign.variants[0] || '';
+      var summary = paleoSignSummary(doc.description);
+      return '<a href="#" class="mech-sign" data-key="' + escapeHtml(key) + '">' +
+        '<span class="mech-sign-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(glyph) + '</span>' +
+        '<span class="mech-sign-body">' +
+          '<span class="mech-sign-name">' + escapeHtml(sign.name) +
+            (translit ? ' <i lang="hbo">' + escapeHtml(translit) + '</i>' : '') +
+            (sign.gloss ? ' <em>— ' + escapeHtml(sign.gloss) + '</em>' : '') +
+          '</span>' +
+          '<span class="mech-sign-text">' + escapeHtml(summary) + '</span>' +
+        '</span>' +
+        '<span class="mech-sign-go" aria-hidden="true">→</span>' +
+      '</a>';
+    }).join('');
+
+    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
+      '<div class="mech-index-bar">' +
+        '<label class="mech-index-field"><span>Поиск по знакам</span>' +
+        '<input id="mech-index-search" class="lab-input" type="search" autocomplete="off" ' +
+        'placeholder="Алеф, бык, различать"></label>' +
+        '<p class="mech-index-count" id="mech-index-count" role="status"></p>' +
+      '</div>' +
+      '<div class="mech-index" id="mech-index">' + rows + '</div>' +
+      '<p class="mech-index-empty" id="mech-index-empty" hidden>Знаки не найдены.</p>' +
+    '</div>';
+
+    var list = document.getElementById('mech-index');
+    if (!list) return;
+    var signs = Array.prototype.slice.call(list.querySelectorAll('.mech-sign'));
+    var search = document.getElementById('mech-index-search');
+    var count = document.getElementById('mech-index-count');
+    var empty = document.getElementById('mech-index-empty');
+
+    function applyFilter(query) {
+      var needle = String(query || '').trim().toLocaleLowerCase('ru-RU');
+      var visible = 0;
+      signs.forEach(function(sign) {
+        var hit = !needle || sign.textContent.toLocaleLowerCase('ru-RU').indexOf(needle) !== -1;
+        sign.hidden = !hit;
+        if (hit) visible++;
+      });
+      if (count) {
+        count.textContent = needle
+          ? visible + ' из ' + signs.length
+          : signs.length + ' ' + paleoSignCountWord(signs.length);
+      }
+      if (empty) empty.hidden = visible !== 0;
+    }
+
+    if (search) search.addEventListener('input', function() { applyFilter(this.value); });
+    applyFilter('');
+    signs.forEach(function(sign) {
+      sign.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (window.LabRouter) {
+          LabRouter.navigate('paleo-mechanics', [this.getAttribute('data-key')]);
+          return;
+        }
+        pageState['paleo-mechanics'].key = this.getAttribute('data-key');
+        renderDocumentPage(container, 'paleo-mechanics', data);
+      });
+    });
+  }
+
+  function paleoSignCountWord(count) {
+    var mod100 = count % 100;
+    var mod10 = count % 10;
+    if (mod100 >= 11 && mod100 <= 14) return 'знаков';
+    if (mod10 === 1) return 'знак';
+    if (mod10 >= 2 && mod10 <= 4) return 'знака';
+    return 'знаков';
   }
 
   function renderDocumentPage(container, page, data) {
@@ -449,51 +896,26 @@ const PageController = (function() {
       return;
     }
     if (!state.key) {
-      var paleoIcons = {
-        'aleph': 'paleo/aleph.png',
-        'bet': 'ui/home.png',
-        'gimel': 'desert/camel.svg',
-        'dalet': 'nav/door.png',
-        'he': 'ui/anchor.png',
-        'vav': 'ui/link.png',
-        'zayin': 'weapons/sword.png',
-        'het': 'ui/grid.png',
-        'tet': 'ui/inbox.png',
-        'yod': 'ui/group.png',
-        'kaf': 'ui/group.png',
-        'lamed': 'ui/arrows.png',
-        'mem': 'ui/hourglass.png',
-        'nun': 'paleo/track.png',
-        'samekh': 'ui/info.png',
-        'ayin': 'ui/question.png',
-        'pe': 'ui/group.png',
-        'tsade': 'ui/link.png',
-        'qof': 'ui/group.png',
-        'resh': 'paleo/track.png',
-        'shin': 'ui/markbook.png',
-        'tav': 'ui/check.png'
-      };
-      var defaultIcon = 'paleo/track.png';
-      var docCards = keys.map(function(key, index) {
-        var doc = data[key];
-        var icon = paleoIcons[key] || defaultIcon;
-        return '<a href="#" class="doc-card" data-key="' + escapeHtml(key) + '" style="animation-delay: ' + (index * 30) + 'ms">' +
-          '<span class="doc-card-icon"><img src="assets/icons/32/' + icon + '" alt=""></span>' +
+      if (page === 'paleo-mechanics') {
+        renderPaleoMechanicsIndex(container, keys, data);
+        return;
+      }
+      var docCards = keys.map(function(key) {
+        var doc = data[key] || {};
+        return '<a href="#" class="doc-card" data-key="' + escapeHtml(key) + '">' +
           '<span class="doc-card-body">' +
             '<span class="doc-card-title">' + escapeHtml(doc.title || key) + '</span>' +
-            '<span class="doc-card-desc">' + escapeHtml((doc.description || '').split('---')[0].trim().substring(0, 80) + (doc.description && doc.description.length > 80 ? '...' : '')) + '</span>' +
+            '<span class="doc-card-desc">' + escapeHtml(safeDocSummary(doc.description)) + '</span>' +
           '</span>' +
           '<span class="doc-card-arrow" aria-hidden="true">→</span>' +
           '</a>';
       }).join('');
-      var heading = page === 'paleo-mechanics' ? 'Палео-механика' : 'Методички';
-      container.innerHTML = page === 'paleo-mechanics'
-        ? '<div id="paleo-mechanics" class="paleo-mechanics-page"><div class="doc-grid" id="doc-grid">' + docCards + '</div></div>'
-        : '<div class="research-page-head">' +
-          '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">' + heading + '</h1>' +
-          '<p class="subtitle">Материалы ResearchLab, собранные из исходных Markdown-документов.</p>' +
-          '</div>' +
-          '<div class="doc-grid" id="doc-grid">' + docCards + '</div>';
+      var heading = 'Методички';
+      container.innerHTML = '<div class="research-page-head">' +
+        '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">' + heading + '</h1>' +
+        '<p class="subtitle">Материалы ResearchLab, собранные из исходных Markdown-документов.</p>' +
+        '</div>' +
+        '<div class="doc-grid" id="doc-grid">' + docCards + '</div>';
       var docGrid = document.getElementById('doc-grid');
       if (docGrid) {
         docGrid.querySelectorAll('.doc-card').forEach(function(card) {
@@ -536,7 +958,14 @@ const PageController = (function() {
         summary = summary ? summary.charAt(0).toLocaleUpperCase('ru-RU') + summary.slice(1) : 'Краткое описание механизма подмены.';
         var icon = mechanismIcons[mechanismIndex % mechanismIcons.length];
         mechanismIndex++;
-        return '<article class="research-section methodology-card"><div class="methodology-card-head"><h2><img src="assets/icons/32/' + icon + '" class="methodology-card-icon" alt="" aria-hidden="true">' + escapeHtml(section.title || '').replace(/^\s*\d+[.)\-:]?\s*/, '') + '</h2></div><div class="research-section-content"><p>' + escapeHtml(summary) + '</p></div></article>';
+        // Та же строка реестра, что и в methodology.js: номер, иконка, имя, короткий текст.
+        return '<article class="research-section methodology-card">' +
+          '<div class="methodology-card-body">' +
+            '<div class="methodology-card-head"><img src="assets/icons/32/' + icon + '" class="methodology-card-icon" alt="" aria-hidden="true">' +
+            '<h2 class="methodology-card-title">' + escapeHtml(section.title || '').replace(/^\s*\d+[.)\-:]?\s*/, '') + '</h2></div>' +
+            '<div class="research-section-content"><p>' + escapeHtml(summary) + '</p></div>' +
+          '</div>' +
+        '</article>';
       }
       var content = typeof marked !== 'undefined' && marked.parse ? marked.parse(section.content || '') : escapeHtml(section.content || '');
       return '<article class="research-section"><h2>' + escapeHtml(section.title || '') + '</h2><div class="research-section-content">' + content + '</div></article>';
@@ -1074,41 +1503,497 @@ const PageController = (function() {
     run(query);
   }
 
+  // ===== ДЕТАЛЬ АГЕНТА: паспорт-шапка (LabHero) + панели §4.1 =====
+  var AGENT_RUNS_KEY = 'alephy_agent_runs_';
+  var AGENT_RUNS_LIMIT = 5;
+  var AGENT_RUN_CHARS = 20000;
+
+  // Делегат i18n: литералы t('key', 'русский резерв') читает tools/i18n-extract.py.
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  // Заголовок панели §4.1: uppercase-микролейбл + волосяная линия.
+  function agentPanelHead(labelHtml) {
+    return '<header class="agent-panel-head"><span class="agent-panel-label">' + labelHtml +
+      '</span><span class="agent-panel-rule" aria-hidden="true"></span></header>';
+  }
+
+  // Empty-state §4.6: пунктир + глиф + подсказка (+ действие, если есть).
+  function agentEmptyState(glyph, hintHtml, actionHtml) {
+    return '<div class="agent-empty"><span class="agent-empty-glyph" aria-hidden="true"><i data-lucide="' + glyph + '"></i></span>' +
+      '<p class="agent-empty-hint">' + hintHtml + '</p>' + (actionHtml || '') + '</div>';
+  }
+
+  function pipelineCountPhrase(n) {
+    if (!n) return t('lab.agents.run.pipelinesZero', 'не участвует ни в одном пайплайне');
+    var word = (n % 10 === 1 && n % 100 !== 11)
+      ? t('lab.agents.run.pipelineOne', 'пайплайне')
+      : t('lab.agents.run.pipelineMany', 'пайплайнах');
+    return t('lab.agents.run.participates', 'участвует в ') + n + ' ' + word;
+  }
+
+  function readAgentRuns(agentId) {
+    try {
+      var runs = JSON.parse(localStorage.getItem(AGENT_RUNS_KEY + agentId) || '[]');
+      return Array.isArray(runs) ? runs : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function writeAgentRuns(agentId, runs) {
+    try {
+      localStorage.setItem(AGENT_RUNS_KEY + agentId, JSON.stringify(runs.slice(0, AGENT_RUNS_LIMIT)));
+    } catch (error) { /* приватный режим или переполнение — история просто не сохраняется */ }
+  }
+
+  function rememberAgentRun(agentId, entry) {
+    var runs = readAgentRuns(agentId).filter(function(run) { return run.q !== entry.q; });
+    runs.unshift(entry);
+    writeAgentRuns(agentId, runs);
+  }
+
+  function agentResultParts(payload) {
+    var core = (payload && payload.result && typeof payload.result === 'object') ? payload.result : {};
+    return {
+      json: JSON.stringify(payload, null, 2),
+      summary: typeof core.summary === 'string' ? core.summary : '',
+      limitations: typeof core.limitations === 'string' ? core.limitations : ''
+    };
+  }
+
+  // Бейджи уверенности — единая легенда проекта (§6): палитра ExposureCase.CONFIDENCE_META.
+  var AGENT_CONFIDENCE_ALIASES = {
+    'факт': 'verified', 'проверено': 'verified', 'интерпретация': 'needs-review',
+    'требует проверки': 'needs-review', 'гипотеза': 'hypothesis', 'спорно': 'disputed'
+  };
+
+  function agentConfidence(payload) {
+    var meta = window.ExposureCase && window.ExposureCase.CONFIDENCE_META;
+    if (!meta) return '';
+    var core = (payload && payload.result && typeof payload.result === 'object') ? payload.result : {};
+    var raw = (payload && typeof payload.confidence === 'string') ? payload.confidence : core.confidence;
+    var key = typeof raw === 'string' ? (AGENT_CONFIDENCE_ALIASES[raw.trim().toLowerCase()] || raw.trim().toLowerCase()) : '';
+    // Если уверенность не объявлена, но ответ несёт ограничения — это «требует проверки».
+    if (!meta[key] && agentResultParts(payload).limitations) key = 'needs-review';
+    return meta[key] ? key : '';
+  }
+
+
+  // Деталь агента — паспорт (герой: имя, роль, статус, модель, описание), запуск, результат, связи.
+  // Тулбара списка здесь нет: поиск, фильтры, счётчик, вид и «Карта агентов» — хром списка.
   function renderAgentDetail(container, agentId) {
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
     var agent = (agentMapData || []).filter(function(item) { return item.id === agentId; })[0];
     if (!detail || !agent) return;
     if (list) list.hidden = true;
+    setAgentListChrome(container, false);
     detail.hidden = false;
+    var status = getAgentStatus(agent);
+    var model = status === 'stub' ? 'без модели' : agent.model;
+    // Override дублируем в container._labHeroOverride: applyModuleHero вызывает
+    // setView после рендера и иначе вернул бы общую шапку «AI-Агенты».
+    container._labHeroOverride = {
+      kicker: 'АЛЕФИ · АГЕНТЫ',
+      title: agent.name,
+      subtitle: agent.desc,
+      subtitleClass: 'lab-hero__subtitle--one-line',
+      icon: agent.icon + '.png',
+      meta: [
+        { label: agent.cat, className: 'agent-hero-chip' },
+        { label: AGENT_STATUSES[status], className: 'agent-hero-chip agent-hero-chip--' + status, dot: true },
+        { label: model, className: 'agent-hero-chip agent-hero-chip--model' }
+      ]
+    };
     if (window.LabHero && window.LabHero.setView) {
-      window.LabHero.setView('ai-agents', 'agent', { kicker: 'ALEPHY · AI-AGENTS', title: agent.name, subtitle: agent.desc, icon: agent.icon + '.png', meta: [agent.cat, agent.model, 'Готов к запуску'] });
+      window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
     detail.innerHTML = '<div class="agent-detail-page">' +
-      '<div class="agent-detail-grid"><section class="agent-detail-section agent-detail-wide"><h2>Запуск агента</h2><form id="agent-run-form"><label for="agent-run-input">Запрос</label><textarea id="agent-run-input" class="lab-textarea agent-prompt" rows="4">разбери слово Берешит</textarea><button type="submit" class="lab-btn lab-btn-primary" id="agent-run-button">Запустить</button></form></section>' +
-      '<section class="agent-detail-section agent-detail-wide"><h2>Результат</h2><pre id="agent-run-output" class="agent-output" aria-live="polite">Результат появится после запуска.</pre></section></div>' +
-      '<button type="button" class="lab-btn lab-btn-secondary agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')">К списку агентов</button></div>';
-    var form = detail.querySelector('#agent-run-form');
-    var input = detail.querySelector('#agent-run-input');
-    var output = detail.querySelector('#agent-run-output');
-    var button = detail.querySelector('#agent-run-button');
-    form.addEventListener('submit', function(event) {
-      event.preventDefault();
-      var query = input.value.trim();
-      if (!query) return;
-      button.disabled = true;
-      output.textContent = 'Запуск пайплайна…';
-      checkAgentServer().then(function() {
-        return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
-      })
-        .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
-        .then(function(result) { output.textContent = JSON.stringify(result, null, 2); })
-        .catch(function(error) { output.innerHTML = isAgentServerUnavailable(error) ? agentServerMessage() : 'Ошибка запуска: ' + escapeHtml(error.message); })
-        .then(function() { button.disabled = false; });
+      '<div class="agent-detail-grid">' +
+      '<section class="agent-detail-section agent-detail-run">' +
+        agentPanelHead(t('lab.agents.panel.run', 'ЗАПУСК')) +
+        '<form id="agent-run-form" class="agent-run-form">' +
+          '<p class="agent-run-context"><span class="agent-model-chip">' + escapeHtml(model) + '</span>' +
+          '<span class="agent-run-pipelines" data-agent-run-context>' + t('lab.agents.run.pipelinesLoading', 'Считаем пайплайны…') + '</span></p>' +
+          '<div class="agent-run-examples" data-agent-run-examples hidden></div>' +
+          '<textarea id="agent-run-input" class="lab-textarea agent-run-input" rows="4" placeholder="' + t('lab.agents.run.placeholder', 'разбери слово Берешит') + '" aria-label="' + t('lab.agents.run.query', 'Запрос к агенту') + '"></textarea>' +
+          '<div class="agent-run-actions">' +
+            '<button type="submit" class="lab-btn lab-btn-primary" id="agent-run-button">' + t('lab.agents.run.start', 'Запустить') + '</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" id="agent-run-clear" aria-label="' + t('lab.agents.run.clear', 'Очистить') + '" title="' + t('lab.agents.run.clear', 'Очистить') + '"><i data-lucide="eraser" class="lab-icon" aria-hidden="true"></i></button>' +
+            '<span class="agent-run-hint">Ctrl+Enter</span>' +
+            '<span class="agent-run-server" data-agent-run-server hidden aria-live="polite"></span>' +
+          '</div>' +
+        '</form>' +
+      '</section>' +
+      '<section class="agent-detail-section agent-detail-links">' +
+        agentPanelHead(t('lab.agents.panel.links', 'СВЯЗИ')) +
+        '<div data-agent-connections>' + agentEmptyState('workflow', t('lab.agents.links.loading', 'Собираем цепочки пайплайнов…')) + '</div>' +
+      '</section>' +
+      '<section class="agent-detail-section agent-detail-result">' +
+        agentPanelHead(t('lab.agents.panel.result', 'РЕЗУЛЬТАТ')) +
+        '<div data-agent-result-empty>' + agentEmptyState('scroll-text', t('lab.agents.result.empty', 'Результат появится после запуска')) + '</div>' +
+        '<div class="agent-result-body" data-agent-result-body hidden aria-live="polite"></div>' +
+        '<div class="agent-result-history" data-agent-history hidden><p class="agent-history-label">' + t('lab.agents.result.history', 'Последние запуски') + '</p><ul class="agent-history-list" data-agent-history-list></ul></div>' +
+      '</section>' +
+      '</div>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.back', 'К списку агентов') + '</button></div>';
+    initAgentRunPanel(detail, agent);
+    renderAgentHistory(detail, agent.id);
+    loadAgentPipelines(detail, agent);
+  }
+
+  function agentAttr(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Бейджи уверенности — единая легенда проекта (§6), палитра ExposureCase.
+  function agentResultBadges(payload) {
+    var key = agentConfidence(payload);
+    var meta = window.ExposureCase && window.ExposureCase.CONFIDENCE_META;
+    if (!key || !meta || !meta[key]) return '';
+    return '<div class="agent-result-badges"><span class="exposure-badge ' + meta[key].className + '">' +
+      escapeHtml(meta[key].label) + '</span></div>';
+  }
+
+  function agentResultMarkup(payload) {
+    var parts = agentResultParts(payload);
+    var summary = parts.summary
+      ? '<p class="agent-result-summary">' + escapeHtml(parts.summary) + '</p>'
+      : '<p class="agent-result-summary agent-result-summary--muted">' + t('lab.agents.result.raw', 'Сервер вернул структуру без резюме — полный ответ ниже.') + '</p>';
+    var limitations = parts.limitations
+      ? '<p class="agent-result-limitations"><span class="agent-result-limitations-label">' + t('lab.agents.result.limits', 'Ограничения') + '</span>' + escapeHtml(parts.limitations) + '</p>'
+      : '';
+    return agentResultBadges(payload) + summary + limitations +
+      '<details class="agent-result-raw"><summary>' + t('lab.agents.result.full', 'Полный ответ') + '</summary>' +
+      '<pre class="agent-result-payload">' + escapeHtml(parts.json) + '</pre></details>' +
+      '<div class="agent-result-actions">' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-copy><i data-lucide="copy" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.copy', 'Копировать') + '</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-download><i data-lucide="download" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.download', 'Скачать .md') + '</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-agent-result-research><i data-lucide="archive" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.result.research', 'Открыть в исследовании') + '</button>' +
+        '<span class="agent-result-status" data-agent-result-status aria-live="polite"></span>' +
+      '</div>';
+  }
+
+  function showAgentResult(detail, payload, query) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (!body) return;
+    body.dataset.query = query;
+    body.agentPayload = payload;
+    body.innerHTML = agentResultMarkup(payload);
+    body.hidden = false;
+    if (empty) empty.hidden = true;
+  }
+
+  function clearAgentResult(detail) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (body) {
+      body.hidden = true;
+      body.innerHTML = '';
+      body.agentPayload = null;
+      body.removeAttribute('data-query');
+    }
+    if (empty) empty.hidden = false;
+  }
+
+  function copyAgentResult(detail) {
+    var body = detail.querySelector('[data-agent-result-body]');
+    var status = detail.querySelector('[data-agent-result-status]');
+    var unavailable = t('lab.agents.result.copyFail', 'Копирование недоступно в этом браузере.');
+    if (!navigator.clipboard) {
+      if (status) status.textContent = unavailable;
+      return;
+    }
+    var text = body && body.agentPayload ? agentResultParts(body.agentPayload).json : (body ? body.textContent : '');
+    navigator.clipboard.writeText(text).then(function() {
+      if (status) status.textContent = t('lab.agents.result.copied', 'Результат скопирован.');
+    }).catch(function() {
+      if (status) status.textContent = unavailable;
     });
   }
 
+  function agentResultMarkdown(agentName, query, payload) {
+    var parts = agentResultParts(payload);
+    var lines = ['# ' + agentName, '',
+      t('lab.agents.result.mdQuery', 'Запрос') + ': ' + query,
+      t('lab.agents.result.mdDate', 'Дата') + ': ' + new Date().toLocaleString('ru-RU'), ''];
+    if (parts.summary) lines.push(parts.summary, '');
+    if (parts.limitations) lines.push('> ' + parts.limitations, '');
+    lines.push('```json', parts.json, '```', '');
+    return lines.join('\n');
+  }
+
+  function downloadAgentResult(agentName, query, payload) {
+    var blob = new Blob([agentResultMarkdown(agentName, query, payload)], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'agent-' + agentName.toLowerCase().replace(/\s+/g, '-') + '-' + new Date().toISOString().slice(0, 10) + '.md';
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    setTimeout(function() { URL.revokeObjectURL(url); }, 0);
+  }
+
+  // Offline-сервер: primary muted с причиной (§4.4 + честное состояние).
+  function setAgentServerState(detail, online) {
+    var button = detail.querySelector('#agent-run-button');
+    var note = detail.querySelector('[data-agent-run-server]');
+    var reason = t('lab.agents.run.offline', 'Сервер агентов недоступен — запустите python products/agents/server.py');
+    if (button) {
+      button.disabled = !online;
+      button.classList.toggle('is-offline', !online);
+      if (online) button.removeAttribute('title');
+      else button.title = reason;
+    }
+    if (note) {
+      note.hidden = online;
+      note.textContent = online ? '' : reason;
+    }
+  }
+
+  function runAgent(detail, agent) {
+    var input = detail.querySelector('#agent-run-input');
+    var button = detail.querySelector('#agent-run-button');
+    var query = input ? input.value.trim() : '';
+    if (!query) return;
+    if (button) button.disabled = true;
+    checkAgentServer().then(function() {
+      setAgentServerState(detail, true);
+      return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
+    })
+      .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
+      .then(function(payload) {
+        showAgentResult(detail, payload, query);
+        rememberAgentRun(agent.id, { q: query, at: Date.now(), out: JSON.stringify(payload).slice(0, AGENT_RUN_CHARS) });
+        renderAgentHistory(detail, agent.id);
+      })
+      .catch(function(error) {
+        var offline = isAgentServerUnavailable(error);
+        if (offline) setAgentServerState(detail, false);
+        var body = detail.querySelector('[data-agent-result-body]');
+        var empty = detail.querySelector('[data-agent-result-empty]');
+        if (!body) return;
+        body.agentPayload = null;
+        body.dataset.query = query;
+        body.innerHTML = offline
+          ? agentServerMessage()
+          : '<p class="agent-result-summary">' + t('lab.agents.result.error', 'Ошибка запуска: ') + escapeHtml(error.message) + '</p>';
+        body.hidden = false;
+        if (empty) empty.hidden = true;
+      })
+      .then(function() {
+        if (button) button.disabled = button.classList.contains('is-offline');
+      });
+  }
+
+  function formatAgentRunTime(stamp) {
+    return new Date(stamp).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function renderAgentHistory(detail, agentId) {
+    var box = detail.querySelector('[data-agent-history]');
+    var list = detail.querySelector('[data-agent-history-list]');
+    if (!box || !list) return;
+    var runs = readAgentRuns(agentId);
+    box.hidden = !runs.length;
+    list.innerHTML = runs.map(function(run, index) {
+      return '<li><button type="button" class="agent-history-row" data-agent-history-index="' + index + '">' +
+        '<span class="agent-history-query">' + escapeHtml(run.q) + '</span>' +
+        '<span class="agent-history-time">' + escapeHtml(formatAgentRunTime(run.at)) + '</span></button></li>';
+    }).join('');
+  }
+
+  // Клик по истории возвращает запрос и сохранённый ответ.
+  function restoreAgentRun(detail, agent, index) {
+    var run = readAgentRuns(agent.id)[index];
+    if (!run) return;
+    var input = detail.querySelector('#agent-run-input');
+    if (input) input.value = run.q;
+    var payload = null;
+    if (run.out) {
+      try { payload = JSON.parse(run.out); } catch (error) { payload = null; }
+    }
+    if (payload) {
+      showAgentResult(detail, payload, run.q);
+      return;
+    }
+    var body = detail.querySelector('[data-agent-result-body]');
+    var empty = detail.querySelector('[data-agent-result-empty]');
+    if (!body) return;
+    body.agentPayload = null;
+    body.dataset.query = run.q;
+    body.innerHTML = '<p class="agent-result-summary agent-result-summary--muted">' + t('lab.agents.result.historyGone', 'Ответ не сохранён — запустите запрос заново.') + '</p>';
+    body.hidden = false;
+    if (empty) empty.hidden = true;
+  }
+
+  function initAgentRunPanel(detail, agent) {
+    var form = detail.querySelector('#agent-run-form');
+    var input = detail.querySelector('#agent-run-input');
+    var clear = detail.querySelector('#agent-run-clear');
+
+    if (form) form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      runAgent(detail, agent);
+    });
+    // Ctrl+Enter выполняет запрос, Enter в textarea остаётся переводом строки.
+    if (input) input.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+        event.preventDefault();
+        runAgent(detail, agent);
+      }
+    });
+    if (clear) clear.addEventListener('click', function() {
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      clearAgentResult(detail);
+    });
+
+    // Делегирование на панель вешаем один раз: повторный рендер детали не должен
+    // накапливать обработчики и держать ссылку на прошлого агента.
+    detail.agentRef = agent;
+    if (!detail.dataset.agentWired) {
+      detail.dataset.agentWired = '1';
+      detail.addEventListener('click', function(event) {
+        var current = detail.agentRef;
+        if (!current) return;
+        var liveInput = detail.querySelector('#agent-run-input');
+        var liveBody = detail.querySelector('[data-agent-result-body]');
+        var example = event.target.closest('[data-agent-example]');
+        if (example && liveInput) {
+          liveInput.value = example.getAttribute('data-agent-example');
+          liveInput.focus();
+          return;
+        }
+        if (event.target.closest('[data-agent-result-copy]')) { copyAgentResult(detail); return; }
+        if (event.target.closest('[data-agent-result-download]')) {
+          if (liveBody && liveBody.agentPayload) downloadAgentResult(current.name, liveBody.dataset.query || '', liveBody.agentPayload);
+          return;
+        }
+        if (event.target.closest('[data-agent-result-research]')) {
+          LabRouter.navigate('researches', [], { q: liveBody ? liveBody.dataset.query || '' : '' });
+          return;
+        }
+        var row = event.target.closest('[data-agent-history-index]');
+        if (row) restoreAgentRun(detail, current, parseInt(row.getAttribute('data-agent-history-index'), 10));
+      });
+    }
+
+    checkAgentServer().then(function() {
+      setAgentServerState(detail, true);
+    }).catch(function() {
+      setAgentServerState(detail, false);
+    });
+  }
+  // Соседи агента в цепочках: кто передаёт ему и кто принимает от него.
+  function agentNeighbours(related, agentName) {
+    var gives = [], takes = [];
+    related.forEach(function(pipeline) {
+      var chain = pipeline.agents || [];
+      var index = chain.indexOf(agentName);
+      if (index < 0) return;
+      if (index > 0 && gives.indexOf(chain[index - 1]) === -1) gives.push(chain[index - 1]);
+      if (index < chain.length - 1 && takes.indexOf(chain[index + 1]) === -1) takes.push(chain[index + 1]);
+    });
+    return { gives: gives, takes: takes };
+  }
+
+  function agentChipRow(names, limit) {
+    var shown = names.slice(0, limit);
+    var html = shown.map(function(name) {
+      return '<span class="agent-pipeline-chip agent-pipeline-chip--plain">' + escapeHtml(name) + '</span>';
+    }).join('');
+    if (names.length > shown.length) html += '<span class="agent-chain-more">+' + (names.length - shown.length) + '</span>';
+    return html;
+  }
+
+  function renderAgentRunContext(detail, related) {
+    var context = detail.querySelector('[data-agent-run-context]');
+    var examples = detail.querySelector('[data-agent-run-examples]');
+    if (context) {
+      context.innerHTML = pipelineCountPhrase(related.length) + (related.length
+        ? ' <span class="agent-run-pipeline-chips">' + related.map(function(pipeline) {
+            return '<a class="agent-pipeline-chip" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>';
+          }).join('') + '</span>'
+        : '');
+    }
+    if (!examples) return;
+    var queries = [];
+    related.forEach(function(pipeline) {
+      if (pipeline.defaultQuery && queries.indexOf(pipeline.defaultQuery) === -1) queries.push(pipeline.defaultQuery);
+    });
+    queries = queries.slice(0, 3);
+    examples.hidden = !queries.length;
+    examples.innerHTML = queries.length
+      ? '<span class="agent-run-examples-label">' + t('lab.agents.run.examples', 'Примеры запроса') + '</span>' + queries.map(function(query) {
+          return '<button type="button" class="agent-example-chip" data-agent-example="' + agentAttr(query) + '">' + escapeHtml(query) + '</button>';
+        }).join('')
+      : '';
+  }
+
+  function renderAgentConnections(box, agent, related) {
+    if (!box) return;
+    if (!related.length) {
+      box.innerHTML = agentEmptyState('workflow', t('lab.agents.links.empty', 'Агент не входит ни в одну цепочку'),
+        '<a class="agent-empty-link" href="#pipelines">' + t('lab.agents.links.browse', 'Смотреть пайплайны') + '</a>');
+      return;
+    }
+    var neighbours = agentNeighbours(related, agent.name);
+    box.innerHTML = '<div class="agent-links-chips">' + related.map(function(pipeline) {
+      return '<a class="agent-pipeline-chip" href="#pipelines/' + encodeURIComponent(pipeline.id) + '">' + escapeHtml(pipeline.name) + '</a>';
+    }).join('') + '</div>' +
+      '<div class="agent-chain">' +
+        '<span class="agent-chain-label">' + t('lab.agents.links.gives', 'передаёт') + '</span>' +
+        (neighbours.gives.length ? agentChipRow(neighbours.gives, 4) : '<span class="agent-chain-none">—</span>') +
+        '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
+        '<span class="agent-chain-self">' + escapeHtml(agent.name) + '</span>' +
+        '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
+        (neighbours.takes.length ? agentChipRow(neighbours.takes, 4) : '<span class="agent-chain-none">—</span>') +
+        '<span class="agent-chain-label">' + t('lab.agents.links.takes', 'принимает') + '</span>' +
+      '</div>';
+  }
+
+  // Один запрос на обе панели: контекст запуска и связи берутся из data/pipelines.json.
+  function loadAgentPipelines(detail, agent) {
+    var box = detail.querySelector('[data-agent-connections]');
+    fetch('data/pipelines.json').then(function(response) {
+      if (!response.ok) throw new Error('Локальный JSON недоступен');
+      return response.json();
+    }).then(function(pipelines) {
+      if (!Array.isArray(pipelines)) throw new Error('Неверный формат данных');
+      var related = pipelines.filter(function(pipeline) {
+        return (pipeline.agents || []).indexOf(agent.name) !== -1;
+      });
+      renderAgentRunContext(detail, related);
+      renderAgentConnections(box, agent, related);
+    }).catch(function() {
+      var context = detail.querySelector('[data-agent-run-context]');
+      // Данные недоступны — не утверждаем ни «участвует», ни «не участвует».
+      if (context) context.textContent = '';
+      if (box) box.innerHTML = agentEmptyState('workflow', t('lab.agents.links.unavailable', 'Цепочки недоступны: локальный список пайплайнов не загрузился'),
+        '<a class="agent-empty-link" href="#pipelines">' + t('lab.agents.links.browse', 'Смотреть пайплайны') + '</a>');
+    });
+  }
+
+
+
+
+
+  // Тулбар (поиск, фильтры, счётчик, вид, карта) принадлежит только списку агентов.
+  function setAgentListChrome(container, visible) {
+    var controls = container.querySelector('.agent-controls-panel');
+    if (controls) controls.hidden = !visible;
+  }
+
   function showAgentList(container) {
+    container._labHeroOverride = null;
     if (window.LabHero && window.LabHero.setView) window.LabHero.setView('ai-agents', null);
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
@@ -1116,6 +2001,7 @@ const PageController = (function() {
     if (detail) detail.hidden = true;
     if (pipelines) pipelines.hidden = true;
     if (list) list.hidden = false;
+    setAgentListChrome(container, true);
   }
 
   function openAgentPipelines(container) {
@@ -1137,7 +2023,29 @@ const PageController = (function() {
     pipelines.hidden = false;
     if (container.id === 'pipelines' && window.LabHero && window.LabHero.setView) window.LabHero.setView('pipelines', null);
     pipelines.innerHTML =
-      '<div class="pipeline-control-panel"><div><div class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span>Проверка сервера…</span></div></div><div class="pipeline-page-actions"><button type="button" class="lab-btn lab-btn-primary pipeline-create-btn" data-pipeline-create>Создать пайплайн</button><button type="button" class="lab-btn lab-btn-secondary" data-pipelines-back>К агентам</button></div></div>' +
+      '<div class="pipeline-control-panel">' +
+        '<div class="pipeline-toolbar-row">' +
+          '<span class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span class="pipeline-server-label">Проверка сервера…</span></span>' +
+          '<input type="search" class="lab-input pl-search" data-pipeline-search placeholder="Поиск по пайплайнам…" aria-label="Поиск по пайплайнам">' +
+          '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+            '<button type="button" class="res-view-btn" data-pipeline-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+            '<button type="button" class="res-view-btn" data-pipeline-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="pipeline-toolbar-row">' +
+          '<div class="pipeline-filter-chips" role="group" aria-label="Фильтр по статусу">' +
+            '<button type="button" class="pipeline-chip active" data-pipeline-filter="all">Все</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="ready">Готовые</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="pending">Ожидание</button>' +
+            '<button type="button" class="pipeline-chip" data-pipeline-filter="loops">Циклы</button>' +
+          '</div>' +
+          '<span class="pipeline-count" data-pipeline-count aria-live="polite"></span>' +
+          '<div class="pipeline-page-actions">' +
+            '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-create-btn" data-pipeline-create><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Создать пайплайн</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-pipelines-back>К агентам</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
       '<div class="agent-pipelines-status lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка локальных пайплайнов…</div></div>';
     pipelines.querySelector('[data-pipelines-back]').addEventListener('click', function() {
       LabRouter.navigate('ai-agents');
@@ -1175,64 +2083,245 @@ const PageController = (function() {
     });
   }
 
+  var PIPELINE_OFFLINE_HINT = 'Сервер агентов отключен — запуск и редактирование недоступны. Запустите: python products/agents/server.py';
+  var PIPELINE_VIEW_KEY = 'alephy-pipelines-view';
+  var pipelinesUiState = { query: '', filter: 'all', view: 'cards', expanded: {}, online: null };
+
   function updatePipelineServerStatus(pipelines, isOnline) {
     var status = pipelines.querySelector('[data-pipeline-server-status]');
     if (!status) return;
+    pipelinesUiState.online = isOnline;
     status.dataset.status = isOnline ? 'online' : 'offline';
-    status.querySelector('span:last-child').textContent = isOnline ? 'Сервер запущен' : 'Сервер отключен';
+    status.querySelector('.pipeline-server-label').textContent = isOnline ? 'Сервер запущен' : 'Сервер отключен';
+    // Offline: действия с сервером muted + причина в тултипе (см. DESIGN-SYSTEM §4.4).
+    pipelines.querySelectorAll('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-create]').forEach(function(control) {
+      control.disabled = !isOnline;
+      control.title = isOnline ? '' : PIPELINE_OFFLINE_HINT;
+      control.setAttribute('aria-disabled', isOnline ? 'false' : 'true');
+    });
+  }
+
+  function pipelineAgentInfo(agentName) {
+    return (agentMapData || []).filter(function(item) { return item.name === agentName; })[0] ||
+      { name: agentName, desc: 'Участник цепочки передачи контекста.', icon: 'paleo/track' };
+  }
+
+  function pipelineKind(pipeline) {
+    return pipeline.type === 'loop' || pipeline.type === 'spiral' ? 'loops' : 'linear';
+  }
+
+  function pipelineScheduleChip(pipeline) {
+    if (pipeline.type === 'loop') return '<span class="pipeline-schedule-chip" title="Цикл: обратная связь до сходимости">Цикл</span>';
+    if (pipeline.type === 'spiral') return '<span class="pipeline-schedule-chip" title="Спираль: каждый виток расширяет горизонт (Хук Свива)">Спираль</span>';
+    return '';
+  }
+
+  function pipelineResultChip(result) {
+    return '<span class="pipeline-result-chip" data-pipeline-run-status data-status="' + (result ? 'done' : 'pending') + '"><span class="pipeline-result-dot" aria-hidden="true"></span><span class="pipeline-result-label">' + (result ? 'Готов' : 'Ожидание') + '</span></span>';
+  }
+
+  function pipelineChain(pipeline) {
+    return (pipeline.agents || []).map(function(agentName, index) {
+      return (index ? '<span class="pipeline-chain-arrow" aria-hidden="true">→</span>' : '') +
+        '<span class="pipeline-chain-chip" title="' + escapeHtml(pipelineAgentInfo(agentName).desc) + '">' + escapeHtml(agentName) + '</span>';
+    }).join('');
+  }
+
+  var PIPELINE_AGENT_ICONS = {
+    'Оркестратор': 'git-branch',
+    'Исследователь': 'microscope',
+    'Разоблачитель': 'eye',
+    'Сборщик': 'package',
+    'Критик': 'scale',
+    'Семитолог': 'book-open',
+    'Компаратор': 'git-compare',
+    'Редактор': 'pen-line',
+    'Переводчик палео-иврита': 'languages',
+    'Фронтенд-разработчик': 'code',
+    'AI-инженер': 'cpu',
+    'Проверяющий': 'shield-check',
+    'Технический писатель': 'file-text',
+    'Ревьюер кода': 'scan-search',
+    'Архитектор потока': 'workflow',
+    'Связной': 'link'
+  };
+
+  function pipelineAgentIcon(agentName) {
+    return PIPELINE_AGENT_ICONS[agentName] || 'circle-dot';
+  }
+
+  function pipelineDiagram(pipeline) {
+    var nodes = (pipeline.agents || []).map(function(agentName, index) {
+      return (index ? '<span class="pipeline-diagram-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>' : '') +
+        '<span class="pipeline-diagram-node" data-agent-name="' + escapeHtml(agentName) + '" data-status="pending">' +
+          '<span class="pipeline-diagram-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agentName) + '"></i></span>' +
+          '<span class="pipeline-diagram-dot" aria-hidden="true"></span>' +
+          '<span class="pipeline-diagram-label">' + escapeHtml(agentName) + '</span>' +
+        '</span>';
+    }).join('');
+    return '<div class="pipeline-diagram" data-pipeline-diagram hidden><div class="pipeline-diagram-inner">' + nodes +
+      (pipelineKind(pipeline) === 'loops' ? '<span class="pipeline-diagram-arrow pipeline-diagram-loop" title="Возврат в начало витка" aria-hidden="true"><i data-lucide="rotate-ccw"></i></span>' : '') +
+      '</div></div>';
   }
 
   function renderAgentPipelines(container, pipelines, data, results) {
-    var cards = (Array.isArray(data) ? data : []).map(function(pipeline) {
+    var list = (Array.isArray(data) ? data : []);
+    try { pipelinesUiState.view = localStorage.getItem(PIPELINE_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { pipelinesUiState.view = 'cards'; }
+
+    function entryState(pipeline) {
+      return findPipelineResult(results, pipeline.id) ? 'ready' : 'pending';
+    }
+
+    function matchesFilters(pipeline) {
+      var query = pipelinesUiState.query.trim().toLowerCase();
+      var matchesQuery = !query ||
+        (pipeline.name || '').toLowerCase().indexOf(query) !== -1 ||
+        (pipeline.description || '').toLowerCase().indexOf(query) !== -1 ||
+        (pipeline.agents || []).join(' ').toLowerCase().indexOf(query) !== -1;
+      var filter = pipelinesUiState.filter;
+      var matchesFilter = filter === 'all' ||
+        (filter === 'loops' ? pipelineKind(pipeline) === 'loops' : entryState(pipeline) === filter);
+      return matchesQuery && matchesFilter;
+    }
+
+    function cardHtml(pipeline) {
       var result = findPipelineResult(results, pipeline.id);
-      var agents = (pipeline.agents || []).map(function(agentName, agentIndex) {
-        var agent = (agentMapData || []).filter(function(item) { return item.name === agentName; })[0] || { name: agentName, desc: 'Участник цепочки передачи контекста.', icon: 'paleo/track' };
-        return (agentIndex ? '<span class="pipeline-flow-arrow" aria-hidden="true">→</span>' : '') + '<li class="pipeline-timeline-step" tabindex="0" title="' + escapeHtml(agent.desc) + '" data-agent-name="' + escapeHtml(agent.name) + '" data-status="pending"><img src="assets/icons/32/' + escapeHtml(agent.icon) + '.png" alt=""><span class="pipeline-status-dot" aria-hidden="true"></span><div><strong>' + escapeHtml(agent.name) + '</strong><small>' + escapeHtml(agent.desc) + '</small></div></li>';
-      }).join('');
-      var isLoop = pipeline.type === 'loop' || pipeline.type === 'spiral';
-      var loopBadge = isLoop ? '<span class="pipeline-loop-badge" title="' + (pipeline.type === 'spiral' ? 'Спираль: каждый виток расширяет горизонт (Хук Свива)' : 'Цикл: обратная связь до сходимости') + '">' + (pipeline.type === 'spiral' ? '↺ спираль' : '↺ цикл') + '</span>' : '';
-      var loopClose = isLoop ? '<li class="pipeline-loop-close" title="Возврат в начало витка">↺ в начало</li>' : '';
-      var resultButton = '<button type="button" class="lab-btn lab-btn-secondary pipeline-view-btn" data-pipeline-details>Открыть результат</button>';
-      return '<article class="agent-pipeline-card" data-pipeline-id="' + escapeHtml(pipeline.id) + '"><div class="pipeline-card-head"><div class="pipeline-card-title"><img src="assets/icons/32/paleo/track.png" alt=""><h3>' + escapeHtml(pipeline.name) + '</h3>' + loopBadge + '<span class="pipeline-status-badge" data-pipeline-run-status data-status="' + (result ? 'done' : 'pending') + '">' + (result ? 'Готовый результат' : 'Ожидание запуска') + '</span></div><div class="agent-pipeline-actions"><button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн">✎</button><button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн">✕</button></div></div><p class="agent-pipeline-route">' + escapeHtml(pipeline.description || 'Цепочка передачи контекста') + '</p><ol class="pipeline-timeline" aria-label="Этапы пайплайна">' + agents + loopClose + '</ol><div class="pipeline-card-buttons"><button type="button" class="lab-btn lab-btn-primary pipeline-run-btn" data-pipeline-run>Запустить локально</button>' + resultButton + '<button type="button" class="lab-btn lab-btn-secondary pipeline-detail-btn" data-pipeline-details>Подробнее</button></div></article>';
-    }).join('');
-    pipelines.querySelector('.agent-pipelines-status').outerHTML = '<div class="agent-pipelines-grid">' + (cards || '<div class="lab-alert lab-alert-info">Пайплайны пока не созданы.</div>') + '</div>';
+      var expanded = !!pipelinesUiState.expanded[pipeline.id];
+      return '<article class="agent-pipeline-card" data-pipeline-id="' + escapeHtml(pipeline.id) + '">' +
+        '<div class="pipeline-card-head">' +
+          '<span class="pipeline-glyph-chip" aria-hidden="true"><i data-lucide="workflow"></i></span>' +
+          '<h3 title="' + escapeHtml(pipeline.description || pipeline.name) + '">' + escapeHtml(pipeline.name) + '</h3>' +
+          pipelineResultChip(result) + pipelineScheduleChip(pipeline) +
+          '<span class="pipeline-card-actions">' +
+            '<button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн" title="Редактировать"><i data-lucide="pencil"></i></button>' +
+            '<button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн" title="Удалить"><i data-lucide="trash-2"></i></button>' +
+          '</span>' +
+        '</div>' +
+        '<div class="pipeline-chain" aria-label="Цепочка агентов">' + pipelineChain(pipeline) + '</div>' +
+        '<div class="pipeline-card-buttons">' +
+          '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-run-btn" data-pipeline-run>Запустить</button>' +
+          '<button type="button" class="pipeline-result-link" data-pipeline-open-detail>Результат</button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-toggle-diagram aria-expanded="' + expanded + '" aria-label="Подробнее: диаграмма цепочки" title="Подробнее"><i data-lucide="info"></i></button>' +
+        '</div>' +
+        pipelineDiagram(pipeline) +
+      '</article>';
+    }
+
+    function rowHtml(pipeline) {
+      return '<div class="pipeline-list-row" data-pipeline-id="' + escapeHtml(pipeline.id) + '">' +
+        '<span class="pipeline-glyph-chip" aria-hidden="true"><i data-lucide="workflow"></i></span>' +
+        '<span class="pipeline-list-name" title="' + escapeHtml(pipeline.name) + '">' + escapeHtml(pipeline.name) + '</span>' +
+        '<span class="pipeline-list-chain" title="' + escapeHtml((pipeline.agents || []).join(' → ')) + '">' + escapeHtml((pipeline.agents || []).join(' → ')) + '</span>' +
+        pipelineResultChip(findPipelineResult(results, pipeline.id)) +
+        '<span class="pipeline-card-actions">' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-run aria-label="Запустить пайплайн" title="Запустить"><i data-lucide="play"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-open-detail aria-label="Открыть результат" title="Результат"><i data-lucide="file-text"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn" data-pipeline-edit aria-label="Редактировать пайплайн" title="Редактировать"><i data-lucide="pencil"></i></button>' +
+          '<button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн" title="Удалить"><i data-lucide="trash-2"></i></button>' +
+        '</span>' +
+      '</div>';
+    }
+    function groupSection(key, label, items, renderItem) {
+      if (!items.length) return '';
+      return '<section class="pipeline-group" data-pipeline-group="' + key + '">' +
+        '<header class="pipeline-group-head"><h2>' + label + '</h2><span class="pipeline-group-badge">' + items.length + '</span></header>' +
+        '<div class="' + (pipelinesUiState.view === 'list' ? 'pipeline-list-rows' : 'agent-pipelines-grid') + '">' + items.map(renderItem).join('') + '</div>' +
+      '</section>';
+    }
+
+    function renderList() {
+      var visible = list.filter(matchesFilters);
+      var renderItem = pipelinesUiState.view === 'list' ? rowHtml : cardHtml;
+      var groups;
+      if (pipelinesUiState.filter === 'all' && !pipelinesUiState.query.trim()) {
+        var linear = function(p) { return pipelineKind(p) === 'linear'; };
+        groups = groupSection('ready', 'Готовые', visible.filter(function(p) { return entryState(p) === 'ready' && linear(p); }), renderItem) +
+          groupSection('pending', 'Ожидание запуска', visible.filter(function(p) { return entryState(p) === 'pending' && linear(p); }), renderItem) +
+          groupSection('loops', 'Циклы и спирали', visible.filter(function(p) { return pipelineKind(p) === 'loops'; }), renderItem);
+      } else {
+        groups = groupSection('filtered', 'Найденные', visible, renderItem);
+      }
+      pipelines.querySelector('[data-pipeline-list]').innerHTML = groups ||
+        '<div class="lab-alert lab-alert-info">По текущему фильтру пайплайнов нет.</div>';
+      var counter = pipelines.querySelector('[data-pipeline-count]');
+      if (counter) counter.innerHTML = '<strong>' + visible.length + '</strong> из ' + list.length;
+      pipelines.querySelectorAll('[data-pipeline-view]').forEach(function(button) {
+        button.classList.toggle('active', button.dataset.pipelineView === pipelinesUiState.view);
+      });
+      if (window.LabIcons && typeof window.LabIcons.sync === 'function') window.LabIcons.sync();
+      // После перерисовки списка повторно применяем offline-состояние к новым кнопкам.
+      if (pipelinesUiState.online !== null) updatePipelineServerStatus(pipelines, pipelinesUiState.online);
+    }
+
+    pipelines.querySelector('.agent-pipelines-status').outerHTML = '<div data-pipeline-list></div>';
+    pipelines.querySelector('[data-pipeline-search]').value = pipelinesUiState.query;
+    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
+      chip.classList.toggle('active', chip.dataset.pipelineFilter === pipelinesUiState.filter);
+    });
+
+    renderList();
+
     pipelines.querySelector('[data-pipeline-create]').addEventListener('click', function() { openPipelineModal(container, pipelines, null); });
-    pipelines.querySelectorAll('[data-pipeline-edit]').forEach(function(button) {
-      button.addEventListener('click', function() { openPipelineModal(container, pipelines, findPipeline(data, this.closest('[data-pipeline-id]').dataset.pipelineId)); });
+    pipelines.querySelector('[data-pipeline-search]').addEventListener('input', function() {
+      pipelinesUiState.query = this.value;
+      renderList();
     });
-    pipelines.querySelectorAll('[data-pipeline-delete]').forEach(function(button) {
-      button.addEventListener('click', function() { deletePipeline(container, pipelines, data, this.closest('[data-pipeline-id]').dataset.pipelineId); });
+    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
+      chip.addEventListener('click', function() {
+        pipelinesUiState.filter = chip.dataset.pipelineFilter;
+        pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(other) { other.classList.toggle('active', other === chip); });
+        renderList();
+      });
     });
-    pipelines.querySelectorAll('[data-pipeline-run]').forEach(function(button) {
-      button.addEventListener('click', function() { runPipeline(this.closest('[data-pipeline-id]'), findPipeline(data, this.closest('[data-pipeline-id]').dataset.pipelineId)); });
+    pipelines.querySelectorAll('[data-pipeline-view]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        pipelinesUiState.view = button.dataset.pipelineView;
+        try { localStorage.setItem(PIPELINE_VIEW_KEY, pipelinesUiState.view); } catch (error) { /* приватный режим */ }
+        renderList();
+      });
     });
-    pipelines.querySelectorAll('[data-pipeline-details]').forEach(function(button) {
-      button.addEventListener('click', function() { LabRouter.navigate('pipelines', [this.closest('[data-pipeline-id]').dataset.pipelineId]); });
+    // Делегирование: список перерисовывается фильтрами, поэтому слушатель один на хосте.
+    pipelines.querySelector('[data-pipeline-list]').addEventListener('click', function(event) {
+      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail], [data-pipeline-toggle-diagram]');
+      if (!target || target.disabled) return;
+      var card = target.closest('[data-pipeline-id]');
+      if (!card) return;
+      var id = card.dataset.pipelineId;
+      if (target.hasAttribute('data-pipeline-edit')) { openPipelineModal(container, pipelines, findPipeline(list, id)); return; }
+      if (target.hasAttribute('data-pipeline-delete')) { deletePipeline(container, pipelines, list, id); return; }
+      if (target.hasAttribute('data-pipeline-run')) { runPipeline(card, findPipeline(list, id)); return; }
+      if (target.hasAttribute('data-pipeline-open-detail')) { LabRouter.navigate('pipelines', [id]); return; }
+      if (target.hasAttribute('data-pipeline-toggle-diagram')) {
+        var diagram = card.querySelector('[data-pipeline-diagram]');
+        if (!diagram) return;
+        pipelinesUiState.expanded[id] = diagram.hidden;
+        diagram.hidden = !diagram.hidden;
+        target.setAttribute('aria-expanded', diagram.hidden ? 'false' : 'true');
+      }
     });
   }
 
+  function setPipelineRunStatus(statusEl, status, label) {
+    if (!statusEl) return;
+    statusEl.dataset.status = status;
+    var labelEl = statusEl.querySelector('.pipeline-result-label');
+    if (labelEl) labelEl.textContent = label;
+  }
+
   function runPipeline(card, pipeline) {
-    var steps = Array.prototype.slice.call(card.querySelectorAll('.pipeline-timeline-step'));
     var status = card.querySelector('[data-pipeline-run-status]');
     var button = card.querySelector('[data-pipeline-run]');
-    if (!steps.length || !pipeline || button.disabled) return;
+    if (!pipeline || !button || button.disabled) return;
     button.disabled = true;
-    steps.forEach(function(step) { step.dataset.status = 'pending'; });
-    status.textContent = 'Запуск локальной цепочки…';
-    status.dataset.status = 'running';
+    setPipelineRunStatus(status, 'running', 'Запуск…');
     fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: pipeline.defaultQuery || '' }) }).then(function(response) {
       if (!response.ok) return response.json().then(function(error) { throw new Error(error.error || 'HTTP ' + response.status); });
       return response.json();
-    }).then(function(result) {
-      var trace = result.trace || [];
-      steps.forEach(function(step, index) { step.dataset.status = trace[index] ? 'done' : 'pending'; });
-      status.textContent = 'Готово';
-      status.dataset.status = 'done';
+    }).then(function() {
+      setPipelineRunStatus(status, 'done', 'Готов');
       LabRouter.navigate('pipelines', [pipeline.id]);
     }).catch(function(error) {
-      steps.forEach(function(step) { step.dataset.status = 'error'; });
-      status.textContent = isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка запуска';
-      status.dataset.status = 'error';
+      setPipelineRunStatus(status, 'error', isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка запуска');
       alert(isAgentServerUnavailable(error) ? 'Сервер AI-Агентов отключен. Готовые результаты доступны в карточках.' : 'Не удалось запустить пайплайн: ' + error.message);
     }).then(function() {
       button.disabled = false;
@@ -1418,6 +2507,17 @@ const PageController = (function() {
         window.ClubModule.render(container.querySelector('#club-app') || container, parsed);
       }
       if (moduleId === 'paleo-keyboard' && window.PaleoKey) PaleoKey.init();
+      if (moduleId === 'root-dictionary' && window.RootDict) {
+        window.RootDict.applyRoute(parsed);
+      }
+      if (moduleId === 'paleo-glossary' && window.PaleoGlossary) {
+        window.PaleoGlossary.applyParams(parsed);
+      }
+      // Карта языков держит список и деталь в одном контейнере: переход
+      // на #language-map/<id> обязан перерисовать панель, иначе остаётся список.
+      if (moduleId === 'language-map' && window.LanguageMap) {
+        window.LanguageMap.init(container, parsed);
+      }
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -1466,17 +2566,8 @@ const PageController = (function() {
         break;
 
       case 'root-dictionary':
-        container.innerHTML = '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Корневой словарь</h1>' +
-          '<p class="subtitle">Поиск по корням иврита. Введите корень, слово или значение. Граф использует только палео-письмо.</p>' +
-          '<div class="search-wrap"><input type="text" id="rd-search" class="lab-input" placeholder="אמן, AMN, верить..." oninput="if(window.RootsSearch)RootsSearch.filter(this.value)" autofocus></div>' +
-          '<div class="rd-stats"><div class="rd-stat"><div class="num" id="rd-total">150</div><div class="label">Корней</div></div><div class="rd-stat"><div class="num" id="rd-found">0</div><div class="label">Найдено</div></div></div>' +
-          '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка словаря…</div></div>' +
-          '<div id="rd-list"></div><div id="rd-pagination" class="rd-pagination"></div>' +
-          '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
+        container.innerHTML = RootDict.markup();
         container.dataset.loaded = '1';
-        applyQueryParam(parsed, 'rd-search',
-          function() { return !!window._roots; },
-          function(query) { RootsSearch.filter(query); });
         if (window.RootDict) {
           RootDict.init();
           RootDict.applyRoute(parsed);
@@ -1484,37 +2575,28 @@ const PageController = (function() {
         break;
 
       case 'paleo-glossary':
-        container.innerHTML = '<div class="paleo-glossary-page">' +
-          '<header class="paleo-glossary-head">' +
-          '<div class="paleo-glossary-icon" aria-hidden="true">𐤌</div>' +
-          '<div><p class="paleo-glossary-kicker">АЛЕФИ · ИНСТРУМЕНТЫ</p><h1>Палео-глоссарий</h1>' +
-          '<p class="subtitle">Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.</p></div>' +
-          '</header>' +
-          '<div class="paleo-glossary-controls">' +
-          '<label class="paleo-glossary-search">Поиск<input id="paleo-glossary-search" class="lab-input" type="search" placeholder="Палео-форма, слово или транслитерация" autocomplete="off"></label>' +
-          '<label>Корень<select id="paleo-glossary-root" class="lab-input"><option value="all">Все корни</option></select></label>' +
-          '</div>' +
-          '<div id="paleo-glossary-meta" class="paleo-glossary-meta" aria-live="polite"></div>' +
-          '<div id="paleo-glossary-grid" class="paleo-glossary-grid"></div>' +
-          '<nav id="paleo-glossary-pagination" class="paleo-glossary-pagination" aria-label="Страницы глоссария"></nav>' +
-          '</div>';
+        var pgPartial2 = PaleoGlossary && PaleoGlossary.markup ? PaleoGlossary.markup('paleo-glossary') : '';
+        var pgBackBtn2 = '<div class="rg-back-row"><button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">' + escapeHtml(t('lab.paleoGlossary.back', 'Назад к словарям')) + '</button></div>';
+        container.innerHTML = pgPartial2 + pgBackBtn2;
+        applyHashFromParsed(container, parsed);
         container.dataset.loaded = '1';
-        if (window.PaleoGlossary) window.PaleoGlossary.init(container);
+        if (window.PaleoGlossary) window.PaleoGlossary.init(container, parsed);
         break;
 
       case 'word-analyzer':
-        container.innerHTML = '<textarea id="wa-input" class="lab-textarea" rows="8" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
-          '<div class="flex gap-8 mb-16">' +
-          '<button class="lab-btn lab-btn-primary" onclick="WordAnalyzer.analyze()"><img src="assets/icons/32/archaeology/testtube.svg" width="32" height="32" alt="Разобрать" style="vertical-align: middle; margin-right: 6px;"> Разобрать</button>' +
-          '<button class="lab-btn lab-btn-secondary" onclick="document.getElementById(\'wa-input\').value=\'\';document.getElementById(\'wa-grid\').innerHTML=\'\';document.getElementById(\'wa-export\').style.display=\'none\';document.getElementById(\'wa-status\').className=\'lab-alert lab-alert-info\';document.getElementById(\'wa-status\').textContent=\'Введите слова для разбора.\'"><img src="assets/icons/32/nav/alert.png" width="32" height="32" alt="Очистить" style="vertical-align: middle; margin-right: 6px;"> Очистить</button>' +
+        container.innerHTML = '<div class="wa-shell">' +
+          '<textarea id="wa-input" class="lab-textarea wa-input" rows="3" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
+          '<div class="wa-toolbar">' +
+            '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="WordAnalyzer.analyze()">Разобрать</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.clear()">Очистить</button>' +
+            '<div id="wa-export" class="wa-export" style="display:none">' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
+            '</div>' +
           '</div>' +
-          '<div id="wa-status" class="lab-alert lab-alert-info">Введите слова для разбора.</div>' +
-          '<div id="wa-export" class="export-bar" style="display:none">' +
-          '<span class="export-title">Экспорт</span>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
-          '</div>' +
-          '<div id="wa-grid" class="wa-grid"></div>';
+          '<p id="wa-status" class="wa-status">Введите слова для разбора.</p>' +
+          '<div id="wa-grid" class="wa-grid"></div>' +
+        '</div>';
         container.dataset.loaded = '1';
         applyQueryParam(parsed, 'wa-input',
           function() { return typeof WordAnalyzer !== 'undefined'; },
@@ -1529,10 +2611,7 @@ const PageController = (function() {
         break;
 
       case 'etymology-checker':
-        container.innerHTML = '<h1><img src="assets/icons/32/archaeology/testtube.svg" class="lab-icon" alt="">Чекер этимологии</h1>' +
-          '<p class="subtitle">Проверь слово на соответствие палео-корням, образам и карте утрат</p>' +
-          '<div class="search-wrap"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите..." onkeydown="if(event.key===\'Enter\')EtymologyLab.analyze()"><button class="lab-btn lab-btn-primary" onclick="EtymologyLab.analyze()">Разобрать</button></div>' +
-          '<div id="el-results"></div>';
+        container.innerHTML = '<section class="el-shell" aria-labelledby="el-title"><p class="el-microlabel" id="el-title">СЛОВО</p><form id="el-form" class="el-input-panel"><div class="el-rule"></div><div class="el-input-row"><input type="text" id="el-input" class="lab-input" placeholder="Введите слово на иврите или транслите" autocomplete="off"><button class="lab-btn lab-btn-primary" type="submit">Разобрать</button><span class="el-hint">Ctrl+Enter</span></div><div class="el-examples" aria-label="Примеры слов"></div></form><div id="el-results" class="el-results" aria-live="polite"></div></section>';
         container.dataset.loaded = '1';
         if (window.EtyLab || window.EtymologyLab) (window.EtyLab || window.EtymologyLab).init();
         break;
@@ -1586,20 +2665,18 @@ const PageController = (function() {
         break;
 
       case 'investigation':
-        container.innerHTML = '<header class="section-hero">' +
-          '<div class="section-hero-watermark" aria-hidden="true">𐤀 𐤁 𐤂 𐤃 𐤄 𐤅</div>' +
-          '<div class="section-hero-kicker">АЛЕФИ · ЧЕКЕР ПОДМЕН</div>' +
-          '<h1><img src="assets/icons/32/ui/question.png" class="lab-icon" alt="">Чекер подмен</h1>' +
-          '<p class="section-hero-lead">Введите слово, корень или перевод. Сопоставьте происхождение, цепочку подмен и текстовые свидетельства.</p>' +
-        '</header>' +
-          '<form id="investigation-form" class="investigation-search" onsubmit="event.preventDefault(); Investigation.investigate();">' +
-          '<label for="investigation-input">Объект расследования</label>' +
+        container.innerHTML = '<form id="investigation-form" class="investigation-search" onsubmit="event.preventDefault(); Investigation.investigate();">' +
+          '<div class="investigation-search-label-row"><label for="investigation-input">ОБЪЕКТ</label><span>Ctrl+Enter</span></div><div class="investigation-rule"></div>' +
           '<div class="investigation-search-row"><input type="search" id="investigation-input" class="lab-input" placeholder="חסד, милость, HSD..." autocomplete="off" required>' +
-          '<button type="submit" class="lab-btn lab-btn-primary" id="investigation-submit"><img src="assets/icons/32/ui/question.png" width="24" height="24" alt="">Расследовать</button></div>' +
-          '<div id="investigation-status" class="investigation-status" role="status" aria-live="polite">Данные загружаются из словаря корней и словарей подмен.</div>' +
-          '</form>' +
-          '<div id="investigation-result" class="investigation-result" aria-live="polite"></div>';
+          '<button type="submit" class="lab-btn lab-btn-primary" id="investigation-submit"><i data-lucide="search" aria-hidden="true"></i>Расследовать</button></div>' +
+          '<div id="investigation-status" class="investigation-status is-busy" role="status" aria-live="polite"><span class="investigation-status-chip"><span class="investigation-status-dot"></span><span data-investigation-status-text>Загрузка…</span></span><span class="investigation-status-stages" hidden aria-label="Стадии">словари → подмены → свидетельства</span><span class="investigation-status-examples"><button type="button" class="lab-example-chip" data-investigation-example="тол">тол</button><button type="button" class="lab-example-chip" data-investigation-example="милость">милость</button><button type="button" class="lab-example-chip" data-investigation-example="hsd">hsd</button><button type="button" class="lab-example-chip" data-investigation-example="господь">господь</button></span></div></form>' +
+          '<div id="investigation-result" class="investigation-result is-visible" aria-live="polite"></div>';
         container.dataset.loaded = '1';
+        if (window.Investigation) {
+          Investigation.init();
+          var initialResult = document.getElementById('investigation-result');
+          if (initialResult) initialResult.innerHTML = Investigation.emptyChapters();
+        }
         break;
 
       case 'board':
@@ -1640,75 +2717,25 @@ const PageController = (function() {
         break;
 
       case 'board-generator':
-        container.innerHTML = '<h1><img src="assets/icons/32/scribe/scroll.png" class="lab-icon" alt="">Генератор исследовательских досок</h1>' +
-          '<p class="subtitle">Создавайте визуальные доски для анализа улик, выводов и вложений. Экспортируйте в PNG, PDF или TXT.</p>' +
-          '<form id="board-form">' +
-          '<div style="margin-bottom:20px"><label style="display:block;font-weight:600;margin-bottom:6px">Заголовок доски <span style="color:var(--accent-red)">*</span></label>' +
-          '<input type="text" id="board-title" required placeholder="Например: Анализ перевода Берешит 1:1" style="width:100%;padding:10px 12px;font-family:\'EB Garamond\',Georgia,serif;font-size:16px;border:1px solid var(--border-light);border-radius:4px;background:var(--bg-primary);color:var(--text-primary);outline:none"></div>' +
-          '<div style="margin-bottom:20px"><label style="display:block;font-weight:600;margin-bottom:6px">Вывод / главная улика <span style="color:var(--accent-red)">*</span></label>' +
-          '<textarea id="main-conclusion" required rows="3" placeholder="Краткий вывод или основная улика..." style="width:100%;padding:10px 12px;font-family:\'EB Garamond\',Georgia,serif;font-size:16px;border:1px solid var(--border-light);border-radius:4px;background:var(--bg-primary);color:var(--text-primary);outline:none;resize:vertical"></textarea></div>' +
-          '<div style="margin-bottom:20px"><label style="display:block;font-weight:600;margin-bottom:8px">Улики</label><div id="evidence-list"></div>' +
-          '<button type="button" onclick="addEvidence()" class="lab-btn lab-btn-secondary lab-btn-sm" style="margin-top:8px">+ Добавить улику</button></div>' +
-          '<div style="margin-bottom:20px"><label style="display:block;font-weight:600;margin-bottom:8px">Вложения</label><div id="attachments-list"></div>' +
-          '<button type="button" onclick="addAttachment()" class="lab-btn lab-btn-secondary lab-btn-sm" style="margin-top:8px">+ Добавить вложение</button></div>' +
-          '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px">' +
-          '<button type="button" onclick="generateBoard()" class="lab-btn lab-btn-primary lab-btn-compact" style="flex:1;min-width:200px">Сгенерировать доску</button></div>' +
-          '<div id="export-section" style="display:none;padding:16px;background:var(--bg-primary);border:1px solid var(--border-light);border-radius:4px">' +
-          '<h3 style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:20px;font-weight:600;margin-bottom:12px">Экспорт</h3>' +
-          '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
-          '<button type="button" onclick="exportPNG()" class="lab-btn lab-btn-secondary lab-btn-sm">PNG</button>' +
-          '<button type="button" onclick="exportPDF()" class="lab-btn lab-btn-secondary lab-btn-sm">PDF</button>' +
-          '<button type="button" onclick="exportTXT()" class="lab-btn lab-btn-secondary lab-btn-sm">TXT</button>' +
-          '<button type="button" onclick="copyPrompt()" class="lab-btn lab-btn-secondary lab-btn-sm">Копировать промпт</button></div></div>' +
-          '</form>' +
-          '<div style="margin-top:24px"><h2 style="font-family:\'Cormorant Garamond\',Georgia,serif;font-size:24px;font-weight:600;text-align:center;margin-bottom:16px">Предпросмотр доски</h2>' +
-          '<div id="board-preview" style="display:none"></div>' +
-          '<div id="board-placeholder" style="text-align:center;padding:60px 20px;color:var(--text-muted);font-style:italic;font-size:16px">Заполните форму и нажмите «Сгенерировать доску».</div></div>' +
-          '<div id="copy-toast" style="position:fixed;top:24px;left:50%;transform:translateX(-50%);background:var(--bg-dark);color:var(--text-light);padding:10px 24px;font-size:14px;font-family:\'EB Garamond\',Georgia,serif;opacity:0;pointer-events:none;z-index:999;border-radius:4px;border:1px solid var(--accent-gold);transition:opacity 0.4s">Скопировано!</div>';
-        container.dataset.loaded = '1';
+        showSpinner(container, 'Загрузка конструктора…');
+        if (window.BoardGenerator) {
+          window.BoardGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор досок» не загрузился.');
+        }
         break;
 
       case 'research-generator':
-        container.innerHTML = '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">Генератор исследований</h1>' +
-          '<p class="subtitle">Выберите тип исследования, укажите тему и получите основу в формате Markdown.</p>' +
-          '<form id="research-generator-form" class="research-generator-form" onsubmit="event.preventDefault(); PageController.generateResearch();">' +
-          '<div class="research-generator-fields">' +
-          '<label for="rg-type">Тип исследования</label>' +
-          '<select id="rg-type" class="lab-select">' +
-          '<option value="root">Корень</option><option value="term">Термин</option><option value="verse">Стих</option><option value="substitution">Подмена</option><option value="free">Свободная тема</option>' +
-          '</select>' +
-          '<label for="rg-topic">Тема</label>' +
-          '<input type="text" id="rg-topic" class="lab-input" placeholder="Например: חֶסֶד или подмена смысла слова «закон»" required>' +
-          '<button type="submit" class="lab-btn lab-btn-primary" id="rg-generate">Сгенерировать</button>' +
-          '</div>' +
-          '</form>' +
-          '<div id="rg-status" class="lab-alert lab-alert-info" role="status">Заполните тему и выберите тип исследования.</div>' +
-          '<div id="rg-export" class="export-bar research-generator-export" style="display:none">' +
-          '<span class="export-title">Экспорт</span>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="PageController.downloadResearchTxt()">Скачать TXT</button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="PageController.copyResearchMarkdown()">Копировать Markdown</button>' +
-          '</div>' +
-          '<section class="research-preview-wrap" aria-labelledby="rg-preview-title">' +
-          '<h2 id="rg-preview-title">Превью</h2>' +
-          '<div id="rg-preview" class="research-preview" aria-live="polite">' +
-          '<p class="research-preview-placeholder">Здесь появится оформленный шаблон исследования.</p>' +
-          '</div>' +
-          '</section>';
-        container.dataset.loaded = '1';
+        showSpinner(container, 'Загрузка конструктора…');
+        if (window.ResearchGenerator) {
+          window.ResearchGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор исследований» не загрузился.');
+        }
         break;
 
-      case 'religionism-checker':
-        container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Чекер религионимов" style="vertical-align: middle; margin-right: 6px;"> Чекер религионимов</h1>' +
-          '<p class="subtitle">Проверка текста на подмены. Вставьте текст на русском — мы подсветим религионизмы.</p>' +
-          '<textarea id="rc-input" class="lab-textarea" rows="6" placeholder="Вставьте текст, например: Господь Бог сказал Моисею..."></textarea>' +
-          '<div class="flex gap-8 items-center mb-16">' +
-          '<button class="lab-btn lab-btn-primary" onclick="RelChecker.check()"><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Проверить" style="vertical-align: middle; margin-right: 6px;"> Проверить текст</button>' +
-          '<button class="lab-btn lab-btn-secondary" onclick="RelChecker.clear()"><img src="assets/icons/32/nav/alert.png" width="32" height="32" alt="Очистить" style="vertical-align: middle; margin-right: 6px;"> Очистить</button></div>' +
-          '<div id="rc-result" class="lab-card" style="display:none;"><div class="lab-card-header"><img src="assets/icons/32/scribe/scroll.png" width="32" height="32" alt="Результат" style="vertical-align: middle; margin-right: 6px;"> Результат проверки</div><div class="lab-card-body" id="rc-body"></div></div>' +
-          '<div class="lab-card"><div class="lab-card-header"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt="Словарь" style="vertical-align: middle; margin-right: 6px;"> Словарь подмен</div><div class="lab-card-body" id="rc-dict"></div></div>';
-        container.dataset.loaded = '1';
-        if (window.RelChecker) window.RelChecker.init();
-        break;
+      // religionism-checker отдаётся fetch-веткой ниже: разметка живёт в
+      // pages/religionism-checker.html и строится по общему канону панелей.
 
       case 'religionisms':
         container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Религионизмы" style="vertical-align: middle; margin-right: 6px;"> Религионизмы</h1>' +
@@ -1759,26 +2786,30 @@ const PageController = (function() {
       case 'ai-agents':
         var agents = getAgentMapData();
         agentMapData = agents;
-        var cards = agents.map(function(a) {
-          return '<button type="button" class="tool-card agent-card agent-list-card' + (a.featured ? ' agent-card-orchestrator' : '') + '" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '"><span class="tool-icon"><img src="assets/icons/32/' + a.icon + '.png" width="32" height="32" alt="' + a.name + '"></span>' +
-            '<div class="tool-name">' + a.name + '</div>' +
-            '<div class="tool-desc">' + a.desc + '</div>' +
-            '<span class="tool-badge model agent-list-model">' + a.model + '</span>' +
-            '<span class="agent-list-role" hidden>' + a.cat + '</span>' +
-            '<span class="badge-category">' + a.cat + '</span>' +
-            '<span class="badge-dev ' + (a.featured ? 'badge-dev-active' : 'badge-dev-progress') + '">' + (a.featured ? 'Активен' : 'В разработке') + '</span></button>';
-        }).join('');
-        container.innerHTML = '<div class="agent-list-view"><div class="agent-grid">' + cards + '</div></div>' +
+        try { agentsUiState.view = localStorage.getItem(AGENT_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { agentsUiState.view = 'cards'; }
+        agentsUiState.status = 'all';
+        agentsUiState.query = '';
+        var agentsToolbar = '<div class="agent-toolbar-row">' +
+          '<input type="search" class="lab-input agents-search" data-agents-search placeholder="Поиск по ролям…" aria-label="Поиск по агентам">' +
+          '<div class="agent-filter-chips" role="group" aria-label="Фильтр по статусу">' +
+          '<button type="button" class="pipeline-chip active" data-agent-status="all">Все</button>' +
+          '<button type="button" class="pipeline-chip" data-agent-status="active">Активен</button>' +
+          '<button type="button" class="pipeline-chip" data-agent-status="dev">В разработке</button>' +
+          '<button type="button" class="pipeline-chip" data-agent-status="stub">Заглушка</button></div>' +
+          '<div class="agent-toolbar-actions">' +
+          '<span class="pipeline-count" data-agents-count aria-live="polite"></span>' +
+          '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+          '<button type="button" class="res-view-btn' + (agentsUiState.view === 'cards' ? ' active' : '') + '" data-agents-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+          '<button type="button" class="res-view-btn' + (agentsUiState.view === 'list' ? ' active' : '') + '" data-agents-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button></div>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-map" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
+          '</div>';
+        container.innerHTML = '<section class="agent-controls-panel" aria-label="Управление агентами">' + agentsToolbar + '</section>' +
+          '<div class="agent-list-view' + (agentsUiState.view === 'list' ? ' is-list-view' : '') + '">' + renderAgentGroups(agents, agentsUiState).html + '</div>' +
           '<div id="agent-detail-view" class="agent-detail-view" hidden></div>' +
           '<div id="agent-map-view" class="agent-map-view" hidden></div>';
-        var agentControls = document.createElement('section');
-        agentControls.className = 'agent-controls-panel';
-        agentControls.setAttribute('aria-label', 'Управление агентами');
-        agentControls.innerHTML = '<button type="button" class="lab-btn lab-btn-primary agent-control-button" data-agent-map-open><img src="assets/icons/32/ui/web.png" alt="" aria-hidden="true"><span>Карта агентов</span></button>';
-        container.insertBefore(agentControls, container.querySelector('.agent-list-view'));
-        agentControls.querySelector('[data-agent-map-open]').addEventListener('click', function() {
-          if (window.AgentMap) window.AgentMap.open();
-        });
+        updateAgentsCount(container, getAgentMapData().length);
+        initAgentsToolbar(container);
+        if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
         container.dataset.loaded = '1';
         if (parsed && parsed.segments && parsed.segments[1]) {
           renderAgentDetail(container, parsed.segments[1]);
@@ -1843,6 +2874,8 @@ const PageController = (function() {
       // ===== МОДУЛИ С FETCH HTML-СТРАНИЦЫ =====
       case 'paleo-builder':
       case 'video-lab':
+      case 'religionism-checker':
+      case 'state-checker':
       case 'generators':
       case 'checkers':
       case 'translation-comparator':
@@ -1887,15 +2920,8 @@ const PageController = (function() {
         }
         break;
 
-      case 'state-checker':
-        showSpinner(container, 'Загрузка чекера стран…');
-        if (window.StateChecker) {
-          window.StateChecker.init(container);
-        } else {
-          showError(container, 'Модуль «Чекер стран» не загрузился.');
-        }
-        container.dataset.loaded = '1';
-        break;
+      // state-checker отдаётся fetch-веткой ниже: разметка живёт в
+      // pages/state-checker.html и строится по общему канону панелей.
 
       case 'tree-checker':
         showSpinner(container, 'Загрузка дерева…');
@@ -2041,6 +3067,22 @@ const PageController = (function() {
         }
         break;
 
+      case 'timescale-generator':
+        if (window.TimescaleGenerator) {
+          window.TimescaleGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор шкалы времени» не загрузился.');
+        }
+        break;
+
+      case 'hypothesis-generator':
+        if (window.HypothesisGenerator) {
+          window.HypothesisGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор гипотез» не загрузился.');
+        }
+        break;
+
       case 'clue-generator':
         if (window.ClueGenerator) {
           window.ClueGenerator.init(container);
@@ -2133,7 +3175,7 @@ const PageController = (function() {
         viewId = seg[2] ? 'course' : 'courses';
         if (seg[2] && window.AlephyCourses && window.AlephyCourses.list) {
           var course = window.AlephyCourses.list.filter(function(item) { return item.id === decodeURIComponent(seg[2]); })[0];
-          if (course) override = { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + course.lessons.length + ' уроков'] };
+          if (course) override = { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + (window.LabPlural ? LabPlural(course.lessons.length, 'урок', 'урока', 'уроков') : course.lessons.length + ' уроков')] };
         }
       }
     } else if (moduleId === 'states') {
@@ -2167,6 +3209,15 @@ const PageController = (function() {
       if (segWb && segWb[1] === 'run') viewId = 'run';
       else if (segWb && segWb[1] === 'project') viewId = 'project';
       // override задаётся в workbench.js (title конвейера / имя проекта)
+    } else if (moduleId === 'dictionaries') {
+      var segD = parsed && parsed.segments;
+      if (segD && decodeURIComponent(segD[1] || '') === 'root-dictionary') {
+        viewId = 'root-dictionary';
+        override = { kicker: 'АЛЕФИ · СЛОВАРИ · КОРНЕВОЙ', title: 'Корневой словарь', subtitle: rootDictionaryDescription() };
+      } else if (segD && decodeURIComponent(segD[1] || '') === 'paleo-glossary') {
+        viewId = 'paleo-glossary';
+        override = { kicker: 'АЛЕФИ · СЛОВАРИ · ПАЛЕО-ГЛОССАРИЙ', title: 'Палео-глоссарий', subtitle: paleoGlossaryDescription() };
+      }
     } else if (moduleId === 'club') {
       viewId = parsed && parsed.segments && parsed.segments[1] === 'discussions' ? 'discussions' : 'club';
     }
@@ -2275,15 +3326,6 @@ const PageController = (function() {
     if (window.LearnLab) LearnLab.init();
     if (window.AlephyStates) AlephyStates.init();
 
-    // Init board generator form
-    var boardForm = document.getElementById('board-form');
-    if (boardForm) {
-      boardForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (typeof generateBoard === 'function') generateBoard();
-      });
-    }
-
   }
   }
 
@@ -2301,6 +3343,14 @@ const PageController = (function() {
     // Простое значение здесь осталось бы снимком null, созданным до первого рендера.
     getAgentMapData: function() {
       return agentMapData || (agentMapData = getAgentMapData());
+    },
+    // Для smoke/визуальных проверок: статус и сборка карточек/строк без браузерного клика.
+    agentsDebug: {
+      getStatus: getAgentStatus,
+      renderCard: renderAgentCard,
+      renderRow: renderAgentRow,
+      renderGroups: renderAgentGroups,
+      filter: filterAgents
     },
     get agentMapData() {
       return agentMapData;

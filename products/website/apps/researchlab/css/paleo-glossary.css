@@ -11,11 +11,37 @@
 .pg-root:hover, .pg-root:focus-visible { border-color: var(--accent-gold); outline: none; }
 .pg-chip-mono { display: inline-flex; align-items: center; padding: 5px 12px; border: 1px solid var(--border-light); border-radius: 999px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .5px; color: var(--text-muted); white-space: nowrap; }
 
-/* ===== Сетка и карточка ~140px ===== */
-.paleo-glossary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.paleo-glossary-card { min-width: 0; min-height: 140px; display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 6px; overflow-wrap: anywhere; cursor: pointer; transition: border-color var(--motion-base); }
-.paleo-glossary-card:hover { border-color: var(--accent-gold); }
-.paleo-glossary-card:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+/* ===== Сетка и строка реестра =====
+   Та же плоская панель, что .mech-index и .methodology-card:
+   hairline-разделители, ни рамок на карточку, ни теней. */
+/* flex-wrap вместо grid: последняя строка растягивается сама, поэтому
+   «хвост» пустых ячеек в цвете разделителя не появляется. */
+.paleo-glossary-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.paleo-glossary-card {
+  min-width: 0;
+  flex: 1 1 21rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: background var(--motion-base);
+}
+.paleo-glossary-card:hover,
+.paleo-glossary-card:focus-visible {
+  background: var(--surface-hover);
+}
+.paleo-glossary-card:focus-visible { outline: none; }
 
 /* Строка 1: палео-глифы слева, транслит mono-чипом справа */
 .paleo-glossary-card-top { display: flex; align-items: center; gap: 10px; }
@@ -43,9 +69,9 @@
 .rg-back-row { display: flex; justify-content: flex-start; margin-top: 16px; }
 
 /* ===== Темы и адаптив ===== */
-@media (max-width: 900px) { .paleo-glossary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 900px) { .paleo-glossary-card { flex-basis: calc(50% - 1px); } }
 @media (max-width: 640px) {
-  .paleo-glossary-grid { grid-template-columns: 1fr; }
+  .paleo-glossary-card { flex-basis: 100%; padding: var(--space-3); }
   .pg-toolbar-row { align-items: stretch; }
   .pg-search { flex-basis: 100%; }
   .pg-root { max-width: none; width: 100%; }

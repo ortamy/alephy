@@ -1,216 +1,197 @@
-﻿/* =============================================
-   word-analyzer.css вЂ” Р Р°Р·Р±РѕСЂ СЃР»РѕРІ
-   РЎС‚РёР»СЊ: РїРµСЂРіР°РјРµРЅС‚, Р·РѕР»РѕС‚Рѕ, РєР°СЂС‚РѕС‡РєРё СЃ С‚РµРЅСЏРјРё
+/* =============================================
+   word-analyzer.css — Разбор слов
+   Стиль: панель ввода, компактные карточки, сетка
+   Канон: DESIGN-SYSTEM §0.2 (тени = 0), §1.3 (4px-сетка)
    ============================================= */
 
-/* ===== GRID ===== */
+/* ===== ОБОЛОЧКА И ПАНЕЛЬ ВВОДА ===== */
+.wa-shell { display: grid; gap: var(--space-2); }
+.wa-input {
+  width: 100%;
+  min-height: 72px;
+  font-family: var(--font-hebrew);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+.wa-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.wa-export {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+/* Строка статуса вместо полноразмерного баннера-алерта. */
+.wa-status {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12, 12px);
+  line-height: 1.4;
+}
+.wa-status--warn { color: var(--gold-text); }
+.wa-status--ok { color: var(--text-primary); }
+
+/* ===== СЕТКА ===== */
 .wa-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-5);
-  margin-top: var(--space-5);
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-2);
 }
 
-/* ===== CARD ===== */
+/* ===== КАРТОЧКА ===== */
 .wa-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  box-shadow: var(--shadow-soft);
-  transition: all var(--motion-base);
   display: flex;
   flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+  transition: border-color var(--motion-base);
 }
-.wa-card:hover {
-  box-shadow: 0 4px 16px var(--shadow-card-hover-color);
-  border-color: var(--accent-gold);
-}
-.wa-card-missing {
-  opacity: 0.8;
-}
-.wa-card-missing:hover {
-  opacity: 1;
-  border-color: var(--accent-red);
-}
+.wa-card:hover { border-color: var(--accent-gold); }
+.wa-card--missing { background: var(--bg-secondary); }
+.wa-card--missing:hover { border-color: var(--accent-red); }
 
-/* ===== CARD HEADER ===== */
-.wa-card-header {
+/* Заголовок: иврит · слово · статус · действие. */
+.wa-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 14px var(--space-4);
-  border-bottom: 1px solid var(--border-light);
-  background: var(--bg-tertiary);
-}
-.wa-card-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
+  gap: var(--space-2);
   min-width: 0;
 }
+.wa-row--head {
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
 .wa-hebrew {
-  font-family: var(--font-hebrew);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  color: var(--text-primary);
-  direction: rtl;
   flex-shrink: 0;
+  color: var(--text-primary);
+  font-family: var(--font-hebrew);
+  font-size: var(--text-lg);
+  line-height: 1.2;
+  direction: rtl;
 }
 .wa-word {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
+  flex: 1;
+  min-width: 0;
   color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ===== BADGE ===== */
-.wa-badge {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  padding: 2px var(--space-2);
-  border-radius: 3px;
+/* Статус по легенде §6: найдено — золото, не найдено — красный. */
+.wa-flag {
   flex-shrink: 0;
-}
-.wa-badge-found {
-  background: var(--accent-gold);
-  color: #2c1810;
-}
-.wa-badge-missing {
-  background: var(--accent-red);
-  color: #faf3e0;
-}
-
-/* ===== CARD BODY ===== */
-.wa-card-body {
-  padding: 14px var(--space-4);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-.wa-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-.wa-section-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-xs);
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10, 10px);
   font-weight: 700;
+  letter-spacing: .08em;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
+  white-space: nowrap;
+}
+.wa-flag--found { border-color: var(--accent-gold); color: var(--gold-text); }
+.wa-flag--missing { border-color: var(--accent-red); color: var(--red-text); }
+.wa-action { flex-shrink: 0; margin-left: auto; }
+
+.wa-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
-/* ===== PALEO ROW ===== */
+/* ===== ПАЛЕО-ОБРАЗЫ (содержательный слой) ===== */
 .wa-paleo-row {
   display: flex;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: var(--space-1);
 }
 .wa-paleo-char {
-  font-size: var(--text-2xl);
+  color: var(--text-primary);
+  font-size: var(--text-xl);
   line-height: 1;
   cursor: help;
-  color: var(--text-primary);
   transition: color var(--motion-base);
 }
-.wa-paleo-char:hover {
-  color: var(--accent-gold);
-}
+.wa-paleo-char:hover { color: var(--accent-gold); }
 
-/* ===== MEANING ===== */
-.wa-meaning {
-  font-size: var(--text-md);
-  color: var(--text-primary);
-  line-height: var(--leading-ui);
+/* ===== ПОЛЯ ЗНАЧЕНИЙ ===== */
+.wa-fields { display: grid; gap: var(--space-1); margin: 0; }
+.wa-field {
+  display: grid;
+  grid-template-columns: 108px minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-2);
 }
-.wa-translit {
-  font-size: 14px;
+.wa-field dt {
   color: var(--text-secondary);
-  font-style: normal;
+  font-family: var(--font-ui);
+  font-size: var(--ui-11, 11px);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
 }
-.wa-root {
-  font-size: 14px;
+.wa-field dd {
+  margin: 0;
+  min-width: 0;
   color: var(--text-primary);
-  line-height: var(--leading-ui);
+  font-size: var(--text-xs);
+  line-height: 1.45;
 }
 .wa-root-heb {
   font-family: var(--font-hebrew);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   direction: rtl;
 }
 
-/* ===== SUBSTITUTIONS ===== */
-.wa-subs {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+/* ===== ПОДМЕНЫ ===== */
+.wa-subs { display: grid; gap: var(--space-1); }
 .wa-sub-item {
-  padding: 6px var(--space-2);
-  background: var(--bg-primary);
-  border-radius: var(--radius-xs);
-  border-left: 3px solid var(--accent-gold);
+  padding: var(--space-1) var(--space-2);
+  border-left: 2px solid var(--accent-gold);
+  background: var(--bg-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.4;
 }
-.wa-sub-from {
-  font-weight: 600;
-  color: var(--accent-red);
-}
-.wa-sub-to {
-  font-weight: 600;
-  color: var(--accent-green);
-}
+.wa-sub-from { color: var(--red-text); }
+.wa-sub-to { color: var(--text-primary); }
 .wa-sub-note {
-  margin-top: 2px;
+  display: block;
+  color: var(--text-secondary);
 }
 
-/* ===== CARD FOOTER ===== */
-.wa-card-footer {
-  padding: 10px var(--space-4);
-  border-top: 1px solid var(--border-light);
-  display: flex;
-  gap: var(--space-2);
-  justify-content: flex-end;
-  background: var(--bg-tertiary);
-}
-
-/* ===== DETAIL MODAL ===== */
-.wa-detail {
-  max-width: 100%;
-}
+/* ===== МОДАЛКА РАЗБОРА ===== */
+.wa-detail { max-width: 100%; }
 .wa-detail-word {
+  margin-bottom: var(--space-3);
   font-family: var(--font-hebrew);
-  font-size: 36px;
+  font-size: var(--text-2xl);
   text-align: center;
-  margin-bottom: var(--space-4);
   direction: rtl;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .wa-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-  }
-  .wa-card-header {
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-  .wa-hebrew {
-    font-size: 20px;
-  }
-  .wa-word {
-    font-size: var(--text-base);
-  }
-  .wa-paleo-char {
-    font-size: 24px;
-  }
+/* ===== АДАПТАЦИЯ ===== */
+@media (max-width: 640px) {
+  .wa-export { margin-left: 0; width: 100%; }
+  .wa-row--head { flex-wrap: wrap; }
+  .wa-action { margin-left: 0; }
+  .wa-field { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .wa-grid { grid-template-columns: minmax(0, 1fr); }
 }

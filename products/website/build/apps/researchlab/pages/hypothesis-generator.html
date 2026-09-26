@@ -1,0 +1,62 @@
+<!-- Генератор гипотез: альтернативные чтения объекта с тестом на опровержение.
+     Шапка — реестр LabHero; панели и empty-state — css/components/panels.css. -->
+<section class="hg-shell" aria-label="Генератор гипотез">
+  <div class="hg-layout">
+    <div class="hg-side">
+      <section class="lab-panel" aria-labelledby="hg-object-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">01</span>
+          <h2 class="lab-chapter-title" id="hg-object-title" data-i18n="lab.hypothesisGenerator.panelObject">Объект</h2>
+        </header>
+        <form id="hg-form" class="hg-form" novalidate>
+          <div class="hg-field">
+            <span class="hg-label" id="hg-type-label" data-i18n="lab.hypothesisGenerator.typeLabel">Тип</span>
+            <div class="hg-types" role="group" aria-labelledby="hg-type-label">
+              <button type="button" class="lab-example-chip hg-type-chip is-active" data-hg-type="word" aria-pressed="true" data-i18n="lab.hypothesisGenerator.typeWord">Слово</button>
+              <button type="button" class="lab-example-chip hg-type-chip" data-hg-type="verse" aria-pressed="false" data-i18n="lab.hypothesisGenerator.typeVerse">Стих</button>
+              <button type="button" class="lab-example-chip hg-type-chip" data-hg-type="root" aria-pressed="false" data-i18n="lab.hypothesisGenerator.typeRoot">Корень</button>
+            </div>
+          </div>
+          <div class="hg-field">
+            <label class="hg-label" for="hg-object" data-i18n="lab.hypothesisGenerator.objectLabel">Объект</label>
+            <input type="text" id="hg-object" class="lab-input" maxlength="160" autocomplete="off"
+                   placeholder="Например: חֶסֶד, закон, Дварим 32:8"
+                   data-i18n-attr="placeholder:lab.hypothesisGenerator.objectPlaceholder">
+          </div>
+          <div class="lab-examples" role="group" aria-label="Примеры объектов"
+               data-i18n-attr="aria-label:lab.hypothesisGenerator.examplesLabel">
+            <span class="lab-examples-label" data-i18n="lab.hypothesisGenerator.examplesLabel">Примеры</span>
+            <button type="button" class="lab-example-chip" data-hg-example="חֶסֶד" data-hg-example-type="root">חֶסֶד</button>
+            <button type="button" class="lab-example-chip" data-hg-example="закон" data-hg-example-type="word">закон</button>
+            <button type="button" class="lab-example-chip" data-hg-example="Дварим 32:8" data-hg-example-type="verse">Дварим 32:8</button>
+          </div>
+          <p class="hg-sources" id="hg-sources" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="lab-panel" aria-labelledby="hg-saved-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">02</span>
+          <h2 class="lab-chapter-title" id="hg-saved-title" data-i18n="lab.hypothesisGenerator.panelSaved">Сохранённые</h2>
+        </header>
+        <div id="hg-saved" class="hg-saved"></div>
+      </section>
+    </div>
+
+    <section class="lab-panel hg-hyp-panel" aria-labelledby="hg-hyp-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">03</span>
+        <h2 class="lab-chapter-title" id="hg-hyp-title" data-i18n="lab.hypothesisGenerator.panelHypotheses">Гипотезы</h2>
+        <span class="wb-badge" id="hg-hyp-badge" data-i18n="lab.hypothesisGenerator.badgeEmpty">Ожидание</span>
+      </header>
+      <div id="hg-hyp" class="hg-hyp" aria-live="polite"></div>
+      <p class="hg-legend" data-i18n="lab.hypothesisGenerator.legendNote">Уровни уверенности: интерпретация — опора на данные, гипотеза — рабочее предположение.</p>
+      <div class="hg-actions">
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-hg-action="copy" disabled data-i18n="lab.hypothesisGenerator.actionsCopy">Копировать Markdown</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-hg-action="board" disabled data-i18n="lab.hypothesisGenerator.actionsBoard">На доску</button>
+        <a class="hg-door" href="#exposure-editor"><span data-i18n="lab.hypothesisGenerator.actionsCase">В кейс исследований</span> →</a>
+      </div>
+      <p class="lab-status" id="hg-status" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+</section>

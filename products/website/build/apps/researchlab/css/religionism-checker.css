@@ -1,0 +1,266 @@
+/* ============================================================
+   religionism-checker.css — Чекер религионизмов (#religionism-checker).
+   Каркас панелей и глав — css/components/panels.css.
+   Здесь: вход, сводка результата, таблица подмен (desktop) → стек (mobile),
+   состояния empty/running/error. Hairline, без теней, золото только primary.
+   ============================================================ */
+
+.rc-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+/* ===== Панель 01: ввод ===== */
+.rc-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.rc-input {
+  width: 100%;
+  min-height: 160px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-ui);
+  resize: vertical;
+}
+
+.rc-input::placeholder { color: var(--text-secondary); }
+
+.rc-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.rc-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Иконочные кнопки модуля: нейтральный hairline, золото принадлежит primary. */
+.rc-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.rc-icon-btn:hover,
+.rc-icon-btn:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.rc-icon-btn svg { width: 16px; height: 16px; }
+
+/* ===== Панель 02: результат ===== */
+.rc-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* hidden должен побеждать display:flex (иначе сводка видна в пустом состоянии) */
+.rc-summary[hidden] { display: none; }
+
+.rc-summary-text {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.rc-summary-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.rc-output {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 148px;
+}
+
+.rc-groups {
+  display: grid;
+  gap: var(--space-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.rc-group { min-width: 0; }
+
+.rc-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.rc-group-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Таблица подмен: hairline-строки, колонки-микролейблы */
+.rc-table {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+
+.rc-table-head,
+.rc-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.9fr) minmax(140px, 1fr) minmax(200px, 1.8fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+}
+
+.rc-table-head {
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.rc-row {
+  color: var(--text-primary);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--motion-base);
+}
+
+.rc-row:last-child { border-bottom: 0; }
+.rc-row:hover,
+.rc-row:focus-visible { background: var(--bg-secondary); }
+
+/* Подмена — красный hairline-чип (заливка убрана) */
+.rc-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  color: var(--red-text);
+  border: 1px solid var(--red-text);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* Оригинал — сериф + иврит */
+.rc-orig {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.rc-heb {
+  margin-left: var(--space-2);
+  color: var(--text-secondary);
+  font-family: var(--font-hebrew, var(--font-heading));
+  font-size: var(--text-lg);
+}
+
+.rc-note {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+/* Бейдж уверенности на интерпретациях (§6) */
+.rc-conf {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--space-2);
+  padding: 1px var(--space-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Подсветка термина, открытого deep-link'ом */
+.rc-row.is-target {
+  background: var(--bg-secondary);
+  box-shadow: inset 2px 0 0 var(--accent-gold);
+}
+
+/* Состояние error: hairline + «Повторить» */
+.rc-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-left: 2px solid var(--red-text);
+  border-radius: var(--radius-8);
+}
+
+.rc-error-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ===== Мобильный закон (§5.3): 390px — стек-строки, края шапки, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .rc-summary { flex-wrap: wrap; }
+  .rc-summary-actions { margin-left: 0; }
+  .rc-table-head { display: none; }
+
+  .rc-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+
+  .rc-cell-repl { order: 1; }
+  .rc-cell-orig { order: 2; }
+  .rc-cell-note { order: 3; }
+}
+
+.rc-group-head .wb-badge { margin-left: auto; }

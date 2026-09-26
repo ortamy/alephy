@@ -1,0 +1,58 @@
+{
+  "cards": {
+    "groups": 5,
+    "items": 16,
+    "groupsHeight": 1299,
+    "moduleHeight": 1585,
+    "viewport": 800
+  },
+  "layout": {
+    "groupWidth": 998,
+    "columns": 3,
+    "cardWidth": 325
+  },
+  "list": {
+    "groups": 5,
+    "items": 16,
+    "groupsHeight": 1024,
+    "moduleHeight": 1309,
+    "viewport": 800
+  },
+  "stub": {
+    "count": 7,
+    "statuses": [
+      "Заглушка",
+      "Заглушка",
+      "Заглушка",
+      "Заглушка",
+      "Заглушка",
+      "Заглушка",
+      "Заглушка"
+    ],
+    "models": [
+      "без модели",
+      "без модели",
+      "без модели",
+      "без модели",
+      "без модели",
+      "без модели",
+      "без модели"
+    ],
+    "countLabel": "7 из 16 · 7 ролей"
+  },
+  "labels": [
+    "Оркестрация",
+    "Исследование",
+    "Контроль качества",
+    "Документация",
+    "Разработка"
+  ],
+  "mobileMetrics": {
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "columns": "332px",
+    "containerLeft": 29,
+    "cardLeft": 29
+  },
+  "errors": []
+}

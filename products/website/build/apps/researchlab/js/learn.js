@@ -307,7 +307,7 @@
     var battleStored = !!(root.PaleoBattle && root.PaleoBattle.STORAGE_KEY && read(root.PaleoBattle.STORAGE_KEY, null));
 
     var cardsPractice = [
-      hubCard({ glyph:'𐤀', title:'Изучение иврита', desc:'22 урока по буквам: название, образ, значение и узнавание знака.', meta: completed + '/22 букв', status: completed === 0 ? 'new' : (completed === 22 ? 'done' : 'progress'), bar: completed / 22, onClick:'LearnLab.openLessons()' }),
+      hubCard({ glyph:'𐤀', title:'Изучение иврита', desc:'22 урока по буквам: название, образ, значение и узнавание знака.', meta: completed + '/22 ' + (window.LabPluralWord ? LabPluralWord(22, 'буква', 'буквы', 'букв') : 'букв'), status: completed === 0 ? 'new' : (completed === 22 ? 'done' : 'progress'), bar: completed / 22, onClick:'LearnLab.openLessons()' }),
       hubCard({ glyph:'𐤕', title:'Повторение', desc:'Короткая очередь карточек, которым пора вернуться в поле зрения.', meta: srs.total === 0 ? 'очередь пуста' : (srs.due > 0 ? srs.due + ' к повторению' : 'всё повторено'), status: srs.total === 0 ? 'new' : (srs.due > 0 ? 'progress' : 'done'), bar: srs.total ? srs.learned / srs.total : null, onClick:'LearnLab.openReview()' }),
       hubCard({ glyph:'𐤏', title:'Палео-тренажёр', desc:'Крупные палео-буквы: увидь образ, назови функцию, собери смысл.', meta: '6 тем · корни и смыслы', status: trainerCount > 0 ? 'progress' : 'new', bar: completed / 22, onClick:'LearnLab.openTrainer()' })
     ];
@@ -806,7 +806,7 @@
     if (!root.LabHero || !root.LabHero.setView) return;
     if (state.view === 'course' && state.course) {
       var course = state.course, lessons = course.lessons || [];
-      root.LabHero.setView('learn', 'course', { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + lessons.length + ' уроков'] });
+      root.LabHero.setView('learn', 'course', { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + (window.LabPlural ? LabPlural(lessons.length, 'урок', 'урока', 'уроков') : lessons.length + ' уроков')] });
     } else if (state.view === 'lesson' && state.lesson) {
       var item = state.lesson.item;
       root.LabHero.setView('learn', 'lesson', { title: item.name, subtitle: item.image + ' · ' + item.meaning });

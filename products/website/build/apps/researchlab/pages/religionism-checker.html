@@ -1,0 +1,78 @@
+<!-- Чекер религионизмов. Шапка — реестр LabHero; каркас — css/components/panels.css.
+     Эмодзи и растровые метки в хроме запрещены (DESIGN-SYSTEM §3): только lucide. -->
+<section class="rc-shell" aria-label="Чекер религионизмов">
+  <div class="lab-panel-row">
+    <section class="lab-panel" aria-labelledby="rc-input-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">01</span>
+        <h2 class="lab-chapter-title" id="rc-input-title" data-i18n="lab.religionism.inputTitle">Входной текст</h2>
+      </header>
+      <p class="lab-chapter-note" data-i18n="lab.religionism.inputNote">Вставьте русский текст — подсветим подмены и покажем ивритские оригиналы.</p>
+      <form class="rc-form" id="rc-form">
+        <textarea id="rc-input" class="lab-textarea rc-input" rows="6"
+                  placeholder="Например: И сказал Господь Бог: да будет свет."
+                  aria-label="Текст для проверки"
+                  data-i18n-attr="placeholder:lab.religionism.placeholder;aria-label:lab.religionism.inputLabel"
+                  spellcheck="false"></textarea>
+        <div class="rc-actions">
+          <button type="submit" id="rc-check-btn" class="lab-btn lab-btn-primary">
+            <i data-lucide="scan-search" aria-hidden="true"></i>
+            <span data-i18n="lab.religionism.check">Проверить</span>
+          </button>
+          <button type="button" id="rc-clear-btn" class="lab-btn lab-btn-secondary lab-btn-compact rc-icon-btn"
+                  aria-label="Очистить" title="Очистить"
+                  data-i18n-attr="aria-label:lab.religionism.clear;title:lab.religionism.clear">
+            <i data-lucide="eraser" class="lab-icon" aria-hidden="true"></i>
+          </button>
+          <span class="rc-hint" data-i18n="lab.religionism.ctrlEnter">Ctrl+Enter</span>
+        </div>
+      </form>
+      <p class="lab-status" id="rc-status" role="status" aria-live="polite"></p>
+      <div class="lab-examples" role="group" aria-label="Примеры"
+           data-i18n-attr="aria-label:lab.religionism.examplesLabel">
+        <span class="lab-examples-label" data-i18n="lab.religionism.examplesLabel">Примеры</span>
+        <button type="button" class="lab-example-chip" data-rc-example="И сказал Господь Бог: да будет свет.">Господь Бог</button>
+        <button type="button" class="lab-example-chip" data-rc-example="Христос и апостол говорили о благодати и покаянии.">Христос и апостол</button>
+        <button type="button" class="lab-example-chip" data-rc-example="Церковь, суббота и Пасха — так заменили каhаль, шаббат и Песах.">Церковь и суббота</button>
+      </div>
+    </section>
+
+    <section class="lab-panel" aria-labelledby="rc-result-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="rc-result-title" data-i18n="lab.religionism.resultTitle">Результат</h2>
+        <span class="wb-badge" id="rc-result-badge" data-i18n="lab.religionism.stateEmpty">Ожидание</span>
+      </header>
+      <div class="rc-summary" id="rc-summary" hidden>
+        <span class="rc-summary-text" id="rc-summary-text"></span>
+        <span class="rc-summary-actions">
+          <button type="button" class="rc-icon-btn" id="rc-copy-btn" aria-label="Копировать Markdown"
+                  title="Копировать Markdown"
+                  data-i18n-attr="aria-label:lab.religionism.copy;title:lab.religionism.copy">
+            <i data-lucide="copy" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="rc-icon-btn" id="rc-download-btn" aria-label="Скачать .md" title="Скачать .md"
+                  data-i18n-attr="aria-label:lab.religionism.download;title:lab.religionism.download">
+            <i data-lucide="download" aria-hidden="true"></i>
+          </button>
+        </span>
+      </div>
+      <div class="rc-output" id="rc-output">
+        <div class="lab-empty">
+          <span class="lab-empty-glyph" aria-hidden="true">𐤀</span>
+          <p class="lab-empty-hint" data-i18n="lab.religionism.emptyHint">Вставьте текст и нажмите «Проверить».</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="lab-panel" aria-labelledby="rc-dict-title">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">03</span>
+      <h2 class="lab-chapter-title" id="rc-dict-title" data-i18n="lab.religionism.dictTitle">Словарь религионизмов</h2>
+      <span class="wb-badge" id="rc-dict-count">0</span>
+    </header>
+    <p class="lab-chapter-note" data-i18n="lab.religionism.dictNote">Строка результата ведёт к записи словаря: переход и подсветка термина.</p>
+    <div class="rc-table" id="rc-dict"></div>
+  </section>
+</section>

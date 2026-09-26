@@ -65,6 +65,43 @@ async function checkRoute(page, route, projectName) {
   await client.detach();
 }
 
+test('agent registry keeps every icon chip populated and cards light', async ({ page }) => {
+  await page.goto('/#ai-agents', { waitUntil: 'domcontentloaded' });
+  await expect(page.locator('#ai-agents .agent-list-card').first()).toBeVisible();
+  const violations = await page.locator('#ai-agents').evaluate((root) => {
+    const isDark = (value) => {
+      const match = value.match(/\d+/g);
+      if (!match) return false;
+      const [r, g, b] = match.map(Number);
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 96;
+    };
+    return {
+      emptyIcons: Array.from(root.querySelectorAll('.agent-icon-chip')).filter((chip) => !chip.querySelector('svg')).length,
+      darkCards: Array.from(root.querySelectorAll('.agent-role-card')).filter((card) => isDark(getComputedStyle(card).backgroundColor)).length
+    };
+  });
+  expect(violations.emptyIcons).toBe(0);
+  expect(violations.darkCards).toBe(0);
+});
+
+test('timeline hub cards open a full feed and return to catalog', async ({ page }) => {
+  await page.goto('/#timeline', { waitUntil: 'domcontentloaded' });
+  const card = page.locator('.tl-card').first();
+  await expect(card).toBeVisible();
+  const id = await card.getAttribute('data-timeline-id');
+  await card.click();
+  await expect(page).toHaveURL(new RegExp(`#timeline/${id}$`));
+  await expect(page.locator('.tl-detail')).toBeVisible();
+  await expect(page.locator('.tl-detail-events')).toHaveAttribute('role', 'list');
+  await page.locator('.tl-detail-search').fill('несуществующий запрос');
+  await expect(page.locator('.tl-detail-empty')).toBeVisible();
+  await page.locator('[data-action=reset-search]').click();
+  await expect(page.locator('.tl-detail-event:visible')).not.toHaveCount(0);
+  await page.locator('.tl-detail-back').click();
+  await expect(page).toHaveURL(/#timeline$/);
+  await expect(page.locator('.tl-toolbar')).toBeVisible();
+});
+
 test.describe('registered routes', () => {
   for (const route of routesToCheck) {
     test(`route #${route} renders without uncaught errors`, async ({ browser }, testInfo) => {
@@ -87,10 +124,12 @@ const SPINNER_BUDGET_MS = 5_000;
 // случай «разметка скачалась, но панель осталась пустой».
 const moduleAnchors = {
   'paleo-builder': '[data-paleo-palette]',
-  'video-lab': '.prompt-generator-layout',
+  'video-lab': '.vl-shell',
   generators: '.gc-grid',
   checkers: '.gc-grid',
-  'translation-comparator': '.tc-checker-content',
+  'religionism-checker': '.rc-shell',
+  'state-checker': '.stc-shell',
+  'translation-comparator': '.tc-shell',
   'paleo-keyboard': '#pk-keys .pk-key',
   analyzers: '.analyzers-shell'
 };
@@ -149,6 +188,41 @@ test.describe('route loading finishes', () => {
       expect(errors, `uncaught errors on #${route}`).toEqual([]);
     });
   }
+});
+
+// Гард шапок: реестр LabHero — источник истины для заголовков модулей, и его
+// служебный текст («Нет записи шапки») не должен доходить до пользователя.
+// Обход реестра — тот же приём, что в route loading grid.
+test.describe('hero guard', () => {
+  test('маршруты реестра LabHero не показывают служебный текст шапки', async ({ page }) => {
+    await page.goto('/#dashboard', { waitUntil: 'domcontentloaded' });
+    const targets = await page.evaluate(() => Object.keys((window.LabHero && window.LabHero.targets) || {}));
+    expect(targets.length, 'реестр LabHero.TARGETS пуст').toBeGreaterThan(0);
+
+    for (const route of targets) {
+      await page.goto(`/#${route}`, { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#labContent .module.active').first()).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+      const activeId = await page.evaluate(() => {
+        const active = document.querySelector('#labContent .module.active');
+        return active ? active.id : null;
+      });
+
+      // Открытый маршрут обязан получить шапку из реестра...
+      if (activeId === route) {
+        await expect(
+          page.locator(`#labContent .lab-hero[data-lab-hero="${route}"]`),
+          `шапка маршрута #${route}`
+        ).toBeVisible({ timeout: SPINNER_BUDGET_MS });
+      }
+
+      // ...и ни одна видимая шапка не содержит служебный текст.
+      await expect(
+        page.locator('#labContent .lab-hero', { hasText: 'Нет записи шапки' }),
+        `служебный текст шапки на #${route}`
+      ).toHaveCount(0);
+    }
+  });
 });
 
 test('agent server offline shows Сервер отключен without uncaught errors', async ({ page }) => {
@@ -280,4 +354,93 @@ test.describe('paleo-keyboard keys', () => {
     await expect(page.locator('#pk-keys .pk-key')).toHaveCount(22, { timeout: 10_000 });
     await expect(page.locator('#pk-keys-count')).toHaveText('22');
   });
+});
+
+// ===== Параметризованные маршруты: рендер детали существует =====
+// Sample-id берутся из данных модулей (languages.json, timeline.json,
+// exposures/index.json, pages/checkers.html) и из реестра агентов в
+// page-controller.js — тест не расходится с источником.
+const labRoot = path.resolve(__dirname, '..');
+
+function readLabJson(relativePath) {
+  return JSON.parse(fs.readFileSync(path.resolve(labRoot, relativePath), 'utf8'));
+}
+
+function agentSlugsFromRegistry() {
+  const source = fs.readFileSync(path.resolve(labRoot, 'js', 'page-controller.js'), 'utf8');
+  const match = source.match(/var agentSlugs = \[(.*?)\];/s);
+  if (!match) throw new Error('Could not find agentSlugs registry in page-controller.js');
+  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
+}
+
+function checkerRoutesFromHub() {
+  const source = fs.readFileSync(path.resolve(labRoot, 'pages', 'checkers.html'), 'utf8');
+  return [...source.matchAll(/href="#([^"]+)"/g)].map((item) => item[1]);
+}
+
+const parameterizedSamples = (() => {
+  const languages = readLabJson('data/language-map/languages.json').languages;
+  const timelines = readLabJson('data/timeline.json');
+  const researches = readLabJson('data/exposures/index.json');
+  const agentSlugs = agentSlugsFromRegistry();
+  return [
+    { route: `language-map/${languages[0].id}`, anchor: '.language-map-detail', title: languages[0].name },
+    { route: `timeline/${timelines[0].id}`, anchor: `[data-timeline-id="${timelines[0].id}"]` },
+    { route: `ai-agents/${agentSlugs[0]}`, anchor: '#agent-detail-view' },
+    { route: 'dictionaries/root-dictionary', anchor: '#rd-search' },
+    { route: 'dictionaries/paleo-glossary', anchor: '#paleo-glossary-search' },
+    { route: `researches/case/${researches[0].slug}`, anchor: '.exposure-case-page' },
+    ...checkerRoutesFromHub().map((route) => ({ route, anchor: moduleAnchors[route] || null }))
+  ];
+})();
+
+test('substitution checker hero never titles «Расследование»', async ({ page }) => {
+  await page.goto('/#investigation', { waitUntil: 'domcontentloaded' });
+  const heroTitle = page.locator('#lab-hero-title-investigation');
+  await expect(heroTitle).toHaveCount(1, { timeout: SPINNER_BUDGET_MS });
+  await expect
+    .poll(() => heroTitle.textContent().then((text) => (text || '').trim()), { timeout: SPINNER_BUDGET_MS, message: 'пустой заголовок шапки чекера подмен' })
+    .not.toBe('Расследование');
+  await expect(heroTitle, 'заголовок героя чекера подмен').toContainText('Чекер подмен');
+});
+
+test.describe('parameterized routes render detail', () => {
+  for (const sample of parameterizedSamples) {
+    test(`#${sample.route} открывает деталь без hero-ошибки и пустой панели`, async ({ page }) => {
+      const errors = [];
+      page.on('console', (message) => {
+        if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(`console: ${message.text()}`);
+      });
+      page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+      const moduleId = sample.route.split('/')[0];
+      await page.goto(`/#${sample.route}`, { waitUntil: 'domcontentloaded' });
+
+      // Заголовок детали живёт в шапке модуля (LabHero).
+      const heroTitle = page.locator(`#lab-hero-title-${moduleId}`);
+      await expect(heroTitle, `заголовок шапки на #${sample.route}`).toHaveCount(1, { timeout: SPINNER_BUDGET_MS });
+      await expect
+        .poll(() => heroTitle.textContent().then((text) => (text || '').trim()), { timeout: SPINNER_BUDGET_MS, message: `пустой заголовок шапки на #${sample.route}` })
+        .not.toBe('');
+      if (sample.title) await expect(heroTitle, `заголовок детали из данных на #${sample.route}`).toContainText(sample.title);
+
+      // Error-state модуля — это «модуль не загрузился», а не рендер детали.
+      await expect(page.locator('#labContent [data-module-error]'), `error-state на #${sample.route}`).toHaveCount(0);
+
+      // Корень лаба (#labContent) не должен остаться с пустой панелью модуля.
+      const panel = page.locator(`#labContent #${moduleId}.module.active`).first();
+      await expect(panel, `панель модуля #${sample.route}`).toBeVisible({ timeout: SPINNER_BUDGET_MS });
+      await expect
+        .poll(() => panel.evaluate((node) => node.children.length), { timeout: SPINNER_BUDGET_MS, message: `пустая панель #${sample.route}` })
+        .toBeGreaterThan(1);
+
+      if (sample.anchor) {
+        await expect(page.locator(`#labContent ${sample.anchor}`).first(), `узел детали ${sample.anchor} на #${sample.route}`)
+          .toBeAttached({ timeout: SPINNER_BUDGET_MS });
+      }
+
+      expect(errors, `uncaught errors on #${sample.route}`).toEqual([]);
+
+    });
+  }
 });

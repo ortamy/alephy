@@ -1,59 +1,553 @@
-/** Генератор улик: собирает наблюдения в проверяемую цепочку. */
-(function() {
+/**
+ * clue-generator.js — «Генератор улик»: живая цепочка наблюдений.
+ * Разметка: pages/clue-generator.html; канон панелей — css/components/panels.css.
+ * Схема перерисовывается по мере ввода; кейсы хранятся в localStorage.
+ */
+(function(window, document) {
   'use strict';
 
+  var PAGE_PATH = 'pages/clue-generator.html';
   var STORAGE_KEY = 'alephy_clue_cases';
-  var state = { clues: [], links: [], conclusion: '', cases: [], selected: null };
-  var container;
+  var CASE_LIMIT = 10;
+  var pagePromise = null;
+  var dom = {};
+  var state = { clues: [], links: [], conclusion: '', cases: [], selected: null, linkType: 'cause' };
 
-  function id() { return 'clue-' + Date.now() + '-' + Math.random().toString(16).slice(2); }
-  function esc(value) { var node = document.createElement('div'); node.textContent = value || ''; return node.innerHTML; }
-  function loadCases() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; } }
-  function saveCases() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cases)); }
-  function clueById(clueId) { return state.clues.filter(function(clue) { return clue.id === clueId; })[0]; }
-
-  function render() {
-    if (!container) return;
-    var clueHtml = state.clues.map(function(clue, index) {
-      var selected = state.selected === clue.id ? ' is-selected' : '';
-      return '<article class="clue-card' + selected + '" draggable="true" data-clue-id="' + clue.id + '">' +
-        '<div class="clue-card-head"><span class="clue-drag" title="Перетащить">⋮⋮</span><span class="clue-number">' + String(index + 1).padStart(2, '0') + '</span><button type="button" class="clue-select" data-select="' + clue.id + '">' + (state.selected === clue.id ? 'Выбрана' : 'Выбрать') + '</button></div>' +
-        '<textarea class="clue-text" data-text="' + clue.id + '" rows="3" placeholder="Наблюдение, факт или след…">' + esc(clue.text) + '</textarea></article>';
-    }).join('');
-    var linkOptions = state.clues.map(function(clue) { return '<option value="' + clue.id + '">' + esc(clue.text || 'Улика без текста') + '</option>'; }).join('');
-    var linksHtml = state.links.map(function(link, index) {
-      return '<div class="clue-link-row" data-link-index="' + index + '"><select data-link-from="' + index + '">' + linkOptions.replace('value="' + link.from + '"', 'value="' + link.from + '" selected') + '</select><input class="lab-input" data-link-text="' + index + '" value="' + esc(link.text) + '" placeholder="потому что / поэтому"><select data-link-to="' + index + '">' + linkOptions.replace('value="' + link.to + '"', 'value="' + link.to + '" selected') + '</select><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-remove-link="' + index + '">Удалить</button></div>';
-    }).join('');
-    var casesHtml = state.cases.map(function(item, index) { return '<li><button type="button" data-case="' + index + '">' + esc(item.title || 'Кейс ' + (index + 1)) + '</button><span>' + item.clues.length + ' улик</span></li>'; }).join('');
-    container.innerHTML = '<div class="clue-page"><p class="gc-kicker">ГЕНЕРАТОРЫ · СВИДЕТЕЛЬСТВА</p><h1>Генератор улик — Цепочка разоблачения</h1><p class="subtitle">Собери наблюдения в последовательность, ведущую к выводу.</p>' +
-      '<div class="clue-layout"><section class="clue-workspace"><div class="clue-section-head"><h2>Наблюдения</h2><span class="clue-hint">Перетащите карточки в нужный порядок</span></div><div id="clue-list" class="clue-list">' + clueHtml + '</div><div class="clue-actions"><button type="button" class="lab-btn lab-btn-primary" id="clue-add">Добавить улику</button><button type="button" class="lab-btn lab-btn-secondary" id="clue-delete">Удалить выбранную</button></div><div class="clue-section-head"><h2>Логическое соединение</h2><span class="clue-hint">Причина → следствие</span></div><div id="clue-links">' + (linksHtml || '<p class="clue-empty">Добавьте связь между двумя уликами.</p>') + '</div><button type="button" class="lab-btn lab-btn-secondary" id="clue-add-link">Добавить стрелку</button></section>' +
-      '<aside class="clue-side"><label for="clue-conclusion">Финальный вывод</label><textarea id="clue-conclusion" class="lab-textarea" rows="7" placeholder="Что следует из всей цепочки?">' + esc(state.conclusion) + '</textarea><button type="button" class="lab-btn lab-btn-primary" id="clue-build">Собрать цепочку</button><div id="clue-output" class="clue-output"><p class="clue-empty">Здесь появится схема цепочки.</p></div><div class="clue-save"><input id="clue-title" class="lab-input" placeholder="Название кейса"><button type="button" class="lab-btn lab-btn-secondary" id="clue-save">Сохранить кейс</button></div><div class="clue-export"><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="clue-export-text">Экспортировать как текст</button><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="clue-export-cards">Экспортировать как карточки</button></div><h2>Сохранённые улики</h2><ul class="clue-cases">' + (casesHtml || '<li class="clue-empty">Сохранённых цепочек пока нет.</li>') + '</ul></aside></div></div>';
-    bind();
+  // ===== i18n и утилиты =====
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
   }
 
-  function bind() {
-    container.querySelectorAll('[data-select]').forEach(function(el) { el.onclick = function() { state.selected = el.dataset.select; render(); }; });
-    container.querySelectorAll('[data-text]').forEach(function(el) { el.oninput = function() { clueById(el.dataset.text).text = el.value; }; });
-    container.querySelector('#clue-conclusion').oninput = function(e) { state.conclusion = e.target.value; };
-    container.querySelector('#clue-add').onclick = function() { state.clues.push({ id: id(), text: '' }); state.selected = state.clues[state.clues.length - 1].id; render(); };
-    container.querySelector('#clue-delete').onclick = function() { if (state.selected) { state.clues = state.clues.filter(function(c) { return c.id !== state.selected; }); state.links = state.links.filter(function(l) { return l.from !== state.selected && l.to !== state.selected; }); state.selected = null; render(); } };
-    container.querySelector('#clue-add-link').onclick = function() { if (state.clues.length < 2) return; state.links.push({ from: state.clues[0].id, to: state.clues[1].id, text: 'потому что' }); render(); };
-    container.querySelectorAll('[data-link-from]').forEach(function(el) { el.onchange = function() { state.links[el.dataset.linkFrom].from = el.value; }; });
-    container.querySelectorAll('[data-link-to]').forEach(function(el) { el.onchange = function() { state.links[el.dataset.linkTo].to = el.value; }; });
-    container.querySelectorAll('[data-link-text]').forEach(function(el) { el.oninput = function() { state.links[el.dataset.linkText].text = el.value; }; });
-    container.querySelectorAll('[data-remove-link]').forEach(function(el) { el.onclick = function() { state.links.splice(Number(el.dataset.removeLink), 1); render(); }; });
-    container.querySelector('#clue-build').onclick = build;
-    container.querySelector('#clue-save').onclick = function() { state.cases.unshift({ title: container.querySelector('#clue-title').value.trim() || 'Кейс ' + new Date().toLocaleDateString('ru-RU'), clues: state.clues, links: state.links, conclusion: state.conclusion }); saveCases(); render(); };
-    container.querySelector('#clue-export-text').onclick = exportText;
-    container.querySelector('#clue-export-cards').onclick = exportCards;
-    container.querySelectorAll('[data-case]').forEach(function(el) { el.onclick = function() { var item = state.cases[Number(el.dataset.case)]; state.clues = item.clues; state.links = item.links; state.conclusion = item.conclusion; render(); build(); }; });
-    container.querySelectorAll('.clue-card').forEach(function(card) { card.ondragstart = function(e) { e.dataTransfer.setData('text/plain', card.dataset.clueId); }; card.ondragover = function(e) { e.preventDefault(); }; card.ondrop = function(e) { e.preventDefault(); reorder(e.dataTransfer.getData('text/plain'), card.dataset.clueId); }; });
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(char) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+    });
   }
-  function reorder(source, target) { var from = state.clues.findIndex(function(c) { return c.id === source; }); var to = state.clues.findIndex(function(c) { return c.id === target; }); if (from < 0 || to < 0 || from === to) return; var item = state.clues.splice(from, 1)[0]; state.clues.splice(to, 0, item); render(); }
-  function build() { var output = container.querySelector('#clue-output'); output.innerHTML = state.clues.map(function(c) { var next = state.links.filter(function(l) { return l.from === c.id; }).map(function(l) { return '<div class="clue-arrow">↓ ' + esc(l.text || 'связь') + '</div>'; }).join(''); return '<div class="clue-output-card"><strong>' + esc(c.text || 'Улика без текста') + '</strong>' + next + '</div>'; }).join('') + '<div class="clue-conclusion"><b>Вывод:</b> ' + esc(state.conclusion || 'Вывод не указан.') + '</div>'; }
-  function text() { return state.clues.map(function(c, i) { var links = state.links.filter(function(l) { return l.from === c.id; }).map(function(l) { var to = clueById(l.to); return '  → ' + (l.text || 'связь') + ' → ' + (to ? to.text : ''); }).join('\n'); return (i + 1) + '. ' + c.text + (links ? '\n' + links : ''); }).join('\n') + '\n\nВывод: ' + state.conclusion; }
-  function download(content, name, type) { var link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type: type })); link.download = name; link.click(); URL.revokeObjectURL(link.href); }
-  function exportText() { download(text(), 'alephy-clue-chain.txt', 'text/plain;charset=utf-8'); }
-  function exportCards() { var cards = state.clues.map(function(c) { return { type: 'clue', title: 'Улика', content: c.text }; }); cards.push({ type: 'conclusion', title: 'Вывод', content: state.conclusion }); localStorage.setItem('alephy_board_import', JSON.stringify(cards)); if (window.LabRouter) window.LabRouter.navigate('board'); }
-  window.ClueGenerator = { init: function(el) { container = el; if (container.dataset.ready) return; container.dataset.ready = '1'; state.cases = loadCases(); state.clues = [{ id: id(), text: '' }]; render(); } };
-})();
+
+  function fill(template, values) {
+    return String(template).replace(/\{(\w+)\}/g, function(match, key) {
+      return values[key] == null ? match : values[key];
+    });
+  }
+
+  function fetchPage() {
+    if (!pagePromise) {
+      pagePromise = fetch(PAGE_PATH).then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      });
+    }
+    return pagePromise;
+  }
+
+  function newId() {
+    return 'clue-' + Date.now() + '-' + Math.random().toString(16).slice(2);
+  }
+
+  function clueById(id) {
+    return state.clues.filter(function(clue) { return clue.id === id; })[0] || null;
+  }
+
+  function clueLabel(index) {
+    return fill(t('lab.clueGenerator.clueLabel', 'Улика {n}'), { n: index + 1 });
+  }
+
+  function optionLabel(clue, index) {
+    var text = clue.text.trim();
+    if (!text) return clueLabel(index);
+    return (index + 1) + '. ' + (text.length > 42 ? text.slice(0, 42) + '…' : text);
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    try {
+      var locale = document.documentElement.lang === 'en' ? 'en-GB' : 'ru-RU';
+      return new Date(ts).toLocaleString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function setStatus(message, type) {
+    if (!dom.status) return;
+    dom.status.textContent = message || '';
+    dom.status.className = 'lab-status' + (type ? ' is-' + type : '');
+  }
+
+  // a11y: порядок карточек объявляется в скрытом live-регионе.
+  function announce(message) {
+    if (!dom.orderLive) return;
+    dom.orderLive.textContent = '';
+    window.setTimeout(function() { dom.orderLive.textContent = message; }, 40);
+  }
+
+  // ===== Хранилище кейсов =====
+  function loadCases() {
+    try {
+      var stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || '[]');
+      return Array.isArray(stored) ? stored.slice(0, CASE_LIMIT) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveCases() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state.cases.slice(0, CASE_LIMIT)));
+    } catch (error) {
+      // localStorage может быть недоступен — кейс просто не сохранится.
+    }
+  }
+
+  function emptyState(hint) {
+    return '<div class="lab-empty">' +
+      '<span class="lab-empty-glyph" aria-hidden="true">𐤋</span>' +
+      '<p class="lab-empty-hint">' + esc(hint) + '</p></div>';
+  }
+
+  // ===== Рендер: карточки наблюдений =====
+  function renderList() {
+    if (!dom.list) return;
+    dom.list.innerHTML = state.clues.map(function(clue, index) {
+      var selected = state.selected === clue.id;
+      return '<article class="cg-card' + (selected ? ' is-selected' : '') + '" draggable="true" data-cg-id="' + clue.id + '">' +
+        '<div class="cg-card-head">' +
+        '<span class="cg-drag" aria-hidden="true">⋮⋮</span>' +
+        '<span class="cg-number">' + String(index + 1).padStart(2, '0') + '</span>' +
+        '<button type="button" class="cg-radio" data-cg-select="' + clue.id + '" aria-pressed="' + (selected ? 'true' : 'false') + '"' +
+        ' aria-label="' + esc(clueLabel(index)) + '" title="' + esc(t('lab.clueGenerator.selectClue', 'Выбрать улику')) + '"></button>' +
+        '<span class="cg-card-tools">' +
+        '<button type="button" class="cg-icon-btn" data-cg-move="-1" data-cg-id="' + clue.id + '"' + (index === 0 ? ' disabled' : '') +
+        ' aria-label="' + esc(t('lab.clueGenerator.moveUp', 'Выше')) + '" title="' + esc(t('lab.clueGenerator.moveUp', 'Выше')) + '">↑</button>' +
+        '<button type="button" class="cg-icon-btn" data-cg-move="1" data-cg-id="' + clue.id + '"' + (index === state.clues.length - 1 ? ' disabled' : '') +
+        ' aria-label="' + esc(t('lab.clueGenerator.moveDown', 'Ниже')) + '" title="' + esc(t('lab.clueGenerator.moveDown', 'Ниже')) + '">↓</button>' +
+        '<button type="button" class="cg-icon-btn" data-cg-remove="' + clue.id + '"' +
+        ' aria-label="' + esc(t('lab.clueGenerator.removeClue', 'Удалить улику')) + '" title="' + esc(t('lab.clueGenerator.removeClue', 'Удалить улику')) + '">×</button>' +
+        '</span></div>' +
+        '<textarea class="cg-textarea" rows="3" data-cg-text="' + clue.id + '"' +
+        ' placeholder="' + esc(t('lab.clueGenerator.cluePlaceholder', 'Наблюдение, факт или след…')) + '"' +
+        ' aria-label="' + esc(clueLabel(index)) + '">' + esc(clue.text) + '</textarea>' +
+        '</article>';
+    }).join('');
+  }
+
+  // ===== Рендер: селекты соединений =====
+  function renderOptions() {
+    [dom.linkFrom, dom.linkTo].forEach(function(select) {
+      if (!select) return;
+      var previous = select.value;
+      select.innerHTML = state.clues.map(function(clue, index) {
+        return '<option value="' + clue.id + '">' + esc(optionLabel(clue, index)) + '</option>';
+      }).join('');
+      if (state.clues.some(function(clue) { return clue.id === previous; })) select.value = previous;
+    });
+    // Второй селект по умолчанию — вторая улика: связь «А → Б» собирается сразу.
+    if (dom.linkTo && state.clues.length > 1 && dom.linkFrom && dom.linkTo.value === dom.linkFrom.value) {
+      dom.linkTo.value = state.clues[1].id;
+    }
+    updateLinkState();
+  }
+
+  // Валидация связи: нужны две улики и разные её концы.
+  function updateLinkState() {
+    if (!dom.linkFrom || !dom.linkTo) return;
+    var twoClues = state.clues.length > 1;
+    var sameClue = dom.linkFrom.value === dom.linkTo.value;
+    dom.linkTo.disabled = !twoClues;
+    if (dom.addLink) dom.addLink.disabled = !twoClues || sameClue;
+    if (dom.linkHint) {
+      var message = !twoClues
+        ? t('lab.clueGenerator.linkNeedTwo', 'Нужны две улики')
+        : (sameClue ? t('lab.clueGenerator.linkHint', 'Выберите разные улики') : '');
+      dom.linkHint.textContent = message;
+      dom.linkHint.hidden = !message;
+    }
+  }
+
+  function linkKindLabel(kind) {
+    return kind === 'rel'
+      ? t('lab.clueGenerator.linkTypeRel', 'связь')
+      : t('lab.clueGenerator.linkTypeCause', 'причина → следствие');
+  }
+
+  // ===== Рендер: добавленные связи =====
+  function renderLinks() {
+    if (!dom.links) return;
+    if (!state.links.length) {
+      dom.links.innerHTML = emptyState(t('lab.clueGenerator.linksEmpty', 'Добавьте связь между двумя уликами.'));
+      return;
+    }
+    dom.links.innerHTML = state.links.map(function(link, index) {
+      var fromIndex = state.clues.findIndex(function(clue) { return clue.id === link.from; });
+      var toIndex = state.clues.findIndex(function(clue) { return clue.id === link.to; });
+      var from = fromIndex < 0 ? '' : optionLabel(state.clues[fromIndex], fromIndex);
+      var to = toIndex < 0 ? '' : optionLabel(state.clues[toIndex], toIndex);
+      return '<span class="cg-link-chip">' +
+        '<span>' + esc(from) + '</span>' +
+        '<span class="cg-arrow" aria-hidden="true">→</span>' +
+        '<span class="cg-link-kind">' + esc(linkKindLabel(link.kind)) + '</span>' +
+        '<span class="cg-arrow" aria-hidden="true">→</span>' +
+        '<span>' + esc(to) + '</span>' +
+        '<button type="button" class="cg-icon-btn" data-cg-remove-link="' + index + '"' +
+        ' aria-label="' + esc(t('lab.clueGenerator.removeLink', 'Удалить связь')) + '" title="' + esc(t('lab.clueGenerator.removeLink', 'Удалить связь')) + '">×</button>' +
+        '</span>';
+    }).join('');
+  }
+
+  // ===== Рендер: живая схема =====
+  function renderScheme() {
+    if (!dom.scheme) return;
+    if (!hasChain()) {
+      dom.scheme.innerHTML = emptyState(t('lab.clueGenerator.schemeEmpty', 'Схема цепочки собирается по мере ввода наблюдений и связей.'));
+      return;
+    }
+    var chips = [];
+    state.clues.forEach(function(clue, index) {
+      var text = clue.text.trim();
+      if (!text) return;
+      var link = state.links.filter(function(item) { return item.from === clue.id; })[0];
+      chips.push('<span class="cg-chip">' + String(index + 1).padStart(2, '0') + ' · ' + esc(text) +
+        (link ? ' <span class="cg-link-kind">(' + esc(linkKindLabel(link.kind)) + ')</span>' : '') + '</span>');
+    });
+    var html = chips.join('<span class="cg-arrow" aria-hidden="true">→</span>');
+    if (state.conclusion.trim()) {
+      html += '<p class="cg-scheme-conclusion">' + esc(state.conclusion.trim()) + '</p>';
+    }
+    dom.scheme.innerHTML = html;
+  }
+
+  // ===== Рендер: сохранённые кейсы =====
+  function renderSaved() {
+    if (!dom.saved) return;
+    if (!state.cases.length) {
+      dom.saved.innerHTML = emptyState(t('lab.clueGenerator.savedEmpty', 'Сохранённых кейсов пока нет.'));
+      return;
+    }
+    dom.saved.innerHTML = state.cases.map(function(item, index) {
+      return '<div class="cg-saved-row">' +
+        '<button type="button" class="cg-saved-open" data-cg-case="' + index + '"' +
+        ' title="' + esc(t('lab.clueGenerator.reopen', 'Открыть')) + '">' +
+        esc(item.title || t('lab.clueGenerator.caseUntitled', 'Без названия')) + '</button>' +
+        '<span class="cg-saved-time">' + esc(formatTime(item.createdAt)) + '</span>' +
+        '<button type="button" class="cg-icon-btn" data-cg-remove-case="' + index + '"' +
+        ' aria-label="' + esc(t('lab.clueGenerator.removeCase', 'Удалить кейс')) + '" title="' + esc(t('lab.clueGenerator.removeCase', 'Удалить кейс')) + '">×</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  function hasChain() {
+    return state.clues.some(function(clue) { return clue.text.trim(); });
+  }
+
+  // Экспорт доступен, как только в цепочке появилась хотя бы одна улика.
+  function updateExports() {
+    var enabled = hasChain();
+    [dom.exportText, dom.exportCards].forEach(function(button) {
+      if (button) button.disabled = !enabled;
+    });
+    if (dom.build) dom.build.disabled = !enabled;
+  }
+
+  function renderAll() {
+    renderList();
+    renderOptions();
+    renderLinks();
+    renderScheme();
+    renderSaved();
+    updateExports();
+  }
+
+  // Обновление только текстовых меток: список карточек не перерисовываем, чтобы не терять фокус.
+  function refreshLabels() {
+    renderOptions();
+    renderLinks();
+    renderScheme();
+    updateExports();
+  }
+
+  // ===== Операции =====
+  function addClue() {
+    var clue = { id: newId(), text: '' };
+    state.clues.push(clue);
+    state.selected = clue.id;
+    renderAll();
+    var textarea = dom.list ? dom.list.querySelector('[data-cg-text="' + clue.id + '"]') : null;
+    if (textarea) textarea.focus();
+  }
+
+  function removeClue(id) {
+    state.clues = state.clues.filter(function(clue) { return clue.id !== id; });
+    state.links = state.links.filter(function(link) { return link.from !== id && link.to !== id; });
+    if (state.selected === id) state.selected = null;
+    if (!state.clues.length) state.clues.push({ id: newId(), text: '' });
+    renderAll();
+    announce(t('lab.clueGenerator.removedClue', 'Улика удалена'));
+  }
+
+  function moveClue(id, direction) {
+    var from = state.clues.findIndex(function(clue) { return clue.id === id; });
+    var to = from + direction;
+    if (from < 0 || to < 0 || to >= state.clues.length) return;
+    var item = state.clues.splice(from, 1)[0];
+    state.clues.splice(to, 0, item);
+    renderList();
+    refreshLabels();
+    announce(direction < 0
+      ? fill(t('lab.clueGenerator.movedUp', 'Улика {n} перемещена выше'), { n: to + 1 })
+      : fill(t('lab.clueGenerator.movedDown', 'Улика {n} перемещена ниже'), { n: to + 1 }));
+  }
+
+  function reorder(sourceId, targetId) {
+    var from = state.clues.findIndex(function(clue) { return clue.id === sourceId; });
+    var to = state.clues.findIndex(function(clue) { return clue.id === targetId; });
+    if (from < 0 || to < 0 || from === to) return;
+    var item = state.clues.splice(from, 1)[0];
+    state.clues.splice(to, 0, item);
+    renderList();
+    refreshLabels();
+    announce(fill(t('lab.clueGenerator.movedDown', 'Улика {n} перемещена ниже'), { n: to + 1 }));
+  }
+
+  function addLink() {
+    if (!dom.linkFrom || !dom.linkTo) return;
+    var from = dom.linkFrom.value;
+    var to = dom.linkTo.value;
+    if (!from || !to || from === to) {
+      setStatus(t('lab.clueGenerator.linkInvalid', 'Выберите две разные улики.'), 'error');
+      return;
+    }
+    state.links.push({ from: from, to: to, kind: state.linkType });
+    setStatus('', '');
+    renderLinks();
+    renderScheme();
+  }
+
+  // ===== Экспорт и кейсы =====
+  function asText() {
+    var lines = state.clues.map(function(clue, index) {
+      var text = clue.text.trim() || t('lab.clueGenerator.clueUntitled', 'Улика без текста');
+      var links = state.links.filter(function(link) { return link.from === clue.id; }).map(function(link) {
+        var toIndex = state.clues.findIndex(function(item) { return item.id === link.to; });
+        var target = toIndex < 0 ? '' : (state.clues[toIndex].text.trim() || clueLabel(toIndex));
+        return '  → ' + linkKindLabel(link.kind) + ' → ' + target;
+      }).join('\n');
+      return (index + 1) + '. ' + text + (links ? '\n' + links : '');
+    });
+    lines.push('', t('lab.clueGenerator.secConclusion', 'Вывод') + ': ' +
+      (state.conclusion.trim() || t('lab.clueGenerator.conclusionMissing', 'Вывод не указан')));
+    return lines.join('\n');
+  }
+
+  function download(content, name, type) {
+    var url = URL.createObjectURL(new Blob([content], { type: type }));
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportText() {
+    if (!hasChain()) return;
+    download(asText(), 'alephy-clue-chain.txt', 'text/plain;charset=utf-8');
+  }
+
+  function exportCards() {
+    if (!hasChain()) return;
+    var cards = state.clues.filter(function(clue) { return clue.text.trim(); }).map(function(clue) {
+      return { type: 'clue', title: 'Улика', content: clue.text.trim() };
+    });
+    cards.push({ type: 'conclusion', title: t('lab.clueGenerator.secConclusion', 'Вывод'), content: state.conclusion.trim() });
+    try {
+      window.localStorage.setItem('alephy_board_import', JSON.stringify(cards));
+    } catch (error) {
+      setStatus(t('lab.clueGenerator.copyFailed', 'Копирование недоступно'), 'error');
+      return;
+    }
+    if (window.LabRouter) window.LabRouter.navigate('board');
+  }
+
+  function saveCase() {
+    if (!hasChain()) {
+      setStatus(t('lab.clueGenerator.needClues', 'Добавьте хотя бы одну улику с текстом.'), 'error');
+      return;
+    }
+    state.cases.unshift({
+      title: dom.caseName && dom.caseName.value.trim() ? dom.caseName.value.trim() : '',
+      clues: state.clues.map(function(clue) { return { id: clue.id, text: clue.text }; }),
+      links: state.links.slice(),
+      conclusion: state.conclusion,
+      createdAt: Date.now()
+    });
+    state.cases = state.cases.slice(0, CASE_LIMIT);
+    saveCases();
+    renderSaved();
+    setStatus(t('lab.clueGenerator.savedCase', 'Кейс сохранён'), 'success');
+  }
+
+  function openCase(index) {
+    var item = state.cases[index];
+    if (!item) return;
+    state.clues = (item.clues || []).map(function(clue) {
+      return { id: clue.id || newId(), text: clue.text || '' };
+    });
+    if (!state.clues.length) state.clues.push({ id: newId(), text: '' });
+    state.links = (item.links || []).slice();
+    state.conclusion = item.conclusion || '';
+    state.selected = null;
+    if (dom.conclusion) dom.conclusion.value = state.conclusion;
+    if (dom.caseName) dom.caseName.value = item.title || '';
+    renderAll();
+    setStatus(t('lab.clueGenerator.reopened', 'Кейс открыт'), 'success');
+  }
+
+  // Фиксация кейса: схема уже живая, кнопка подтверждает собранную цепочку.
+  function buildChain() {
+    if (!hasChain()) {
+      setStatus(t('lab.clueGenerator.needClues', 'Добавьте хотя бы одну улику с текстом.'), 'error');
+      return;
+    }
+    setStatus(t('lab.clueGenerator.built', 'Цепочка зафиксирована'), 'success');
+  }
+
+  // ===== События =====
+  function bind(scope) {
+    if (scope.dataset.cgBound === '1') return;
+    scope.dataset.cgBound = '1';
+
+    // Живая схема: ввод в тексте улики или вывода перерисовывает цепочку.
+    scope.addEventListener('input', function(event) {
+      var target = event.target;
+      if (!target) return;
+      if (target.hasAttribute('data-cg-text')) {
+        var clue = clueById(target.getAttribute('data-cg-text'));
+        if (clue) clue.text = target.value;
+        refreshLabels();
+        return;
+      }
+      if (target.id === 'cg-conclusion') {
+        state.conclusion = target.value;
+        renderScheme();
+        return;
+      }
+    });
+
+    scope.addEventListener('click', function(event) {
+      var target = event.target;
+      if (!target || !target.closest) return;
+
+      var select = target.closest('[data-cg-select]');
+      if (select) {
+        var selectId = select.getAttribute('data-cg-select');
+        state.selected = state.selected === selectId ? null : selectId;
+        renderList();
+        return;
+      }
+      var move = target.closest('[data-cg-move]');
+      if (move) {
+        moveClue(move.getAttribute('data-cg-id'), Number(move.getAttribute('data-cg-move')));
+        return;
+      }
+      var remove = target.closest('[data-cg-remove]');
+      if (remove) {
+        removeClue(remove.getAttribute('data-cg-remove'));
+        return;
+      }
+      var removeLink = target.closest('[data-cg-remove-link]');
+      if (removeLink) {
+        state.links.splice(Number(removeLink.getAttribute('data-cg-remove-link')), 1);
+        renderLinks();
+        renderScheme();
+        return;
+      }
+      if (target.closest('#cg-add')) { addClue(); return; }
+      if (target.closest('#cg-add-link')) { addLink(); return; }
+      if (target.closest('#cg-link-type')) {
+        state.linkType = state.linkType === 'cause' ? 'rel' : 'cause';
+        dom.linkType.textContent = linkKindLabel(state.linkType);
+        dom.linkType.setAttribute('aria-pressed', state.linkType === 'cause' ? 'true' : 'false');
+        renderLinks();
+        return;
+      }
+      if (target.closest('#cg-build')) { buildChain(); return; }
+      if (target.closest('#cg-save')) { saveCase(); return; }
+      if (target.closest('#cg-export-text')) { exportText(); return; }
+      if (target.closest('#cg-export-cards')) { exportCards(); return; }
+      var caseOpen = target.closest('[data-cg-case]');
+      if (caseOpen) { openCase(Number(caseOpen.getAttribute('data-cg-case'))); return; }
+      var caseRemove = target.closest('[data-cg-remove-case]');
+      if (caseRemove) {
+        state.cases.splice(Number(caseRemove.getAttribute('data-cg-remove-case')), 1);
+        saveCases();
+        renderSaved();
+      }
+    });
+
+    scope.addEventListener('change', function(event) {
+      var target = event.target;
+      if (!target || !target.id) return;
+      if (target.id === 'cg-link-from' || target.id === 'cg-link-to') updateLinkState();
+    });
+
+    // Drag&drop — мышь; клавиатурная альтернатива — кнопки ↑/↓.
+    scope.addEventListener('dragstart', function(event) {
+      var card = event.target.closest ? event.target.closest('.cg-card') : null;
+      if (!card || !event.dataTransfer) return;
+      event.dataTransfer.setData('text/plain', card.getAttribute('data-cg-id'));
+    });
+    scope.addEventListener('dragover', function(event) {
+      if (event.target.closest && event.target.closest('.cg-card')) event.preventDefault();
+    });
+    scope.addEventListener('drop', function(event) {
+      var card = event.target.closest ? event.target.closest('.cg-card') : null;
+      if (!card || !event.dataTransfer) return;
+      event.preventDefault();
+      reorder(event.dataTransfer.getData('text/plain'), card.getAttribute('data-cg-id'));
+    });
+  }
+
+  function collectDom(scope) {
+    dom = {
+      list: scope.querySelector('#cg-list'),
+      links: scope.querySelector('#cg-links'),
+      linkFrom: scope.querySelector('#cg-link-from'),
+      linkTo: scope.querySelector('#cg-link-to'),
+      linkType: scope.querySelector('#cg-link-type'),
+      linkHint: scope.querySelector('#cg-link-hint'),
+      addLink: scope.querySelector('#cg-add-link'),
+      scheme: scope.querySelector('#cg-scheme'),
+      saved: scope.querySelector('#cg-saved'),
+      conclusion: scope.querySelector('#cg-conclusion'),
+      caseName: scope.querySelector('#cg-case-name'),
+      status: scope.querySelector('#cg-status'),
+      orderLive: scope.querySelector('#cg-order-live'),
+      build: scope.querySelector('#cg-build'),
+      exportText: scope.querySelector('#cg-export-text'),
+      exportCards: scope.querySelector('#cg-export-cards')
+    };
+  }
+
+  function init(container) {
+    var scope = container;
+    if (!scope) return;
+    fetchPage().then(function(html) {
+      scope.innerHTML = html;
+      // Разметка приходит после старта i18n — переводим её здесь.
+      if (window.AlephyI18n && window.AlephyI18n.applyTranslations) {
+        window.AlephyI18n.applyTranslations(scope);
+      }
+      collectDom(scope);
+      bind(scope);
+      state.cases = loadCases();
+      if (!state.clues.length) state.clues = [{ id: newId(), text: '' }];
+      if (dom.conclusion) dom.conclusion.value = state.conclusion;
+      if (dom.linkType) dom.linkType.textContent = linkKindLabel(state.linkType);
+      renderAll();
+    }).catch(function(error) {
+      scope.innerHTML = '<div class="lab-alert lab-alert-error">' +
+        esc(t('lab.clueGenerator.loadFailed', 'Не удалось загрузить конструктор: ')) + esc(error.message) + '</div>';
+    });
+  }
+
+  window.ClueGenerator = { init: init, render: init };
+})(window, document);

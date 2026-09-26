@@ -1,0 +1,73 @@
+{"display":"flex","alignItems":"normal","cards":[{"h":187,"top":424,"basis":"100%","bodyH":111,"bodyAlign":"auto"},{"h":187,"top":612,"basis":"100%","bodyH":111,"bodyAlign":"auto"},{"h":187,"top":799,"basis":"100%","bodyH":111,"bodyAlign":"auto"},{"h":187,"top":987,"basis":"100%","bodyH":111,"bodyAlign":"auto"}]}
+{
+  "results": [
+    {
+      "name": "methodology-desktop-light",
+      "overflow": 0,
+      "cards": 33,
+      "boxShadow": "none",
+      "borderTop": "0px none",
+      "radius": "0px",
+      "index": true,
+      "actions": 5
+    },
+    {
+      "name": "methodology-dark",
+      "overflow": 0,
+      "cards": 33,
+      "boxShadow": "none",
+      "borderTop": "0px none",
+      "radius": "0px",
+      "index": true,
+      "actions": 5
+    },
+    {
+      "name": "methodology-900",
+      "overflow": 0,
+      "cards": 33,
+      "boxShadow": "none",
+      "borderTop": "0px none",
+      "radius": "0px",
+      "index": true,
+      "actions": 5
+    },
+    {
+      "name": "methodology-390",
+      "overflow": 0,
+      "cards": 33,
+      "boxShadow": "none",
+      "borderTop": "0px none",
+      "radius": "0px",
+      "index": true,
+      "actions": 5
+    },
+    {
+      "name": "glossary-desktop",
+      "overflow": 0,
+      "cards": 0,
+      "boxShadow": null,
+      "borderTop": null,
+      "radius": null,
+      "index": null,
+      "actions": 0
+    },
+    {
+      "name": "ling-desktop",
+      "overflow": 0,
+      "cards": 0,
+      "boxShadow": null,
+      "borderTop": null,
+      "radius": null,
+      "index": null,
+      "actions": 0
+    }
+  ],
+  "errors": [
+    "methodology-desktop-light: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED",
+    "methodology-dark: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED",
+    "methodology-900: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED",
+    "methodology-390: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED",
+    "glossary-desktop: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED",
+    "ling-desktop: Failed to load resource: net::ERR_PROXY_CONNECTION_FAILED"
+  ]
+}

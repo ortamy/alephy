@@ -1,0 +1,338 @@
+/* ============================================================
+   state-checker.css — Чекер стран (#state-checker).
+   Каркас панелей и глав — css/components/panels.css.
+   Здесь: форма ввода, донат кураторской рампы (золото доминанте →
+   коричнево-ink ступени), легенда мини-чипами, диагноз, футер действий.
+   Hairline, без теней; зелёный/синий/красный в диаграмме не используются.
+   ============================================================ */
+
+.stc-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+/* ===== Панель 01: страна ===== */
+.stc-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.stc-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+}
+
+.stc-input::placeholder { color: var(--text-secondary); }
+
+.stc-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* ===== Панель 02: результат ===== */
+.stc-output {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 148px;
+}
+
+.stc-result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+/* Шапка результата: сериф-имя страны + чип доминанты, одна волосяная линия */
+.stc-result-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.stc-country {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.stc-result-head .wb-badge { margin-left: auto; }
+
+/* ===== Донат + легенда ===== */
+.stc-visual {
+  display: grid;
+  grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: center;
+}
+
+.stc-chart-box {
+  width: 100%;
+  max-width: 260px;
+}
+
+.stc-chart {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Кураторская рампа: ранг 0 — золото доминанте, далее ступени к ink. */
+.stc-tone-0 { --stc-fill: var(--accent-gold); }
+.stc-tone-1 { --stc-fill: color-mix(in srgb, var(--accent-gold) 78%, var(--text-primary)); }
+.stc-tone-2 { --stc-fill: color-mix(in srgb, var(--accent-gold) 66%, var(--text-primary)); }
+.stc-tone-3 { --stc-fill: color-mix(in srgb, var(--accent-gold) 56%, var(--text-primary)); }
+.stc-tone-4 { --stc-fill: color-mix(in srgb, var(--accent-gold) 47%, var(--text-primary)); }
+.stc-tone-5 { --stc-fill: color-mix(in srgb, var(--accent-gold) 38%, var(--text-primary)); }
+.stc-tone-6 { --stc-fill: color-mix(in srgb, var(--accent-gold) 30%, var(--text-primary)); }
+.stc-tone-7 { --stc-fill: color-mix(in srgb, var(--accent-gold) 22%, var(--text-primary)); }
+
+/* Сегменты и точки легенды берут тон из одной переменной ранга. */
+.stc-seg {
+  fill: var(--stc-fill);
+  stroke: var(--bg-card);
+  stroke-width: 1;
+}
+
+.stc-chart-center-pct {
+  fill: var(--gold-text);
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.stc-chart-center-label {
+  fill: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.stc-legend {
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.stc-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.stc-legend-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+  background: var(--stc-fill);
+}
+
+/* Мини-чип состояния: палео-глиф + имя (глиф-строка hero-дубля) */
+.stc-legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 1px var(--space-2);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+}
+
+.stc-legend-glyph {
+  color: var(--text-secondary);
+  font-family: var(--font-paleo);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.stc-legend-value {
+  margin-left: auto;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+}
+
+/* ===== Диагноз: одна мысль = один абзац ===== */
+.stc-diagnosis {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.stc-diagnosis-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.stc-para {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-ui);
+}
+
+.stc-para--note {
+  padding-top: var(--space-3);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-light);
+  font-size: var(--text-sm);
+}
+
+/* Бейдж уверенности на интерпретации (§6) */
+.stc-conf {
+  display: inline-flex;
+  align-items: center;
+  margin-right: var(--space-2);
+  padding: 1px var(--space-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* ===== Двери-чипы и футер действий ===== */
+.stc-doors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.stc-door {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h-sm);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  text-decoration: none;
+  transition: border-color var(--motion-base);
+}
+
+.stc-door:hover,
+.stc-door:focus-visible { border-color: var(--accent-gold); }
+
+.stc-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+/* Действия результата — нейтральный hairline: золото принадлежит primary. */
+.stc-footer .lab-btn-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
+
+.stc-footer .lab-btn-secondary:hover,
+.stc-footer .lab-btn-secondary:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.stc-footer-status {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.stc-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: var(--control-h);
+  height: var(--control-h);
+  padding: 0;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.stc-icon-btn:hover,
+.stc-icon-btn:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.stc-icon-btn svg { width: 16px; height: 16px; }
+
+/* Состояние error: hairline + «Повторить» */
+.stc-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-left: 2px solid var(--red-text);
+  border-radius: var(--radius-8);
+}
+
+.stc-error-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ===== Мобильный закон (§5.3): донат+легенда стеком, края шапки, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .stc-hint { margin-left: 0; }
+  .stc-visual { grid-template-columns: 1fr; }
+  .stc-result-head .wb-badge { margin-left: 0; }
+  .stc-chart-box { max-width: 220px; margin: 0 auto; }
+}
+

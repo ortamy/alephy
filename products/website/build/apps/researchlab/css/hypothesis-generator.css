@@ -1,0 +1,265 @@
+/* ============================================================
+   hypothesis-generator.css — «Генератор гипотез»: альтернативы чтения с тестом
+   на опровержение. Канон: hairline-рамки, без теней; только токены tokens.css.
+   ============================================================ */
+
+.hg-shell {
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  padding: var(--space-3) 0 var(--space-8);
+}
+
+/* Объект+сохранённые слева (span 5), гипотезы sticky справа (span 7) */
+.hg-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.hg-side {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  min-width: 0;
+}
+
+.hg-hyp-panel {
+  position: sticky;
+  top: calc(var(--header-compact) + var(--space-4));
+  min-width: 0;
+}
+
+/* ===== Панель «Объект» ===== */
+.hg-form { display: grid; gap: var(--space-4); }
+
+.hg-field { display: grid; gap: var(--space-2); min-width: 0; }
+
+.hg-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.hg-form .lab-input {
+  width: 100%;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.hg-form .lab-input:focus {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 1px;
+}
+
+.hg-types { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.hg-type-chip.is-active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* Строка источников: muted, перечитывается на каждый ввод */
+.hg-sources {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+/* ===== Гипотезы ===== */
+.hg-hyp { display: grid; gap: var(--space-3); }
+
+.hg-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+}
+
+.hg-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.hg-rank {
+  flex: 0 0 auto;
+  color: var(--accent-gold);
+  font: 600 var(--ui-11)/1.3 var(--font-mono);
+  letter-spacing: var(--tracking-caps);
+}
+
+/* Сериф-заголовок чтения */
+.hg-card-title {
+  flex: 1 1 auto;
+  margin: 0;
+  color: var(--text-primary);
+  font: 600 var(--text-lg)/1.3 var(--font-heading);
+}
+
+.hg-badge {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.hg-badge.is-interpretation { color: var(--gold-text); }
+
+.hg-card-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font: var(--text-md)/1.6 var(--font-serif);
+  overflow-wrap: anywhere;
+}
+
+.hg-card-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--ui-11) var(--font-mono);
+}
+
+.hg-grounds { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.hg-ground {
+  padding: 1px var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Строка опровержения в hairline-рамке */
+.hg-falsify {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+.hg-falsify-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Легенда уверенности + строка действий панели */
+.hg-legend {
+  margin: var(--space-4) 0 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.hg-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-top: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+.hg-actions .lab-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.hg-door {
+  margin-left: auto;
+  color: var(--accent-gold);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--motion-base);
+}
+
+.hg-door:hover,
+.hg-door:focus-visible { border-bottom-color: var(--accent-gold); }
+
+/* ===== Сохранённые: hairline-строки ===== */
+.hg-saved { display: grid; }
+
+.hg-saved-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.hg-saved-row:last-child { border-bottom: 0; }
+
+.hg-saved-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--text-md)/1.4 var(--font-serif);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--motion-base);
+}
+
+.hg-saved-open:hover,
+.hg-saved-open:focus-visible { color: var(--accent-gold); }
+
+.hg-saved-meta {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font: var(--ui-11) var(--font-mono);
+  white-space: nowrap;
+}
+
+.hg-saved-remove {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: 16px/1 var(--font-ui);
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.hg-saved-remove:hover,
+.hg-saved-remove:focus-visible { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+/* ===== Мобильный закон: стек, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .hg-shell { padding: 0 0 var(--space-7); }
+  .hg-layout { grid-template-columns: 1fr; }
+  .hg-hyp-panel { position: static; }
+  .hg-door { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hg-door,
+  .hg-saved-open,
+  .hg-saved-remove { transition: none; }
+}

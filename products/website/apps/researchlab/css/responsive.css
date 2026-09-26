@@ -5,20 +5,6 @@
    ============================================= */
 
 @media (max-width: 760px) {
-  .paleo-module-image,
-  .paleo-module-function,
-  .paleo-module-example,
-  .paleo-module-steps {
-    grid-column: 1 / -1;
-  }
-
-  .paleo-assembly {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-
-@media (max-width: 760px) {
   .research-controls,
   .research-term-card {
     grid-template-columns: 1fr;

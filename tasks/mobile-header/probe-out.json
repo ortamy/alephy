@@ -1,0 +1,170 @@
+{
+  "mobile360": {
+    "headerHeight": 48,
+    "scrollWidth": 360,
+    "innerWidth": 360,
+    "burger": {
+      "display": "flex",
+      "size": "36x36",
+      "right": 16,
+      "topElement": true,
+      "hit": "labSidebarToggle"
+    },
+    "globeGithubVisible": 0,
+    "mobileLinksDisplay": "none",
+    "navDisplay": "flex",
+    "linksSectionDisplay": "block",
+    "headerOverflow": 0,
+    "overlaps": [],
+    "navOverflow": 0,
+    "navChildren": [
+      "Переключить тему",
+      "search-toggle",
+      "lang-btn"
+    ]
+  },
+  "mobile390": {
+    "headerHeight": 48,
+    "scrollWidth": 390,
+    "innerWidth": 390,
+    "burger": {
+      "display": "flex",
+      "size": "36x36",
+      "right": 16,
+      "topElement": true,
+      "hit": "labSidebarToggle"
+    },
+    "globeGithubVisible": 0,
+    "mobileLinksDisplay": "none",
+    "navDisplay": "flex",
+    "linksSectionDisplay": "block",
+    "headerOverflow": 0,
+    "overlaps": [],
+    "navOverflow": 0,
+    "navChildren": [
+      "Переключить тему",
+      "search-toggle",
+      "lang-btn"
+    ]
+  },
+  "mobile414": {
+    "headerHeight": 48,
+    "scrollWidth": 414,
+    "innerWidth": 414,
+    "burger": {
+      "display": "flex",
+      "size": "36x36",
+      "right": 16,
+      "topElement": true,
+      "hit": "labSidebarToggle"
+    },
+    "globeGithubVisible": 0,
+    "mobileLinksDisplay": "none",
+    "navDisplay": "flex",
+    "linksSectionDisplay": "block",
+    "headerOverflow": 0,
+    "overlaps": [],
+    "navOverflow": 0,
+    "navChildren": [
+      "Переключить тему",
+      "search-toggle",
+      "lang-btn"
+    ]
+  },
+  "tablet800": {
+    "headerHeight": 48,
+    "scrollWidth": 800,
+    "innerWidth": 800,
+    "burger": {
+      "display": "flex",
+      "size": "36x36",
+      "right": 16,
+      "topElement": true,
+      "hit": "labSidebarToggle"
+    },
+    "globeGithubVisible": 0,
+    "mobileLinksDisplay": "none",
+    "navDisplay": "flex",
+    "linksSectionDisplay": "block",
+    "headerOverflow": 0,
+    "overlaps": [],
+    "navOverflow": 0,
+    "navChildren": [
+      "Переключить тему",
+      "search-toggle",
+      "lang-btn"
+    ],
+    "drawer": {
+      "open": true,
+      "background": "color(srgb 0.984314 0.980392 0.964706 / 0.74)",
+      "backdrop": "blur(14px) saturate(1.3)",
+      "transition": "0.18s",
+      "sectionVisible": true,
+      "sectionDisplay": "block",
+      "rows": [
+        {
+          "label": "GitHub проекта",
+          "href": "https://github.com/ortamy/alephy",
+          "height": 50,
+          "hasIcon": true
+        },
+        {
+          "label": "Сайт проекта",
+          "href": "../../",
+          "height": 49,
+          "hasIcon": true
+        }
+      ]
+    }
+  },
+  "drawer390": {
+    "open": true,
+    "background": "color(srgb 0.984314 0.980392 0.964706 / 0.74)",
+    "backdrop": "none",
+    "transition": "0.18s",
+    "sectionVisible": true,
+    "sectionDisplay": "block",
+    "rows": [
+      {
+        "label": "GitHub проекта",
+        "href": "https://github.com/ortamy/alephy",
+        "height": 50,
+        "hasIcon": true
+      },
+      {
+        "label": "Сайт проекта",
+        "href": "../../",
+        "height": 49,
+        "hasIcon": true
+      }
+    ],
+    "burgerTopElementWhileOpen": true,
+    "sectionInViewport": true
+  },
+  "reducedMotion390": {
+    "drawerTransition": "1e-05s",
+    "overlayTransition": "1e-05s",
+    "drawerBackdrop": "none"
+  },
+  "desktop1280": {
+    "headerHeight": 48,
+    "burgerDisplay": "none",
+    "iconLinks": [
+      {
+        "title": "Сайт",
+        "display": "flex",
+        "href": "../../"
+      },
+      {
+        "title": "GitHub",
+        "display": "flex",
+        "href": "https://github.com/ortamy/alephy"
+      }
+    ],
+    "sidebarPosition": "sticky",
+    "linksSectionDisplay": "none",
+    "scrollWidth": 1280,
+    "innerWidth": 1280
+  },
+  "errors": []
+}

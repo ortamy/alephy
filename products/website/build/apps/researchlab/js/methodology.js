@@ -551,12 +551,18 @@
     return cleanMethodTitle(title);
   }
 
+  // Краткое описание строки реестра: не более четырёх строк, обрезка по границе слова.
   function displayCardSummary(summary) {
     var text = String(summary == null ? '' : summary)
       .replace(/^\s*\*{0,2}Суть:\s*\*{0,2}/i, '')
       .replace(/^\s*Суть\s*[-—:]\s*/i, '')
+      .replace(/\s+/g, ' ')
       .trim();
-    return text ? text.charAt(0).toLocaleUpperCase('ru-RU') + text.slice(1) : text;
+    if (!text) return text;
+    text = text.charAt(0).toLocaleUpperCase('ru-RU') + text.slice(1);
+    if (text.length <= 220) return text;
+    var cut = text.lastIndexOf(' ', 220);
+    return text.slice(0, cut > 120 ? cut : 220).replace(/[\s,;:—–-]+$/, '') + '…';
   }
 
   function findTechniqueCard(id) {
@@ -736,21 +742,20 @@
 
     panel.className = 'methodology-panel';
     panel.innerHTML = cards.map(function(card, index) {
-      var isDocumentCard = card.document === 'system-architecture' || card.document === 'source-document' || card.document === 'language-shift' || card.document === 'language-technique' || card.document === 'technique-card' || card.document === 'philosopheme-card' || card.document === 'distortion-card' || card.document === 'paleo-translation-card';
-      var documentClass = isDocumentCard ? ' methodology-document-card' : '';
-      var shiftClass = card.document === 'language-shift' || card.document === 'language-technique' || card.document === 'technique-card' || card.document === 'philosopheme-card' || card.document === 'distortion-card' || card.document === 'paleo-translation-card' ? ' methodology-shift-card' : '';
       var cardText = displayCardSummary(card.summary || card.text);
       var cardTitle = displayCardTitle(card.title);
-      var isCompactMethod = card.document === 'language-technique' || card.document === 'mechanism-card';
       var cardIcon = card.icon
         ? '<img src="' + escapeHtml(card.icon) + '" class="methodology-card-icon" alt="" aria-hidden="true">'
         : '';
+      // Порядковый номер держит строку реестра читаемой без рамок и теней.
+      var cardNumber = ('0' + (index + 1)).slice(-2);
       var infoButton = '<button type="button" class="methodology-icon-btn methodology-info-btn" data-id="' + escapeHtml(card.id) + '" onclick="MethodologyLab.openCard(this.dataset.id); return false;" title="Открыть полный текст" aria-label="Открыть полный текст карточки">' + INFO_ICON + '</button>';
-      return '<article class="methodology-card' + documentClass + shiftClass + '" data-id="' + escapeHtml(card.id) + '" style="animation-delay:' + (index * 30) + 'ms">' +
-        '<div class="methodology-card-head">' +
-          '<div class="methodology-card-heading">' + cardIcon + '<h3 class="methodology-card-title">' + escapeHtml(cardTitle) + '</h3></div>' +
+      return '<article class="methodology-card" data-id="' + escapeHtml(card.id) + '">' +
+        '<span class="methodology-card-index" aria-hidden="true">' + cardNumber + '</span>' +
+        '<div class="methodology-card-body">' +
+          '<div class="methodology-card-head">' + cardIcon + '<h3 class="methodology-card-title">' + escapeHtml(cardTitle) + '</h3></div>' +
+          '<p class="methodology-card-text">' + escapeHtml(cardText) + '</p>' +
         '</div>' +
-        '<p class="methodology-card-text">' + escapeHtml(cardText) + '</p>' +
         '<div class="methodology-card-actions">' +
           infoButton +
           '<button type="button" class="methodology-icon-btn methodology-copy-btn" data-id="' + escapeHtml(card.id) + '" title="Копировать" aria-label="Копировать карточку">' + COPY_ICON + '</button>' +
@@ -866,9 +871,12 @@
       });
     });
 
-    panel.querySelectorAll('.methodology-document-card').forEach(function(article) {
+    // Клик по строке реестра открывает полный текст в любом разделе —
+    // ранье это работало только для подкласса карточек-документов.
+    panel.querySelectorAll('.methodology-card').forEach(function(article) {
       article.addEventListener('click', function(event) {
-        if (event.target.closest('button')) return;
+        if (event.target.closest('button, textarea')) return;
+        if (article.classList.contains('is-editing')) return;
         var card = findCard(article.dataset.id);
         if (card) openFullText(card);
       });

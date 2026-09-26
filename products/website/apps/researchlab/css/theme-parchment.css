@@ -29,10 +29,8 @@ html[data-theme="parchment"] .question-option.selected,
 html[data-theme="parchment"] .scale-option.selected,
 html[data-theme="parchment"] .tc-witness-row.active td,
 html[data-theme="parchment"] .rd-subs,
-html[data-theme="parchment"] .clue-conclusion,
-html[data-theme="parchment"] .methodology-icon-btn:hover,
-html[data-theme="parchment"] .methodology-info-btn:hover {
-  background: #eadfc8;
+html[data-theme="parchment"] .clue-conclusion {
+  background: var(--bg-tertiary);
 }
 
 /* Акцентные поверхности сохраняют золото пергаментной темы. */

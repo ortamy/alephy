@@ -1,21 +1,58 @@
-<section class="tree-checker-shell" aria-labelledby="tree-checker-title">
-  <header class="tree-checker-intro">
-    <p class="tree-checker-kicker">𐤏𐤑 · ШЕСТЬ УРОВНЕЙ</p>
-    <h1 id="tree-checker-title">Чекер дерева</h1>
-    <p class="subtitle">Проведите учение от семени до плодов. На каждом уровне зафиксируйте наблюдение и оцените, держится ли дерево.</p>
-  </header>
-  <div class="tree-checker-toolbar" role="toolbar" aria-label="Пресеты">
-    <span class="tree-checker-toolbar-label">Быстрая проверка:</span>
-    <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-tree-preset="trinity">Троица</button>
-    <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-tree-reset>Очистить</button>
-  </div>
-  <div class="tree-checker-progress" aria-live="polite"><span data-tree-progress-bar></span></div>
-  <form class="tree-checker-form" data-tree-form>
-    <div data-tree-level></div>
-    <div class="tree-checker-actions">
-      <button type="button" class="lab-btn lab-btn-secondary" data-tree-prev>Назад</button>
-      <button type="button" class="lab-btn lab-btn-primary" data-tree-next>Далее</button>
+<!-- Чекер дерева. Шапка — реестр LabHero (строка быстрой проверки живёт
+     чипами в её футере); каркас панелей и глав — css/components/panels.css. -->
+<section class="trc-shell" aria-label="Чекер дерева">
+  <section class="lab-panel trc-progress" aria-labelledby="trc-progress-label">
+    <div class="trc-progress-row">
+      <span class="trc-progress-label" id="trc-progress-label" data-i18n="lab.treeChecker.progressLabel">Уровень 1 из 6</span>
+      <span class="trc-dots" id="trc-dots" role="tablist" aria-label="Уровни дерева"
+            data-i18n-attr="aria-label:lab.treeChecker.dotsLabel"></span>
+    </div>
+    <div class="trc-bar" aria-hidden="true"><span class="trc-bar-fill" id="trc-bar-fill"></span></div>
+  </section>
+
+  <form class="lab-panel trc-card" id="trc-form" novalidate>
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">01</span>
+      <h2 class="lab-chapter-title" id="trc-level-label">Уровень 1 из 6</h2>
+      <span class="wb-badge" id="trc-level-badge" data-i18n="lab.treeChecker.stateNew">Новый</span>
+    </header>
+    <h3 class="trc-level-name" id="trc-level-name"></h3>
+    <p class="lab-chapter-note" id="trc-level-description"></p>
+    <p class="trc-question" id="trc-level-question"></p>
+    <textarea id="trc-text" class="lab-textarea trc-text" rows="5"
+              placeholder="Зафиксируйте наблюдение…" aria-label="Наблюдение"
+              data-i18n-attr="placeholder:lab.treeChecker.placeholder;aria-label:lab.treeChecker.answerLabel"></textarea>
+    <div class="trc-verdicts" id="trc-verdicts" role="radiogroup"
+         aria-label="Оценка уровня" data-i18n-attr="aria-label:lab.treeChecker.verdictLabel"></div>
+    <p class="lab-status" id="trc-status" role="status" aria-live="polite"></p>
+    <div class="trc-nav">
+      <button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" id="trc-prev"
+              data-i18n="lab.treeChecker.prev">Назад</button>
+      <button type="submit" class="lab-btn lab-btn-primary lab-btn-compact" id="trc-next"
+              data-i18n="lab.treeChecker.next">Далее</button>
     </div>
   </form>
-  <section class="tree-checker-result" data-tree-result hidden aria-live="polite"></section>
+
+  <section class="lab-panel" id="trc-result" hidden aria-live="polite">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">02</span>
+      <h2 class="lab-chapter-title" id="trc-result-title" data-i18n="lab.treeChecker.resultTitle">Дерево</h2>
+      <span class="wb-badge" id="trc-result-badge"></span>
+    </header>
+    <div class="trc-verdict-row">
+      <span class="wb-badge" id="trc-verdict-chip"></span>
+      <span class="trc-conf" data-i18n="lab.treeChecker.confidence">интерпретация</span>
+    </div>
+    <ul class="trc-tree" id="trc-tree"></ul>
+    <p class="trc-verdict-text" id="trc-verdict-text"></p>
+    <div class="trc-footer">
+      <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="trc-copy">
+        <i data-lucide="copy" aria-hidden="true"></i><span data-i18n="lab.treeChecker.copy">Копировать Markdown</span>
+      </button>
+      <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="trc-again">
+        <i data-lucide="rotate-ccw" aria-hidden="true"></i><span data-i18n="lab.treeChecker.again">Начать заново</span>
+      </button>
+      <span class="trc-footer-status" id="trc-copy-status" role="status" aria-live="polite"></span>
+    </div>
+  </section>
 </section>

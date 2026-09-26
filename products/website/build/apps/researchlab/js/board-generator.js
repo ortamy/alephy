@@ -1,485 +1,397 @@
-// Research Board Generator - Main JavaScript (webapp version)
+/**
+ * board-generator.js — «Генератор досок»: конструктор с живым предпросмотром.
+ * Разметка: pages/board-generator.html; канон панелей — css/components/panels.css.
+ * Превью перерисовывается по мере ввода; история — последние 5 досок в localStorage.
+ */
+(function(window, document) {
+  'use strict';
 
-// ===== STATE =====
-let boardData = {
-  title: '',
-  conclusion: '',
-  evidence: [],
-  attachments: [],
-  nnModel: 'none',
-  nnSettings: {}
-};
+  var PAGE_PATH = 'pages/board-generator.html';
+  var HISTORY_KEY = 'alephy_board_generator_history';
+  var HISTORY_LIMIT = 5;
+  var PREFILL_KEY = 'alephy_board_generator_prefill';
+  var pagePromise = null;
+  var lastBoard = null;
 
-// ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', function() {
-  // Add initial evidence and attachment fields
-  addEvidence();
-  addAttachment();
-  
-  // Form submission handler
-  document.getElementById('board-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    generateBoard();
-  });
-});
+  // Чипы примеров: data-bg-example в разметке указывает индекс этого массива.
+  var EXAMPLES = [
+    {
+      title: 'Подмена слова «закон»',
+      conclusion: '«Закон» в переводах заменяет образ Торы как пути-наставления: живая траектория превращена в свод запретов.',
+      evidence: [
+        'Тора описана глаголами движения и ходьбы, а не запрета',
+        'Греческий νόμος в LXX сдвигает смысл к юридической норме',
+        'Ряд хук / мицва / тора держит образ наставления, не кодекса'
+      ],
+      attachments: ['Словарь подмен: запись «закон»', 'Компаратор переводов: слой LXX']
+    },
+    {
+      title: 'Берешит 1:1 — образ начатка',
+      conclusion: '«Берешит» читается как «в начатке»: текст открывается не датой, а указанием на первый сноп процесса.',
+      evidence: [
+        'Буквенный ряд: дом → голова → начаток',
+        'Когнат «решит» в Дварим — начаток жатвы',
+        'Масоретский текст не содержит артикля «в начале»'
+      ],
+      attachments: ['Палео-таблица букв', 'Компаратор: Берешит 1:1']
+    }
+  ];
 
-// ===== DYNAMIC FORM FIELDS =====
-function addEvidence() {
-  const container = document.getElementById('evidence-list');
-  const id = Date.now();
-  const index = container.children.length + 1;
-  
-  const div = document.createElement('div');
-  div.className = 'evidence-item';
-  div.dataset.id = id;
-  div.style.cssText = 'margin-bottom: 12px; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 4px;';
-  
-  div.innerHTML = `
-    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <input type="text" placeholder="Название улики #${index}" 
-        style="flex: 1; padding: 8px 10px; font-family: 'EB Garamond', Georgia, serif; font-size: 14px; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-card); color: var(--text-primary); outline: none;"
-        onfocus="this.style.borderColor='var(--accent-gold)'" onblur="this.style.borderColor='var(--border-light)'">
-      <button type="button" onclick="removeEvidence(${id})" 
-        style="padding: 8px 12px; background: var(--accent-red); color: #faf3e0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
-        ✕
-      </button>
-    </div>
-    <textarea placeholder="Описание улики..." rows="2"
-      style="width: 100%; padding: 8px 10px; font-family: 'EB Garamond', Georgia, serif; font-size: 14px; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-card); color: var(--text-primary); outline: none; resize: vertical;"
-      onfocus="this.style.borderColor='var(--accent-gold)'" onblur="this.style.borderColor='var(--border-light)'"></textarea>
-  `;
-  
-  container.appendChild(div);
-}
+  // ===== i18n и утилиты =====
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
 
-function removeEvidence(id) {
-  const item = document.querySelector(`.evidence-item[data-id="${id}"]`);
-  if (item) {
-    item.remove();
-    // Renumber remaining items
-    const items = document.querySelectorAll('.evidence-item');
-    items.forEach((item, index) => {
-      const input = item.querySelector('input[type="text"]');
-      if (input) {
-        input.placeholder = `Название улики #${index + 1}`;
-      }
+  function esc(value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function(char) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
     });
   }
-}
 
-function addAttachment() {
-  const container = document.getElementById('attachments-list');
-  const id = Date.now();
-  const index = container.children.length + 1;
-  
-  const div = document.createElement('div');
-  div.className = 'attachment-item';
-  div.dataset.id = id;
-  div.style.cssText = 'margin-bottom: 12px; padding: 12px; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 4px;';
-  
-  div.innerHTML = `
-    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <input type="text" placeholder="Название вложения #${index}" 
-        style="flex: 1; padding: 8px 10px; font-family: 'EB Garamond', Georgia, serif; font-size: 14px; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-card); color: var(--text-primary); outline: none;"
-        onfocus="this.style.borderColor='var(--accent-gold)'" onblur="this.style.borderColor='var(--border-light)'">
-      <button type="button" onclick="removeAttachment(${id})" 
-        style="padding: 8px 12px; background: var(--accent-red); color: #faf3e0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
-        ✕
-      </button>
-    </div>
-    <input type="text" placeholder="Ссылка на изображение/документ (URL)" 
-      style="width: 100%; padding: 8px 10px; font-family: 'EB Garamond', Georgia, serif; font-size: 14px; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-card); color: var(--text-primary); outline: none; margin-bottom: 8px;"
-      onfocus="this.style.borderColor='var(--accent-gold)'" onblur="this.style.borderColor='var(--border-light)'">
-    <textarea placeholder="Краткое описание..." rows="2"
-      style="width: 100%; padding: 8px 10px; font-family: 'EB Garamond', Georgia, serif; font-size: 14px; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-card); color: var(--text-primary); outline: none; resize: vertical;"
-      onfocus="this.style.borderColor='var(--accent-gold)'" onblur="this.style.borderColor='var(--border-light)'"></textarea>
-  `;
-  
-  container.appendChild(div);
-}
-
-function removeAttachment(id) {
-  const item = document.querySelector(`.attachment-item[data-id="${id}"]`);
-  if (item) {
-    item.remove();
-    // Renumber remaining items
-    const items = document.querySelectorAll('.attachment-item');
-    items.forEach((item, index) => {
-      const input = item.querySelector('input[type="text"]');
-      if (input) {
-        input.placeholder = `Название вложения #${index + 1}`;
-      }
-    });
-  }
-}
-
-// ===== NEURAL NETWORK SETTINGS =====
-function updateNNSettings() {
-  const model = document.getElementById('nn-model').value;
-  const settingsDiv = document.getElementById('nn-settings');
-  const generateAIBtn = document.getElementById('btn-generate-ai');
-  
-  if (model === 'none') {
-    settingsDiv.style.display = 'none';
-    generateAIBtn.style.display = 'none';
-  } else {
-    settingsDiv.style.display = 'block';
-    generateAIBtn.style.display = 'inline-block';
-  }
-}
-
-// ===== BOARD GENERATION =====
-function generateBoard() {
-  // Collect form data
-  boardData.title = document.getElementById('board-title').value;
-  boardData.conclusion = document.getElementById('main-conclusion').value;
-  boardData.nnModel = document.getElementById('nn-model').value;
-  
-  // Collect evidence
-  boardData.evidence = [];
-  const evidenceItems = document.querySelectorAll('.evidence-item');
-  evidenceItems.forEach((item, index) => {
-    const title = item.querySelector('input[type="text"]').value;
-    const description = item.querySelector('textarea').value;
-    if (title.trim()) {
-      boardData.evidence.push({
-        number: index + 1,
-        title: title,
-        description: description
+  function fetchPage() {
+    if (!pagePromise) {
+      pagePromise = fetch(PAGE_PATH).then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
       });
     }
-  });
-  
-  // Collect attachments
-  boardData.attachments = [];
-  const attachmentItems = document.querySelectorAll('.attachment-item');
-  attachmentItems.forEach((item, index) => {
-    const name = item.querySelectorAll('input[type="text"]')[0].value;
-    const url = item.querySelectorAll('input[type="text"]')[1].value;
-    const desc = item.querySelector('textarea').value;
-    if (name.trim()) {
-      boardData.attachments.push({
-        name: name,
-        url: url,
-        description: desc
-      });
+    return pagePromise;
+  }
+
+  // ===== История (localStorage, последние 5) =====
+  function readHistory() {
+    try {
+      var stored = JSON.parse(window.localStorage.getItem(HISTORY_KEY) || '[]');
+      if (!Array.isArray(stored)) return [];
+      return stored.filter(function(item) {
+        return item && typeof item.title === 'string' && typeof item.conclusion === 'string';
+      }).slice(0, HISTORY_LIMIT);
+    } catch (error) {
+      return [];
     }
-  });
-  
-  // Collect NN settings if needed
-  if (boardData.nnModel !== 'none') {
-    boardData.nnSettings = {
-      apiKey: document.getElementById('nn-api-key').value,
-      endpoint: document.getElementById('nn-endpoint').value,
-      resolution: document.getElementById('nn-resolution').value,
-      style: document.getElementById('nn-style').value
+  }
+
+  function saveHistory(items) {
+    try {
+      window.localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, HISTORY_LIMIT)));
+    } catch (error) {
+      // localStorage может быть недоступен — доска просто не попадёт в историю.
+    }
+  }
+
+  function formatTime(ts) {
+    try {
+      var locale = document.documentElement.lang === 'en' ? 'en-GB' : 'ru-RU';
+      return new Date(ts).toLocaleString(locale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+      return '';
+    }
+  }
+
+  // ===== Состояние формы =====
+  function rowValues(scope, selector) {
+    var list = scope.querySelector(selector);
+    if (!list) return [];
+    return Array.prototype.map.call(list.querySelectorAll('.bg-row-input'), function(input) {
+      return input.value.trim();
+    }).filter(Boolean);
+  }
+
+  function collect(scope) {
+    var title = scope.querySelector('#bg-title');
+    var conclusion = scope.querySelector('#bg-conclusion');
+    return {
+      title: title ? title.value.trim() : '',
+      conclusion: conclusion ? conclusion.value.trim() : '',
+      evidence: rowValues(scope, '#bg-evidence-list'),
+      attachments: rowValues(scope, '#bg-attachments-list')
     };
   }
-  
-  // Render board
-  renderBoard();
-  
-  // Generate prompt
-  generatePrompt();
-  
-  // Show export section
-  document.getElementById('export-section').style.display = 'block';
-  
-  // Show board preview
-  document.getElementById('board-preview').style.display = 'block';
-  document.getElementById('board-placeholder').style.display = 'none';
-}
 
-function renderBoard() {
-  const preview = document.getElementById('board-preview');
-  
-  // Build evidence HTML
-  let evidenceHTML = '';
-  boardData.evidence.forEach(ev => {
-    evidenceHTML += `
-      <div class="evidence-card">
-        <div class="evidence-number">${ev.number}</div>
-        <div class="evidence-title">${escapeHtml(ev.title)}</div>
-        <div class="evidence-description">${escapeHtml(ev.description)}</div>
-      </div>
-    `;
-  });
-  
-  // Build attachments HTML
-  let attachmentsHTML = '';
-  if (boardData.attachments.length > 0) {
-    attachmentsHTML = '<div class="attachments-section"><div class="section-title">Вложения</div><div class="attachments-grid">';
-    boardData.attachments.forEach(att => {
-      let thumbnailHTML = '';
-      if (att.url) {
-        thumbnailHTML = `<img src="${escapeHtml(att.url)}" alt="${escapeHtml(att.name)}" class="attachment-thumbnail" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
-        thumbnailHTML += `<div class="attachment-placeholder" style="display: none;">📎</div>`;
-      } else {
-        thumbnailHTML = `<div class="attachment-placeholder">📎</div>`;
+  function isValid(data) {
+    return Boolean(data.title && data.conclusion);
+  }
+
+  function setStatus(scope, message, type) {
+    var status = scope.querySelector('#bg-status');
+    if (!status) return;
+    status.textContent = message || '';
+    status.className = 'lab-status' + (type ? ' is-' + type : '');
+  }
+
+  function updateGenerateState(scope) {
+    var button = scope.querySelector('#bg-generate');
+    var hint = scope.querySelector('#bg-hint');
+    var valid = isValid(collect(scope));
+    if (button) button.disabled = !valid;
+    if (hint) hint.hidden = valid;
+  }
+
+  // ===== Живой предпросмотр =====
+  function renderPreview(scope) {
+    var host = scope.querySelector('#bg-preview');
+    if (!host) return;
+    var data = collect(scope);
+    if (!data.title && !data.conclusion && !data.evidence.length && !data.attachments.length) {
+      host.innerHTML = '<div class="lab-empty">' +
+        '<span class="lab-empty-glyph" aria-hidden="true">𐤁</span>' +
+        '<p class="lab-empty-hint">' + esc(t('lab.boardGenerator.emptyHint', 'Доска собирается по мере ввода: заголовок, вывод, улики и вложения.')) + '</p></div>';
+      return;
+    }
+    var html = '<article class="bg-board">';
+    if (data.title) {
+      html += '<h3 class="bg-board-title">' + esc(data.title) + '</h3>';
+    }
+    if (data.conclusion) {
+      html += '<p class="bg-board-label">' + esc(t('lab.boardGenerator.conclusionSection', 'Вывод')) + '</p>' +
+        '<p class="bg-board-conclusion">' + esc(data.conclusion) + '</p>';
+    }
+    if (data.evidence.length) {
+      html += '<p class="bg-board-label">' + esc(t('lab.boardGenerator.evidenceSection', 'Улики')) + '</p><ul class="bg-board-evidence">';
+      data.evidence.forEach(function(item) {
+        html += '<li><span class="bg-glyph" aria-hidden="true">𐤄</span><span>' + esc(item) + '</span></li>';
+      });
+      html += '</ul>';
+    }
+    if (data.attachments.length) {
+      html += '<p class="bg-board-label">' + esc(t('lab.boardGenerator.attachmentsSection', 'Вложения')) + '</p><div class="bg-chips">';
+      data.attachments.forEach(function(item) {
+        html += '<span class="bg-chip">' + esc(item) + '</span>';
+      });
+      html += '</div>';
+    }
+    host.innerHTML = html + '</article>';
+  }
+
+  // ===== Динамические hairline-строки =====
+  function addRow(scope, listSelector, placeholderKey, placeholderFallback, value) {
+    var list = scope.querySelector(listSelector);
+    if (!list) return;
+    var row = document.createElement('div');
+    row.className = 'bg-row';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'lab-input bg-row-input';
+    input.maxLength = 240;
+    input.placeholder = t(placeholderKey, placeholderFallback);
+    if (value) input.value = value;
+    var remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'bg-icon-button bg-row-remove';
+    var removeLabel = t('lab.boardGenerator.removeTitle', 'Удалить');
+    remove.setAttribute('aria-label', removeLabel);
+    remove.title = removeLabel;
+    remove.textContent = '×';
+    row.appendChild(input);
+    row.appendChild(remove);
+    list.appendChild(row);
+    if (!value) input.focus();
+  }
+
+  function rebuildRows(scope, listSelector, placeholderKey, placeholderFallback, values) {
+    var list = scope.querySelector(listSelector);
+    if (!list) return;
+    list.innerHTML = '';
+    (values || []).forEach(function(value) {
+      addRow(scope, listSelector, placeholderKey, placeholderFallback, value);
+    });
+  }
+
+  function applyData(scope, data) {
+    var title = scope.querySelector('#bg-title');
+    var conclusion = scope.querySelector('#bg-conclusion');
+    if (title) title.value = data.title || '';
+    if (conclusion) conclusion.value = data.conclusion || '';
+    rebuildRows(scope, '#bg-evidence-list', 'lab.boardGenerator.evidencePlaceholder', 'Наблюдение или источник', data.evidence);
+    rebuildRows(scope, '#bg-attachments-list', 'lab.boardGenerator.attachmentPlaceholder', 'Ссылка или материал', data.attachments);
+    renderPreview(scope);
+    updateGenerateState(scope);
+  }
+
+  // ===== Генерация и история =====
+  function generate(scope) {
+    var data = collect(scope);
+    if (!isValid(data)) {
+      updateGenerateState(scope);
+      return;
+    }
+    var board = {
+      title: data.title,
+      conclusion: data.conclusion,
+      evidence: data.evidence,
+      attachments: data.attachments,
+      createdAt: Date.now()
+    };
+    lastBoard = board;
+    var history = readHistory();
+    history.unshift(board);
+    saveHistory(history);
+    renderHistory(scope);
+    var actions = scope.querySelector('#bg-actions');
+    if (actions) actions.hidden = false;
+    setStatus(scope, t('lab.boardGenerator.saved', 'Доска сохранена в историю'), 'success');
+  }
+
+  function renderHistory(scope) {
+    var host = scope.querySelector('#bg-history');
+    if (!host) return;
+    var items = readHistory();
+    if (!items.length) {
+      host.innerHTML = '<p class="bg-history-empty">' + esc(t('lab.boardGenerator.historyEmpty', 'Сохранённых досок пока нет.')) + '</p>';
+      return;
+    }
+    host.innerHTML = items.map(function(item, index) {
+      return '<button type="button" class="bg-history-row" data-bg-history="' + index + '">' +
+        '<span class="bg-history-title">' + esc(item.title || t('lab.boardGenerator.untitled', 'Без названия')) + '</span>' +
+        '<span class="bg-history-time">' + esc(formatTime(item.createdAt)) + '</span></button>';
+    }).join('');
+  }
+
+  // ===== Экспорт =====
+  function toMarkdown(board) {
+    var lines = ['# ' + board.title, '', '## ' + t('lab.boardGenerator.conclusionSection', 'Вывод'), '', board.conclusion];
+    if (board.evidence.length) {
+      lines.push('', '## ' + t('lab.boardGenerator.evidenceSection', 'Улики'), '');
+      board.evidence.forEach(function(item) { lines.push('- ' + item); });
+    }
+    if (board.attachments.length) {
+      lines.push('', '## ' + t('lab.boardGenerator.attachmentsSection', 'Вложения'), '');
+      board.attachments.forEach(function(item) { lines.push('- ' + item); });
+    }
+    return lines.join('\n');
+  }
+
+  function download(filename, text, type) {
+    var blob = new Blob([text], { type: type });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  function stamp() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function copyMarkdown(scope) {
+    if (!lastBoard) return;
+    var done = function() { setStatus(scope, t('lab.boardGenerator.copied', 'Markdown скопирован'), 'success'); };
+    var failed = function() { setStatus(scope, t('lab.boardGenerator.copyFailed', 'Копирование недоступно'), 'error'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(toMarkdown(lastBoard)).then(done, failed);
+    } else {
+      failed();
+    }
+  }
+
+  // Префил из генератора гипотез: гипотезы приходят уликами доски.
+  function applyPrefill(scope) {
+    var raw = null;
+    try { raw = window.localStorage.getItem(PREFILL_KEY); } catch (error) { return; }
+    if (!raw) return;
+    try { window.localStorage.removeItem(PREFILL_KEY); } catch (error) { /* ignore */ }
+    var data = null;
+    try { data = JSON.parse(raw); } catch (error) { return; }
+    if (!data || typeof data !== 'object') return;
+    applyData(scope, {
+      title: data.title || '',
+      conclusion: data.conclusion || '',
+      evidence: Array.isArray(data.evidence) ? data.evidence : [],
+      attachments: Array.isArray(data.attachments) ? data.attachments : []
+    });
+    setStatus(scope, t('lab.boardGenerator.prefilled', 'Форма заполнена из генератора гипотез'), 'success');
+  }
+
+  // ===== События =====
+  function bind(scope) {
+    if (scope.dataset.bgBound === '1') return;
+    scope.dataset.bgBound = '1';
+
+    // Живое превью: любой ввод в форме перерисовывает доску и валидность.
+    scope.addEventListener('input', function(event) {
+      if (!event.target.closest || !event.target.closest('.bg-form')) return;
+      renderPreview(scope);
+      updateGenerateState(scope);
+    });
+
+    scope.addEventListener('click', function(event) {
+      var target = event.target;
+      if (!target || !target.closest) return;
+
+      var chip = target.closest('[data-bg-example]');
+      if (chip) {
+        var example = EXAMPLES[Number(chip.getAttribute('data-bg-example'))];
+        if (example) applyData(scope, example);
+        return;
       }
-      
-      attachmentsHTML += `
-        <div class="attachment-card">
-          ${thumbnailHTML}
-          <div class="attachment-name">${escapeHtml(att.name)}</div>
-          ${att.description ? `<div class="attachment-desc">${escapeHtml(att.description)}</div>` : ''}
-        </div>
-      `;
+      if (target.closest('#bg-add-evidence')) {
+        addRow(scope, '#bg-evidence-list', 'lab.boardGenerator.evidencePlaceholder', 'Наблюдение или источник');
+        return;
+      }
+      if (target.closest('#bg-add-attachment')) {
+        addRow(scope, '#bg-attachments-list', 'lab.boardGenerator.attachmentPlaceholder', 'Ссылка или материал');
+        return;
+      }
+      var remove = target.closest('.bg-row-remove');
+      if (remove) {
+        var row = remove.closest('.bg-row');
+        if (row) row.remove();
+        renderPreview(scope);
+        return;
+      }
+      if (target.closest('#bg-clear')) {
+        applyData(scope, { title: '', conclusion: '', evidence: [], attachments: [] });
+        setStatus(scope, t('lab.boardGenerator.cleared', 'Форма очищена'), 'success');
+        return;
+      }
+      var historyRow = target.closest('[data-bg-history]');
+      if (historyRow) {
+        var item = readHistory()[Number(historyRow.getAttribute('data-bg-history'))];
+        if (item) {
+          applyData(scope, item);
+          setStatus(scope, t('lab.boardGenerator.restored', 'Доска восстановлена из истории'), 'success');
+        }
+        return;
+      }
+      var action = target.closest('[data-bg-action]');
+      if (action && lastBoard) {
+        var kind = action.getAttribute('data-bg-action');
+        if (kind === 'copy') copyMarkdown(scope);
+        else if (kind === 'md') download('board-' + stamp() + '.md', toMarkdown(lastBoard), 'text/markdown;charset=utf-8');
+        else if (kind === 'json') download('board-' + stamp() + '.json', JSON.stringify(lastBoard, null, 2), 'application/json;charset=utf-8');
+      }
     });
-    attachmentsHTML += '</div></div>';
-  }
-  
-  // Build board HTML
-  const boardHTML = `
-    <div class="research-board">
-      <div class="board-decoration top-left">✦</div>
-      <div class="board-decoration top-right">✦</div>
-      <div class="board-decoration bottom-left">✦</div>
-      <div class="board-decoration bottom-right">✦</div>
-      
-      <div class="board-title">${escapeHtml(boardData.title)}</div>
-      
-      <div class="board-conclusion">
-        <div class="board-conclusion-label">Вывод / Главная улика</div>
-        <div class="board-conclusion-text">${escapeHtml(boardData.conclusion)}</div>
-      </div>
-      
-      <div class="evidence-section">
-        <div class="section-title">Улики</div>
-        <div class="evidence-grid">
-          ${evidenceHTML}
-        </div>
-      </div>
-      
-      ${attachmentsHTML}
-    </div>
-  `;
-  
-  preview.innerHTML = boardHTML;
-}
 
-function generatePrompt() {
-  const promptSection = document.getElementById('prompt-section');
-  const promptText = document.getElementById('generated-prompt');
-  
-  let prompt = `Исследовательская доска: "${boardData.title}"\n\n`;
-  prompt += `Главный вывод: ${boardData.conclusion}\n\n`;
-  prompt += `Улики:\n`;
-  boardData.evidence.forEach((ev, i) => {
-    prompt += `${i + 1}. ${ev.title}: ${ev.description}\n`;
-  });
-  
-  if (boardData.attachments.length > 0) {
-    prompt += `\nВложения:\n`;
-    boardData.attachments.forEach((att, i) => {
-      prompt += `${i + 1}. ${att.name}${att.url ? ` (${att.url})` : ''}: ${att.description}\n`;
+    var form = scope.querySelector('#bg-form');
+    if (form) form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      generate(scope);
     });
   }
-  
-  // Add AI generation instructions if model selected
-  if (boardData.nnModel !== 'none') {
-    prompt += `\n---\nПромпт для генерации изображения:\n`;
-    prompt += `Создай визуальную исследовательскую доску в стиле древнего манускрипта на пергаменте. `;
-    prompt += `Заголовок: "${boardData.title}". `;
-    prompt += `Главный вывод: "${boardData.conclusion}". `;
-    prompt += `На доске должны быть расположены ${boardData.evidence.length} карточек с уликами, `;
-    prompt += `связанных красными нитями. `;
-    prompt += `Стиль: пергамент, коричневые тона, золотые акценты, рукописный шрифт. `;
-    prompt += `Атмосфера: древняя библиотека, скрипторий, таинственное освещение.`;
-    
-    if (boardData.nnModel === 'local') {
-      prompt += `\n\n[Локальная модель] Используй эндпоинт: ${boardData.nnSettings.endpoint || 'http://localhost:8188'}`;
-    } else if (boardData.nnModel === 'dalle') {
-      prompt += `\n\n[DALL-E] Используй API ключ для генерации`;
-    } else if (boardData.nnModel === 'midjourney') {
-      prompt += `\n\n[Midjourney] Используй API для генерации`;
-    } else if (boardData.nnModel === 'openrouter') {
-      prompt += `\n\n[OpenRouter] Используй выбранную модель для генерации`;
-    }
-  }
-  
-  promptText.textContent = prompt;
-  promptSection.style.display = 'block';
-}
 
-// ===== EXPORT FUNCTIONS =====
-function exportPNG() {
-  const board = document.querySelector('.research-board');
-  if (!board) {
-    alert('Сначала сгенерируйте доску!');
-    return;
-  }
-  
-  // Use html2canvas
-  if (typeof html2canvas !== 'undefined') {
-    html2canvas(board, {
-      backgroundColor: '#ede0c8',
-      scale: 2,
-      useCORS: true,
-      logging: false
-    }).then(canvas => {
-      const link = document.createElement('a');
-      link.download = `board-${Date.now()}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }).catch(err => {
-      console.error('PNG export error:', err);
-      alert('Ошибка при экспорте PNG. Попробуйте другой метод.');
-    });
-  } else {
-    alert('Библиотека html2canvas не загружена. Проверьте подключение к интернету.');
-  }
-}
-
-function exportPDF() {
-  const board = document.querySelector('.research-board');
-  if (!board) {
-    alert('Сначала сгенерируйте доску!');
-    return;
-  }
-  
-  // Use window.print() with print styles
-  window.print();
-}
-
-function exportTXT() {
-  if (!boardData.title) {
-    alert('Сначала сгенерируйте доску!');
-    return;
-  }
-  
-  let text = `ИССЛЕДОВАТЕЛЬСКАЯ ДОСКА\n`;
-  text += `${'='.repeat(50)}\n\n`;
-  text += `Заголовок: ${boardData.title}\n\n`;
-  text += `ГЛАВНЫЙ ВЫВОД:\n${boardData.conclusion}\n\n`;
-  text += `УЛИКИ:\n`;
-  boardData.evidence.forEach((ev, i) => {
-    text += `${i + 1}. ${ev.title}\n`;
-    text += `   ${ev.description}\n\n`;
-  });
-  
-  if (boardData.attachments.length > 0) {
-    text += `ВЛОЖЕНИЯ:\n`;
-    boardData.attachments.forEach((att, i) => {
-      text += `${i + 1}. ${att.name}\n`;
-      if (att.url) text += `   URL: ${att.url}\n`;
-      if (att.description) text += `   ${att.description}\n\n`;
+  function init(container) {
+    var scope = container;
+    if (!scope) return;
+    fetchPage().then(function(html) {
+      scope.innerHTML = html;
+      // Разметка приходит после старта i18n — переводим её здесь.
+      if (window.AlephyI18n && window.AlephyI18n.applyTranslations) {
+        window.AlephyI18n.applyTranslations(scope);
+      }
+      bind(scope);
+      renderHistory(scope);
+      renderPreview(scope);
+      updateGenerateState(scope);
+      applyPrefill(scope);
+    }).catch(function(error) {
+      scope.innerHTML = '<div class="lab-alert lab-alert-error">' +
+        esc(t('lab.boardGenerator.loadFailed', 'Не удалось загрузить конструктор: ')) + esc(error.message) + '</div>';
     });
   }
-  
-  text += `${'='.repeat(50)}\n`;
-  text += `Создано: ${new Date().toLocaleString('ru-RU')}\n`;
-  text += `Проект: Alephy — Свидетель Истины\n`;
-  
-  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  const link = document.createElement('a');
-  link.download = `board-${Date.now()}.txt`;
-  link.href = URL.createObjectURL(blob);
-  link.click();
-  URL.revokeObjectURL(link.href);
-}
 
-function copyPrompt() {
-  const promptText = document.getElementById('generated-prompt').textContent;
-  if (!promptText) {
-    alert('Сначала сгенерируйте доску!');
-    return;
-  }
-  
-  navigator.clipboard.writeText(promptText).then(() => {
-    showToast('Промпт скопирован в буфер обмена!');
-  }).catch(err => {
-    console.error('Copy error:', err);
-    alert('Не удалось скопировать промпт');
-  });
-}
-
-// ===== UTILITIES =====
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-function showToast(message) {
-  const toast = document.getElementById('copy-toast');
-  toast.textContent = message;
-  toast.style.opacity = '1';
-  setTimeout(() => {
-    toast.style.opacity = '0';
-  }, 2000);
-}
-
-// ===== AI IMAGE GENERATION =====
-async function generateWithAI() {
-  const model = document.getElementById('nn-model').value;
-  const apiKey = document.getElementById('nn-api-key').value;
-  const endpoint = document.getElementById('nn-endpoint').value;
-  const resolution = document.getElementById('nn-resolution').value;
-  const style = document.getElementById('nn-style').value;
-  
-  if (!apiKey && model !== 'local') {
-    alert('Введите API ключ для выбранной модели');
-    return;
-  }
-  
-  if (model === 'local' && !endpoint) {
-    alert('Введите URL эндпоинта для локальной модели');
-    return;
-  }
-  
-  // Generate prompt
-  const prompt = document.getElementById('generated-prompt').textContent;
-  
-  try {
-    let imageUrl;
-    
-    if (model === 'local') {
-      // Local Stable Diffusion / ComfyUI
-      imageUrl = await generateLocalImage(endpoint, prompt, resolution);
-    } else if (model === 'dalle') {
-      // DALL-E
-      imageUrl = await generateDALLEImage(apiKey, prompt, resolution);
-    } else if (model === 'midjourney') {
-      // Midjourney (via API proxy)
-      imageUrl = await generateMidjourneyImage(apiKey, prompt);
-    } else if (model === 'openrouter') {
-      // OpenRouter
-      imageUrl = await generateOpenRouterImage(apiKey, endpoint, prompt, resolution);
-    }
-    
-    if (imageUrl) {
-      showToast('Изображение сгенерировано! (В разработке: полная интеграция)');
-      // TODO: Display generated image in preview
-      console.log('Generated image URL:', imageUrl);
-    }
-  } catch (error) {
-    console.error('AI generation error:', error);
-    alert('Ошибка при генерации изображения: ' + error.message);
-  }
-}
-
-// Placeholder functions for AI generation
-async function generateLocalImage(endpoint, prompt, resolution) {
-  // TODO: Implement ComfyUI / SD WebUI API integration
-  console.log('Local generation:', endpoint, prompt, resolution);
-  throw new Error('Локальная генерация в разработке');
-}
-
-async function generateDALLEImage(apiKey, prompt, resolution) {
-  // TODO: Implement DALL-E API integration
-  console.log('DALL-E generation:', prompt, resolution);
-  throw new Error('DALL-E генерация в разработке');
-}
-
-async function generateMidjourneyImage(apiKey, prompt) {
-  // TODO: Implement Midjourney API integration
-  console.log('Midjourney generation:', prompt);
-  throw new Error('Midjourney генерация в разработке');
-}
-
-async function generateOpenRouterImage(apiKey, endpoint, prompt, resolution) {
-  // TODO: Implement OpenRouter API integration
-  console.log('OpenRouter generation:', endpoint, prompt, resolution);
-  throw new Error('OpenRouter генерация в разработке');
-}
+  window.BoardGenerator = { init: init, render: init };
+})(window, document);

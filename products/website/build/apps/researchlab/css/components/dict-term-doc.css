@@ -5,42 +5,205 @@
    ============================================= */
 
 /* ===== DICT/TERM/DOC GRIDS ===== */
-.dict-grid, .term-grid, .doc-grid {
+.dict-grid, .term-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
 }
 
-/* ===== DICT CARD ===== */
+/* Реестр документов — единая панель: зазор 1px поверх --border-light
+   рисует сетку разделителей, flex-wrap убирает «хвост» пустых ячеек. */
+.doc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin-bottom: var(--space-5);
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* ===== DICT REGISTRY: ICON CHIP + CARD ~120px (hairline, без теней) ===== */
+.dict-icon-chip { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 32px; width: 32px; height: 32px; border: 1px solid var(--border-light); border-radius: var(--radius-sm); background: var(--bg-tertiary); color: var(--text-muted); box-sizing: border-box; }
+.dict-icon-chip svg.lucide { width: 16px; height: 16px; }
+
+/* ===== DICT GROUP: uppercase-лейбл + волосяная линия + бейдж ===== */
+.dict-group { margin: 0 0 var(--space-5); }
+.dict-group-head { display: flex; align-items: center; gap: var(--space-3); margin: 0 0 var(--space-3); }
+.dict-group-label { color: var(--text-muted); font: 700 var(--ui-11)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.dict-group-rule { flex: 1 1 20px; min-width: 16px; height: 1px; background: var(--border-light); }
+.dict-group-count { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); white-space: nowrap; }
+
+/* ===== DICT CARD (registry) ===== */
 .dict-card {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--space-2);
-  padding: var(--space-5);
+  min-height: 120px;
+  align-content: start;
+  padding: var(--space-4);
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   text-decoration: none;
   cursor: pointer;
-  transition: all var(--motion-base);
-  box-shadow: var(--shadow-card);
-}
-.dict-card-top {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
+  transition: border-color var(--motion-base);
 }
 .dict-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
   border-color: var(--accent-gold);
 }
-.dict-card:active {
-  transform: translateY(-1px);
+.dict-card:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
 }
-.dict-card .dict-icon {
+.dict-card .dict-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.dict-card .dict-count {
+  justify-self: end;
+  padding: 1px 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: var(--ui-12);
+  color: var(--text-muted);
+}
+.dict-card .dict-desc {
+  grid-column: 1 / -1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-ui);
+}
+
+/* ===== DICT LIST MODE: строки 48px ===== */
+.dict-grid.is-list { display: flex; flex-direction: column; gap: 0; }
+.dict-list-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 48px;
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color var(--motion-base);
+  box-sizing: border-box;
+}
+.dict-list-row:hover { border-color: var(--accent-gold); }
+.dict-list-row:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.dict-list-row .dict-list-name {
+  flex: 0 1 220px;
+  min-width: 0;
+  color: var(--text-primary);
+  font: 600 var(--text-14, 14px)/1.3 var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dict-list-row .dict-list-desc {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-muted);
+  font: 500 var(--ui-12)/1.4 var(--font-ui);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dict-list-row .dict-count { margin-left: auto; }
+
+/* ===== DICT SORT SELECT: 36px, стрелка и рамка по токенам (все темы) ===== */
+.dict-sort-wrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+.dict-sort-select {
+  height: 36px;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 0 calc(var(--space-4) + 14px) 0 var(--space-3);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13, 13px);
+  cursor: pointer;
+}
+.dict-sort-select:hover { border-color: var(--border-light); filter: none; }
+.dict-sort-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: var(--ring-focus, 0 0 0 2px rgb(var(--accent-gold-rgb, 184, 134, 11) / 0.25));
+}
+/* Шеврон через currentColor — наследует тему автоматически. */
+.dict-sort-wrap::after {
+  content: '';
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* ===== DICT EMPTY STATE: пунктир + глиф + подсказка + Сбросить ===== */
+.dict-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--space-4);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.dict-empty-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+}
+.dict-empty-glyph svg.lucide { width: 16px; height: 16px; }
+.dict-empty-hint { margin: 0; font: 500 var(--ui-13, 13px)/1.4 var(--font-ui); color: var(--text-muted); }
+
+/* ===== MOBILE: list по умолчанию при JS-переключателе ===== */
+@media (max-width: 640px) {
+  .dict-toolbar-row { flex-wrap: wrap; }
+  .dict-toolbar-row .agents-search { flex: 1 1 100%; }
+  .dict-toolbar-row .agent-toolbar-actions { margin-left: 0; width: 100%; justify-content: space-between; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dict-card, .dict-list-row { transition: none; }
+}
+
+/* ===== DICT CARD (detail pages: книги-иконки) ===== */
+.dict-card img.dict-icon {
   width: 32px;
   height: 32px;
   display: block;
@@ -109,43 +272,55 @@
   color: var(--text-secondary);
 }
 
-/* ===== DOC CARD ===== */
+/* ===== DOC CARD: плоский реестр документов =====
+   Те же волосяные разделители, что в .mech-index и .methodology-card:
+   без рамок на карточку, без теней, без hover-подъёма. */
 .doc-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  flex: 1 1 21rem;
+  grid-template-columns: minmax(0, 1fr) 1rem;
+  align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
   text-decoration: none;
-  cursor: pointer;
-  transition: all var(--motion-base);
-  box-shadow: var(--shadow-card);
+  background: var(--surface);
+  transition: background var(--motion-base);
 }
-.doc-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-gold);
+.doc-card:hover,
+.doc-card:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
 }
-.doc-card:active {
-  transform: translateY(-1px);
-}
-.doc-card .doc-icon {
-  width: 48px;
-  height: 48px;
+.doc-card-body { min-width: 0; }
+.doc-card-title {
   display: block;
-  margin-bottom: var(--space-1);
-}
-.doc-card .doc-name {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
   color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
 }
-.doc-card .doc-desc {
-  font-size: var(--text-sm);
+.doc-card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
   color: var(--text-secondary);
-  line-height: var(--leading-ui);
+  font-size: var(--ui-12);
+  line-height: 1.45;
+}
+.doc-card-arrow {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  opacity: 0;
+  transition: opacity var(--motion-base), transform var(--motion-base);
+}
+.doc-card:hover .doc-card-arrow,
+.doc-card:focus-visible .doc-card-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 

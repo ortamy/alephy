@@ -1,29 +1,287 @@
-.tree-checker-shell { max-width: 980px; margin: 0 auto; }
-.tree-checker-intro { margin-bottom: 20px; }
-.tree-checker-kicker { margin: 0 0 8px; color: var(--accent-gold); font-size: .78rem; font-weight: 700; letter-spacing: .14em; }
-.tree-checker-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-.tree-checker-toolbar-label { color: var(--text-muted); font-size: .9rem; }
-.tree-checker-progress { height: 6px; margin-bottom: 18px; overflow: hidden; background: var(--border-light); border-radius: 99px; }
-.tree-checker-progress span { display: block; width: 16.666%; height: 100%; background: var(--accent-gold); transition: width .2s ease; }
-.tree-checker-form { padding: 24px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; }
-.tree-checker-level-kicker { color: var(--accent-gold); font-size: .78rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
-.tree-checker-level h2 { margin: 6px 0; }
-.tree-checker-level-description { margin: 0 0 18px; color: var(--text-muted); line-height: 1.5; }
-.tree-checker-question { margin: 0 0 16px; color: var(--text-secondary); font-weight: 700; }
-.tree-checker-form textarea { width: 100%; min-height: 130px; resize: vertical; box-sizing: border-box; }
-.tree-checker-rating { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
-.tree-checker-rating label { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 6px; cursor: pointer; }
-.tree-checker-rating input { accent-color: var(--accent-gold); }
-.tree-checker-actions { display: flex; justify-content: space-between; gap: 10px; margin-top: 22px; }
-.tree-checker-result { margin-top: 22px; padding: 22px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; }
-.tree-checker-result h2 { margin-top: 0; }
-.tree-checker-verdict { padding: 12px 14px; border-left: 4px solid var(--accent-gold); background: var(--bg-primary); font-weight: 700; }
-.tree-checker-verdict.is-healthy { border-left-color: #4d8b52; color: #4d8b52; }
-.tree-checker-verdict.is-rotten { border-left-color: var(--accent-red); color: var(--accent-red); }
-.tree-checker-svg-wrap { margin: 20px auto; max-width: 700px; overflow: auto; background: var(--bg-primary); border: 1px solid var(--border-light); border-radius: 6px; }
-.tree-checker-svg { display: block; width: 100%; min-width: 560px; height: auto; }
-.tree-checker-svg text { font-family: 'EB Garamond', Georgia, serif; fill: var(--text-primary); }
-.tree-checker-summary { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.tree-checker-summary li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border-light); }
-.tree-checker-summary strong { color: var(--text-primary); }
-@media (max-width: 640px) { .tree-checker-form { padding: 18px; } .tree-checker-rating { flex-direction: column; } .tree-checker-actions .lab-btn { flex: 1; } }
+/* ============================================================
+   tree-checker.css — Чекер дерева (#tree-checker).
+   Каркас панелей и глав — css/components/panels.css.
+   Здесь: подписанный прогресс, карточка уровня, verdict-чипы,
+   финальная сводка «Дерево». Hairline, без теней; семантика
+   verdict — по легенде §6 (зелёный / золото / accent-red).
+   ============================================================ */
+
+.trc-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+.trc-card,
+.trc-progress { gap: var(--space-3); }
+
+/* ===== ПРОГРЕСС: подпись + 6 точек + тонкий бар в одной hairline-панели ===== */
+.trc-progress-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.trc-progress-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+}
+
+.trc-dots {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.trc-dot {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color var(--motion-base), background var(--motion-base);
+}
+
+.trc-dot:hover,
+.trc-dot:focus-visible { border-color: var(--accent-gold); }
+
+.trc-dot.is-current {
+  border-color: var(--accent-gold);
+  box-shadow: inset 0 0 0 2px var(--bg-card);
+  background: var(--accent-gold);
+}
+
+/* Пройденный уровень носит цвет своего вердикта (легенда §6). */
+.trc-dot.is-passed-healthy { background: var(--accent-green); border-color: var(--accent-green); }
+.trc-dot.is-passed-unclear { background: var(--gold-text); border-color: var(--gold-text); }
+.trc-dot.is-passed-rotten { background: var(--red-text); border-color: var(--red-text); }
+
+.trc-bar {
+  height: 3px;
+  overflow: hidden;
+  background: var(--border-light);
+  border-radius: var(--radius-pill);
+}
+
+.trc-bar-fill {
+  display: block;
+  width: 16.666%;
+  height: 100%;
+  background: var(--accent-gold);
+  transition: width 200ms cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trc-bar-fill,
+  .trc-dot { transition: none; }
+}
+
+/* ===== КАРТОЧКА УРОВНЯ ===== */
+/* Имя уровня — рабочая подпись, а не парадный заголовок: кегль панели,
+   а не сериф раздела. Плотный ритм — как у соседних чекеров (§4.2). */
+.trc-level-name {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.trc-question {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-ui);
+}
+
+.trc-text {
+  width: 100%;
+  min-height: 88px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13);
+}
+
+.trc-text::placeholder { color: var(--text-secondary); }
+
+/* Verdict-чипы: выбранное состояние видно точкой (§6). */
+.trc-verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.trc-verdict {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-h-sm);
+  padding: 2px var(--space-3);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  cursor: pointer;
+  transition: border-color var(--motion-base);
+}
+
+.trc-verdict input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.trc-verdict-dot {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.trc-verdict--healthy { color: var(--accent-green); }
+.trc-verdict--unclear { color: var(--gold-text); }
+.trc-verdict--rotten { color: var(--red-text); }
+
+.trc-verdict:hover,
+.trc-verdict:focus-within { border-color: var(--accent-gold); }
+
+.trc-verdict.is-checked { border-color: currentColor; }
+.trc-verdict.is-checked .trc-verdict-dot { background: currentColor; }
+
+/* ===== НАВИГАЦИЯ ===== */
+/* Разделитель-волосяная линия отвечает за ритм, лишний margin — нет. */
+.trc-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+/* ===== ФИНАЛЬНАЯ СВОДКА «ДЕРЕВО» ===== */
+.trc-verdict-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.trc-verdict-row .wb-badge.is-running { color: var(--gold-text); }
+.trc-verdict-row .wb-badge.is-error { color: var(--red-text); }
+
+.trc-conf {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px var(--space-2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.trc-tree {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+
+.trc-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.trc-row:last-child { border-bottom: 0; }
+
+.trc-row-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-light);
+}
+
+.trc-row-dot.is-healthy { background: var(--accent-green); }
+.trc-row-dot.is-unclear { background: var(--gold-text); }
+.trc-row-dot.is-rotten { background: var(--red-text); }
+
+.trc-row-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+}
+
+.trc-row-verdict {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.trc-verdict-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-ui);
+}
+
+.trc-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.trc-footer .lab-btn-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-light);
+}
+
+.trc-footer .lab-btn-secondary:hover,
+.trc-footer .lab-btn-secondary:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.trc-footer-status {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* ===== Мобильный закон (§5.3): стек, края шапки, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .trc-dots { margin-left: 0; }
+  .trc-nav { flex-direction: column-reverse; align-items: stretch; }
+  .trc-nav .lab-btn { justify-content: center; }
+  .trc-row { flex-wrap: wrap; }
+  .trc-row-verdict { white-space: normal; }
+}

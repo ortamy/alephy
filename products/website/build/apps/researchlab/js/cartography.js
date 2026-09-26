@@ -480,34 +480,28 @@ const Cartography = (function() {
 
   function renderThemeCard(theme, index) {
     var count = themeObjectCount(theme);
-    var kindLabel = theme.kind === 'research' ? 'исследование' : 'тема';
-    var spanClass = theme.kind === 'research' ? ' cartography-theme-card--wide' : '';
-    return '<article class="cartography-theme-card' + spanClass + '" tabindex="0" role="button" data-theme-id="' + escapeHtml(theme.id) + '" aria-label="Открыть карту: ' + escapeHtml(theme.title) + '" style="animation-delay:' + (index * 40) + 'ms">' +
-      '<div class="cartography-theme-preview" aria-hidden="true">' + miniVisualSvg(theme.visual) + '</div>' +
+    return '<article class="cartography-theme-card" tabindex="0" role="button" data-theme-id="' + escapeHtml(theme.id) + '" aria-label="Открыть карту: ' + escapeHtml(theme.title) + '" style="animation-delay:' + (index * 40) + 'ms">' +
       '<div class="cartography-theme-body">' +
-        '<div class="cartography-theme-meta">' +
-          '<span class="cartography-card-type">' + kindLabel + '</span>' +
-          '<span class="cartography-theme-count" aria-label="' + count + ' объектов">' + count + '</span>' +
-        '</div>' +
+        '<span class="cartography-theme-glyph" aria-hidden="true">' + miniVisualSvg(theme.visual) + '</span>' +
         '<h2 class="cartography-card-title">' + escapeHtml(theme.title) + '</h2>' +
+        '<span class="cartography-theme-count" aria-label="' + count + ' объектов">' + count + '</span>' +
         '<p class="cartography-card-summary">' + escapeHtml(theme.description) + '</p>' +
-        '<span class="cartography-theme-arrow" aria-hidden="true">→</span>' +
       '</div></article>';
   }
 
-  function renderCatalogGroup(label, items, startIndex) {
+  function renderCatalogGroup(label, items) {
     return '<section class="cartography-catalog-group">' +
       '<header class="cartography-section-head">' +
         '<h2 class="cartography-section-label">' + escapeHtml(label) + '</h2>' +
         '<span class="cartography-section-count">' + items.length + '</span>' +
       '</header>' +
-      '<div class="cartography-theme-grid">' + items.map(function(theme, i) { return renderThemeCard(theme, startIndex + i); }).join('') + '</div>' +
+      '<div class="cartography-theme-grid">' + items.map(function(theme, i) { return renderThemeCard(theme, i); }).join('') + '</div>' +
     '</section>';
   }
 
   function renderFeatureCell() {
     return '<article class="cartography-feature" data-open-map="1" tabindex="0" role="button" aria-label="Открыть глобальную карту состояний">' +
-      '<div class="cartography-feature-visual" aria-hidden="true">' + miniVisualSvg('feature') + '</div>' +
+      '<span class="cartography-feature-glyph" aria-hidden="true">' + miniVisualSvg('feature') + '</span>' +
       '<div class="cartography-feature-body">' +
         '<h2 class="cartography-feature-title">Глобальная карта состояний</h2>' +
         '<p class="cartography-feature-lead">Поле Хошех и Ор: диагностика стран на одной карте мира.</p>' +
@@ -567,13 +561,10 @@ const Cartography = (function() {
       return;
     }
 
-    var themeMaps = MAP_THEMES.filter(function(t) { return t.kind !== 'research'; });
-    var researchMaps = MAP_THEMES.filter(function(t) { return t.kind === 'research'; });
-
+    // Исследования — такой же слой каталога, поэтому живут в одной сетке с темами.
     container.innerHTML = '<div class="cartography-page">' +
       renderFeatureCell() +
-      renderCatalogGroup('Темы карт', themeMaps, 0) +
-      renderCatalogGroup('Сохранённые исследования', researchMaps, themeMaps.length) +
+      renderCatalogGroup('Темы карт', MAP_THEMES) +
     '</div>';
 
     bindCatalog(container);

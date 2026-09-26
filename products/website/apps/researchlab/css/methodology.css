@@ -63,74 +63,91 @@
   white-space: nowrap;
 }
 
+/* ===== РЕЕСТР КАРТОЧЕК =====
+   Однотипные карточки раздела заменены плоским реестром: hairline-разделители,
+   порядковый номер, заголовок с иконкой, короткая строка функции и действия,
+   которые появляются по наведению или фокусу. Рамок и теней нет
+   (DESIGN-SYSTEM §0.2). Разметка и обработчики — js/methodology.js. */
+
+/* Зазор 1px поверх --border-light рисует сетку разделителей панели.
+   flex-wrap вместо grid: последняя строка растягивается сама, поэтому
+   «хвост» пустых ячеек в цвете разделителя не появляется. */
 .methodology-panel {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
   opacity: 1;
-  transition: opacity 0.25s ease;
+  transition: opacity var(--motion-base);
 }
 
 .methodology-panel.fade-out { opacity: 0; }
 
 .methodology-panel.methodology-panel-empty {
   display: block;
+  border-width: 1px;
+  padding: var(--space-4);
 }
 
 .methodology-card {
-  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  flex: 1 1 20rem;
   min-width: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  background: var(--bg-card);
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow var(--motion-base), border-color var(--motion-base), transform var(--motion-fast);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface);
+  transition: background var(--motion-base);
+}
+.methodology-card:hover,
+.methodology-card:focus-within {
+  background: var(--surface-hover);
+}
+/* Карточка-механизм на странице «Методички» — та же строка реестра:
+   блок объявлен в research-json.css, здесь только снимаем лишние отступы. */
+.research-section.methodology-card { padding: var(--space-3) var(--space-4); }
+.research-section.methodology-card .methodology-card-text,
+.research-section.methodology-card .research-section-content p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-13);
+  line-height: 1.5;
 }
 
-/* РџСЂРёРЅС†РёРїС‹ Рё РјРµС…Р°РЅРёР·РјС‹ РёСЃРїРѕР»СЊР·СѓСЋС‚ Р±РµР»СѓСЋ РїРѕРІРµСЂС…РЅРѕСЃС‚СЊ РєР°СЂС‚РѕС‡РµРє. */
-.methodology-card[data-id^="principles-"],
-.methodology-card[data-id^="mechanisms-"] {
-   background: var(--bg-secondary, #f7f1e5);
+.methodology-card-index {
+  flex: 0 0 1.75rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-variant-numeric: tabular-nums;
 }
-
-.methodology-shift-card {
-  background: var(--bg-secondary, #f7f1e5);
-  cursor: pointer;
+.methodology-card-body {
+  min-width: 0;
+  margin-bottom: var(--space-1);
 }
-
-.methodology-shift-card .methodology-card-icon {
-  width: 22px;
-  height: 22px;
-  margin-top: 1px;
-}
-
-.methodology-card-heading {
+.methodology-card-actions {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+  margin-top: auto;
+}
+.methodology-card.is-editing {
+  background: var(--surface-hover);
 }
 
 .methodology-card-icon {
   flex: 0 0 auto;
-  width: 28px;
-  height: 28px;
+  width: 18px;
+  height: 18px;
   object-fit: contain;
 }
 
-.methodology-card:hover {
-  border-color: var(--accent-gold);
-  box-shadow: 0 8px 22px var(--shadow-card-hover-color);
-  transform: translateY(-2px);
-}
-
-.methodology-document-card { cursor: pointer; }
-.methodology-document-card .methodology-card-text { color: var(--text-primary); }
+/* Вся строка реестра кликабельна: открывает полный текст карточки. */
+.methodology-panel .methodology-card { cursor: pointer; }
+.methodology-card:focus-within { cursor: default; }
 .methodology-document-content { line-height: 1.65; }
 .methodology-document-content h1,
 .methodology-document-content h2,
@@ -151,67 +168,72 @@
   color: var(--text-secondary);
 }
 
+/* Заголовок строки реестра: иконка 18px + имя, выключка влево. */
 .methodology-card-head {
   display: flex;
   flex-wrap: nowrap;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-2);
-  width: 100%;
-  margin-bottom: 8px;
-}
-
-.methodology-card-head .methodology-card-heading {
-  display: flex;
-  flex: 1 1 auto;
   min-width: 0;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 2px;
 }
 
 .methodology-card-title {
   min-width: 0;
   margin: 0;
-  color: var(--text-gold);
-  font: 700 15px/1.35 var(--font-heading);
-  padding-right: var(--space-1);
+  color: var(--text-primary);
+  font: 600 var(--text-md)/1.3 var(--font-heading);
 }
 
 .methodology-card-text {
-  order: 2;
-  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--ui-13);
   line-height: 1.5;
   white-space: pre-line;
 }
 
-.methodology-card-actions {
-  order: 3;
-  display: flex;
-  flex-basis: 100%;
-  justify-content: center;
-  gap: 6px;
+/* Действия приглушены всегда и раскрываются по наведению/фокусу:
+   на тач-экранах (@media hover:none) они остаются заметными. */
+@media (hover: hover) and (pointer: fine) {
+  .methodology-card-actions {
+    opacity: 0.45;
+    transition: opacity var(--motion-base);
+  }
+  .methodology-card:hover .methodology-card-actions,
+  .methodology-card:focus-within .methodology-card-actions {
+    opacity: 1;
+  }
 }
 
 .methodology-icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  border: 1px solid var(--border-light);
-  border-radius: 5px;
-  background: var(--bg-primary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   transition: color var(--motion-base), border-color var(--motion-base), background var(--motion-base);
 }
 
 .methodology-icon-btn:hover {
-  color: var(--accent-gold);
-  border-color: var(--accent-gold);
+  color: var(--text-gold);
+  border-color: var(--border-light);
   background: rgb(var(--accent-gold-rgb) / 0.12);
+}
+
+.methodology-icon-btn:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
 }
 
 .methodology-icon-btn svg {
@@ -241,30 +263,26 @@
 }
 
 .methodology-info-btn:hover {
-  border-color: var(--accent-gold);
+  border-color: var(--border-light);
   background: rgb(var(--accent-gold-rgb) / 0.12);
 }
 
 .methodology-delete-btn:hover {
-  color: var(--accent-red, #a83232);
-  border-color: var(--accent-red, #a83232);
-  background: rgba(168, 50, 50, 0.12);
+  color: var(--accent-red);
+  border-color: var(--border-light);
+  background: color-mix(in srgb, var(--accent-red) 12%, transparent);
 }
 
 .methodology-copy-btn.is-copied {
-  color: #2e8b57;
-  border-color: #2e8b57;
-  background: rgba(46, 139, 87, 0.14);
+  color: var(--status-green);
+  border-color: var(--border-light);
+  background: color-mix(in srgb, var(--status-green) 14%, transparent);
 }
 
 .methodology-edit-btn.is-active {
-  color: var(--accent-gold);
-  border-color: var(--accent-gold);
+  color: var(--text-gold);
+  border-color: var(--border-light);
   background: rgb(var(--accent-gold-rgb) / 0.16);
-}
-
-.methodology-card.is-editing {
-  border-color: var(--accent-gold);
 }
 
 .methodology-card-textarea {
@@ -303,13 +321,9 @@
 
 /* РўС‘РјРЅС‹Р№ СЃР»РѕР№ СЃРѕС…СЂР°РЅСЏРµС‚ РµРґРёРЅРѕРµ РїРѕР»Рµ РґР»СЏ С„РѕСЂРј, РєРЅРѕРїРѕРє Рё РєР°СЂС‚РѕС‡РµРє. */
 html[data-theme="dark"] .methodology-toolbar,
-html[data-theme="dark"] .methodology-card,
-html[data-theme="dark"] .methodology-card[data-id^="principles-"],
-html[data-theme="dark"] .methodology-card[data-id^="mechanisms-"],
-html[data-theme="dark"] .methodology-shift-card {
+html[data-theme="dark"] .methodology-panel {
   background: var(--bg-card);
   border-color: var(--border-light);
-  box-shadow: var(--shadow-soft);
 }
 
 html[data-theme="dark"] .methodology-select-label .lab-input,
@@ -318,18 +332,8 @@ html[data-theme="dark"] .methodology-select-label .lab-input option {
   color: var(--text-primary);
 }
 
-html[data-theme="dark"] .methodology-card:hover {
-  box-shadow: 0 8px 22px var(--shadow-card-hover-color);
-}
-
-html[data-theme="dark"] .methodology-icon-btn {
-  background: var(--bg-primary);
-  border-color: var(--border-light);
-  color: var(--text-muted);
-}
-
 html[data-theme="dark"] .methodology-toolbar .lab-btn {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+  box-shadow: none;
 }
 
 html[data-theme="dark"] .methodology-toolbar .lab-btn-primary {
@@ -343,13 +347,19 @@ html[data-theme="dark"] .methodology-toolbar .lab-btn-secondary:active {
 
 @media (max-width: 640px) {
   .methodology-heading { padding: 20px; }
-  .methodology-panel { grid-template-columns: 1fr; }
+  .methodology-card {
+    flex-basis: 100%;
+    padding: var(--space-3);
+  }
+  .methodology-card-index { display: none; }
+  .methodology-card-actions { justify-content: flex-start; }
+  .methodology-icon-btn { width: 44px; height: 44px; }
   .methodology-toolbar { flex-direction: column; align-items: stretch; }
   .methodology-select-label { align-items: stretch; flex-direction: column; }
   .methodology-select-label .lab-input { min-width: 0; width: 100%; }
 }
 @media (min-width: 641px) and (max-width: 980px) {
-  .methodology-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .methodology-card { flex-basis: calc(50% - 1px); }
 }
 @media (max-width: 768px) {
   .methodology-toolbar {

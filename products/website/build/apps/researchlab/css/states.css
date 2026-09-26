@@ -317,49 +317,95 @@
   background: var(--bg-card, #fffdf8);
   border: 1px solid var(--border-light, #d4c4a8);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 28px rgba(44, 24, 16, 0.10);
   overflow: hidden;
 }
 
-.state-detail-hero {
-  text-align: left;
-  padding: 40px 0 var(--space-7);
-  margin-bottom: var(--space-7);
-  border-bottom: 1px solid var(--border-light, #d4c4a8);
-  position: relative;
+/* Чип-навигация состояний под героем: горизонтальный скролл на mobile. */
+.state-nav {
+  display: flex;
+  gap: 8px;
+  margin: var(--space-5) 0 var(--space-6);
+  padding: 2px 2px 10px;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
-.state-detail-hero-paleo {
-  font-size: 64px;
-  line-height: 1;
-  color: var(--accent-gold);
-  margin-bottom: var(--space-4);
-  display: block;
-}
-
-.state-detail-hero h2 {
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--text-primary, #2c1810);
-  margin-bottom: var(--space-2);
-}
-
-.state-detail-hero .hebrew {
-  font-family: 'Times New Roman', serif;
-  font-size: var(--text-xl);
-  direction: rtl;
+.state-nav-chip {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border: 1px solid var(--border-light, #d4c4a8);
+  border-radius: 999px;
+  background: transparent;
   color: var(--text-secondary, #4a3728);
-  margin-bottom: var(--space-3);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color var(--motion-base), color var(--motion-base);
 }
 
-.state-detail-hero .physics {
-  font-size: 17px;
-  line-height: 1.6;
+.state-nav-chip:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+.state-nav-chip.is-active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.state-nav-chip:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+
+/* Секции-главы: номер + uppercase-лейбл вместо сериф-заголовков. */
+.state-chapter-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: var(--space-4);
+}
+
+.state-chapter-index {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: var(--accent-gold);
+}
+
+.state-chapter-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
   color: var(--text-muted, #6b5b4e);
-  font-style: normal;
-  max-width: 600px;
-  margin: 0;
+}
+
+/* 01 Открытость: тонкий бар + mono-процент. */
+.state-openness {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 6px 12px;
+  max-width: 420px;
+}
+
+.state-openness-label {
+  color: var(--text-secondary, #4a3728);
+  font-size: var(--text-sm);
+}
+
+.state-openness-value {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--text-sm);
+  color: var(--text-primary, #2c1810);
+}
+
+.state-openness .state-intensity-bar {
+  grid-column: 1 / -1;
+  height: 2px;
 }
 
 .state-detail-section {
@@ -373,30 +419,13 @@
   border-bottom: none;
 }
 
-.state-detail-section h3 {
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--text-primary, #2c1810);
-  margin-bottom: var(--space-3);
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.state-detail-section h3 .section-icon {
-  width: 24px;
-  height: 24px;
-  opacity: 0.7;
-}
-
 .state-detail-section p {
   font-size: var(--text-md);
   line-height: 1.7;
   color: var(--text-secondary, #4a3728);
 }
 
-/* Палео-разбор */
+/* Палео-разбор: hairline-карточки глифов без заливок. */
 .paleo-breakdown {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -411,9 +440,19 @@
   align-items: flex-start;
   gap: var(--space-1);
   padding: var(--space-2) var(--space-3);
-  background: var(--bg-tertiary, #f5edd5);
+  background: transparent;
+  border: 1px solid var(--border-light, #d4c4a8);
   border-radius: var(--radius-sm);
   min-width: 0;
+}
+
+/* Caption разбора: muted, левое выравнивание. */
+.paleo-meaning-caption {
+  margin: 0;
+  color: var(--text-muted, #6b5b4e);
+  font-size: var(--text-sm);
+  font-style: italic;
+  text-align: left;
 }
 
 .paleo-breakdown-item .paleo-char {
@@ -625,7 +664,7 @@
 
 .state-city-card {
   padding: 14px;
-  background: var(--bg-subtle, #f5f0e8);
+  background: transparent;
   border: 1px solid var(--border-light, #d4c4a8);
   border-radius: var(--radius-sm);
   transition: border-color var(--motion-base);
@@ -663,27 +702,17 @@
   line-height: 1.4;
 }
 
-/* ===== ЛАНДШАФТ ВНУТРЕННЕЙ СТРАНИЦЫ ===== */
+/* ===== ЛАНДШАФТ ВНУТРЕННЕЙ СТРАНИЦЫ =====
+   Канон: uppercase-лейбл + волосяная линия, plain-фон, без теней и градиент-ванн. */
 .state-landscape {
-  --landscape-color: var(--accent-gold);
   margin: 0 0 var(--space-7);
-  overflow: hidden;
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: var(--radius-md);
-  background: var(--bg-card, #fffdf8);
-  box-shadow: var(--shadow-card);
 }
 
 .state-landscape-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-5) var(--space-5) var(--space-4);
-  text-align: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light, #d4c4a8);
+  text-align: left;
 }
-
-.state-landscape-head > div { width: 100%; }
 
 .state-landscape-kicker,
 .state-landscape-route-kicker {
@@ -692,135 +721,77 @@
   font-size: 10px;
   font-weight: 700;
   letter-spacing: .14em;
+  text-transform: uppercase;
 }
-
-.state-landscape-head h3 {
-  margin: 4px 0 0;
-  color: var(--text-primary, #2c1810);
-  font-family: var(--font-heading, Georgia, serif);
-  font-size: var(--text-xl);
-}
-
-.state-landscape-level {
-  flex: 0 0 auto;
-  padding: 6px 9px;
-  border: 1px solid color-mix(in srgb, var(--landscape-color) 45%, var(--border-light));
-  border-radius: var(--radius-pill);
-  color: var(--text-muted, #6b5b4e);
-  font-size: var(--text-xs);
-  white-space: nowrap;
-}
-
-.state-landscape-level b { color: var(--landscape-color); }
 
 .state-landscape-stage {
-  position: relative;
   display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
-  min-height: 284px;
-  isolation: isolate;
-  overflow: hidden;
-  border-top: 1px solid var(--border-light, #d4c4a8);
+  place-items: center;
+  padding: var(--space-6) var(--space-4);
   border-bottom: 1px solid var(--border-light, #d4c4a8);
-  background:
-    radial-gradient(circle at 25% 50%, color-mix(in srgb, var(--landscape-color) 18%, transparent), transparent 44%),
-    linear-gradient(145deg, #f7efd9, #fffdf8 62%, #f1e3c7);
+  background: transparent;
 }
 
-.state-landscape-terrain { position: absolute; inset: 0; z-index: -1; opacity: .54; }
-.state-landscape-terrain i { position: absolute; display: block; border: 1px solid color-mix(in srgb, var(--landscape-color) 22%, transparent); border-radius: 50%; }
-.state-landscape-terrain i:nth-child(1) { width: 360px; height: 190px; top: -80px; left: -100px; }
-.state-landscape-terrain i:nth-child(2) { width: 490px; height: 260px; right: -150px; bottom: -150px; }
-.state-landscape-terrain i:nth-child(3) { width: 220px; height: 110px; top: 32%; left: 32%; border-style: dashed; }
-
+/* Круг текущего состояния: hairline-кольцо, глифы внутри, без тени. */
 .state-landscape-current {
-  position: relative;
   display: grid;
   place-items: center;
   align-content: center;
-  width: min(190px, calc(100% - 36px));
+  gap: 4px;
+  width: min(180px, calc(100% - 36px));
   aspect-ratio: 1;
-  margin: auto;
   padding: var(--space-4);
-  border: 2px solid var(--landscape-color);
+  border: 1px solid var(--accent-gold);
   border-radius: 50%;
-  background: color-mix(in srgb, var(--bg-card) 86%, var(--landscape-color));
-  box-shadow: 0 0 0 9px color-mix(in srgb, var(--landscape-color) 10%, transparent), 0 12px 28px rgba(44, 24, 16, .14);
+  background: transparent;
   text-align: center;
 }
+.state-landscape-current-paleo { color: var(--accent-gold); font-family: var(--font-paleo, serif); font-size: 38px; line-height: 1; }
+.state-landscape-current strong { color: var(--text-primary); font-family: var(--font-heading, Georgia, serif); font-size: 22px; }
+.state-landscape-current small { color: var(--text-secondary); font-size: 12px; }
 
-.state-landscape-current::before,
-.state-landscape-current::after {
-  content: none;
-}
-.state-landscape-current::before { top: -5px; left: 50%; transform: translateX(-50%); }
-.state-landscape-current::after { bottom: -5px; left: 50%; transform: translateX(-50%); }
-.state-landscape-current-paleo { color: var(--landscape-color); font-family: var(--font-paleo, serif); font-size: 38px; line-height: 1; }
-.state-landscape-current-label { margin-top: 8px; color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.state-landscape-current strong { margin-top: 3px; color: var(--text-primary); font-family: var(--font-heading, Georgia, serif); font-size: 25px; }
-.state-landscape-current small { margin-top: 2px; color: var(--text-secondary); font-size: 12px; }
-
-.state-landscape-routes { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; box-sizing: border-box; padding: var(--space-4) var(--space-5); }
-.state-landscape-routes h4 { grid-column: 1 / -1; margin: 0; color: var(--text-primary); font-family: var(--font-heading, Georgia, serif); font-size: var(--text-lg); text-align: center; }
+/* Переходы — hairline-строки: стрелка + paleo-глифы + имя + подсказка действия. */
+.state-landscape-routes { display: grid; grid-template-columns: 1fr; width: 100%; box-sizing: border-box; }
 .state-landscape-route {
   display: grid;
-  grid-template-columns: 44px 24px max-content minmax(0, 1fr);
+  grid-template-columns: 20px auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  min-height: 84px;
-  padding: 12px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  padding: 12px 4px;
+  border: none;
+  border-bottom: 1px solid var(--border-light, #d4c4a8);
   background: transparent;
   color: var(--text-primary);
   cursor: pointer;
-  text-align: center;
-  transition: background var(--motion-base), border-color var(--motion-base), transform var(--motion-base);
+  text-align: left;
+  transition: border-color var(--motion-base);
 }
 
-.state-landscape-route:hover,
-.state-landscape-route.is-active { border-color: var(--landscape-color); background: rgb(255 253 248 / .78); transform: translateY(-2px); }
+.state-landscape-route:hover { border-bottom-color: var(--accent-gold); }
 .state-landscape-route:focus-visible,
-.state-landscape-open:focus-visible { outline: none; box-shadow: var(--ring-focus); }
-.state-landscape-route-line { position: relative; height: 1px; background: color-mix(in srgb, var(--landscape-color) 45%, var(--border-light)); }
-.state-landscape-route-line::after { position: absolute; top: -4px; right: -1px; border-width: 4px 0 4px 6px; border-style: solid; border-color: transparent transparent transparent var(--landscape-color); content: ''; }
-.state-landscape-route-line i { position: absolute; width: 7px; height: 7px; top: -3px; left: 42%; border-radius: 50%; background: var(--landscape-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--landscape-color) 13%, transparent); }
-.state-landscape-route-index { color: var(--accent-gold); font: 700 10px var(--font-mono, monospace); }
-.state-landscape-route-paleo { color: var(--landscape-color); font-family: var(--font-paleo, serif); font-size: 25px; line-height: 1; white-space: nowrap; }
-.state-landscape-route-copy { min-width: 0; text-align: center; }
+.state-landscape-open:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.state-landscape-route-arrow { color: var(--accent-gold); font-size: 15px; line-height: 1; }
+.state-landscape-route-paleo { color: var(--accent-gold); font-family: var(--font-paleo, serif); font-size: 24px; line-height: 1; white-space: nowrap; }
+.state-landscape-route-copy { min-width: 0; text-align: left; }
 .state-landscape-route-copy strong,
-.state-landscape-route-copy small { display: block; overflow: visible; text-overflow: clip; white-space: normal; overflow-wrap: anywhere; }
-.state-landscape-route-copy strong { font-family: var(--font-heading, Georgia, serif); font-size: 18px; }
+.state-landscape-route-copy small { display: block; overflow-wrap: anywhere; }
+.state-landscape-route-copy strong { font-family: var(--font-heading, Georgia, serif); font-size: 16px; }
 .state-landscape-route-copy small { margin-top: 1px; color: var(--text-muted); font-size: 12px; }
 
-.state-landscape-route-detail { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-4); padding: var(--space-4) var(--space-5); background: color-mix(in srgb, var(--landscape-color) 7%, var(--bg-card)); }
-.state-landscape-route-chain { display: grid; justify-items: center; gap: 4px; color: var(--text-primary); font-family: var(--font-heading, Georgia, serif); font-size: var(--text-lg); text-align: center; }
-.state-landscape-route-chain > span[aria-hidden="true"] { color: var(--landscape-color); font-size: var(--text-xl); line-height: 1; }
-.state-landscape-route-label { color: var(--landscape-color); font-size: var(--text-sm); }
-.state-landscape-route-detail p { grid-column: 1 / -1; margin: -9px 0 0; color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.45; text-align: center; }
-.state-landscape-route-detail p b { color: var(--landscape-color); }
-.state-landscape-route-detail.is-empty { display: block; color: var(--text-muted); font-size: var(--text-sm); }
-.state-landscape-open { padding: 8px 11px; border: 1px solid var(--landscape-color); border-radius: var(--radius-xs); background: var(--landscape-color); color: #fffdf8; cursor: pointer; font: 600 14px var(--font-heading, Georgia, serif); }
-.state-landscape-open:hover { filter: brightness(.93); }
-.state-landscape-open span { margin-left: 5px; }
-
-.state-landscape-contour { position: relative; display: flex; align-items: flex-start; justify-content: center; gap: 3px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 13px var(--space-5) 14px; scrollbar-width: thin; }
-.state-landscape-contour::before,
-.state-landscape-contour::after { position: sticky; z-index: 2; top: 0; width: 20px; height: 42px; flex: 0 0 20px; content: ''; pointer-events: none; }
-.state-landscape-contour::before { left: 0; margin-right: -20px; background: linear-gradient(90deg, var(--bg-card), transparent); }
-.state-landscape-contour::after { right: 0; margin-left: -20px; background: linear-gradient(270deg, var(--bg-card), transparent); }
-.state-landscape-contour-node { display: grid; justify-items: center; gap: 5px; min-width: max-content; padding-inline: 8px; color: var(--text-muted); scroll-snap-align: center; }
-.state-landscape-contour-node::before { width: 100%; height: 1px; margin-top: 6px; background: var(--border-light); content: ''; }
-.state-landscape-contour-node:first-child::before { border-radius: 2px 0 0 2px; }
-.state-landscape-contour-node:last-child::before { border-radius: 0 2px 2px 0; }
-.state-landscape-contour-node i { width: 9px; height: 9px; margin-top: -11px; border: 2px solid var(--node-color); border-radius: 50%; background: var(--bg-card); }
-.state-landscape-contour-node.is-current { color: var(--text-primary); font-weight: 700; }
-.state-landscape-contour-node.is-current i { width: 12px; height: 12px; margin-top: -13px; background: var(--node-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--node-color) 15%, transparent); }
-.state-landscape-contour-node small { font-size: 10px; white-space: nowrap; }
+/* Маршрут: чипы «Тоху → Шаанаим» + muted-подсказка + compact-кнопка справа. */
+.state-landscape-route-detail { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; padding-top: var(--space-4); }
+.state-landscape-route-detail .state-landscape-route-kicker { flex: 1 1 100%; }
+.state-landscape-route-chain { display: inline-flex; align-items: center; gap: 8px; }
+.state-landscape-chain-chip { padding: 4px 12px; border: 1px solid var(--border-light, #d4c4a8); border-radius: 999px; color: var(--text-secondary); font-family: var(--font-mono, monospace); font-size: 12px; white-space: nowrap; }
+.state-landscape-chain-chip.is-target { border-color: var(--accent-gold); color: var(--accent-gold); }
+.state-landscape-chain-arrow { color: var(--accent-gold); }
+.state-landscape-route-hint { flex: 1 1 220px; margin: 0; color: var(--text-muted); font-size: var(--text-sm); line-height: 1.45; text-align: left; }
+.state-landscape-route-detail.is-empty { display: block; padding-top: var(--space-4); color: var(--text-muted); font-size: var(--text-sm); }
+.state-landscape-open { margin-left: auto; padding: 7px 14px; border: 1px solid var(--accent-gold); border-radius: var(--radius-xs); background: var(--accent-gold); color: #fffdf8; cursor: pointer; font: 600 12px var(--font-mono, monospace); letter-spacing: .04em; }
+.state-landscape-open:hover { background: var(--accent-gold-hover); border-color: var(--accent-gold-hover); }
 
 /* ===== ДИАГНОСТИКА ===== */
 .diagnostic-page {
@@ -1086,15 +1057,6 @@
   line-height: 1.6;
 }
 
-.state-detail-olam {
-  margin-top: 14px;
-  font-family: var(--font-body, 'EB Garamond', Georgia, serif);
-  font-size: var(--text-lg);
-  line-height: 1.45;
-  color: var(--accent-gold);
-  font-style: normal;
-}
-
 .diagnostic-result .result-transition {
   display: inline-flex;
   align-items: center;
@@ -1248,48 +1210,23 @@
     border-radius: var(--radius-sm);
   }
 
-  .state-detail-hero {
-    padding-top: 28px;
-  }
-
   .states-page { padding: 16px 0; }
   .states-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .states-grid > .state-card:last-child:nth-child(7) { grid-column: auto; }
-  .state-detail-hero { padding: 24px 16px; }
-  .state-detail-hero-paleo { font-size: 48px; }
   .diagnostic-page { padding: 16px; }
   .question-options-scale { flex-wrap: wrap; }
   .state-cities { grid-template-columns: 1fr; }
   .states-controls { flex-wrap: wrap; }
   .states-controls .states-nav-back { margin-right: 0; }
 
-  .state-landscape-head { flex-direction: column; }
-  .state-landscape-level { align-self: flex-start; }
-  .state-landscape-stage { gap: 10px; padding: 24px 16px; }
+  .state-landscape-stage { padding: var(--space-5) var(--space-3); }
   .state-landscape-current { width: min(170px, 72vw); }
-  .state-landscape-routes { padding: var(--space-4); }
-  .state-landscape-route {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 4px;
-    padding: 14px;
-    text-align: center;
-  }
-  .state-landscape-route-line { display: none; }
-  .state-landscape-route-index { order: 1; }
-  .state-landscape-route-paleo { order: 2; }
-  .state-landscape-route-copy { order: 3; width: 100%; }
-  .state-landscape-route-copy strong,
-  .state-landscape-route-copy small { text-align: center; }
-  .state-landscape-route-detail { grid-template-columns: 1fr; }
-  .state-landscape-route-detail p { margin-top: -4px; }
-  .state-landscape-open { justify-self: start; }
+  .state-landscape-open { margin-left: 0; }
 }
 
 @media (max-width: 720px) {
   .paleo-breakdown { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .paleo-breakdown-item { align-items: center; text-align: center; }
-  .paleo-breakdown-item .paleo-func { max-width: none; text-align: center; }
+  .paleo-breakdown-item .paleo-func { max-width: none; }
 }
 
 @media (max-width: 480px) {
@@ -1300,6 +1237,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .state-card { animation: none; transition: none; }
+  .state-nav-chip { transition: none; }
+  .state-landscape-route { transition: none; }
   .question-card { animation: none; }
   .diagnostic-result { animation: none; }
   .diagnostic-result-paleo { animation: none; }

@@ -35,76 +35,208 @@
     'ת': { char: '𐤕', name: 'Тав', meaning: 'знак, завет, истина', motion: 'Печать завершенности, кристаллизация опыта в форму завета.' }
   };
 
+  // i18n: литералы t('lab.video.*', 'русский резерв') читает tools/i18n-extract.py.
+  function t(key, fallback) {
+    return window.AlephyI18n && window.AlephyI18n.t ? window.AlephyI18n.t(key, fallback) : fallback;
+  }
+
+  function esc(value) {
+    return String(value).replace(/[&<>"']/g, function (char) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char];
+    });
+  }
+
+  /* Бейдж состояния панели (DESIGN-SYSTEM §6): empty — нейтральный,
+     running — золото, error — --accent-red, success — --accent-green. */
+  function badgeState(badge, state) {
+    if (!badge) return;
+    var meta = {
+      empty: { className: 'wb-badge', label: t('lab.video.stateEmpty', 'Ожидание') },
+      running: { className: 'wb-badge is-running', label: t('lab.video.stateRunning', 'Генерация') },
+      error: { className: 'wb-badge is-error', label: t('lab.video.stateError', 'Ошибка') },
+      success: { className: 'wb-badge is-done', label: t('lab.video.stateSuccess', 'Готово') }
+    }[state] || { className: 'wb-badge', label: '' };
+    badge.className = meta.className;
+    badge.textContent = meta.label;
+  }
+
+  /* Empty-state (§4.6): пунктирная рамка, глиф по центру, подсказка muted. */
+  function emptyState(hint) {
+    return '<div class="lab-empty">' +
+      '<span class="lab-empty-glyph" aria-hidden="true">\uD800\uDF00</span>' +
+      '<p class="lab-empty-hint">' + esc(hint) + '</p>' +
+      '</div>';
+  }
+
+  function runningState() {
+    return '<div class="lab-empty">' +
+      '<i data-lucide="loader-circle" class="vl-run-icon" aria-hidden="true"></i>' +
+      '<p class="lab-empty-hint">' + esc(t('lab.video.running', 'Собираем образ слова…')) + '</p>' +
+      '</div>';
+  }
+
+  /* Лента состояний: глиф → имя → значение, между ними волосяная стрелка. */
+  function renderTimeline(letters) {
+    var html = '<div class="vl-timeline">';
+    letters.forEach(function (item, idx) {
+      html += '<div class="vl-timeline-node">' +
+        '<span class="vl-paleo-char" lang="hbo" aria-hidden="true">' + esc(item.info.char) + '</span>' +
+        '<span class="vl-char-name">' + esc(item.info.name) + ' (' + esc(item.raw) + ')</span>' +
+        '<span class="vl-char-meaning">' + esc(item.info.meaning) + '</span>' +
+        '</div>';
+      if (idx < letters.length - 1) {
+        html += '<div class="vl-timeline-arrow" aria-hidden="true">' +
+          '<span class="vl-arrow-shaft"></span>' +
+          '<span class="vl-arrow-label">' + esc(t('lab.video.transition', 'переход')) + '</span>' +
+          '</div>';
+      }
+    });
+    return html + '</div>';
+  }
+
+  /* Описание физики движения + синтез общей динамики перехода. */
+  function renderDescription(letters) {
+    var html = '<ol class="vl-desc-list">';
+    letters.forEach(function (item, idx) {
+      html += '<li><strong>' + esc(t('lab.video.statePrefix', 'Состояние ')) + (idx + 1) +
+        ' — ' + esc(item.info.name) + ':</strong> ' + esc(item.info.motion) + '</li>';
+    });
+    html += '</ol>';
+    if (letters.length > 1) {
+      var first = letters[0].info.meaning;
+      var middle = letters[Math.min(1, letters.length - 1)].info.meaning;
+      var last = letters[letters.length - 1].info.meaning;
+      var sentence = esc(t('lab.video.synthesis', 'Импульс начинается как {first}, проходит трансформацию через состояние {second} и запечатывается в финальном состоянии {last}.'))
+        .replace('{first}', '<strong>' + esc(first) + '</strong>')
+        .replace('{second}', '<strong>' + esc(middle) + '</strong>')
+        .replace('{last}', '<strong>' + esc(last) + '</strong>');
+      html += '<div class="vl-synthesis">' +
+        '<h3>' + esc(t('lab.video.synthesisTitle', 'Общая динамика перехода')) + '</h3>' +
+        '<p>' + sentence + '</p>' +
+        '</div>';
+    }
+    return html;
+  }
+
   function init(container) {
     if (!container) return;
-    
+
+    var form = container.querySelector('#vl-form');
     var wordInput = container.querySelector('#vl-word-input');
-    var generateBtn = container.querySelector('#vl-generate-btn');
+    var clearBtn = container.querySelector('#vl-clear-btn');
     var visualOutput = container.querySelector('#vl-visual-output');
     var descOutput = container.querySelector('#vl-description-output');
+    var visualBadge = container.querySelector('#vl-visual-badge');
+    var descBadge = container.querySelector('#vl-description-badge');
     var status = container.querySelector('#vl-status');
 
-    if (!wordInput || !generateBtn) return;
+    if (!form || !wordInput || !visualOutput || !descOutput) return;
 
-    generateBtn.onclick = function() {
+    // Повторный заход на маршрут не должен дублировать слушатели:
+    // разметка и последний результат живут в DOM контейнера.
+    if (container.dataset.vlInit === '1') return;
+    container.dataset.vlInit = '1';
+
+    // Разметка страницы приходит после старта i18n — переводим её здесь.
+    if (window.AlephyI18n && window.AlephyI18n.applyTranslations) {
+      window.AlephyI18n.applyTranslations(container);
+    }
+
+    var raf = window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : function (cb) { cb(); };
+
+    function setStatus(message, state) {
+      if (!status) return;
+      status.textContent = message || '';
+      status.className = 'lab-status' + (state ? ' is-' + state : '');
+    }
+
+    function setState(state) {
+      badgeState(visualBadge, state);
+      badgeState(descBadge, state);
+    }
+
+    function reset() {
+      visualOutput.innerHTML = emptyState(t('lab.video.emptyVisual', 'Введите слово и нажмите «Сгенерировать».'));
+      descOutput.innerHTML = emptyState(t('lab.video.emptyDescription', 'Здесь появится описание.'));
+      setState('empty');
+      setStatus('', '');
+    }
+
+    function fail(messageKey, fallback) {
+      var hint = emptyState(t(messageKey, fallback));
+      setState('error');
+      setStatus(t(messageKey, fallback), 'error');
+      visualOutput.innerHTML = hint;
+      descOutput.innerHTML = hint;
+    }
+
+    function collectLetters(word) {
+      var letters = [];
+      word.split('').forEach(function (letter) {
+        var clean = letter.replace(/[\u0591-\u05C7]/g, ''); // Очистка от огласовок
+        if (clean && PALEO_CHARS[clean]) letters.push({ raw: clean, info: PALEO_CHARS[clean] });
+      });
+      return letters;
+    }
+
+    function generate() {
       var word = wordInput.value.trim();
       if (!word) {
-        status.textContent = 'Введите слово на иврите.';
-        status.className = 'prompt-generator-status text-warn';
+        fail('lab.video.errorEmptyWord', 'Введите слово на иврите.');
         return;
       }
 
-      status.textContent = '';
-      status.className = 'prompt-generator-status';
-
-      var letters = word.split('');
-      var validLetters = [];
-      
-      letters.forEach(function(l) {
-        var clean = l.replace(/[\u0591-\u05C7]/g, ''); // Очистка от огласовок
-        if (clean && PALEO_CHARS[clean]) {
-          validLetters.push({ raw: clean, info: PALEO_CHARS[clean] });
-        }
-      });
-
-      if (validLetters.length === 0) {
-        status.textContent = 'Не найдено палео-символов в введённом слове.';
-        status.className = 'prompt-generator-status text-warn';
+      var letters = collectLetters(word);
+      if (!letters.length) {
+        fail('lab.video.errorNoPaleo', 'Не найдено палео-символов в введённом слове.');
         return;
       }
 
-      // Отрисовка визуальной ленты
-      var timelineHtml = '<div class="vl-timeline">';
-      validLetters.forEach(function(item, idx) {
-        timelineHtml += '<div class="vl-timeline-node">' +
-          '<div class="vl-paleo-char">' + item.info.char + '</div>' +
-          '<div class="vl-char-name">' + item.info.name + ' (' + item.raw + ')</div>' +
-          '<div class="vl-char-meaning">' + item.info.meaning + '</div>' +
-          '</div>';
-
-        if (idx < validLetters.length - 1) {
-          timelineHtml += '<div class="vl-timeline-arrow">' +
-            '<div class="vl-arrow-shaft"></div>' +
-            '<div class="vl-arrow-label">переход</div>' +
-            '</div>';
-        }
+      setStatus('', '');
+      // Состояние running показываем честно: рендер синхронный,
+      // поэтому отдаём кадр браузеру до сборки ленты.
+      setState('running');
+      visualOutput.innerHTML = runningState();
+      descOutput.innerHTML = runningState();
+      raf(function () {
+        visualOutput.innerHTML = renderTimeline(letters);
+        descOutput.innerHTML = renderDescription(letters);
+        setState('success');
+        setStatus(t('lab.video.done', 'Образ собран'), 'success');
       });
-      timelineHtml += '</div>';
-      visualOutput.innerHTML = timelineHtml;
+    }
 
-      // Отрисовка описания физики движения
-      var descHtml = '<ol class="vl-desc-list">';
-      validLetters.forEach(function(item, idx) {
-        descHtml += '<li><strong>Состояние ' + (idx + 1) + ' (' + item.info.name + '):</strong> ' + item.info.motion + '</li>';
-      });
-      descHtml += '</ol>';
+    function clear() {
+      wordInput.value = '';
+      reset();
+      wordInput.focus();
+    }
 
-      if (validLetters.length > 1) {
-        descHtml += '<div class="vl-synthesis"><h4>Общая динамика перехода:</h4><p>Импульс начинается как <strong>' + validLetters[0].info.meaning + '</strong>, проходит трансформацию через состояние <strong>' + validLetters[Math.min(1, validLetters.length - 1)].info.meaning + '</strong> и запечатывается в финальном состоянии <strong>' + validLetters[validLetters.length - 1].info.meaning + '</strong>.</p></div>';
-      }
+    form.addEventListener('submit', function (event) {
+      event.preventDefault();
+      generate();
+    });
 
-      descOutput.innerHTML = descHtml;
-    };
+    // Ctrl/Cmd+Enter — запуск генерации из любого поля модуля.
+    container.addEventListener('keydown', function (event) {
+      if (event.key !== 'Enter' || !(event.ctrlKey || event.metaKey)) return;
+      event.preventDefault();
+      generate();
+    });
+
+    if (clearBtn) clearBtn.addEventListener('click', clear);
+
+    // Примеры слов: клик подставляет слово в инпут (без авто-запуска).
+    container.addEventListener('click', function (event) {
+      var target = event.target;
+      var chip = target && target.closest ? target.closest('.lab-example-chip') : null;
+      if (!chip) return;
+      wordInput.value = chip.getAttribute('data-vl-example') || chip.textContent.trim();
+      setStatus('', '');
+      wordInput.focus();
+    });
+
+    reset();
   }
 
   window.VideoLab = {

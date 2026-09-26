@@ -1,0 +1,9 @@
+{
+  "nameColor": "rgb(240, 240, 242)",
+  "nameFont": "\"Cormorant Garamond\", Georgia, serif / 15px",
+  "nameOpacity": "1",
+  "chipBox": "32x32",
+  "svgBox": "15.29998779296875x15.29998779296875",
+  "svgCss": "18px / 18px",
+  "descColor": "rgb(92, 81, 66)"
+}

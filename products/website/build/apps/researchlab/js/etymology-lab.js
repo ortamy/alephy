@@ -130,16 +130,24 @@ const EtyLab = (function() {
     showChips();
   }
 
+  function emptySection(num, title, text, icon) {
+    return '<section class="el-section" data-el-section="' + num + '"><div class="el-section-head"><span class="el-section-num">' + num + '</span><span class="el-section-label">' + title + '</span></div><div class="el-empty"><i data-lucide="' + icon + '" aria-hidden="true"></i><span>' + text + '</span></div></section>';
+  }
+  function initialSections() {
+    return emptySection('01', 'ПАЛЕО-РАЗБОР ПО БУКВАМ', 'После разбора здесь появятся буквы и их образы.', 'scan-text') + emptySection('02', 'КОРЕНЬ СЛОВА', 'После разбора здесь появится корень и его значение.', 'git-branch') + emptySection('03', 'ЦЕПОЧКА ПОДМЕН', 'После разбора здесь появится цепочка смысловых сдвигов.', 'git-compare-arrows') + emptySection('04', 'КАРТА УТРАТ', 'После разбора здесь появятся четыре слоя перевода.', 'layers-3') + '<section class="el-section el-visual" data-el-section="05"><div class="el-section-head"><span class="el-section-num">05</span><span class="el-section-label">ВИЗУАЛЬНЫЙ ЧЕКЕР</span></div><div class="el-visual-grid"><div class="el-visual-panel"><h3>ПРОВЕРКА ПО СЛОВАРЮ</h3><button class="lab-btn lab-btn-primary lab-btn-sm" type="button" onclick="EtymologyLab.checkDictionary()">Проверить</button><div id="el-dictionary-check" class="el-checker-output"><div class="el-empty"><i data-lucide="search-check" aria-hidden="true"></i><span>Результат проверки появится после разбора</span></div></div></div><div class="el-visual-panel"><h3>СРАВНЕНИЕ С ПЕРЕВОДОМ</h3><select class="lab-select" aria-label="Слой перевода"><option>Синодальный</option><option>Греческий</option><option>Латынь</option></select><div id="el-translation-check" class="el-checker-output"><div class="el-empty"><i data-lucide="git-compare-arrows" aria-hidden="true"></i><span>Дифф переводов появится после разбора</span></div></div></div></div></section>';
+  }
   function showChips() {
     var el = document.getElementById('el-results');
     if (!el) return;
-    el.innerHTML = '<div class="el-examples">' +
-      '<p class="el-examples-hint">Введите слово на иврите или транслите. Примеры:</p>' +
-      '<div class="el-chips">' +
-      EXAMPLE_WORDS.map(function(w) {
-        return '<button class="el-chip" onclick="EtymologyLab.example(\'' + w + '\')">' + w + '</button>';
-      }).join('') +
-      '</div></div>';
+    el.innerHTML = initialSections();
+    var input = document.getElementById('el-input'); var form = document.getElementById('el-form');
+    if (form && !form.dataset.bound) { form.dataset.bound = '1'; form.addEventListener('submit', function(e) { e.preventDefault(); analyze(); }); }
+    if (input && !input.dataset.bound) { input.dataset.bound = '1'; input.addEventListener('keydown', function(e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); analyze(); } }); }
+    var examples = document.querySelector('.el-examples');
+    if (examples) examples.innerHTML = EXAMPLE_WORDS.map(function(w) { return '<button type="button" class="el-chip" data-el-example="' + escapeHTML(w) + '">' + escapeHTML(w) + '</button>'; }).join('');
+    examples.addEventListener('click', function(e) { var chip = e.target.closest('[data-el-example]'); if (chip) { var field = document.getElementById('el-input'); if (field) field.value = chip.dataset.elExample; analyze(); } });
+    if (window.LabIcons) window.LabIcons.sync();
+    if (window.LabIcons) window.LabIcons.sync();
   }
 
   function example(word) {
@@ -182,10 +190,8 @@ const EtyLab = (function() {
 
     if (!wordData) {
       currentAnalysis = null;
-      resultsEl.innerHTML = '<div class="lab-alert lab-alert-warn">Слово «' + escapeHTML(val) + '» пока нет в базе. Попробуй: ' +
-        EXAMPLE_WORDS.slice(0, 4).map(function(w) {
-          return '<button class="el-chip el-chip-sm" onclick="EtymologyLab.example(\'' + w + '\')">' + escapeHTML(w) + '</button>';
-        }).join(' ') + '</div>';
+      resultsEl.innerHTML = '<div class="el-error" role="alert"><span>Слово «' + escapeHTML(val) + '» не разобрано.</span><button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="EtymologyLab.analyze()">Повторить</button></div>' + initialSections();
+      if (window.LabIcons) window.LabIcons.sync();
       return;
     }
 

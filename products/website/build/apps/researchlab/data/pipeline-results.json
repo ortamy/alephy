@@ -1,5 +1,419 @@
 [
   {
+    "id": "word_analyzer-20260918220643",
+    "pipelineId": "word_analyzer",
+    "title": "Исследование: Берешит",
+    "query": "разбери слово Берешит",
+    "createdAt": "2026-09-18T22:06:43Z",
+    "source": "local-agents",
+    "status": "ready",
+    "trace": [
+      "researcher",
+      "semitologist",
+      "exposer",
+      "editor",
+      "collector"
+    ],
+    "agentTrace": [
+      {
+        "agentId": "researcher",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Берешит"
+        },
+        "observations": [
+          {
+            "field": "term",
+            "value": "Берешит"
+          },
+          {
+            "field": "root",
+            "value": null
+          },
+          {
+            "field": "sources",
+            "value": [
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+            ]
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "term": "Берешит",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+          ]
+        }
+      },
+      {
+        "agentId": "semitologist",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Берешит",
+          "term": "Берешит",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+          ]
+        },
+        "observations": [
+          {
+            "field": "semitic_parallels",
+            "value": {
+              "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+              "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+              "letters": "Берешит"
+            }
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Берешит"
+          }
+        }
+      },
+      {
+        "agentId": "exposer",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Берешит",
+          "term": "Берешит",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Берешит"
+          }
+        },
+        "observations": [
+          {
+            "field": "exposures",
+            "value": [
+              {
+                "source": "Берешит",
+                "translation": "не найдено в локальном словаре",
+                "status": "требует проверки"
+              }
+            ]
+          },
+          {
+            "field": "gaps",
+            "value": [
+              {
+                "source": "Берешит",
+                "cause": "нет записи в roots.json"
+              }
+            ]
+          },
+          {
+            "field": "fresh_gap_count",
+            "value": 1
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "exposures": [
+            {
+              "source": "Берешит",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Берешит",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1
+        }
+      },
+      {
+        "agentId": "editor",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Берешит",
+          "term": "Берешит",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Берешит"
+          },
+          "exposures": [
+            {
+              "source": "Берешит",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Берешит",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1
+        },
+        "observations": [
+          {
+            "field": "editorial_note",
+            "value": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет"
+          },
+          {
+            "field": "addressed_issues",
+            "value": 0
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+          "addressed_issues": 0
+        }
+      },
+      {
+        "agentId": "collector",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Берешит",
+          "term": "Берешит",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Берешит"
+          },
+          "exposures": [
+            {
+              "source": "Берешит",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Берешит",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1,
+          "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+          "addressed_issues": 0
+        },
+        "observations": [
+          {
+            "field": "result",
+            "value": {
+              "title": "Исследование: Берешит",
+              "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+              "trace": [
+                "researcher",
+                "semitologist",
+                "exposer",
+                "editor",
+                "collector"
+              ],
+              "data": {
+                "query": "разбери слово Берешит",
+                "term": "Берешит",
+                "root": null,
+                "sources": [
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+                ],
+                "semitic_parallels": {
+                  "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+                  "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+                  "letters": "Берешит"
+                },
+                "exposures": [
+                  {
+                    "source": "Берешит",
+                    "translation": "не найдено в локальном словаре",
+                    "status": "требует проверки"
+                  }
+                ],
+                "gaps": [
+                  {
+                    "source": "Берешит",
+                    "cause": "нет записи в roots.json"
+                  }
+                ],
+                "fresh_gap_count": 1,
+                "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+                "addressed_issues": 0
+              },
+              "gaps": [
+                {
+                  "source": "Берешит",
+                  "cause": "нет записи в roots.json"
+                }
+              ]
+            }
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "result": {
+            "title": "Исследование: Берешит",
+            "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+            "trace": [
+              "researcher",
+              "semitologist",
+              "exposer",
+              "editor",
+              "collector"
+            ],
+            "data": {
+              "query": "разбери слово Берешит",
+              "term": "Берешит",
+              "root": null,
+              "sources": [
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+              ],
+              "semitic_parallels": {
+                "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+                "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+                "letters": "Берешит"
+              },
+              "exposures": [
+                {
+                  "source": "Берешит",
+                  "translation": "не найдено в локальном словаре",
+                  "status": "требует проверки"
+                }
+              ],
+              "gaps": [
+                {
+                  "source": "Берешит",
+                  "cause": "нет записи в roots.json"
+                }
+              ],
+              "fresh_gap_count": 1,
+              "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+              "addressed_issues": 0
+            },
+            "gaps": [
+              {
+                "source": "Берешит",
+                "cause": "нет записи в roots.json"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "result": {
+      "title": "Исследование: Берешит",
+      "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+      "trace": [
+        "researcher",
+        "semitologist",
+        "exposer",
+        "editor",
+        "collector"
+      ],
+      "data": {
+        "query": "разбери слово Берешит",
+        "term": "Берешит",
+        "root": null,
+        "sources": [
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\bsora.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\kehillah.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\mashiach.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\bashah\\terminology\\ruach.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\bavel-layer.md"
+        ],
+        "semitic_parallels": {
+          "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+          "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+          "letters": "Берешит"
+        },
+        "exposures": [
+          {
+            "source": "Берешит",
+            "translation": "не найдено в локальном словаре",
+            "status": "требует проверки"
+          }
+        ],
+        "gaps": [
+          {
+            "source": "Берешит",
+            "cause": "нет записи в roots.json"
+          }
+        ],
+        "fresh_gap_count": 1,
+        "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+        "addressed_issues": 0
+      },
+      "gaps": [
+        {
+          "source": "Берешит",
+          "cause": "нет записи в roots.json"
+        }
+      ]
+    }
+  },
+  {
     "id": "result-word-bereshit",
     "pipelineId": "word_analyzer",
     "title": "Исследование: Берешит",
@@ -7,7 +421,13 @@
     "createdAt": "2026-08-27T00:00:00Z",
     "source": "verified-local",
     "status": "ready",
-    "trace": ["researcher", "semitologist", "exposer", "editor", "collector"],
+    "trace": [
+      "researcher",
+      "semitologist",
+      "exposer",
+      "editor",
+      "collector"
+    ],
     "result": {
       "summary": "Готовая локальная сборка показывает маршрут: источник → палео-образ → проверка. Автоматические параллели и выводы требуют сверки с корпусом.",
       "limitations": "Это демонстрационный результат. Он не заменяет проверку корня и источников."
@@ -21,7 +441,12 @@
     "createdAt": "2026-08-27T00:00:00Z",
     "source": "verified-local",
     "status": "ready",
-    "trace": ["comparator", "critic", "editor", "collector"],
+    "trace": [
+      "comparator",
+      "critic",
+      "editor",
+      "collector"
+    ],
     "result": {
       "summary": "Маршрут сравнения готов: свидетель → расхождение → проверка. Локальный корпус необходимо пополнить до окончательных сопоставлений.",
       "limitations": "Готовый результат фиксирует метод исследования, а не окончательный вывод о свидетелях."
@@ -35,7 +460,12 @@
     "createdAt": "2026-08-27T00:00:00Z",
     "source": "verified-local",
     "status": "ready",
-    "trace": ["flow_architect", "liaison", "writer", "collector"],
+    "trace": [
+      "flow_architect",
+      "liaison",
+      "writer",
+      "collector"
+    ],
     "result": {
       "summary": "Готова последовательность сборки: вопрос → улики → палео-образ → критика → отчёт.",
       "limitations": "Каждая гипотеза в отчёте требует связи с наблюдаемым источником."

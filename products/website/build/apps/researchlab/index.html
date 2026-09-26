@@ -21,6 +21,9 @@
 <link rel="stylesheet" href="css/paleo-builder.css">
 <link rel="stylesheet" href="css/etymology-lab.css">
 <link rel="stylesheet" href="css/board-generator.css">
+<link rel="stylesheet" href="css/research-generator.css">
+<link rel="stylesheet" href="css/hypothesis-generator.css">
+<link rel="stylesheet" href="css/timescale-generator.css">
 <link rel="stylesheet" href="css/board.css">
 <link rel="stylesheet" href="css/word-analyzer.css">
 <link rel="stylesheet" href="css/investigation.css">
@@ -30,6 +33,8 @@
 <link rel="stylesheet" href="css/scripture-reader.css">
 <link rel="stylesheet" href="css/admin.css">
 <link rel="stylesheet" href="css/religionisms.css">
+<link rel="stylesheet" href="css/religionism-checker.css?v=20260919-rc1">
+<link rel="stylesheet" href="css/state-checker.css?v=20260919-stc1">
 <link rel="stylesheet" href="css/learn.css">
 <link rel="stylesheet" href="css/exposure-editor.css">
 <link rel="stylesheet" href="css/heraldry.css">
@@ -41,6 +46,7 @@
 <link rel="stylesheet" href="css/davar-checker.css">
 <link rel="stylesheet" href="css/tree-checker.css">
 <link rel="stylesheet" href="css/generators-checkers.css">
+<link rel="stylesheet" href="css/video-lab.css?v=20260919-vl3">
 <link rel="stylesheet" href="css/clue-generator.css">
 <link rel="stylesheet" href="css/paleo-linguistics.css">
 <link rel="stylesheet" href="css/language-map.css">
@@ -50,8 +56,9 @@
 <link rel="stylesheet" href="css/manifest.css">
 <link rel="stylesheet" href="css/theme-parchment.css">
 <link rel="stylesheet" href="css/theme-white.css">
-<link rel="stylesheet" href="css/timeline.css?v=20260917-acc1">
+<link rel="stylesheet" href="css/timeline.css?v=20260924-doors1">
 <link rel="stylesheet" href="css/analyzers.css">
+<link rel="stylesheet" href="css/components/panels.css">
 <link rel="stylesheet" href="css/components/buttons.css">
 <link rel="stylesheet" href="css/workbench.css">
 <link rel="stylesheet" href="css/user-preferences.css">
@@ -104,7 +111,7 @@
 
 <!-- HEADER -->
 <header class="lab-header glass-topbar" id="labHeader">
-  <a href="#dashboard" class="logo"><img src="../../assets/images/alephy-logo.svg" alt="Alephy" style="height: 40px; width: auto;"><span class="alephy-beta" aria-label="Бета-версия">BETA</span></a>
+  <a href="#dashboard" class="logo"><img src="../../assets/images/alephy-logo.svg" alt="Alephy"><span class="alephy-beta" aria-label="Бета-версия">BETA</span></a>
   
   <nav>
     <button class="theme-toggle icon-btn" onclick="LabTheme.toggle()" data-i18n-attr="title:lab.chrome.theme" title="Переключить тему" id="themeBtn"><i data-lucide="moon" aria-hidden="true"></i></button>
@@ -205,6 +212,16 @@
         
       </div>
     </div>
+    <!-- Ссылки вынесены в бургер-меню (mobile ≤900px), см. .sidebar-links -->
+    <div class="sidebar-section sidebar-links">
+      <div class="sidebar-links-head" data-i18n="lab.links.title">Ссылки</div>
+      <a class="sidebar-link" href="https://github.com/ortamy/alephy" target="_blank" rel="noopener">
+        <i data-lucide="github" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.links.github">GitHub проекта</span>
+      </a>
+      <a class="sidebar-link" href="../../">
+        <i data-lucide="globe" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.links.site">Сайт проекта</span>
+      </a>
+    </div>
   </div>
   </aside>
 
@@ -272,6 +289,10 @@
 <script defer src="js/club.js"></script>
 <script defer src="js/etymology-lab.js"></script>
 <script defer src="js/prompt-generator.js"></script>
+<script defer src="js/board-generator.js"></script>
+<script defer src="js/research-generator.js"></script>
+<script defer src="js/hypothesis-generator.js"></script>
+<script defer src="js/timescale-generator.js"></script>
 <script defer src="js/davar-checker.js"></script>
 <script defer src="js/tree-checker.js"></script>
 <script defer src="js/clue-generator.js"></script>
@@ -279,6 +300,7 @@
 <script defer src="js/agent-server.js"></script>
 <script defer src="js/workbench-pipelines.js"></script>
 <script defer src="js/workbench.js"></script>
+<script defer src="js/plural.js"></script>
 <script defer src="js/page-controller.js"></script>
 <script defer src="js/reveal.js"></script>
 <script defer src="js/shortcuts.js"></script>
@@ -295,7 +317,7 @@
 <script defer src="js/video-lab.js"></script>
 <script defer src="js/cartography.js"></script>
 <script defer src="js/heraldry.js"></script>
-<script defer src="js/timeline.js?v=20260917-acc1"></script>
+<script defer src="js/timeline.js?v=20260924-doors1"></script>
 <script defer src="js/paleo-builder.js"></script>
 <script defer src="js/analyzers.js"></script>
 <script defer src="js/lab-search.js"></script>
@@ -781,7 +803,7 @@ const WordAnalyzer = {
 
     var raw = input.value.trim();
     if (!raw) {
-      status.className = 'lab-alert lab-alert-warn';
+      status.className = 'wa-status wa-status--warn';
       status.textContent = 'Введите слова для разбора.';
       return;
     }
@@ -789,12 +811,12 @@ const WordAnalyzer = {
     // Split into words
     var words = raw.split(/[,\n\r]+/).map(function(w) { return w.trim(); }).filter(function(w) { return w.length > 0; });
     if (words.length === 0) {
-      status.className = 'lab-alert lab-alert-warn';
+      status.className = 'wa-status wa-status--warn';
       status.textContent = 'Не найдено ни одного слова.';
       return;
     }
 
-    status.className = 'lab-alert lab-alert-info';
+    status.className = 'wa-status';
     status.textContent = 'Разбираю ' + words.length + ' слов…';
     if (exportBar) exportBar.style.display = 'none';
     grid.innerHTML = '';
@@ -861,25 +883,35 @@ const WordAnalyzer = {
     });
     grid.innerHTML = html;
 
-    status.className = 'lab-alert lab-alert-success';
+    status.className = 'wa-status wa-status--ok';
     status.textContent = 'Разобрано: ' + found + ' найдено, ' + notFound + ' не найдено.';
     if (exportBar) exportBar.style.display = 'flex';
   },
 
+  clear: function() {
+    var input = document.getElementById('wa-input');
+    var grid = document.getElementById('wa-grid');
+    var exportBar = document.getElementById('wa-export');
+    var status = document.getElementById('wa-status');
+    if (input) input.value = '';
+    if (grid) grid.innerHTML = '';
+    if (exportBar) exportBar.style.display = 'none';
+    if (status) {
+      status.className = 'wa-status';
+      status.textContent = 'Введите слова для разбора.';
+    }
+  },
+
   renderCard: function(word, data) {
     if (!data.found) {
-      return '<div class="wa-card wa-card-missing">' +
-        '<div class="wa-card-header">' +
+      return '<article class="wa-card wa-card--missing">' +
+        '<div class="wa-row">' +
           '<span class="wa-word">' + escapeHtml(word) + '</span>' +
-          '<span class="wa-badge wa-badge-missing">Не найдено</span>' +
+          '<span class="wa-flag wa-flag--missing">Не найдено</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm wa-action" onclick="WordAnalyzer.askAI(\'' + escapeHtml(word) + '\')">Спросить AI</button>' +
         '</div>' +
-        '<div class="wa-card-body">' +
-          '<p class="text-muted">Слово отсутствует в базе данных.</p>' +
-        '</div>' +
-        '<div class="wa-card-footer">' +
-          '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.askAI(\'' + escapeHtml(word) + '\')">Спросить AI</button>' +
-        '</div>' +
-      '</div>';
+        '<p class="wa-note">Слово отсутствует в базе данных.</p>' +
+      '</article>';
     }
 
     var d = data.data;
@@ -887,7 +919,7 @@ const WordAnalyzer = {
     if (d.subs && d.subs.length > 0) {
       subsHTML = '<div class="wa-subs">';
       d.subs.forEach(function(s) {
-        subsHTML += '<div class="wa-sub-item"><span class="wa-sub-from">' + escapeHtml(s[0]) + '</span> → <span class="wa-sub-to">' + escapeHtml(s[1]) + '</span><div class="wa-sub-note text-small text-muted">' + escapeHtml(s[2]) + '</div></div>';
+        subsHTML += '<div class="wa-sub-item"><span class="wa-sub-from">' + escapeHtml(s[0]) + '</span> → <span class="wa-sub-to">' + escapeHtml(s[1]) + (s[2] ? '<span class="wa-sub-note">' + escapeHtml(s[2]) + '</span>' : '') + '</span></div>';
       });
       subsHTML += '</div>';
     }
@@ -908,27 +940,21 @@ const WordAnalyzer = {
       paleoHTML = '<div class="wa-paleo-row">' + chars.join('') + '</div>';
     }
 
-    var detailId = 'wa-detail-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4);
-
-    return '<div class="wa-card">' +
-      '<div class="wa-card-header">' +
-        '<div class="wa-card-title">' +
-          (clean ? '<span class="wa-hebrew hebrew">' + clean + '</span>' : '') +
-          '<span class="wa-word">' + escapeHtml(word) + '</span>' +
-        '</div>' +
-        '<span class="wa-badge wa-badge-found">Найдено</span>' +
-      '</div>' +
-      '<div class="wa-card-body">' +
-        (paleoHTML ? '<div class="wa-section"><div class="wa-section-title">Палео-образы</div>' + paleoHTML + '</div>' : '') +
-        '<div class="wa-section"><div class="wa-section-title">Значение</div><div class="wa-meaning">' + escapeHtml(d.meaning) + '</div></div>' +
-        '<div class="wa-section"><div class="wa-section-title">Транслитерация</div><div class="wa-translit mono">' + escapeHtml(d.translit) + '</div></div>' +
-        '<div class="wa-section"><div class="wa-section-title">Корень</div><div class="wa-root"><span class="wa-root-heb hebrew">' + escapeHtml(d.root) + '</span> — ' + escapeHtml(d.rootMeaning) + '</div></div>' +
-        (subsHTML ? '<div class="wa-section"><div class="wa-section-title">Подмены</div>' + subsHTML + '</div>' : '') +
-      '</div>' +
-      '<div class="wa-card-footer">' +
-        '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.showDetail(\'' + escapeHtml(word) + '\')">Подробнее</button>' +
-      '</div>' +
-    '</div>';
+    return '<article class="wa-card">' +
+      '<header class="wa-row wa-row--head">' +
+        (clean ? '<span class="wa-hebrew hebrew">' + clean + '</span>' : '') +
+        '<span class="wa-word">' + escapeHtml(word) + '</span>' +
+        '<span class="wa-flag wa-flag--found">Найдено</span>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm wa-action" onclick="WordAnalyzer.showDetail(\'' + escapeHtml(word) + '\')">Подробнее</button>' +
+      '</header>' +
+      (paleoHTML ? paleoHTML : '') +
+      '<dl class="wa-fields">' +
+        '<div class="wa-field"><dt>Значение</dt><dd>' + escapeHtml(d.meaning) + '</dd></div>' +
+        '<div class="wa-field"><dt>Транслитерация</dt><dd class="mono">' + escapeHtml(d.translit) + '</dd></div>' +
+        '<div class="wa-field"><dt>Корень</dt><dd><span class="wa-root-heb hebrew">' + escapeHtml(d.root) + '</span> — ' + escapeHtml(d.rootMeaning) + '</dd></div>' +
+      '</dl>' +
+      (subsHTML ? subsHTML : '') +
+    '</article>';
   },
 
   showDetail: function(word) {

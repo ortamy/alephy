@@ -1,145 +1,277 @@
-/* checkers-comparator.css — вертикальная сравнительная карта */
+/* ============================================================
+   checkers-comparator.css — Компаратор переводов (#translation-comparator).
+   Каркас панелей и глав — css/components/panels.css.
+   Здесь: поиск стиха, секции слоёв, карточки источников, маркер расхождения,
+   hairline-строки аналитики и тонкие бары статистики.
+   Hairline, без теней; золото — только primary и бар «совпадения».
+   ============================================================ */
 
-.tc-checker-content { padding: 20px; background: var(--bg-card); }
-.tc-checker-header { margin-bottom: 18px; }
-.tc-checker-header h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-family: var(--font-heading); font-size: 1.35rem; color: var(--text-primary); }
-.tc-checker-header p { margin: 6px 0 0; color: var(--text-muted); }
+.tc-shell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  color: var(--text-primary);
+}
 
-.tc-page-head { margin-bottom: 18px; }
-.tc-search-row { width: 100%; max-width: none; margin: 0 0 24px; }
-.tc-search-row > label {
-  display: block; margin-bottom: 7px; font-weight: 600; color: var(--text-primary);
+/* ===== ПАНЕЛЬ ВВОДА ===== */
+.tc-form {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
-.tc-search-row .search-wrap { display: flex; width: 100%; gap: 10px; align-items: stretch; }
-.tc-search-row .lab-input { flex: 1 1 auto; width: auto; max-width: none; min-width: 0; }
-.tc-search-row .lab-btn { flex: 0 0 132px; min-height: 44px; }
-.tc-map-page { max-width: var(--shell-page); }
-.tc-section {
-  margin: 0 0 28px; padding: 0 0 26px; border-bottom: 1px solid var(--border-light);
+
+.tc-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
 }
-.tc-section:last-child { border-bottom: 0; }
-.tc-section > h2 {
-  display: flex; align-items: center; gap: 9px; margin: 0 0 14px;
-  font-family: var(--font-heading); font-size: 23px; color: var(--text-primary);
+
+.tc-search::placeholder { color: var(--text-secondary); }
+
+/* ===== СЕКЦИИ СЛОЁВ (каждая — hairline-панель канона) ===== */
+.tc-map-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
-.tc-section > h2 img { width: 28px; height: 28px; object-fit: contain; }
+
+.tc-section { margin: 0; }
+
 .tc-source-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
 }
-.tc-source-card { min-width: 0; min-height: 178px; margin: 0; }
-.tc-source-card h3 {
-  display: flex; flex-direction: row; align-items: flex-start; gap: 8px; margin: 0; padding: 13px 15px 9px;
-  color: var(--accent-gold); font-family: var(--font-heading); font-size: 22px;
+
+.tc-source-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: var(--card-border);
+  border-radius: var(--radius-8);
+}
+
+.tc-source-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Имя слоя — чернильный сериф (золото здесь не используется). */
+.tc-source-name {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.tc-lang-chip {
+  padding: 1px var(--space-2);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.tc-source-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.tc-text {
+  min-height: 76px;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-md);
+  line-height: var(--leading-ui);
+  overflow-wrap: anywhere;
+}
+
+.tc-hebrew,
+.tc-paleo {
+  direction: rtl;
+  text-align: right;
+  max-width: 100%;
+}
+
+.tc-hebrew { font-family: var(--font-hebrew, var(--font-serif)); font-size: var(--text-lg); line-height: var(--leading-read); }
+.tc-paleo { font-family: var(--font-paleo); font-size: var(--text-xl); line-height: 1.5; }
+
+.tc-word { display: inline-block; }
+.tc-word + .tc-word { margin-inline-start: 0.25em; }
+
+/* Маркер расхождения: красное подчёркивание слова + тултип типа (§6). */
+.tc-word-diverge {
+  color: inherit;
+  text-decoration: underline 2px var(--red-text);
+  text-underline-offset: 3px;
+}
+
+.tc-word-minor {
+  color: inherit;
+  text-decoration: underline 2px var(--gold-text);
+  text-underline-offset: 3px;
+}
+
+.tc-word-missing { color: var(--text-secondary); }
+
+/* Пустой слой внутри карточки — компактный вариант общего empty-state (§4.6) */
+.tc-source-card .lab-empty {
+  min-height: 76px;
+  padding: var(--space-3);
+  gap: var(--space-1);
+}
+
+.tc-source-card .lab-empty-glyph { font-size: 22px; }
+.tc-source-card .lab-empty-hint { font-size: var(--text-xs); }
+
+/* Легенда маркера — одной строкой под секцией */
+.tc-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+/* ===== АНАЛИТИКА ===== */
+.tc-analysis-section { padding-bottom: 0; }
+
+.tc-rows {
+  display: grid;
+  gap: 0;
+  margin: var(--space-3) 0 var(--space-4);
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+
+.tc-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.6fr) minmax(180px, 2fr) minmax(120px, 0.7fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border-light);
 }
-.tc-source-card h3 img { flex: 0 0 32px; width: 32px; height: 32px; object-fit: contain; }
-.tc-source-card h3 > span { min-width: 0; white-space: nowrap; font-size: 22px; line-height: 1.15; }
-.tc-source-card h3 small { display: block; margin: 4px 0 0; }
-.tc-source-card h3 small {
-  color: var(--text-muted); font-family: var(--font-serif); font-size: 11px; font-weight: 400;
-}
-.tc-text {
-  min-height: 76px; margin-top: 8px; padding: 16px; color: var(--text-primary); font-size: 17px; line-height: 1.55;
-  overflow-wrap: normal;
-}
-.tc-hebrew, .tc-paleo {
-  direction: rtl; text-align: right; white-space: normal; overflow: hidden;
-}
-.tc-hebrew { font-size: 21px; line-height: 1.8; }
-.tc-paleo { font-size: 26px; line-height: 1.5; letter-spacing: 1px; }
-.tc-word { display: inline-block; }
-.tc-word { color: var(--text-primary); }
-.red-zone {
-  display: inline-block; padding: 2px 4px; border-radius: 4px;
-  background: #ffe6e6; color: #000;
-}
-.tc-word-minor { text-decoration: underline 2px #d49b00; text-underline-offset: 3px; }
-.tc-word-missing { color: #757575; }
-.tc-source-analysis { margin: 18px 0 0; padding: 20px 22px; background: var(--bg-card); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: 0 3px 12px rgba(61, 40, 22, 0.08); }
-.tc-source-analysis > h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 18px; font-family: var(--font-heading); font-size: 23px; color: var(--text-primary); }
-.tc-source-analysis > h2 img { width: 28px; height: 28px; object-fit: contain; }
-.tc-analysis-subsection { padding-top: 16px; border-top: 1px solid var(--border-light); }
-.tc-analysis-subsection:first-of-type { padding-top: 0; border-top: 0; }
-.tc-analysis-subsection > h3 { margin: 0 0 10px; font-family: var(--font-heading); font-size: 19px; color: var(--text-primary); }
-.tc-analysis-subsection .tc-analysis-block { margin-bottom: 8px; }
-.tc-analysis-subsection .tc-analysis-block:last-child { margin-bottom: 0; }
-.tc-analysis-subsection .tc-analysis-block h4 { margin: 0 0 5px; font-family: var(--font-heading); font-size: 16px; }
-.tc-analysis-subsection .tc-analysis-block {
-  background: transparent; border-left: 0; box-shadow: none; padding: 0;
-}
-.tc-source-ratio { display: flex; flex-wrap: wrap; gap: 12px 24px; font-size: 17px; font-weight: 600; margin-bottom: 10px; }
-.tc-ratio-match { color: #2e7d32; }
-.tc-ratio-diff { color: #c62828; }
-.tc-ratio-missing { color: #757575; }
-.tc-source-key-difference { margin: 0; line-height: 1.5; color: var(--text-primary); }
-.tc-analysis-section { margin-top: 18px; }
-.tc-analysis-block {
-  margin: 0 0 var(--space-2); padding: 11px 14px; background: var(--bg-primary);
-  border-left: 4px solid var(--accent-gold); box-shadow: 0 3px 12px rgba(61, 40, 22, 0.08);
-}
-.tc-analysis-block:last-child { margin-bottom: 0; }
-.tc-analysis-block h3 { margin: 0 0 5px; font-family: var(--font-heading); font-size: 17px; }
-.tc-analysis-text { line-height: 1.6; }
-.tc-analysis-text.highlight-green { border-left-color: var(--accent-green); }
-.tc-analysis-text.highlight-gold { border-left-color: var(--accent-gold); }
-.tc-analysis-text.highlight-red { border-left-color: var(--accent-red); }
 
-.tc-verse-btn {
-  background: none; border: none; padding: 0; cursor: pointer;
-  color: var(--accent-gold); font-family: var(--font-serif);
-  font-size: var(--text-md); font-weight: 600; text-decoration: underline;
-  text-decoration-color: transparent; transition: text-decoration-color var(--motion-base);
+.tc-row:last-child { border-bottom: 0; }
+
+.tc-layer-chip {
+  justify-self: start;
+  padding: 1px var(--space-2);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.tc-verse-btn:hover { text-decoration-color: var(--accent-gold); color: var(--accent-gold-hover); }
 
-.tc-witness-row.active td { background: rgb(var(--accent-gold-rgb) / 0.08); }
-
-/* Карта расхождений: радиальный граф стих → источники */
-.tc-map { display: flex; justify-content: center; margin: 10px 0 20px; }
-.tc-map svg { width: 100%; height: auto; max-width: 480px; }
-.tc-map-node { cursor: pointer; }
-.tc-map-node circle {
-  fill: var(--bg-tertiary); stroke-width: 1.5;
-  transition: fill var(--motion-base);
+.tc-row-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
 }
-.tc-map-node:hover circle { fill: var(--accent-gold); }
-.tc-map-node text {
-  font-family: var(--font-serif); font-size: 11px; fill: var(--text-primary);
-  text-anchor: middle; pointer-events: none;
+
+.tc-row-type {
+  justify-self: start;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
-.tc-map-center circle { fill: var(--bg-dark); stroke: var(--accent-gold); stroke-width: 2; }
-.tc-map-center text { fill: var(--text-light); font-weight: 700; font-size: 12px; }
 
-.tc-map-line-match { stroke: var(--accent-green); stroke-width: 2; opacity: 0.7; }
-.tc-map-line-diverge { stroke: var(--accent-red); stroke-width: 2; opacity: 0.8; }
-.tc-map-line-partial { stroke: var(--accent-gold); stroke-width: 2; opacity: 0.8; }
+.tc-row-type.is-critical { color: var(--red-text); }
+.tc-row-type.is-partial { color: var(--gold-text); }
 
-.tc-node-match circle { stroke: var(--accent-green); }
-.tc-node-diverge circle { stroke: var(--accent-red); }
-.tc-node-partial circle { stroke: var(--accent-gold); }
+/* ===== БАРЫ СТАТИСТИКИ (три тонких полосы, % mono справа) ===== */
+.tc-stats { margin-top: var(--space-4); }
 
-.tc-map-legend {
-  display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
-  font-size: var(--text-sm); color: var(--text-muted); margin-bottom: 16px;
+.tc-stats-title {
+  margin: 0 0 var(--space-3);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
-.tc-map-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.tc-map-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-.tc-map-legend .dot-match { background: var(--accent-green); }
-.tc-map-legend .dot-diverge { background: var(--accent-red); }
-.tc-map-legend .dot-partial { background: var(--accent-gold); }
 
-.tc-detail-section { margin-bottom: 14px; }
-.tc-detail-section h3 {
-  font-family: var(--font-heading); font-size: 15px; font-weight: 600;
-  color: var(--accent-gold); margin-bottom: 6px;
+.tc-bars { display: grid; gap: var(--space-3); }
+
+.tc-bar-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(120px, 2fr) 54px;
+  gap: var(--space-3);
+  align-items: center;
 }
-.tc-detail-hebrew { direction: rtl; font-size: 18px; margin-bottom: 4px; }
 
-@media (max-width: 720px) {
-  .tc-search-row .search-wrap { flex-direction: column; }
-  .tc-search-row .lab-input { max-width: none; }
-  .tc-search-row .lab-btn { flex-basis: 44px; width: 100%; justify-content: center; }
-  .tc-section > h2 { font-size: 21px; }
+.tc-bar-label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.tc-bar {
+  height: 3px;
+  overflow: hidden;
+  background: var(--border-light);
+  border-radius: var(--radius-pill);
+}
+
+.tc-bar-fill {
+  display: block;
+  height: 100%;
+  transition: width 200ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.tc-bar-fill.is-match { background: var(--accent-gold); }
+.tc-bar-fill.is-diverge { background: var(--red-text); }
+.tc-bar-fill.is-missing { background: var(--text-secondary); }
+
+.tc-bar-value {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tc-bar-fill { transition: none; }
+}
+
+/* ===== Мобильный закон (§5.3): карточки стеком, RTL без overflow-x ===== */
+@media (max-width: 760px) {
   .tc-source-grid { grid-template-columns: 1fr; }
-  .tc-map svg { max-width: 100%; }
+  .tc-row { grid-template-columns: 1fr; gap: var(--space-2); }
+  .tc-row-type { justify-self: start; }
+  .tc-bar-row { grid-template-columns: 1fr 54px; }
+  .tc-bar-label { grid-column: 1 / -1; }
 }

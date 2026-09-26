@@ -1,0 +1,73 @@
+<!-- Генератор досок: конструктор с живым предпросмотром. Шапка — реестр LabHero
+     (локального hero-дубля нет); панели, главы и пустое состояние — css/components/panels.css. -->
+<section class="bg-shell" aria-label="Генератор досок">
+  <div class="lab-examples bg-examples" role="group" aria-label="Примеры досок"
+       data-i18n-attr="aria-label:lab.boardGenerator.examplesLabel">
+    <span class="lab-examples-label" data-i18n="lab.boardGenerator.examplesLabel">Примеры</span>
+    <button type="button" class="lab-example-chip" data-bg-example="0">Подмена слова «закон»</button>
+    <button type="button" class="lab-example-chip" data-bg-example="1">Берешит 1:1 — образ начатка</button>
+  </div>
+
+  <div class="bg-layout">
+    <section class="lab-panel bg-form-panel" aria-labelledby="bg-form-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">01</span>
+        <h2 class="lab-chapter-title" id="bg-form-title" data-i18n="lab.boardGenerator.formTitle">Доска</h2>
+      </header>
+      <p class="lab-chapter-note" data-i18n="lab.boardGenerator.formNote">Заголовок и вывод обязательны — доска перерисовывается справа по мере ввода.</p>
+      <form id="bg-form" class="bg-form" novalidate>
+        <div class="bg-field">
+          <label class="bg-label" for="bg-title"><span data-i18n="lab.boardGenerator.titleLabel">Заголовок</span>&nbsp;<span class="bg-req" aria-hidden="true">*</span></label>
+          <input type="text" id="bg-title" class="lab-input" maxlength="140" autocomplete="off"
+                 placeholder="Например: Подмена слова «закон»"
+                 data-i18n-attr="placeholder:lab.boardGenerator.titlePlaceholder">
+        </div>
+        <div class="bg-field">
+          <label class="bg-label" for="bg-conclusion"><span data-i18n="lab.boardGenerator.conclusionLabel">Вывод / главная улика</span>&nbsp;<span class="bg-req" aria-hidden="true">*</span></label>
+          <textarea id="bg-conclusion" class="lab-input bg-textarea" rows="4"
+                    placeholder="Сформулируйте главный вывод доски…"
+                    data-i18n-attr="placeholder:lab.boardGenerator.conclusionPlaceholder"></textarea>
+        </div>
+        <div class="bg-field">
+          <span class="bg-label" id="bg-evidence-label" data-i18n="lab.boardGenerator.evidenceLabel">Улики</span>
+          <div id="bg-evidence-list" class="bg-rows" role="group" aria-labelledby="bg-evidence-label"></div>
+          <div><button type="button" id="bg-add-evidence" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.boardGenerator.addEvidence">+ Улика</button></div>
+        </div>
+        <div class="bg-field">
+          <span class="bg-label" id="bg-attachments-label" data-i18n="lab.boardGenerator.attachmentsLabel">Вложения</span>
+          <div id="bg-attachments-list" class="bg-rows" role="group" aria-labelledby="bg-attachments-label"></div>
+          <div><button type="button" id="bg-add-attachment" class="lab-btn lab-btn-secondary lab-btn-sm" data-i18n="lab.boardGenerator.addAttachment">+ Вложение</button></div>
+        </div>
+        <footer class="bg-form-footer">
+          <button type="submit" id="bg-generate" class="lab-btn lab-btn-primary" disabled data-i18n="lab.boardGenerator.generate">Сгенерировать доску</button>
+          <span class="bg-hint" id="bg-hint" data-i18n="lab.boardGenerator.generateHint">Заполните заголовок и вывод</span>
+          <button type="button" id="bg-clear" class="bg-icon-button" title="Очистить" aria-label="Очистить"
+                  data-i18n-attr="title:lab.boardGenerator.clear;aria-label:lab.boardGenerator.clear">×</button>
+        </footer>
+        <p class="lab-status" id="bg-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="lab-panel bg-preview-panel" aria-labelledby="bg-preview-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="bg-preview-title" data-i18n="lab.boardGenerator.previewTitle">Предпросмотр</h2>
+      </header>
+      <div id="bg-preview" class="bg-preview" aria-live="polite"></div>
+      <div class="bg-actions" id="bg-actions" hidden>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-bg-action="copy" data-i18n="lab.boardGenerator.copy">Копировать Markdown</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-bg-action="md" data-i18n="lab.boardGenerator.downloadMd">Скачать .md</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-bg-action="json" data-i18n="lab.boardGenerator.downloadJson">Скачать .json</button>
+        <a class="bg-door" href="#board"><span data-i18n="lab.boardGenerator.doorResearch">Открыть в исследованиях</span> →</a>
+      </div>
+    </section>
+  </div>
+
+  <section class="lab-panel bg-history-panel" aria-labelledby="bg-history-title">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">03</span>
+      <h2 class="lab-chapter-title" id="bg-history-title" data-i18n="lab.boardGenerator.historyTitle">История</h2>
+    </header>
+    <div id="bg-history" class="bg-history"></div>
+  </section>
+</section>

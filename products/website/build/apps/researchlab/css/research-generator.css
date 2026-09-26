@@ -1,0 +1,248 @@
+/* ============================================================
+   research-generator.css — «Генератор исследований»: живой конструктор маршрута.
+   Канон: hairline-рамки, без теней; цвета — только токены tokens.css,
+   поэтому светлая и тёмная темы переключаются без переопределений.
+   ============================================================ */
+
+.rg-shell {
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  padding: var(--space-3) 0 var(--space-8);
+}
+
+/* Параметры+маршрут слева (span 5), превью sticky справа (span 7) */
+.rg-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-5);
+  align-items: start;
+  min-width: 0;
+}
+
+.rg-side {
+  display: grid;
+  gap: var(--space-5);
+  align-content: start;
+  min-width: 0;
+}
+
+.rg-preview-panel {
+  position: sticky;
+  top: calc(var(--header-compact) + var(--space-4));
+}
+
+/* ===== Панель «Параметры» ===== */
+.rg-form { display: grid; gap: var(--space-4); }
+
+.rg-field { display: grid; gap: var(--space-2); min-width: 0; }
+
+/* Микролейблы полей: uppercase, не сериф-болд */
+.rg-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.rg-form .lab-input {
+  width: 100%;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-light);
+}
+
+.rg-form .lab-input:focus {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 1px;
+}
+
+/* Тип исследования — radio-чипы */
+.rg-types { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+.rg-type-chip.is-active {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* Футер: primary + icon «Очистить»; валидность — muted-строка под формой */
+.rg-form-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+#rg-generate:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.rg-icon-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font: 20px/1 var(--font-ui);
+  transition: border-color var(--motion-base), color var(--motion-base);
+}
+
+.rg-icon-button:hover,
+.rg-icon-button:focus-visible { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+/* ===== Панель «Маршрут»: цепочка чипов со стрелками ===== */
+.rg-route { min-width: 0; }
+
+.rg-route-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rg-route-chip {
+  padding: 2px var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.rg-route-arrow { color: var(--text-muted); }
+
+/* ===== Панель «Превью»: живой скелет шаблона ===== */
+.rg-preview { min-width: 0; }
+
+.rg-doc { display: grid; gap: var(--space-3); align-content: start; }
+
+.rg-doc-title {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+  font: 600 var(--text-2xl)/1.25 var(--font-heading);
+  overflow-wrap: anywhere;
+}
+
+.rg-doc-meta {
+  margin: 0;
+  color: var(--text-muted);
+  font: var(--ui-11) var(--font-mono);
+}
+
+.rg-doc-label {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.rg-doc-line {
+  margin: 0;
+  color: var(--text-primary);
+  font: var(--text-md)/1.6 var(--font-serif);
+  overflow-wrap: anywhere;
+}
+
+/* Действия после генерации */
+.rg-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-light);
+}
+
+.rg-actions[hidden] { display: none; }
+
+.rg-door {
+  margin-left: auto;
+  color: var(--accent-gold);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--motion-base);
+}
+
+.rg-door:hover,
+.rg-door:focus-visible { border-bottom-color: var(--accent-gold); }
+
+/* ===== История: hairline-строки, клик восстанавливает ===== */
+.rg-history-panel { margin-top: var(--space-5); }
+
+.rg-history { display: grid; }
+
+.rg-history-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-2) 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-light);
+  background: transparent;
+  color: var(--text-primary);
+  font: var(--text-md)/1.4 var(--font-serif);
+  text-align: left;
+  cursor: pointer;
+}
+
+.rg-history-row:last-child { border-bottom: 0; }
+
+.rg-history-topic {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--motion-base);
+}
+
+.rg-history-row:hover .rg-history-topic,
+.rg-history-row:focus-visible .rg-history-topic { color: var(--accent-gold); }
+
+.rg-history-type {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-10);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.rg-history-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font: var(--ui-11) var(--font-mono);
+  white-space: nowrap;
+}
+
+.rg-history-empty { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+/* ===== Мобильный закон: стек на 390px, превью под формой, overflow-x = 0 ===== */
+@media (max-width: 760px) {
+  .rg-shell { padding: 0 0 var(--space-7); }
+  .rg-layout { grid-template-columns: 1fr; }
+  .rg-preview-panel { position: static; }
+  .rg-icon-button { margin-left: 0; }
+  .rg-door { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rg-icon-button,
+  .rg-door,
+  .rg-history-topic { transition: none; }
+}

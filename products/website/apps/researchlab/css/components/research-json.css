@@ -109,25 +109,35 @@
   letter-spacing: 0.04em;
 }
 
+/* Секции документа — плоский реестр: зазор 1px поверх --border-light
+   рисует сетку разделителей, у секции остаётся только подложка. */
 .research-sections {
   display: grid;
-  gap: 14px;
+  gap: 1px;
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 .research-section {
-  padding: var(--space-5) 22px;
-  background: var(--bg-primary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
 }
 
 .research-section h2 {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-2);
   color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .research-section-content {
   color: var(--text-secondary);
+  font-size: var(--ui-13);
   line-height: 1.6;
 }
 

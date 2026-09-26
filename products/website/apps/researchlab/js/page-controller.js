@@ -710,7 +710,7 @@ const PageController = (function() {
       'Алеф': '𐤀', 'Бет': '𐤁', 'Гимель': '𐤂', 'Далет': '𐤃', 'Вав': '𐤅',
       'Хей': '𐤄', 'Заин': '𐤆', 'Хет': '𐤇', 'Тет': '𐤈', 'Йод': '𐤉',
       'Каф': '𐤊', 'Ламед': '𐤋', 'Мем': '𐤌', 'Нун': '𐤍', 'Самех': '𐤎',
-      'Аин': '𐤏', 'Пей': '𐤐', 'Цади': '𐤑', 'Коф': '𐤒', 'Реш': '𐤓',
+      'Аин': '𐤏', 'Айн': '𐤏', 'Пей': '𐤐', 'Цади': '𐤑', 'Коф': '𐤒', 'Реш': '𐤓',
       'Шин': '𐤔', 'Тав': '𐤕'
     };
     return glyphs[letterName] || '';
@@ -727,36 +727,44 @@ const PageController = (function() {
     var exampleText = fields['Пример в слове'] || '';
     var comparisonText = fields['Сравнение с греческой подменой'] || '';
     var steps = fields.steps || [];
-    var cards = [
-      '<article class="paleo-module paleo-module-image">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/paleo/track.png" alt=""><h2>Образ</h2></div>' +
-        '<p class="paleo-module-lead">' + renderInlineMarkdown(image) + '</p>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-function">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/archaeology/testtube.svg" alt=""><h2>Функция</h2></div>' +
-        '<div class="paleo-module-copy">' + renderInlineMarkdown(functionText) + '</div>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-example">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/ui/book.png" alt=""><h2>Пример в слове</h2></div>' +
-        '<div class="paleo-word-display" lang="hbo">' + escapeHtml(paleoWord) + '</div>' +
-        '<div class="paleo-assembly"><span>Сборка</span><strong lang="hbo">' + escapeHtml(paleoAssembly) + '</strong></div>' +
-        '<p class="paleo-module-copy">' + renderInlineMarkdown(exampleText) + '</p>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-steps">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/crafts/hammer-and-chisel.png" alt=""><h2>Как работает</h2></div>' +
-        '<ol class="paleo-steps">' + steps.map(function(step, index) {
-          return '<li class="paleo-step"><span>' + (index + 1) + '</span><div>' + renderInlineMarkdown(step) + '</div></li>';
-        }).join('') + '</ol>' +
-      '</article>',
-      '<article class="paleo-module paleo-module-comparison">' +
-        '<div class="paleo-module-heading"><img src="assets/icons/32/ui/scales.png" alt=""><h2>Сравнение с греческой подменой</h2></div>' +
-        '<div class="paleo-comparison-copy">' + renderInlineMarkdown(comparisonText) + '</div>' +
-      '</article>'
-    ].join('');
+    var title = documentData.title || 'Документ';
+    // Пять разрозненных карточек свёрнуты в один манускрипт:
+    // рельс с глифом + колонка блоков, разделённых hairline.
+    var blocks = [
+      { label: 'Функция', body: renderInlineMarkdown(functionText) },
+      {
+        label: 'Как работает',
+        body: steps.length
+          ? '<ol class="mech-steps">' + steps.map(function(step) {
+            return '<li>' + renderInlineMarkdown(step) + '</li>';
+          }).join('') + '</ol>'
+          : '<p>' + escapeHtml('Шаги не указаны.') + '</p>'
+      },
+      { label: 'Пример в слове', body: renderInlineMarkdown(exampleText) }
+    ];
+    if (comparisonText) {
+      blocks.push({ label: 'Сравнение с греческой подменой', note: true, body: renderInlineMarkdown(comparisonText) });
+    }
 
-    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page"><div class="paleo-mechanics-actions">' + backBtn + '</div>' +
-      '<div class="research-controls"><label>Документ<select id="research-paleo-mechanics-select" class="lab-input">' + options + '</select></label></div>' +
-      '<div class="paleo-mechanics-modules">' + cards + '</div></div>';
+    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
+      '<div class="mech-bar">' + backBtn +
+        '<label class="mech-field"><span>Документ</span>' +
+        '<select id="research-paleo-mechanics-select" class="lab-input">' + options + '</select></label>' +
+      '</div>' +
+      '<article class="mech-sheet">' +
+        '<header class="mech-head"><span class="mech-kicker">Палео-механика</span><h2>' + escapeHtml(title) + '</h2></header>' +
+        '<div class="mech-layout">' +
+          '<div class="mech-rail">' +
+            '<p class="mech-glyph" lang="hbo">' + escapeHtml(paleoWord) + '</p>' +
+            '<p class="mech-assembly"><span class="mech-label">Сборка</span><b lang="hbo">' + escapeHtml(paleoAssembly) + '</b></p>' +
+            '<p class="mech-image"><span class="mech-label">Образ</span><b>' + escapeHtml(image) + '</b></p>' +
+          '</div>' +
+          '<div class="mech-blocks">' + blocks.map(function(block) {
+            return '<section class="mech-block' + (block.note ? ' mech-block--note' : '') + '">' +
+              '<h3>' + escapeHtml(block.label) + '</h3>' + block.body + '</section>';
+          }).join('') + '</div>' +
+        '</div>' +
+      '</article></div>';
 
     var select = document.getElementById('research-paleo-mechanics-select');
     if (select) select.addEventListener('change', function() {
@@ -767,6 +775,112 @@ const PageController = (function() {
       PageController.pageState['paleo-mechanics'].key = this.value;
       renderDocumentPage(container, 'paleo-mechanics', PageController.jsonCache['paleo-mechanics']);
     });
+  }
+  // Заголовок знака смешивает имя, палео-написание и глоссу — разбираем его
+  // на части, иначе строка реестра остаётся нечитаемой.
+  function splitPaleoSignTitle(rawTitle) {
+    var raw = String(rawTitle || '').trim();
+    var match = raw.match(/^(.+?)\s*\(([^)]*)\)\s*(?:[\u2014\u2013-]\s*(.*))?$/);
+    if (!match) return { name: raw, variants: [], gloss: '' };
+    return {
+      name: match[1].trim(),
+      variants: match[2].split('/').map(function(part) { return part.trim(); }).filter(Boolean),
+      gloss: (match[3] || '').trim()
+    };
+  }
+
+  // Первая строка описания в предложениях, обрезанная по границе слова.
+  function paleoSignSummary(description) {
+    return safeDocSummary(description);
+  }
+
+  // Обрезка описания по границе слова: реестр не должен показывать «висячие» буквы.
+  function safeDocSummary(description) {
+    var text = String(description || '').split('---')[0].replace(/\s+/g, ' ').trim();
+    if (text.length <= 110) return text;
+    var cut = text.lastIndexOf(' ', 110);
+    return text.slice(0, cut > 56 ? cut : 110).replace(/[\s,;:—–-]+$/, '') + '…';
+  }
+
+  // ===== РЕЕСТР ЗНАКОВ =====
+  // 22 одинаковые карточки заменены плоским реестром: реальный глиф,
+  // имя с транслитом, глосса и одна строка функции. Без рамок и теней.
+  function renderPaleoMechanicsIndex(container, keys, data) {
+    var rows = keys.map(function(key) {
+      var doc = data[key] || {};
+      var sign = splitPaleoSignTitle(doc.title || key);
+      var translit = sign.variants[sign.variants.length - 1] || '';
+      var glyph = getPaleoGlyph(sign.name) || sign.variants[0] || '';
+      var summary = paleoSignSummary(doc.description);
+      return '<a href="#" class="mech-sign" data-key="' + escapeHtml(key) + '">' +
+        '<span class="mech-sign-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(glyph) + '</span>' +
+        '<span class="mech-sign-body">' +
+          '<span class="mech-sign-name">' + escapeHtml(sign.name) +
+            (translit ? ' <i lang="hbo">' + escapeHtml(translit) + '</i>' : '') +
+            (sign.gloss ? ' <em>— ' + escapeHtml(sign.gloss) + '</em>' : '') +
+          '</span>' +
+          '<span class="mech-sign-text">' + escapeHtml(summary) + '</span>' +
+        '</span>' +
+        '<span class="mech-sign-go" aria-hidden="true">→</span>' +
+      '</a>';
+    }).join('');
+
+    container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
+      '<div class="mech-index-bar">' +
+        '<label class="mech-index-field"><span>Поиск по знакам</span>' +
+        '<input id="mech-index-search" class="lab-input" type="search" autocomplete="off" ' +
+        'placeholder="Алеф, бык, различать"></label>' +
+        '<p class="mech-index-count" id="mech-index-count" role="status"></p>' +
+      '</div>' +
+      '<div class="mech-index" id="mech-index">' + rows + '</div>' +
+      '<p class="mech-index-empty" id="mech-index-empty" hidden>Знаки не найдены.</p>' +
+    '</div>';
+
+    var list = document.getElementById('mech-index');
+    if (!list) return;
+    var signs = Array.prototype.slice.call(list.querySelectorAll('.mech-sign'));
+    var search = document.getElementById('mech-index-search');
+    var count = document.getElementById('mech-index-count');
+    var empty = document.getElementById('mech-index-empty');
+
+    function applyFilter(query) {
+      var needle = String(query || '').trim().toLocaleLowerCase('ru-RU');
+      var visible = 0;
+      signs.forEach(function(sign) {
+        var hit = !needle || sign.textContent.toLocaleLowerCase('ru-RU').indexOf(needle) !== -1;
+        sign.hidden = !hit;
+        if (hit) visible++;
+      });
+      if (count) {
+        count.textContent = needle
+          ? visible + ' из ' + signs.length
+          : signs.length + ' ' + paleoSignCountWord(signs.length);
+      }
+      if (empty) empty.hidden = visible !== 0;
+    }
+
+    if (search) search.addEventListener('input', function() { applyFilter(this.value); });
+    applyFilter('');
+    signs.forEach(function(sign) {
+      sign.addEventListener('click', function(e) {
+        e.preventDefault();
+        if (window.LabRouter) {
+          LabRouter.navigate('paleo-mechanics', [this.getAttribute('data-key')]);
+          return;
+        }
+        pageState['paleo-mechanics'].key = this.getAttribute('data-key');
+        renderDocumentPage(container, 'paleo-mechanics', data);
+      });
+    });
+  }
+
+  function paleoSignCountWord(count) {
+    var mod100 = count % 100;
+    var mod10 = count % 10;
+    if (mod100 >= 11 && mod100 <= 14) return 'знаков';
+    if (mod10 === 1) return 'знак';
+    if (mod10 >= 2 && mod10 <= 4) return 'знака';
+    return 'знаков';
   }
 
   function renderDocumentPage(container, page, data) {
@@ -782,51 +896,26 @@ const PageController = (function() {
       return;
     }
     if (!state.key) {
-      var paleoIcons = {
-        'aleph': 'paleo/aleph.png',
-        'bet': 'ui/home.png',
-        'gimel': 'desert/camel.svg',
-        'dalet': 'nav/door.png',
-        'he': 'ui/anchor.png',
-        'vav': 'ui/link.png',
-        'zayin': 'weapons/sword.png',
-        'het': 'ui/grid.png',
-        'tet': 'ui/inbox.png',
-        'yod': 'ui/group.png',
-        'kaf': 'ui/group.png',
-        'lamed': 'ui/arrows.png',
-        'mem': 'ui/hourglass.png',
-        'nun': 'paleo/track.png',
-        'samekh': 'ui/info.png',
-        'ayin': 'ui/question.png',
-        'pe': 'ui/group.png',
-        'tsade': 'ui/link.png',
-        'qof': 'ui/group.png',
-        'resh': 'paleo/track.png',
-        'shin': 'ui/markbook.png',
-        'tav': 'ui/check.png'
-      };
-      var defaultIcon = 'paleo/track.png';
-      var docCards = keys.map(function(key, index) {
-        var doc = data[key];
-        var icon = paleoIcons[key] || defaultIcon;
-        return '<a href="#" class="doc-card" data-key="' + escapeHtml(key) + '" style="animation-delay: ' + (index * 30) + 'ms">' +
-          '<span class="doc-card-icon"><img src="assets/icons/32/' + icon + '" alt=""></span>' +
+      if (page === 'paleo-mechanics') {
+        renderPaleoMechanicsIndex(container, keys, data);
+        return;
+      }
+      var docCards = keys.map(function(key) {
+        var doc = data[key] || {};
+        return '<a href="#" class="doc-card" data-key="' + escapeHtml(key) + '">' +
           '<span class="doc-card-body">' +
             '<span class="doc-card-title">' + escapeHtml(doc.title || key) + '</span>' +
-            '<span class="doc-card-desc">' + escapeHtml((doc.description || '').split('---')[0].trim().substring(0, 80) + (doc.description && doc.description.length > 80 ? '...' : '')) + '</span>' +
+            '<span class="doc-card-desc">' + escapeHtml(safeDocSummary(doc.description)) + '</span>' +
           '</span>' +
           '<span class="doc-card-arrow" aria-hidden="true">→</span>' +
           '</a>';
       }).join('');
-      var heading = page === 'paleo-mechanics' ? 'Палео-механика' : 'Методички';
-      container.innerHTML = page === 'paleo-mechanics'
-        ? '<div id="paleo-mechanics" class="paleo-mechanics-page"><div class="doc-grid" id="doc-grid">' + docCards + '</div></div>'
-        : '<div class="research-page-head">' +
-          '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">' + heading + '</h1>' +
-          '<p class="subtitle">Материалы ResearchLab, собранные из исходных Markdown-документов.</p>' +
-          '</div>' +
-          '<div class="doc-grid" id="doc-grid">' + docCards + '</div>';
+      var heading = 'Методички';
+      container.innerHTML = '<div class="research-page-head">' +
+        '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" class="lab-icon" alt="">' + heading + '</h1>' +
+        '<p class="subtitle">Материалы ResearchLab, собранные из исходных Markdown-документов.</p>' +
+        '</div>' +
+        '<div class="doc-grid" id="doc-grid">' + docCards + '</div>';
       var docGrid = document.getElementById('doc-grid');
       if (docGrid) {
         docGrid.querySelectorAll('.doc-card').forEach(function(card) {
@@ -869,7 +958,14 @@ const PageController = (function() {
         summary = summary ? summary.charAt(0).toLocaleUpperCase('ru-RU') + summary.slice(1) : 'Краткое описание механизма подмены.';
         var icon = mechanismIcons[mechanismIndex % mechanismIcons.length];
         mechanismIndex++;
-        return '<article class="research-section methodology-card"><div class="methodology-card-head"><h2><img src="assets/icons/32/' + icon + '" class="methodology-card-icon" alt="" aria-hidden="true">' + escapeHtml(section.title || '').replace(/^\s*\d+[.)\-:]?\s*/, '') + '</h2></div><div class="research-section-content"><p>' + escapeHtml(summary) + '</p></div></article>';
+        // Та же строка реестра, что и в methodology.js: номер, иконка, имя, короткий текст.
+        return '<article class="research-section methodology-card">' +
+          '<div class="methodology-card-body">' +
+            '<div class="methodology-card-head"><img src="assets/icons/32/' + icon + '" class="methodology-card-icon" alt="" aria-hidden="true">' +
+            '<h2 class="methodology-card-title">' + escapeHtml(section.title || '').replace(/^\s*\d+[.)\-:]?\s*/, '') + '</h2></div>' +
+            '<div class="research-section-content"><p>' + escapeHtml(summary) + '</p></div>' +
+          '</div>' +
+        '</article>';
       }
       var content = typeof marked !== 'undefined' && marked.parse ? marked.parse(section.content || '') : escapeHtml(section.content || '');
       return '<article class="research-section"><h2>' + escapeHtml(section.title || '') + '</h2><div class="research-section-content">' + content + '</div></article>';
@@ -2488,18 +2584,19 @@ const PageController = (function() {
         break;
 
       case 'word-analyzer':
-        container.innerHTML = '<textarea id="wa-input" class="lab-textarea" rows="8" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
-          '<div class="flex gap-8 mb-16">' +
-          '<button class="lab-btn lab-btn-primary" onclick="WordAnalyzer.analyze()"><img src="assets/icons/32/archaeology/testtube.svg" width="32" height="32" alt="Разобрать" style="vertical-align: middle; margin-right: 6px;"> Разобрать</button>' +
-          '<button class="lab-btn lab-btn-secondary" onclick="document.getElementById(\'wa-input\').value=\'\';document.getElementById(\'wa-grid\').innerHTML=\'\';document.getElementById(\'wa-export\').style.display=\'none\';document.getElementById(\'wa-status\').className=\'lab-alert lab-alert-info\';document.getElementById(\'wa-status\').textContent=\'Введите слова для разбора.\'"><img src="assets/icons/32/nav/alert.png" width="32" height="32" alt="Очистить" style="vertical-align: middle; margin-right: 6px;"> Очистить</button>' +
+        container.innerHTML = '<div class="wa-shell">' +
+          '<textarea id="wa-input" class="lab-textarea wa-input" rows="3" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
+          '<div class="wa-toolbar">' +
+            '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="WordAnalyzer.analyze()">Разобрать</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.clear()">Очистить</button>' +
+            '<div id="wa-export" class="wa-export" style="display:none">' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
+            '</div>' +
           '</div>' +
-          '<div id="wa-status" class="lab-alert lab-alert-info">Введите слова для разбора.</div>' +
-          '<div id="wa-export" class="export-bar" style="display:none">' +
-          '<span class="export-title">Экспорт</span>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
-          '</div>' +
-          '<div id="wa-grid" class="wa-grid"></div>';
+          '<p id="wa-status" class="wa-status">Введите слова для разбора.</p>' +
+          '<div id="wa-grid" class="wa-grid"></div>' +
+        '</div>';
         container.dataset.loaded = '1';
         applyQueryParam(parsed, 'wa-input',
           function() { return typeof WordAnalyzer !== 'undefined'; },

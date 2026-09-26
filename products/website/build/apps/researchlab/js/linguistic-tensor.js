@@ -80,17 +80,19 @@
       var rightTone = row.right > row.left ? 'lead' : (row.right < row.left ? 'trail' : 'equal');
       var lead = row.delta === 0 ? 'Сопоставимая плотность' :
         (row.delta > 0 ? left.name + ' · выше плотность' : right.name + ' · выше плотность');
-      return '<article class="tensor-axis-card" aria-labelledby="tensor-axis-' + index + '">' +
-        '<div class="tensor-axis-head"><span class="tensor-axis-number">0' + (index + 1) + '</span><div><h3 id="tensor-axis-' + index + '">' + escapeHtml(row.axis.title) + '</h3><p>' + escapeHtml(row.axis.hint) + '</p></div></div>' +
-        '<div class="tensor-lane"><div class="tensor-lane-label"><span>' + escapeHtml(left.name) + '</span><strong>' + row.left + '</strong></div>' + bar(row.left, leftTone) + '</div>' +
-        '<div class="tensor-lane"><div class="tensor-lane-label"><span>' + escapeHtml(right.name) + '</span><strong>' + row.right + '</strong></div>' + bar(row.right, rightTone) + '</div>' +
+      return '<article class="tensor-axis" role="listitem">' +
+        '<div class="tensor-axis-head"><span class="tensor-axis-number">' + (index + 1) + '</span><div class="tensor-axis-titles"><h3 id="tensor-axis-' + index + '">' + escapeHtml(row.axis.title) + '</h3><p>' + escapeHtml(row.axis.hint) + '</p></div></div>' +
+        '<div class="tensor-lanes">' +
+        '<div class="tensor-lane"><span class="tensor-lane-label">' + escapeHtml(left.name) + '</span>' + bar(row.left, leftTone) + '</div>' +
+        '<div class="tensor-lane"><span class="tensor-lane-label">' + escapeHtml(right.name) + '</span>' + bar(row.right, rightTone) + '</div>' +
+        '</div>' +
         '<p class="tensor-axis-verdict">' + escapeHtml(lead) + '</p></article>';
     }).join('');
     container.querySelector('#tensor-results').innerHTML =
       '<section class="tensor-results" aria-labelledby="tensor-results-title">' +
-      '<div class="tensor-results-head"><div><p class="tensor-kicker">СЛОЙ СРАВНЕНИЯ · 06 ОСЕЙ</p><h2 id="tensor-results-title">Плотность языкового потока</h2></div>' +
-      '<div class="tensor-totals"><span><b>' + analysis.leftTotal + '</b> ' + escapeHtml(left.name) + '</span><span><b>' + analysis.rightTotal + '</b> ' + escapeHtml(right.name) + '</span></div></div>' +
-      '<div class="tensor-axis-grid" aria-label="Сравнение по шести осям">' + cards + '</div>' +
+      '<div class="tensor-results-head"><div class="tensor-results-titles"><p class="tensor-kicker">СЛОЙ СРАВНЕНИЯ · 06 ОСЕЙ</p><h2 id="tensor-results-title">Плотность языкового потока</h2></div>' +
+      '<div class="tensor-totals"><span><b>' + analysis.leftTotal + '</b>' + escapeHtml(left.name) + '</span><i aria-hidden="true">/</i><span><b>' + analysis.rightTotal + '</b>' + escapeHtml(right.name) + '</span></div></div>' +
+      '<div class="tensor-matrix" role="list" aria-label="Сравнение по шести осям">' + cards + '</div>' +
       '<aside class="tensor-verdict" aria-labelledby="tensor-verdict-title"><div><p class="tensor-kicker">ИТОГОВЫЙ ВЕРДИКТ</p><h2 id="tensor-verdict-title">' + escapeHtml(analysis.verdict) + '</h2><p>Баллы нормированы по шкале 0–100 и собраны из исследовательских признаков Карты языков.</p></div><button type="button" class="lab-btn lab-btn-secondary tensor-copy" id="tensor-copy">Копировать как промпт</button></aside>' +
       '</section>';
     var copyButton = container.querySelector('#tensor-copy');

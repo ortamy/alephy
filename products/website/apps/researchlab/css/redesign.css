@@ -757,3 +757,108 @@ html[data-theme="beige"] .lab-header .logo img[src*="alephy-logo"] {
   .lab-header nav a.icon-link:active,
   .lab-header .lang-btn:active { transform: none; }
 }
+
+/* =============================================
+   МИНИМАЛИЗМ + КОМПАКТНОСТЬ (слой 4, 2026-09-26).
+   Задача: убрать «воздух» и лишние рамки, не ломая модульные CSS.
+   1) Базовый текст 15px/1.55 вместо 18px/1.8 — главный источник пустоты.
+   2) Сайдбар 208px, пункты 13px, иконки 16px.
+   3) Контент: плоскость без «плавающей карточки», ширина --shell-page.
+   4) Hero: одна плотная шапка, kicker + title + subtitle в 2 строки.
+   5) Панели и карточки: 16px вместо 24px, пустые состояния 72px.
+   Читалки (Манифест, Книгочтение) сохраняют крупный кегль.
+   ============================================= */
+
+body {
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+/* --- Сайдбар: плотнее по вертикали и по ширине --- */
+.lab-sidebar {
+  width: 208px;
+  min-width: 208px;
+}
+.sidebar-item {
+  min-height: 30px;
+  padding: 3px var(--space-4) 3px var(--space-5);
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+}
+.sidebar-item .icon,
+.sidebar-item .icon img { width: 16px; height: 16px; font-size: var(--text-sm); }
+.sidebar-section-header { min-height: 24px; padding: 2px var(--space-4); }
+.sidebar-section-header .icon,
+.sidebar-section-header .icon img { width: 13px; height: 13px; }
+
+/* --- Контент: одна рамка (панели), а не две (карточка + панели) --- */
+.lab-content {
+  margin: var(--space-2) var(--space-3) var(--space-3);
+  padding: var(--space-4);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lab-content > .module,
+.lab-content > .research-page {
+  max-width: var(--shell-page);
+  margin-inline: auto;
+}
+
+/* --- Hero: шапка раздела в две строки --- */
+.lab-hero,
+[data-lab-hero] {
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-md);
+}
+.lab-hero__icon { width: 20px; height: 20px; }
+.lab-hero__glyph { width: 28px; height: 28px; font-size: 16px; }
+.lab-hero__glyph svg { width: 16px; height: 16px; }
+[data-lab-hero] .lab-hero__kicker,
+.module .lab-hero__kicker { margin-bottom: 2px; font-size: var(--ui-10); }
+[data-lab-hero] .lab-hero__title,
+.module .lab-hero__title {
+  margin-bottom: 2px;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.2;
+}
+[data-lab-hero] .lab-hero__subtitle,
+.module .lab-hero__subtitle { font-size: var(--text-sm); line-height: 1.45; }
+.lab-hero__meta { margin-top: var(--space-2); gap: 6px; }
+.lab-hero__chip { min-height: 20px; padding: 1px 8px; font-size: var(--ui-10); }
+
+/* --- Панели: 16px, зазор 12px --- */
+.lab-panel {
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+.lab-panel-row { gap: var(--space-3); }
+
+/* --- Пустые состояния и скелетоны: минимум высоты --- */
+.lab-empty,
+.lab-skeleton { min-height: 72px; padding: var(--space-3); }
+.lab-empty-glyph { font-size: 20px; }
+
+/* --- Карточки и витрины --- */
+.lab-card { padding: var(--space-4); margin-bottom: var(--space-4); }
+.gc-grid { gap: 8px; }
+.gc-card { padding: 10px 12px; }
+.gc-card-icon { width: 28px; height: 28px; border-radius: var(--radius-sm); }
+.gc-card-icon img { width: 16px; height: 16px; }
+
+/* --- Заголовки разделов: кегль по размеру, а не по пафосу --- */
+.module h2:not(:last-child) {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+}
+
+/* --- Мобильный закон: тач-таргеты 44px сохраняются --- */
+@media (max-width: 768px) {
+  .sidebar-item { min-height: 44px; font-size: 16px; padding-block: 10px; }
+  .sidebar-section-header { min-height: 40px; }
+  .lab-content { margin: 0; padding: var(--space-3); }
+  .lab-panel { padding: var(--space-4); }
+}

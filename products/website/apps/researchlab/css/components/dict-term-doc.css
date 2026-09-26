@@ -5,11 +5,24 @@
    ============================================= */
 
 /* ===== DICT/TERM/DOC GRIDS ===== */
-.dict-grid, .term-grid, .doc-grid {
+.dict-grid, .term-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-4);
   margin-bottom: var(--space-5);
+}
+
+/* Реестр документов — единая панель: зазор 1px поверх --border-light
+   рисует сетку разделителей, flex-wrap убирает «хвост» пустых ячеек. */
+.doc-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  margin-bottom: var(--space-5);
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
 /* ===== DICT REGISTRY: ICON CHIP + CARD ~120px (hairline, без теней) ===== */
@@ -259,43 +272,55 @@
   color: var(--text-secondary);
 }
 
-/* ===== DOC CARD ===== */
+/* ===== DOC CARD: плоский реестр документов =====
+   Те же волосяные разделители, что в .mech-index и .methodology-card:
+   без рамок на карточку, без теней, без hover-подъёма. */
 .doc-card {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  flex: 1 1 21rem;
+  grid-template-columns: minmax(0, 1fr) 1rem;
+  align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-5);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-4);
+  color: inherit;
   text-decoration: none;
-  cursor: pointer;
-  transition: all var(--motion-base);
-  box-shadow: var(--shadow-card);
+  background: var(--surface);
+  transition: background var(--motion-base);
 }
-.doc-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-  border-color: var(--accent-gold);
+.doc-card:hover,
+.doc-card:focus-visible {
+  background: var(--surface-hover);
+  outline: none;
 }
-.doc-card:active {
-  transform: translateY(-1px);
-}
-.doc-card .doc-icon {
-  width: 48px;
-  height: 48px;
+.doc-card-body { min-width: 0; }
+.doc-card-title {
   display: block;
-  margin-bottom: var(--space-1);
-}
-.doc-card .doc-name {
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  font-weight: 600;
   color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1.3;
 }
-.doc-card .doc-desc {
-  font-size: var(--text-sm);
+.doc-card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 2px;
   color: var(--text-secondary);
-  line-height: var(--leading-ui);
+  font-size: var(--ui-12);
+  line-height: 1.45;
+}
+.doc-card-arrow {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  opacity: 0;
+  transition: opacity var(--motion-base), transform var(--motion-base);
+}
+.doc-card:hover .doc-card-arrow,
+.doc-card:focus-visible .doc-card-arrow {
+  opacity: 1;
+  transform: translateX(2px);
 }
 

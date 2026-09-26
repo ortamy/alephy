@@ -1,0 +1,46 @@
+<!-- Чекер стран. Шапка — реестр LabHero (локального hero-дубля нет);
+     каркас панелей и глав — css/components/panels.css. -->
+<section class="stc-shell" aria-label="Чекер стран">
+  <div class="lab-panel-row">
+    <section class="lab-panel" aria-labelledby="stc-input-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">01</span>
+        <h2 class="lab-chapter-title" id="stc-input-title" data-i18n="lab.stateChecker.inputTitle">Страна</h2>
+      </header>
+      <p class="lab-chapter-note" data-i18n="lab.stateChecker.inputNote">Диагностика по восьми состояниям пространств: доминанта, распределение, вывод.</p>
+      <form class="stc-form" id="stc-form">
+        <input type="text" id="stc-input" class="lab-input stc-input" autocomplete="off"
+               placeholder="Например: Израиль, Египет, Рим"
+               aria-label="Название страны"
+               data-i18n-attr="placeholder:lab.stateChecker.placeholder;aria-label:lab.stateChecker.inputLabel" />
+        <button type="submit" id="stc-check-btn" class="lab-btn lab-btn-primary">
+          <i data-lucide="scan-search" aria-hidden="true"></i>
+          <span data-i18n="lab.stateChecker.check">Проверить</span>
+        </button>
+        <span class="stc-hint" data-i18n="lab.stateChecker.ctrlEnter">Ctrl+Enter</span>
+      </form>
+      <p class="lab-status" id="stc-status" role="status" aria-live="polite"></p>
+      <div class="lab-examples" role="group" aria-label="Примеры"
+           data-i18n-attr="aria-label:lab.stateChecker.examplesLabel">
+        <span class="lab-examples-label" data-i18n="lab.stateChecker.examplesLabel">Примеры</span>
+        <button type="button" class="lab-example-chip" data-stc-example="Израиль">Израиль</button>
+        <button type="button" class="lab-example-chip" data-stc-example="Египет">Египет</button>
+        <button type="button" class="lab-example-chip" data-stc-example="Рим">Рим</button>
+      </div>
+    </section>
+
+    <section class="lab-panel" aria-labelledby="stc-result-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="stc-result-title" data-i18n="lab.stateChecker.resultTitle">Результат</h2>
+        <span class="wb-badge" id="stc-result-badge" data-i18n="lab.stateChecker.stateEmpty">Ожидание</span>
+      </header>
+      <div class="stc-output" id="stc-output">
+        <div class="lab-empty">
+          <span class="lab-empty-glyph" aria-hidden="true">𐤕</span>
+          <p class="lab-empty-hint" data-i18n="lab.stateChecker.emptyHint">Введите страну и нажмите «Проверить».</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

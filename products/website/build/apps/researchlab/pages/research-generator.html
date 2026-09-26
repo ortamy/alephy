@@ -1,0 +1,73 @@
+<!-- Генератор исследований: живой конструктор маршрута. Шапка — реестр LabHero
+     (локального hero-дубля нет); панели, главы и пустое состояние — css/components/panels.css. -->
+<section class="rg-shell" aria-label="Генератор исследований">
+  <div class="rg-layout">
+    <div class="rg-side">
+      <section class="lab-panel" aria-labelledby="rg-params-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">01</span>
+          <h2 class="lab-chapter-title" id="rg-params-title" data-i18n="lab.researchGenerator.paramsTitle">Параметры</h2>
+        </header>
+        <form id="rg-form" class="rg-form" novalidate>
+          <div class="rg-field">
+            <span class="rg-label" id="rg-type-label" data-i18n="lab.researchGenerator.typeLabel">Тип</span>
+            <div class="rg-types" role="group" aria-labelledby="rg-type-label">
+              <button type="button" class="lab-example-chip rg-type-chip is-active" data-rg-type="root" aria-pressed="true" data-i18n="lab.researchGenerator.typeRoot">Корень</button>
+              <button type="button" class="lab-example-chip rg-type-chip" data-rg-type="word" aria-pressed="false" data-i18n="lab.researchGenerator.typeWord">Слово</button>
+              <button type="button" class="lab-example-chip rg-type-chip" data-rg-type="verse" aria-pressed="false" data-i18n="lab.researchGenerator.typeVerse">Стих</button>
+              <button type="button" class="lab-example-chip rg-type-chip" data-rg-type="concept" aria-pressed="false" data-i18n="lab.researchGenerator.typeConcept">Концепт</button>
+            </div>
+          </div>
+          <div class="rg-field">
+            <label class="rg-label" for="rg-topic" data-i18n="lab.researchGenerator.topicLabel">Тема</label>
+            <input type="text" id="rg-topic" class="lab-input" maxlength="160" autocomplete="off"
+                   placeholder="Например: חֶסֶד или подмена смысла слова «закон»"
+                   data-i18n-attr="placeholder:lab.researchGenerator.topicPlaceholder">
+          </div>
+          <div class="lab-examples" role="group" aria-label="Примеры тем"
+               data-i18n-attr="aria-label:lab.researchGenerator.examplesLabel">
+            <span class="lab-examples-label" data-i18n="lab.researchGenerator.examplesLabel">Примеры</span>
+            <button type="button" class="lab-example-chip" data-rg-example="חֶסֶד">חֶסֶד</button>
+            <button type="button" class="lab-example-chip" data-rg-example="Подмена слова «закон»">Подмена слова «закон»</button>
+            <button type="button" class="lab-example-chip" data-rg-example="Берешит 1:1">Берешит 1:1</button>
+          </div>
+          <footer class="rg-form-footer">
+            <button type="submit" id="rg-generate" class="lab-btn lab-btn-primary" disabled data-i18n="lab.researchGenerator.generate">Сгенерировать</button>
+            <button type="button" id="rg-clear" class="rg-icon-button" title="Очистить" aria-label="Очистить"
+                    data-i18n-attr="title:lab.researchGenerator.clear;aria-label:lab.researchGenerator.clear">×</button>
+          </footer>
+          <p class="lab-status" id="rg-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="lab-panel" aria-labelledby="rg-route-title">
+        <header class="lab-chapter">
+          <span class="lab-chapter-num" aria-hidden="true">02</span>
+          <h2 class="lab-chapter-title" id="rg-route-title" data-i18n="lab.researchGenerator.routeTitle">Маршрут</h2>
+        </header>
+        <div id="rg-route" class="rg-route" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <section class="lab-panel rg-preview-panel" aria-labelledby="rg-preview-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">03</span>
+        <h2 class="lab-chapter-title" id="rg-preview-title" data-i18n="lab.researchGenerator.previewTitle">Превью</h2>
+      </header>
+      <div id="rg-preview" class="rg-preview" aria-live="polite"></div>
+      <div class="rg-actions" id="rg-actions" hidden>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-rg-action="copy" data-i18n="lab.researchGenerator.copy">Копировать Markdown</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-rg-action="md" data-i18n="lab.researchGenerator.downloadMd">Скачать .md</button>
+        <a class="rg-door" href="#exposure-editor"><span data-i18n="lab.researchGenerator.doorCase">Создать дело в исследованиях</span> →</a>
+      </div>
+    </section>
+  </div>
+
+  <section class="lab-panel rg-history-panel" aria-labelledby="rg-history-title">
+    <header class="lab-chapter">
+      <span class="lab-chapter-num" aria-hidden="true">04</span>
+      <h2 class="lab-chapter-title" id="rg-history-title" data-i18n="lab.researchGenerator.historyTitle">История</h2>
+    </header>
+    <div id="rg-history" class="rg-history"></div>
+  </section>
+</section>
