@@ -2387,20 +2387,21 @@ const PageController = (function() {
       if (window.LabHero && window.LabHero.setView) {
         window.LabHero.setView('pipelines', 'pipeline', { title: pipeline.name, subtitle: pipeline.description || 'Цепочка передачи контекста', icon: 'paleo/track.png', meta: [latest ? 'Есть сохранённый запуск' : 'Ожидание запуска'] });
       }
-      container.innerHTML = '<article class="pipeline-detail-page"><div class="pipeline-back-container"><button type="button" class="lab-btn lab-btn-secondary" data-pipeline-back>К пайплайнам</button></div><section class="pipeline-detail-card"><h2>Запуск</h2><label>Запрос<textarea class="lab-input" data-pipeline-query rows="3">' + escapeHtml(latest && latest.query || pipeline.defaultQuery || '') + '</textarea></label><div class="pipeline-card-buttons"><button class="lab-btn lab-btn-primary" data-pipeline-detail-run>Запустить локально</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-open-result>Открыть результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-copy>Копировать результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-json>Экспорт JSON</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-markdown>Экспорт Markdown</button></div><p class="pipeline-run-status" data-pipeline-detail-status>Последний запуск: ' + escapeHtml(latest ? formatPipelineDate(latest.createdAt) : 'нет') + '</p></section><div class="pipeline-detail-grid"><section class="pipeline-detail-card"><h2>Цепочка процесса</h2><p class="pipeline-detail-note">Показаны доступные факты выполнения. Скрытые рассуждения не отображаются.</p><ol class="pipeline-process-list">' + steps + '</ol></section><section class="pipeline-detail-card" id="pipeline-result"><h2>Результат</h2><p>' + escapeHtml(body.aiSummary || body.summary || 'Запустите локальный пайплайн, чтобы получить результат.') + '</p>' + (body.limitations ? '<p class="pipeline-result-limitations"><strong>Ограничения:</strong> ' + escapeHtml(body.limitations) + '</p>' : '') + '</section></div><section class="pipeline-detail-card"><h2>История запусков</h2><ul class="pipeline-detail-history">' + (history.map(function(item) { return '<li><strong>' + escapeHtml(item.title || pipeline.name) + '</strong><span>' + escapeHtml(formatPipelineDate(item.createdAt)) + '</span><p>' + escapeHtml(item.query || '') + '</p></li>'; }).join('') || '<li>Сохранённых запусков пока нет.</li>') + '</ul></section></article>';
+      container.innerHTML = '<article class="pipeline-detail-page"><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">01</span><div><h2>Запуск</h2><p>Локальный прогон цепочки агентов.</p></div></header><label class="pipeline-detail-label" for="pipeline-detail-query">Запрос</label><textarea id="pipeline-detail-query" class="lab-input" data-pipeline-query rows="2">' + escapeHtml(latest && latest.query || pipeline.defaultQuery || '') + '</textarea><div class="pipeline-detail-actions"><button class="lab-btn lab-btn-primary" data-pipeline-detail-run>Запустить локально</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-open-result>Открыть результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-copy>Копировать результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-json>Экспорт JSON</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-markdown>Экспорт Markdown</button></div><p class="pipeline-run-status" data-pipeline-detail-status>Последний запуск: ' + escapeHtml(latest ? formatPipelineDate(latest.createdAt) : 'нет') + '</p></section><div class="pipeline-detail-grid"><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">02</span><div><h2>Цепочка процесса</h2><p>Доступные факты выполнения. Скрытые рассуждения не отображаются.</p></div></header><ol class="pipeline-process-list">' + steps + '</ol></section><section class="pipeline-detail-card" id="pipeline-result"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">03</span><div><h2>Результат</h2></div></header><p class="pipeline-result-body">' + escapeHtml(body.aiSummary || body.summary || 'Запустите локальный пайплайн, чтобы получить результат.') + '</p>' + (body.limitations ? '<p class="pipeline-result-limitations"><strong>Ограничения:</strong> ' + escapeHtml(body.limitations) + '</p>' : '') + '</section></div><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">04</span><div><h2>История запусков</h2></div></header><ul class="pipeline-detail-history">' + (history.map(function(item) { return '<li><strong>' + escapeHtml(item.title || pipeline.name) + '</strong><span>' + escapeHtml(formatPipelineDate(item.createdAt)) + '</span><p>' + escapeHtml(item.query || '') + '</p></li>'; }).join('') || '<li>Сохранённых запусков пока нет.</li>') + '</ul></section></article>';
       var status = container.querySelector('[data-pipeline-detail-status]');
-      container.querySelector('[data-pipeline-back]').addEventListener('click', function() { window.location.hash = 'pipelines'; });
+      // Статус: текст + тон, чтобы ошибка/успех читались без цветовой зависимости.
+      function setPipelineStatus(message, tone) { status.textContent = message; status.className = 'pipeline-run-status' + (tone ? ' is-' + tone : ''); }
       container.querySelector('[data-pipeline-detail-open-result]').addEventListener('click', function() { var result = document.getElementById('pipeline-result'); if (result) result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
       container.querySelector('[data-pipeline-detail-run]').addEventListener('click', function() {
         var button = this;
         button.disabled = true;
-        status.textContent = 'Пайплайн выполняется и сохраняется…';
-        fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: container.querySelector('[data-pipeline-query]').value.trim() }) }).then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function() { renderPipelineDetail(container, pipelineId); }).catch(function(error) { button.disabled = false; status.textContent = 'Не удалось запустить: ' + error.message; });
+        setPipelineStatus('Пайплайн выполняется и сохраняется…');
+        fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: container.querySelector('[data-pipeline-query]').value.trim() }) }).then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function() { renderPipelineDetail(container, pipelineId); }).catch(function(error) { button.disabled = false; setPipelineStatus('Не удалось запустить: ' + error.message, 'error'); });
       });
       container.querySelector('[data-pipeline-detail-copy]').addEventListener('click', function() {
         var text = body.aiSummary || body.summary || '';
-        if (!text || !navigator.clipboard) { status.textContent = 'Копирование недоступно в этом браузере.'; return; }
-        navigator.clipboard.writeText(text).then(function() { status.textContent = 'Результат скопирован.'; }).catch(function() { status.textContent = 'Не удалось скопировать результат.'; });
+        if (!text || !navigator.clipboard) { setPipelineStatus('Копирование недоступно в этом браузере.', 'error'); return; }
+        navigator.clipboard.writeText(text).then(function() { setPipelineStatus('Результат скопирован.', 'success'); }).catch(function() { setPipelineStatus('Не удалось скопировать результат.', 'error'); });
       });
       container.querySelector('[data-pipeline-detail-json]').addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.json', JSON.stringify({ pipeline: pipeline, result: latest || null }, null, 2), 'application/json'); });
       container.querySelector('[data-pipeline-detail-markdown]').addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.md', '# ' + pipeline.name + '\n\n' + (body.aiSummary || body.summary || '') + '\n\n## Ограничения\n\n' + (body.limitations || ''), 'text/markdown'); });
@@ -2758,29 +2759,92 @@ const PageController = (function() {
         break;
 
       case 'vision':
-        container.innerHTML = '<h1><img src="assets/icons/32/archaeology/lamp.png" width="32" height="32" alt="Визуальный анализатор" style="vertical-align: middle; margin-right: 6px;"> Визуальный анализатор</h1>' +
-          '<p class="subtitle">Загрузите изображение для анализа. Модель опишет содержимое: текст, символы, объекты.</p>' +
-          '<div class="flex gap-8 mb-16">' +
-          '<button class="lab-btn lab-btn-primary" data-mode="huggingface" onclick="VisionUI.setMode(\'huggingface\')"><i data-lucide="cloud" aria-hidden="true"></i> Hugging Face API</button>' +
-          '<button class="lab-btn lab-btn-secondary" data-mode="local" onclick="VisionUI.setMode(\'local\')"><i data-lucide="server" aria-hidden="true"></i> Локальный сервер</button></div>' +
-          '<div class="lab-card"><div class="lab-card-header"><img src="assets/icons/32/nav/door.png" width="32" height="32" alt="Настройки" style="vertical-align: middle; margin-right: 6px;"> Настройки</div><div class="lab-card-body">' +
-          '<label class="mb-8" style="display:block;font-weight:600;">API ключ Hugging Face</label>' +
-          '<div class="text-small text-muted mb-8"><a href="https://huggingface.co/settings/tokens" target="_blank" style="color:#b8860b;">Получить бесплатный ключ</a></div>' +
-          '<div class="flex gap-8"><input type="password" id="vi-apikey" class="lab-input" placeholder="hf_xxxxxxxxxxxx" style="max-width:400px;" />' +
-          '<button class="lab-btn lab-btn-secondary" onclick="VisionUI.saveKey()"><i data-lucide="save" aria-hidden="true"></i> Сохранить</button></div></div></div>' +
-          '<div class="lab-card" style="text-align:center;cursor:pointer;" onclick="document.getElementById(\'vi-file\').click()">' +
-          '<div id="vi-preview" style="display:none;margin-bottom:12px;">' +
-          '<img id="vi-img" src="" alt="preview" style="max-width:100%;max-height:300px;border-radius:4px;border:1px solid #d4c4a8;" />' +
-          '<button class="lab-btn lab-btn-secondary mt-8" onclick="event.stopPropagation();VisionUI.remove()"><i data-lucide="trash-2" aria-hidden="true"></i> Удалить</button></div>' +
-          '<div id="vi-placeholder"><span><img src="assets/icons/32/ui/placeholder.svg" width="32" height="32" alt="Изображение" style="vertical-align: middle; margin-right: 6px;"></span><div style="font-size:18px;color:#2c1810;margin-top:8px;">Нажмите, чтобы загрузить</div>' +
-          '<div class="text-muted text-small mt-8">PNG, JPG, WEBP — до 10 МБ</div></div>' +
-          '<input type="file" id="vi-file" accept="image/png,image/jpeg,image/jpg,image/webp" style="display:none;" onchange="VisionUI.load(event)" /></div>' +
-          '<button class="lab-btn lab-btn-primary" id="vi-analyze-btn" onclick="VisionUI.analyze()" disabled style="width:100%;justify-content:center;padding:14px;font-size:18px;margin-bottom:16px;"><i data-lucide="image" aria-hidden="true"></i> Анализировать</button>' +
+        container.innerHTML = '<div class="vi-bento">' +
+          // 01 · Поле изображения
+          '<section class="vi-cell vi-cell--drop" aria-labelledby="vi-drop-title">' +
+          '<div class="vi-cell-head"><span class="vi-num">01</span><h2 class="vi-cell-title" id="vi-drop-title">Изображение</h2>' +
+          '<span class="vi-cell-hint">PNG, JPG, WEBP · до 10 МБ</span></div>' +
+          '<div class="vi-drop" id="vi-drop" role="button" tabindex="0" aria-describedby="vi-drop-title"' +
+          ' onclick="document.getElementById(\'vi-file\').click()"' +
+          ' onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();document.getElementById(\'vi-file\').click();}"' +
+          ' ondragover="VisionUI.dragOver(event)" ondragleave="VisionUI.dragLeave(event)" ondrop="VisionUI.drop(event)">' +
+          '<div class="vi-preview" id="vi-preview" style="display:none;">' +
+          '<img class="vi-preview-img" id="vi-img" src="" alt="Загруженное изображение">' +
+          // Метаданные снимка: без них пользователь не знает, какой файл ушёл в модель.
+          '<p class="vi-file-meta" id="vi-file-meta"></p>' +
+          '<div class="vi-preview-actions">' +
+          '<button type="button" class="lab-btn lab-btn-secondary" onclick="event.stopPropagation();VisionUI.remove()"><i data-lucide="trash-2" aria-hidden="true"></i> Убрать</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" onclick="event.stopPropagation();document.getElementById(\'vi-file\').click()"><i data-lucide="refresh-cw" aria-hidden="true"></i> Заменить</button>' +
+          '</div></div>' +
+          '<div class="vi-empty" id="vi-placeholder"><i data-lucide="image-plus" class="vi-empty-glyph" aria-hidden="true"></i>' +
+          '<p class="vi-empty-title">Нажмите или перетащите изображение</p>' +
+          '<p class="vi-empty-hint">Модель прочтёт текст, знаки, символы и объекты</p>' +
+          '<p class="vi-kbd-hint"><kbd>Enter</kbd> — открыть выбор файла</p></div>' +
+          '<input class="vi-file" type="file" id="vi-file" accept="image/png,image/jpeg,image/jpg,image/webp" onchange="VisionUI.load(event)" />' +
+          '</div></section>' +
+          // 02 · Режим
+          '<section class="vi-cell vi-cell--mode" aria-labelledby="vi-mode-title">' +
+          '<div class="vi-cell-head"><span class="vi-num">02</span><h2 class="vi-cell-title" id="vi-mode-title">Режим</h2></div>' +
+          '<div class="vi-segment" role="group" aria-label="Источник анализа">' +
+          '<button type="button" class="lab-btn vi-segment-btn" data-mode="huggingface" aria-pressed="false" onclick="VisionUI.setMode(\'huggingface\')"><i data-lucide="cloud" aria-hidden="true"></i> Hugging Face</button>' +
+          '<button type="button" class="lab-btn vi-segment-btn" data-mode="local" aria-pressed="false" onclick="VisionUI.setMode(\'local\')"><i data-lucide="server" aria-hidden="true"></i> Локальный сервер</button></div>' +
+          '<p class="vi-note" id="vi-mode-note"></p>' +
+          // Точный адрес запроса: пользователь должен видеть, куда уходит снимок.
+          '<p class="vi-endpoint"><span class="vi-endpoint-label">Запрос уйдёт на</span><code id="vi-endpoint">—</code></p></section>' +
+          // 03 · Ключ
+          '<section class="vi-cell vi-cell--key" aria-labelledby="vi-key-title">' +
+          '<div class="vi-cell-head"><span class="vi-num">03</span><h2 class="vi-cell-title" id="vi-key-title">Ключ Hugging Face</h2></div>' +
+          '<p class="vi-note"><a class="vi-link" href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">Получить бесплатный ключ</a> — хранится только в этом браузере.</p>' +
+          '<div class="vi-key-row"><input type="password" id="vi-apikey" class="lab-input" placeholder="hf_xxxxxxxxxxxx" aria-label="API ключ Hugging Face">' +
+          '<button type="button" class="lab-btn lab-btn-secondary" onclick="VisionUI.saveKey()"><i data-lucide="save" aria-hidden="true"></i> Сохранить</button></div></section>' +
+          // 04 · Запуск
+          '<section class="vi-cell vi-cell--action" aria-labelledby="vi-action-title">' +
+          '<div class="vi-cell-head"><span class="vi-num">04</span><h2 class="vi-cell-title" id="vi-action-title">Анализ</h2></div>' +
+          '<button type="button" class="lab-btn lab-btn-primary vi-run" id="vi-analyze-btn" onclick="VisionUI.analyze()" disabled><i data-lucide="scan-search" aria-hidden="true"></i> Анализировать</button>' +
           '<div id="vi-spinner" class="lab-spinner"><div class="loader"></div><div class="spinner-text">Анализ…</div></div>' +
-          '<div id="vi-result" class="lab-card" style="display:none;"><div class="lab-card-header"><img src="assets/icons/32/scribe/scroll.png" width="32" height="32" alt="Результат" style="vertical-align: middle; margin-right: 6px;"> Результат</div><div class="lab-card-body" id="vi-result-body" style="white-space:pre-wrap;"></div>' +
-          '<div class="text-muted text-small mt-8 flex justify-between"><span id="vi-model-badge">SmolVLM-256M</span><span id="vi-timestamp"></span></div></div>' +
-          '<div id="vi-error" class="lab-alert lab-alert-error" style="display:none;"></div>';
+          '<p class="vi-status" id="vi-status" role="status" aria-live="polite"></p>' +
+          '<p class="vi-note">Модель отвечает описанием сцены. Это чтение изображения, а не доказательство: проверяйте подписи по источнику.</p>' +
+          // Сводка запуска: до отправки видно, что именно уйдёт в модель.
+          '<dl class="vi-recipe" id="vi-recipe">' +
+          '<div class="vi-recipe-row"><dt>Снимок</dt><dd id="vi-r-file">не выбран</dd></div>' +
+          '<div class="vi-recipe-row"><dt>Режим</dt><dd id="vi-r-mode">—</dd></div>' +
+          '<div class="vi-recipe-row"><dt>Модель</dt><dd id="vi-r-model">SmolVLM-256M-Instruct</dd></div>' +
+          '</dl>' +
+          '<div id="vi-error" class="lab-alert lab-alert-error" style="display:none;"></div></section>' +
+          // 05 · Что читает модель
+          '<section class="vi-cell vi-cell--legend" aria-labelledby="vi-legend-title">' +
+          '<div class="vi-cell-head"><span class="vi-num">05</span><h2 class="vi-cell-title" id="vi-legend-title">Что читает модель</h2>' +
+          '<span class="vi-cell-hint">SmolVLM-256M</span></div>' +
+          '<ul class="vi-caps">' +
+          '<li class="vi-cap"><i data-lucide="type" class="vi-cap-icon" aria-hidden="true"></i>' +
+          '<span class="vi-cap-body"><span class="vi-cap-title">Знаки</span>' +
+          '<span class="vi-cap-desc">древние письмена, символы, рукописные пометы</span></span></li>' +
+          '<li class="vi-cap"><i data-lucide="align-left" class="vi-cap-icon" aria-hidden="true"></i>' +
+          '<span class="vi-cap-body"><span class="vi-cap-title">Текст</span>' +
+          '<span class="vi-cap-desc">надписи, подписи, нумерация, служебные пометки</span></span></li>' +
+          '<li class="vi-cap"><i data-lucide="shapes" class="vi-cap-icon" aria-hidden="true"></i>' +
+          '<span class="vi-cap-body"><span class="vi-cap-title">Формы</span>' +
+          '<span class="vi-cap-desc">объекты, их расположение и связи между ними</span></span></li>' +
+          '<li class="vi-cap"><i data-lucide="pencil-line" class="vi-cap-icon" aria-hidden="true"></i>' +
+          '<span class="vi-cap-body"><span class="vi-cap-title">Следы правки</span>' +
+          '<span class="vi-cap-desc">зачёркивания, дописывания, следы подмены</span></span></li>' +
+          '</ul>' +
+          // Легенда §6: ответ модели — интерпретация, не проверенный факт.
+          '<p class="vi-caveat"><i data-lucide="triangle-alert" aria-hidden="true"></i>' +
+          '<span>Ответ модели — <b>интерпретация</b>, а не проверенный факт. Сверяйте подписи с источником, прежде чем опираться на них в исследовании.</span></p>' +
+          '</section>' +
+          // 06 · Результат
+          '<section class="vi-cell vi-cell--result" id="vi-result" aria-labelledby="vi-result-title" style="display:none;">' +
+          '<div class="vi-cell-head"><span class="vi-num">06</span><h2 class="vi-cell-title" id="vi-result-title">Результат</h2>' +
+          '<button type="button" class="lab-btn lab-btn-compact" onclick="VisionUI.copyResult()"><i data-lucide="copy" aria-hidden="true"></i> Копировать</button></div>' +
+          '<p class="vi-result-body" id="vi-result-body"></p>' +
+          '<div class="vi-result-meta"><span class="vi-chip" id="vi-model-badge">SmolVLM-256M</span><span class="vi-time" id="vi-timestamp"></span></div></section>' +
+          '</div>';
         container.dataset.loaded = '1';
+        // Init после разметки: глобальный вызов в init() успевает до неё
+        // и не находит ни ключ, ни кнопки режима. Проверяем идентификатор,
+        // а не window.VisionUI: модуль объявлен const и не вешается на window.
+        if (typeof VisionUI !== 'undefined') VisionUI.init();
         break;
 
       case 'ai-agents':
@@ -2867,8 +2931,12 @@ const PageController = (function() {
         break;
 
       case 'admin-settings':
+        // Контейнер создаётся роутером, а AdminSettings.init() вызывается один раз
+        // при загрузке лаборатории. Без рендера здесь повторный вход в #settings
+        // показывал пустую страницу (page-controller затирал разметку модуля).
         container.innerHTML = '';
         container.dataset.loaded = '1';
+        if (window.AdminSettings) AdminSettings.render();
         break;
 
       // ===== МОДУЛИ С FETCH HTML-СТРАНИЦЫ =====
@@ -3080,6 +3148,14 @@ const PageController = (function() {
           window.HypothesisGenerator.init(container);
         } else {
           showError(container, 'Модуль «Генератор гипотез» не загрузился.');
+        }
+        break;
+
+      case 'context-generator':
+        if (window.ContextGenerator) {
+          window.ContextGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор контекста» не загрузился.');
         }
         break;
 
@@ -3317,7 +3393,7 @@ const PageController = (function() {
     }, 500);
     if (window.Religionisms) Religionisms.init();
     if (window.BoardLib) BoardLib.init();
-    if (window.VisionUI) VisionUI.init();
+    if (typeof VisionUI !== 'undefined') VisionUI.init();
     if (window.EdChat) EdChat.init();
     if (window.LabIcons) window.LabIcons.sync();
     if (window.Investigation) Investigation.init();

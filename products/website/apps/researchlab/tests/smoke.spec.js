@@ -130,7 +130,9 @@ const moduleAnchors = {
   'religionism-checker': '.rc-shell',
   'state-checker': '.stc-shell',
   'translation-comparator': '.tc-shell',
+  'context-generator': '.cx-shell',
   'paleo-keyboard': '#pk-keys .pk-key',
+  vision: '.vi-bento',
   analyzers: '.analyzers-shell'
 };
 

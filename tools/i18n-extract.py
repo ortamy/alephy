@@ -71,7 +71,8 @@ def source_files() -> list[Path]:
     # Phase 2: оболочка, крошки и реестры шапки; page-controller.js даёт ключи панелей
     # детали агента (литералы t('lab.agents.*', ...) в JS модуля),
     # video-lab.js — ключи Генератора видео-образов (литералы t('lab.video.*', ...)),
-    # religionism-checker.js и его страница — ключи чекера (lab.religionism.*).
+    # religionism-checker.js и его страница — ключи чекера (lab.religionism.*),
+    # context-generator.js и его страница — ключи Генератора контекста.
     found = [
         lab / "index.html",
         lab / "js" / "router.js",
@@ -83,11 +84,13 @@ def source_files() -> list[Path]:
         lab / "js" / "tree-checker.js",
         lab / "js" / "checkers-comparator.js",
         lab / "js" / "states.js",
+        lab / "js" / "context-generator.js",
         lab / "pages" / "video-lab.html",
         lab / "pages" / "religionism-checker.html",
         lab / "pages" / "state-checker.html",
         lab / "pages" / "tree-checker.html",
         lab / "pages" / "translation-comparator.html",
+        lab / "pages" / "context-generator.html",
     ]
     for base in SCAN_DIRS:
         if not base.is_dir():

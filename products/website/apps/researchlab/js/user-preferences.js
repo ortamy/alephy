@@ -9,6 +9,7 @@ const UserPreferences = (function() {
 
   var STORAGE_KEY = 'alephy_user_preferences';
   var HTML = document.documentElement;
+  var PREFS_FONT_HINT = 'EB Garamond, sans';
 
   var PRESETS = {
     theme: {
@@ -194,6 +195,14 @@ const UserPreferences = (function() {
     } else {
       HTML.removeAttribute('data-reduced-motion');
     }
+
+    // Крошки рисует роутер (router.js → renderBreadcrumbs); он читает этот
+    // атрибут, поэтому переключатель должен быть не просто сохранённой строкой.
+    if (prefs.showBreadcrumbs === false) {
+      HTML.setAttribute('data-breadcrumbs', 'off');
+    } else {
+      HTML.removeAttribute('data-breadcrumbs');
+    }
   }
 
   function render(container, role) {
@@ -208,94 +217,140 @@ const UserPreferences = (function() {
   function buildHTML(role) {
     var prefs = load();
     var isResearcher = role === 'researcher';
-    return '<div class="up-theme-container">' +
-      '<div class="up-panel">' +
-        '<div class="up-panel-header"><div>' +
-            '<h1 class="up-title">' + (isResearcher ? 'Моё рабочее пространство' : 'Настройки отображения') + '</h1>' +
-            '<p class="up-subtitle">' + (isResearcher ?
-              'Персонализация интерфейса, навигации и обучения.' :
-              'Выберите комфортное оформление для работы с платформой.') + '</p>' +
-          '</div>' +
-          '<div class="up-role-badge">' + escapeHtml(roleLabel(role)) + '</div>' +
-        '</div>' +
-        '<div class="up-grid">' +
-          tabAppearance(prefs) +
-          (isResearcher ? tabNavigation(prefs) : '') +
-          (isResearcher ? tabLearning(prefs) : '') +
-          tabData(prefs, role) +
-        '</div>' +
-      '</div>' +
-    '</div>';
+    // Нумерация ячеек сквозная: пропущенные для гостя разделы не оставляют дыр.
+    var num = 0;
+    function n() {
+      num += 1;
+      return num < 10 ? '0' + num : String(num);
+    }
+    var cells = [
+      tabAppearance(prefs, n),
+      tabMotion(prefs, n),
+      isResearcher ? tabNavigation(prefs, n) : '',
+      isResearcher ? tabLearning(prefs, n) : '',
+      tabData(prefs, n),
+      summaryCell(prefs, n, role)
+    ];
+    return '<div class="up-bento">' + cells.join('') + '</div>';
   }
 
-  function tabAppearance(prefs) {
-    return '<section class="up-card">' +
-      '<h2 class="up-card-title">Внешний вид</h2>' +
-      '<p class="up-card-hint">Тема оформления и типографика.</p>' +
-      fieldSelect('theme', 'Тема', PRESETS.theme, prefs.theme) +
-      fieldSelect('fontFamily', 'Шрифт', PRESETS.fontFamily, prefs.fontFamily) +
-      fieldSelect('fontSize', 'Размер текста', PRESETS.fontSize, prefs.fontSize) +
-      '<div class="up-field"><label class="up-label">Плотность</label>' +
-        '<div class="up-segmented" data-key="density">' +
+  function tabAppearance(prefs, n) {
+    return cell(n(), 'Тема', 'Мгновенно', themeSwatches(prefs) + themePreview(prefs), 'theme') +
+      cell(n(), 'Типографика', PREFS_FONT_HINT, fieldSelect('fontFamily', 'Шрифт', PRESETS.fontFamily, prefs.fontFamily) +
+        '<div class="up-field"><label class="up-label">Размер текста</label>' +
+          '<div class="up-segmented" role="group" aria-label="Размер текста">' +
+            segmentedOption('fontSize', 'compact', PRESETS.fontSize.compact.label, prefs.fontSize) +
+            segmentedOption('fontSize', 'standard', PRESETS.fontSize.standard.label, prefs.fontSize) +
+            segmentedOption('fontSize', 'large', PRESETS.fontSize.large.label, prefs.fontSize) +
+          '</div></div>', 'type');
+  }
+
+  function tabMotion(prefs, n) {
+    return cell(n(), 'Плотность и анимации', 'Макет', '<div class="up-field"><label class="up-label">Плотность</label>' +
+        '<div class="up-segmented" role="group" aria-label="Плотность">' +
           segmentedOption('density', 'compact', PRESETS.density.compact.label, prefs.density) +
           segmentedOption('density', 'standard', PRESETS.density.standard.label, prefs.density) +
           segmentedOption('density', 'comfortable', PRESETS.density.comfortable.label, prefs.density) +
         '</div></div>' +
       '<div class="up-field"><label class="up-label">Ширина контента</label>' +
-        '<div class="up-segmented" data-key="contentWidth">' +
+        '<div class="up-segmented" role="group" aria-label="Ширина контента">' +
           segmentedOption('contentWidth', 'narrow', PRESETS.contentWidth.narrow.label, prefs.contentWidth) +
           segmentedOption('contentWidth', 'standard', PRESETS.contentWidth.standard.label, prefs.contentWidth) +
           segmentedOption('contentWidth', 'wide', PRESETS.contentWidth.wide.label, prefs.contentWidth) +
         '</div></div>' +
       '<div class="up-field"><label class="up-label">Анимации</label>' +
-        '<div class="up-segmented" data-key="motion">' +
+        '<div class="up-segmented" role="group" aria-label="Анимации">' +
           segmentedOption('motion', 'full', PRESETS.motion.full.label, prefs.motion) +
           segmentedOption('motion', 'reduced', PRESETS.motion.reduced.label, prefs.motion) +
-        '</div></div>' +
-    '</section>';
+        '</div></div>', 'motion') +
+      cell(n(), 'Навигация', 'Старт и крошки', startPageSelect(prefs) +
+        '<div class="up-field"><span class="up-label" id="up-crumb-label">Хлебные крошки</span>' +
+        '<label class="up-toggle"><input type="checkbox" id="up-show-breadcrumbs" aria-labelledby="up-crumb-label"' + (prefs.showBreadcrumbs ? ' checked' : '') + '>' +
+        '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты') + '</span></label></div>', 'start');
   }
 
-  function tabNavigation(prefs) {
-    return '<section class="up-card">' +
-      '<h2 class="up-card-title">Навигация</h2>' +
-      '<p class="up-card-hint">Стартовая страница и элементы интерфейса.</p>' +
-      '<div class="up-field"><label class="up-label">Стартовая страница</label>' +
-        '<select id="up-start-page" class="up-select">' +
-          '<option value="dashboard"' + (prefs.startPage === 'dashboard' ? ' selected' : '') + '>Рабочий стол</option>' +
-          '<option value="learn"' + (prefs.startPage === 'learn' ? ' selected' : '') + '>Обучение</option>' +
-          '<option value="root-dictionary"' + (prefs.startPage === 'root-dictionary' ? ' selected' : '') + '>Корневой словарь</option>' +
-          '<option value="paleo-linguistics"' + (prefs.startPage === 'paleo-linguistics' ? ' selected' : '') + '>Палео-лингвистика</option>' +
-          '<option value="workbench"' + (prefs.startPage === 'workbench' ? ' selected' : '') + '>Мастерская</option>' +
-        '</select></div>' +
-      '<div class="up-field"><label class="up-label">Хлебные крошки</label>' +
-        '<label class="up-toggle"><input type="checkbox" id="up-show-breadcrumbs"' + (prefs.showBreadcrumbs ? ' checked' : '') + '>' +
-        '<span class="up-toggle-slider"></span><span class="up-toggle-label">' + (prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты') + '</span></label></div>' +
-    '</section>';
-  }
-
-  function tabLearning(prefs) {
-    return '<section class="up-card">' +
-      '<h2 class="up-card-title">Обучение</h2>' +
-      '<p class="up-card-hint">Параметры интервального повторения.</p>' +
-      '<div class="up-field"><label class="up-label">Новые карточки в день: <span id="up-daily-new-val">10</span></label>' +
+  function tabLearning(prefs, n) {
+    return cell(n(), 'Обучение', 'Интервальное повторение', '<div class="up-field"><label class="up-label" for="up-daily-new">Новые карточки в день: <span class="up-range-val" id="up-daily-new-val">10</span></label>' +
         '<input type="range" id="up-daily-new" min="1" max="30" value="10" class="up-range"></div>' +
-      '<div class="up-field"><label class="up-label">Повторений в день: <span id="up-daily-review-val">30</span></label>' +
-        '<input type="range" id="up-daily-review" min="5" max="100" value="30" class="up-range"></div>' +
-    '</section>';
+      '<div class="up-field"><label class="up-label" for="up-daily-review">Повторений в день: <span class="up-range-val" id="up-daily-review-val">30</span></label>' +
+        '<input type="range" id="up-daily-review" min="5" max="100" value="30" class="up-range"></div>', 'learn');
   }
 
-  function tabData(prefs, role) {
-    return '<section class="up-card">' +
-      '<h2 class="up-card-title">Данные</h2>' +
-      '<p class="up-card-hint">Экспорт, импорт и сброс настроек.</p>' +
-      '<div class="up-actions">' +
-        '<button class="up-btn up-btn-secondary" id="up-export">Экспорт настроек</button>' +
-        '<button class="up-btn up-btn-secondary" id="up-import">Импорт настроек</button>' +
-        '<button class="up-btn up-btn-danger" id="up-reset">Сбросить настройки</button>' +
+  function tabData(prefs, n) {
+    return cell(n(), 'Данные', 'Резервная копия', '<div class="up-actions">' +
+        '<button type="button" class="lab-btn lab-btn-secondary" id="up-export"><i data-lucide="download" aria-hidden="true"></i> Экспорт настроек</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary" id="up-import"><i data-lucide="upload" aria-hidden="true"></i> Импорт настроек</button>' +
+        '<button type="button" class="lab-btn lab-btn-danger" id="up-reset"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Сбросить настройки</button>' +
       '</div>' +
-      '<input type="file" id="up-import-file" accept=".json" style="display:none;">' +
-      '<div id="up-notice" class="up-notice" style="display:none;"></div>' +
-    '</section>';
+      '<input type="file" id="up-import-file" accept=".json,application/json" class="up-file">' +
+      '<p class="up-caveat"><i data-lucide="info" aria-hidden="true"></i><span>Настройки хранятся только в этом браузере (<code>localStorage</code>). Экспортируйте их, если работаете на чужом устройстве.</span></p>' +
+      '<div id="up-notice" class="up-notice" role="status" aria-live="polite" style="display:none;"></div>', 'data');
+  }
+
+  // Итоговая ячейка: показывает применённые значения словами, а не только формой.
+  function summaryCell(prefs, n, role) {
+    return cell(n(), 'Сейчас применено', roleLabel(role), '<dl class="up-recipe">' +
+      '<div class="up-recipe-row"><dt>Тема</dt><dd data-sum="theme">' + escapeHtml(PRESETS.theme[prefs.theme].label) + '</dd></div>' +
+      '<div class="up-recipe-row"><dt>Шрифт</dt><dd data-sum="fontFamily">' + escapeHtml(PRESETS.fontFamily[prefs.fontFamily].label) + '</dd></div>' +
+      '<div class="up-recipe-row"><dt>Размер</dt><dd data-sum="fontSize">' + escapeHtml(PRESETS.fontSize[prefs.fontSize].value) + '</dd></div>' +
+      '<div class="up-recipe-row"><dt>Плотность</dt><dd data-sum="density">' + escapeHtml(PRESETS.density[prefs.density].label) + '</dd></div>' +
+      '<div class="up-recipe-row"><dt>Ширина</dt><dd data-sum="contentWidth">' + escapeHtml(PRESETS.contentWidth[prefs.contentWidth].value) + '</dd></div>' +
+      '<div class="up-recipe-row"><dt>Анимации</dt><dd data-sum="motion">' + escapeHtml(PRESETS.motion[prefs.motion].label) + '</dd></div>' +
+      '</dl>', 'summary');
+  }
+
+  // Оболочка ячейки bento: шапка по DESIGN-SYSTEM §5.2a (номер + капитель + подпись).
+  function cell(num, title, hint, body, modifier) {
+    var id = 'up-cell-' + modifier;
+    return '<section class="up-cell up-cell--' + modifier + '" aria-labelledby="' + id + '">' +
+      '<div class="up-cell-head"><span class="up-num">' + escapeHtml(num) + '</span>' +
+        '<h2 class="up-cell-title" id="' + id + '">' + escapeHtml(title) + '</h2>' +
+        (hint ? '<span class="up-cell-hint">' + escapeHtml(hint) + '</span>' : '') +
+      '</div>' + body + '</section>';
+  }
+
+  // Темы показываем образцами, а не списком: палитра — главный выбор на этой
+  // странице, и её невозможно увидеть в выпадающем списке.
+  function themeSwatches(prefs) {
+    return '<div class="up-swatches" role="group" aria-label="Тема оформления">' +
+      Object.keys(PRESETS.theme).map(function(key) {
+        var vars = PRESETS.theme[key].vars;
+        var on = prefs.theme === key;
+        return '<button type="button" class="up-swatch' + (on ? ' is-active' : '') + '" data-group="theme" data-value="' + key + '"' +
+          ' aria-pressed="' + (on ? 'true' : 'false') + '"' +
+          ' style="--sw-bg:' + vars['--bg-primary'] + ';--sw-fg:' + vars['--text-primary'] + ';--sw-accent:' + vars['--accent-gold'] + ';--sw-line:' + vars['--border-light'] + '">' +
+          '<span class="up-swatch-chip" aria-hidden="true"><i class="up-swatch-bar"></i><i class="up-swatch-bar"></i><i class="up-swatch-bar"></i></span>' +
+          '<span class="up-swatch-label">' + escapeHtml(PRESETS.theme[key].label) + '</span></button>';
+      }).join('') + '</div>';
+  }
+
+  // Живой образец выбранной темы: показывает, как строка и поверхность будут
+  // выглядеть вместе. Цвета берём из активной темы, а не хардкодим.
+  function themePreview(prefs) {
+    var vars = PRESETS.theme[PRESETS.theme[prefs.theme] ? prefs.theme : 'white'].vars;
+    return '<div class="up-preview" style="--pv-bg:' + vars['--bg-primary'] + ';--pv-surface:' + vars['--bg-card'] +
+      ';--pv-fg:' + vars['--text-primary'] + ';--pv-muted:' + vars['--text-muted'] + ';--pv-accent:' + vars['--accent-gold'] +
+      ';--pv-line:' + vars['--border-light'] + '">' +
+      '<p class="up-preview-title">Алеф</p>' +
+      '<p class="up-preview-text">Так читается основной текст на выбранной поверхности.</p>' +
+      '<p class="up-preview-muted">Вторичный текст и подписи</p>' +
+      '<span class="up-preview-chip">Дavar</span></div>';
+  }
+
+  function startPageSelect(prefs) {
+    var pages = [
+      { key: 'dashboard', label: 'Рабочий стол' },
+      { key: 'learn', label: 'Обучение' },
+      { key: 'root-dictionary', label: 'Корневой словарь' },
+      { key: 'paleo-linguistics', label: 'Палео-лингвистика' },
+      { key: 'workbench', label: 'Мастерская' }
+    ];
+    return '<div class="up-field"><label class="up-label" for="up-start-page">Стартовая страница</label>' +
+      '<select id="up-start-page" class="up-select">' +
+        pages.map(function(p) {
+          return '<option value="' + p.key + '"' + (prefs.startPage === p.key ? ' selected' : '') + '>' + escapeHtml(p.label) + '</option>';
+        }).join('') +
+      '</select></div>';
   }
 
   function fieldSelect(key, label, options, current) {
@@ -307,35 +362,57 @@ const UserPreferences = (function() {
   }
 
   function segmentedOption(group, value, label, current) {
-    return '<button class="up-segment' + (current === value ? ' active' : '') + '" data-group="' + group + '" data-value="' + value + '">' + escapeHtml(label) + '</button>';
+    var on = current === value;
+    return '<button type="button" class="up-segment' + (on ? ' is-active' : '') + '" data-group="' + group + '" data-value="' + value + '"' +
+      ' aria-pressed="' + (on ? 'true' : 'false') + '">' + escapeHtml(label) + '</button>';
   }
 
   function bindEvents(container, prefs, role) {
+    function commit(key, value) {
+      prefs[key] = value;
+      save(prefs);
+      apply(prefs);
+      updateSummary(container, prefs);
+    }
     container.querySelectorAll('.up-select').forEach(function(sel) {
       sel.addEventListener('change', function() {
-        prefs[sel.getAttribute('data-key')] = sel.value;
-        save(prefs);
-        apply(prefs);
+        commit(sel.getAttribute('data-key'), sel.value);
       });
     });
-    container.querySelectorAll('.up-segment').forEach(function(seg) {
+    // Сегменты и образцы тем — одна группа переключателей: aria-pressed держится здесь.
+    container.querySelectorAll('.up-segment, .up-swatch').forEach(function(seg) {
       seg.addEventListener('click', function() {
         var group = seg.getAttribute('data-group');
         var value = seg.getAttribute('data-value');
-        seg.parentElement.querySelectorAll('.up-segment').forEach(function(s) { s.classList.remove('active'); });
-        seg.classList.add('active');
-        prefs[group] = value;
-        save(prefs);
-        apply(prefs);
+        seg.parentElement.querySelectorAll('[data-group="' + group + '"]').forEach(function(s) {
+          s.classList.remove('is-active');
+          s.setAttribute('aria-pressed', 'false');
+        });
+        seg.classList.add('is-active');
+        seg.setAttribute('aria-pressed', 'true');
+        commit(group, value);
+      });
+    });
+    var startSelect = container.querySelector('#up-start-page');
+    if (startSelect) {
+      startSelect.addEventListener('change', function() { commit('startPage', startSelect.value); });
+    }
+    [['up-daily-new', 'up-daily-new-val'], ['up-daily-review', 'up-daily-review-val']].forEach(function(pair) {
+      var range = container.querySelector('#' + pair[0]);
+      var out = container.querySelector('#' + pair[1]);
+      if (!range) return;
+      range.addEventListener('input', function() {
+        if (out) out.textContent = range.value;
       });
     });
     var breadToggle = container.querySelector('#up-show-breadcrumbs');
     if (breadToggle) {
       breadToggle.addEventListener('change', function() {
-        prefs.showBreadcrumbs = breadToggle.checked;
         var lbl = breadToggle.parentElement.querySelector('.up-toggle-label');
-        if (lbl) lbl.textContent = prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты';
-        save(prefs);
+        if (lbl) lbl.textContent = breadToggle.checked ? 'Показаны' : 'Скрыты';
+        commit('showBreadcrumbs', breadToggle.checked);
+        // Крошки уже нарисованы для текущего маршрута — перерисовываем их.
+        if (window.LabRouter) LabRouter.refreshBreadcrumbs(LabRouter.current());
       });
     }
     var exportBtn = container.querySelector('#up-export');
@@ -360,7 +437,11 @@ const UserPreferences = (function() {
         reader.onload = function(e) {
           try {
             var imp = JSON.parse(e.target.result);
-            Object.keys(imp).forEach(function(k) { if (k !== 'role') prefs[k] = imp[k]; });
+            Object.keys(imp).forEach(function(k) {
+              if (k === 'role') return;
+              // Импорт — внешний ввод: принимаем только ключи из defaults.
+              if (Object.prototype.hasOwnProperty.call(defaults('guest'), k)) prefs[k] = imp[k];
+            });
             save(prefs);
             apply(prefs);
             render(container, prefs.role);
@@ -383,6 +464,22 @@ const UserPreferences = (function() {
         showNotice('Настройки сброшены.', false);
       });
     }
+  }
+
+  // Итоговая ячейка живёт без перерисовки: значения обновляются на лету.
+  function updateSummary(container, prefs) {
+    var values = {
+      theme: PRESETS.theme[prefs.theme] ? PRESETS.theme[prefs.theme].label : prefs.theme,
+      fontFamily: PRESETS.fontFamily[prefs.fontFamily] ? PRESETS.fontFamily[prefs.fontFamily].label : prefs.fontFamily,
+      fontSize: PRESETS.fontSize[prefs.fontSize] ? PRESETS.fontSize[prefs.fontSize].value : prefs.fontSize,
+      density: PRESETS.density[prefs.density] ? PRESETS.density[prefs.density].label : prefs.density,
+      contentWidth: PRESETS.contentWidth[prefs.contentWidth] ? PRESETS.contentWidth[prefs.contentWidth].value : prefs.contentWidth,
+      motion: PRESETS.motion[prefs.motion] ? PRESETS.motion[prefs.motion].label : prefs.motion
+    };
+    container.querySelectorAll('[data-sum]').forEach(function(node) {
+      var key = node.getAttribute('data-sum');
+      if (values[key]) node.textContent = values[key];
+    });
   }
 
   function showNotice(message, isError) {

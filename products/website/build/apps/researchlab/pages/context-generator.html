@@ -1,0 +1,177 @@
+<!-- Генератор контекста: bento-поле среды объекта или события — время, место,
+     слой, состояние, действие, свидетели и уровни утверждений → одна карточка.
+     Шапка — реестр LabHero; панели, главы и empty-state — panels.css. -->
+<section class="cx-shell" aria-label="Генератор контекста">
+  <div class="cx-grid">
+
+    <!-- 01 Объект: тип, поле ввода, примеры -->
+    <section class="lab-panel cx-tile cx-tile--object" aria-labelledby="cx-object-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">01</span>
+        <h2 class="lab-chapter-title" id="cx-object-title" data-i18n="lab.contextGenerator.panelObject">Объект</h2>
+        <span class="wb-badge" id="cx-badge" data-i18n="lab.contextGenerator.badgeIdle">Ожидание</span>
+      </header>
+      <form id="cx-form" class="cx-form" novalidate>
+        <div class="cx-field">
+          <span class="cx-label" id="cx-type-label" data-i18n="lab.contextGenerator.typeLabel">Тип</span>
+          <div class="cx-chips" role="group" aria-labelledby="cx-type-label">
+            <button type="button" class="lab-example-chip cx-chip is-active" data-cx-type="word" aria-pressed="true" data-i18n="lab.contextGenerator.typeWord">Слово</button>
+            <button type="button" class="lab-example-chip cx-chip" data-cx-type="verse" aria-pressed="false" data-i18n="lab.contextGenerator.typeVerse">Стих</button>
+            <button type="button" class="lab-example-chip cx-chip" data-cx-type="event" aria-pressed="false" data-i18n="lab.contextGenerator.typeEvent">Событие</button>
+          </div>
+        </div>
+        <div class="cx-field">
+          <label class="cx-label" for="cx-object" data-i18n="lab.contextGenerator.objectLabel">Объект или событие</label>
+          <input type="text" id="cx-object" class="lab-input" maxlength="200" autocomplete="off"
+                 placeholder="Например: חֶסֶד, Дварим 32:8, Исход из Египта"
+                 data-i18n-attr="placeholder:lab.contextGenerator.objectPlaceholder">
+        </div>
+        <div class="lab-examples" role="group" aria-label="Примеры"
+             data-i18n-attr="aria-label:lab.contextGenerator.examplesLabel">
+          <span class="lab-examples-label" data-i18n="lab.contextGenerator.examplesLabel">Примеры</span>
+          <button type="button" class="lab-example-chip" data-cx-example="חֶסֶד" data-cx-example-type="word">חֶסֶד</button>
+          <button type="button" class="lab-example-chip" data-cx-example="Дварим 32:8" data-cx-example-type="verse">Дварим 32:8</button>
+          <button type="button" class="lab-example-chip" data-cx-example="Исход из Египта" data-cx-example-type="event">Исход из Египта</button>
+        </div>
+        <p class="cx-sources" id="cx-sources" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- 02 Время -->
+    <section class="lab-panel cx-tile cx-tile--time" aria-labelledby="cx-time-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">02</span>
+        <h2 class="lab-chapter-title" id="cx-time-title" data-i18n="lab.contextGenerator.panelTime">Время</h2>
+      </header>
+      <div class="cx-field">
+        <label class="cx-label" for="cx-time" data-i18n="lab.contextGenerator.timeLabel">Когда</label>
+        <input type="text" id="cx-time" class="lab-input" maxlength="120" autocomplete="off"
+               placeholder="Когда: ~1400 до н.э."
+               data-i18n-attr="placeholder:lab.contextGenerator.timePlaceholder">
+        <div id="cx-time-hits" class="cx-chips" role="group" aria-labelledby="cx-time-title"></div>
+        <p class="cx-meta" id="cx-time-meta"></p>
+      </div>
+    </section>
+
+    <!-- 03 Место -->
+    <section class="lab-panel cx-tile cx-tile--place" aria-labelledby="cx-place-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">03</span>
+        <h2 class="lab-chapter-title" id="cx-place-title" data-i18n="lab.contextGenerator.panelPlace">Место</h2>
+      </header>
+      <div class="cx-field">
+        <label class="cx-label" for="cx-place" data-i18n="lab.contextGenerator.placeLabel">Где</label>
+        <input type="text" id="cx-place" class="lab-input" maxlength="120" autocomplete="off"
+               placeholder="Где: Египет, Ханаан, Ур…"
+               data-i18n-attr="placeholder:lab.contextGenerator.placePlaceholder">
+        <div id="cx-place-hits" class="cx-chips" role="group" aria-labelledby="cx-place-title"></div>
+        <p class="cx-meta" id="cx-place-meta"></p>
+      </div>
+    </section>
+
+    <!-- 04 Слой передачи: пять слоёв Манифеста (Акт I) -->
+    <section class="lab-panel cx-tile cx-tile--layer" aria-labelledby="cx-layer-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">04</span>
+        <h2 class="lab-chapter-title" id="cx-layer-title" data-i18n="lab.contextGenerator.panelLayer">Слой передачи</h2>
+      </header>
+      <div id="cx-layers" class="cx-chips" role="group" aria-labelledby="cx-layer-title">
+        <button type="button" class="lab-example-chip cx-chip" data-cx-layer="stream" aria-pressed="false" data-i18n="lab.contextGenerator.layerStream">Слитный поток</button>
+        <button type="button" class="lab-example-chip cx-chip" data-cx-layer="masoretic" aria-pressed="false" data-i18n="lab.contextGenerator.layerMasoretic">Масоретская фиксация</button>
+        <button type="button" class="lab-example-chip cx-chip" data-cx-layer="lxx" aria-pressed="false" data-i18n="lab.contextGenerator.layerLXX">Септуагинта</button>
+        <button type="button" class="lab-example-chip cx-chip" data-cx-layer="vulgate" aria-pressed="false" data-i18n="lab.contextGenerator.layerVulgate">Вульгата</button>
+        <button type="button" class="lab-example-chip cx-chip" data-cx-layer="slavonic" aria-pressed="false" data-i18n="lab.contextGenerator.layerSlavonic">Славянский и русский</button>
+      </div>
+    </section>
+
+    <!-- 05 Состояние: карта состояний -->
+    <section class="lab-panel cx-tile cx-tile--state" aria-labelledby="cx-state-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">05</span>
+        <h2 class="lab-chapter-title" id="cx-state-title" data-i18n="lab.contextGenerator.panelState">Состояние</h2>
+      </header>
+      <div id="cx-states" class="cx-chips" role="group" aria-labelledby="cx-state-title"></div>
+      <p class="cx-meta" id="cx-state-hint" data-i18n="lab.contextGenerator.stateHintEmpty">Физика состояния появится здесь.</p>
+    </section>
+
+    <!-- 06 Действие / образ: ручной ввод + подсказка корня -->
+    <section class="lab-panel cx-tile cx-tile--action" aria-labelledby="cx-action-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">06</span>
+        <h2 class="lab-chapter-title" id="cx-action-title" data-i18n="lab.contextGenerator.panelAction">Действие / образ</h2>
+      </header>
+      <div class="cx-field">
+        <label class="cx-label" for="cx-action" data-i18n="lab.contextGenerator.actionLabel">Действие</label>
+        <input type="text" id="cx-action" class="lab-input" maxlength="160" autocomplete="off"
+               placeholder="Что делает объект: движение, функция, результат"
+               data-i18n-attr="placeholder:lab.contextGenerator.actionPlaceholder">
+        <div id="cx-root" class="cx-chips" role="group" aria-labelledby="cx-action-title"></div>
+      </div>
+    </section>
+
+    <!-- 07 Свидетели -->
+    <section class="lab-panel cx-tile cx-tile--witness" aria-labelledby="cx-witness-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">07</span>
+        <h2 class="lab-chapter-title" id="cx-witness-title" data-i18n="lab.contextGenerator.panelWitness">Свидетели</h2>
+        <span class="wb-badge" id="cx-witness-count">0</span>
+      </header>
+      <div id="cx-witness-hits" class="cx-chips" role="group" aria-labelledby="cx-witness-title"></div>
+      <p class="cx-meta" id="cx-witness-meta"></p>
+    </section>
+
+    <!-- 08 Уровни утверждений: факт / интерпретация / гипотеза (§6) -->
+    <section class="lab-panel cx-tile cx-tile--levels" aria-labelledby="cx-levels-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">08</span>
+        <h2 class="lab-chapter-title" id="cx-levels-title" data-i18n="lab.contextGenerator.panelLevels">Уровни утверждений</h2>
+      </header>
+      <div class="cx-level">
+        <label class="cx-label" for="cx-level-fact" data-i18n="lab.contextGenerator.levelFact">Факт</label>
+        <input type="text" id="cx-level-fact" class="lab-input" maxlength="200" autocomplete="off"
+               placeholder="Что подтверждено источником…"
+               data-i18n-attr="placeholder:lab.contextGenerator.levelFactPh">
+      </div>
+      <div class="cx-level">
+        <label class="cx-label" for="cx-level-interp" data-i18n="lab.contextGenerator.levelInterp">Интерпретация</label>
+        <input type="text" id="cx-level-interp" class="lab-input" maxlength="200" autocomplete="off"
+               placeholder="Как читаете вы…"
+               data-i18n-attr="placeholder:lab.contextGenerator.levelInterpPh">
+      </div>
+      <div class="cx-level">
+        <label class="cx-label" for="cx-level-hyp" data-i18n="lab.contextGenerator.levelHyp">Гипотеза</label>
+        <input type="text" id="cx-level-hyp" class="lab-input" maxlength="200" autocomplete="off"
+               placeholder="Что требует проверки…"
+               data-i18n-attr="placeholder:lab.contextGenerator.levelHypPh">
+      </div>
+      <p class="cx-note" data-i18n="lab.contextGenerator.levelsNote">Факт — подтверждено источником; интерпретация — рабочее чтение; гипотеза — требует проверки.</p>
+    </section>
+
+    <!-- 09 Контекстная карточка: живой вывод + действия -->
+    <section class="lab-panel cx-tile cx-tile--output" aria-labelledby="cx-card-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">09</span>
+        <h2 class="lab-chapter-title" id="cx-card-title" data-i18n="lab.contextGenerator.panelCard">Контекстная карточка</h2>
+        <span class="wb-badge" id="cx-out-badge" data-i18n="lab.contextGenerator.badgeDraft">Черновик</span>
+      </header>
+      <div id="cx-preview" class="cx-preview" aria-live="polite"></div>
+      <div class="cx-actions">
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-cx-action="copy" disabled data-i18n="lab.contextGenerator.actionsCopy">Копировать Markdown</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-cx-action="md" disabled data-i18n="lab.contextGenerator.actionsMd">Скачать .md</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-cx-action="prompt" disabled data-i18n="lab.contextGenerator.actionsPrompt">В промпт</button>
+        <button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-cx-action="save" disabled data-i18n="lab.contextGenerator.actionsSave">Сохранить</button>
+      </div>
+      <p class="lab-status" id="cx-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- 10 Сохранённые -->
+    <section class="lab-panel cx-tile cx-tile--saved" aria-labelledby="cx-saved-title">
+      <header class="lab-chapter">
+        <span class="lab-chapter-num" aria-hidden="true">10</span>
+        <h2 class="lab-chapter-title" id="cx-saved-title" data-i18n="lab.contextGenerator.panelSaved">Сохранённые</h2>
+      </header>
+      <div id="cx-saved" class="cx-saved"></div>
+    </section>
+
+  </div>
+</section>

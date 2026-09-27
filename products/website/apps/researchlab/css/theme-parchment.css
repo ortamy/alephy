@@ -51,8 +51,7 @@ html[data-theme="parchment"] .btn-result-state {
 }
 
 html[data-theme="parchment"] .sidebar-section-title,
-html[data-theme="parchment"] .investigation-timeline-tag,
-html[data-theme="parchment"] .agent-server-kicker {
+html[data-theme="parchment"] .investigation-timeline-tag {
   color: var(--text-secondary);
 }
 
@@ -113,10 +112,6 @@ html[data-theme="parchment"] .board-dialog textarea {
 /* Жёстко заданные статусы и подсветки переводим в бежевую шкалу. */
 html[data-theme="parchment"] .book-card--completed,
 html[data-theme="parchment"] .book-card--in-progress,
-html[data-theme="parchment"] .agent-server-status,
-html[data-theme="parchment"] .agent-server-output pre,
-html[data-theme="parchment"] .agent-server-note code,
-html[data-theme="parchment"] .agent-server-note kbd,
 html[data-theme="parchment"] .vl-synthesis,
 html[data-theme="parchment"] .br-callout,
 html[data-theme="parchment"] .br-text-card {

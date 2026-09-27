@@ -8,7 +8,7 @@
       "name": "Русский",
       "dir": "ltr",
       "status": "ready",
-      "coverage": 0.98
+      "coverage": 1
     },
     {
       "code": "en",
@@ -16,7 +16,7 @@
       "name": "English",
       "dir": "ltr",
       "status": "draft",
-      "coverage": 0.35
+      "coverage": 0.45
     },
     {
       "code": "he",

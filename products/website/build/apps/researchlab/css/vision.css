@@ -1,0 +1,481 @@
+/* ============================================================
+   vision.css — «Визуальный анализатор» (#vision), bento-сетка.
+   Анатомия ячеек повторяет .gc-card (css/generators-checkers.css):
+   нумерованный лейбл + строка пояснения. Канон: hairline-рамки,
+   тени = 0 (§0.2), 4px-сетка (§1.3), только токены (§1.1),
+   mobile = одна колонка (§5.3), reduced-motion (§7).
+   ============================================================ */
+
+.vi-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  max-width: var(--shell-page);
+  margin: 0 auto;
+  color: var(--text-primary);
+}
+
+/* ===== Ячейка: hairline-рамка, radius -8, без теней ===== */
+.vi-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+}
+
+/* Пропорции бенто: поле — 7 колонок и две строки, служебные — по 5 */
+.vi-cell--drop { grid-column: span 7; grid-row: span 2; }
+.vi-cell--mode,
+.vi-cell--key { grid-column: span 5; }
+.vi-cell--action { grid-column: span 7; }
+.vi-cell--legend { grid-column: span 5; }
+.vi-cell--result { grid-column: 1 / -1; }
+
+/* ===== Заголовок ячейки: номер + лейбл капителью (§4.1) ===== */
+.vi-cell-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.vi-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+
+.module .vi-cell .vi-cell-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.vi-cell-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  white-space: nowrap;
+}
+
+/* ===== Зона загрузки: dropzone с dashed-рамкой (§4.6) ===== */
+.vi-drop {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  min-height: 220px;
+  padding: var(--space-4);
+  text-align: center;
+  background: var(--bg-secondary);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+  cursor: pointer;
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1), background 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.vi-drop:hover,
+.vi-drop:focus-visible,
+.vi-drop.is-over {
+  background: var(--surface-hover);
+  border-color: var(--accent-gold);
+  outline: none;
+  box-shadow: var(--ring-focus);
+}
+
+/* Клик открывает диалог выбора файла — вложенные контролы остаются живыми. */
+.vi-drop > * { pointer-events: none; }
+/* Исключение обязано покрывать весь контейнер кнопок: иначе они
+   перехватываются зоной и «Убрать»/«Заменить» не работают. */
+.vi-drop .vi-preview-actions,
+.vi-drop .vi-preview-actions * { pointer-events: auto; }
+
+.vi-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+}
+
+.vi-empty-glyph {
+  width: var(--space-7);
+  height: var(--space-7);
+  color: var(--accent-gold);
+  opacity: 0.35;
+}
+
+.vi-empty-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+}
+
+.vi-empty-hint,
+.vi-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+.vi-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.vi-preview-img {
+  max-width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+}
+
+/* Скрытый file-input: доступен кликом и с клавиатуры по зоне загрузки */
+.vi-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ===== Переключатель режима: сегменты, а не две кнопки в ряд ===== */
+.vi-segment {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.vi-segment-btn {
+  min-width: 0;
+  justify-content: center;
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  transition: border-color 150ms cubic-bezier(.2, .7, .2, 1), background 150ms cubic-bezier(.2, .7, .2, 1), color 150ms cubic-bezier(.2, .7, .2, 1);
+}
+
+.vi-segment-btn.is-active {
+  color: var(--text-on-accent);
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+/* ===== Поле ключа ===== */
+.vi-key-row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.vi-key-row .lab-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: var(--font-mono);
+}
+
+.vi-key-row .lab-btn { flex: 0 0 auto; }
+
+.vi-link {
+  color: var(--gold-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.vi-link:hover { color: var(--accent-gold); }
+
+/* ===== Запуск анализа: primary во всю ширину ячейки (§4.4) ===== */
+.vi-run {
+  width: 100%;
+  justify-content: center;
+}
+
+.vi-cell .lab-spinner { padding: var(--space-4); }
+.vi-cell .lab-spinner .spinner-text { color: var(--text-secondary); font-size: var(--text-sm); }
+
+.vi-status { min-height: 18px; }
+.vi-status:empty { display: none; }
+.vi-status.is-success { color: var(--accent-green); }
+.vi-status.is-error { color: var(--red-text); }
+
+.vi-cell .lab-alert { margin-bottom: 0; }
+
+/* ===== 05 «Что читает модель»: чипы способностей =====
+   Мини-карточки в анатомии .gc-card: иконка + подпись + строка.
+   Список не `ul` со списками, а сетка — иначе наследование .module
+   возвращает маркеры и съедает межстрочный отступ. */
+.vi-caps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.vi-cap {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-8);
+}
+
+.vi-cap-icon {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  color: var(--accent-gold);
+}
+
+.vi-cap-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vi-cap-title {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: var(--leading-ui);
+}
+
+.vi-cap-desc {
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+  /* Узкая колонка bento: длинные слова («служебные») не должны упираться в край. */
+  overflow-wrap: anywhere;
+}
+
+/* Оговорка о статусе ответа (легенда §6): нейтральная, не тревожная. */
+.vi-caveat {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border-left: 2px solid var(--accent-gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+}
+
+.vi-caveat svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  color: var(--accent-gold);
+}
+
+.vi-caveat b { color: var(--text-primary); font-weight: 600; }
+
+/* ===== Адрес назначения запроса (приватность) ===== */
+.vi-endpoint {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  margin-top: auto;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.vi-endpoint-label {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vi-endpoint code {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+  overflow-wrap: anywhere;
+}
+
+/* ===== Сводка запуска в ячейке 04 ===== */
+.vi-recipe {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light);
+}
+
+.vi-recipe-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.vi-recipe dt {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+}
+
+.vi-recipe dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Метаданные загруженного снимка ===== */
+.vi-file-meta {
+  max-width: 100%;
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+  overflow-wrap: anywhere;
+}
+
+.vi-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: center;
+}
+
+/* ===== Подсказка про клавиатуру в пустом состоянии ===== */
+.vi-kbd-hint {
+  margin: var(--space-2) 0 0;
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+}
+
+.vi-kbd-hint kbd {
+  padding: 1px 6px;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+/* ===== Результат: читалка описания ===== */
+.vi-result-body {
+  max-width: 78ch;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: var(--text-md);
+  line-height: var(--leading-read);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.vi-result-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  padding-top: var(--space-2);
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border-light);
+  font-size: var(--ui-12);
+}
+
+.vi-chip {
+  padding: 2px 10px;
+  color: var(--text-secondary);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.vi-time { font-family: var(--font-mono); }
+.vi-time:empty { display: none; }
+
+/* ===== Тост модуля: оверлей на токенах (DESIGN-SYSTEM §4.10), без литералов (§1.1) ===== */
+.vi-toast {
+  position: fixed;
+  top: var(--space-5);
+  left: 50%;
+  z-index: var(--z-toast);
+  padding: var(--space-3) var(--space-5);
+  color: var(--text-on-dark);
+  background: color-mix(in srgb, var(--bg-dark) 92%, transparent);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  transform: translateX(-50%);
+  transition: opacity 200ms cubic-bezier(.2, .7, .2, 1);
+  pointer-events: none;
+}
+
+.vi-toast.is-open { opacity: 1; }
+.vi-toast:not(.is-open) { opacity: 0; }
+
+/* ===== Мобильный закон (§5.3): одна колонка, тап-таргеты ≥40px ===== */
+@media (max-width: 760px) {
+  .vi-cell--drop,
+  .vi-cell--mode,
+  .vi-cell--key,
+  .vi-cell--action,
+  .vi-cell--legend,
+  .vi-cell--result { grid-column: 1 / -1; grid-row: auto; }
+
+  .vi-cell { padding: var(--space-3); }
+  .vi-drop { min-height: 168px; }
+  .vi-cell-hint { display: none; }
+  .vi-caps { grid-template-columns: 1fr; }
+  .vi-key-row { flex-direction: column; }
+  .vi-key-row .lab-btn { justify-content: center; }
+  .vi-preview-actions .lab-btn { flex: 1 1 0; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vi-drop,
+  .vi-segment-btn,
+  .vi-toast { transition: none; }
+}

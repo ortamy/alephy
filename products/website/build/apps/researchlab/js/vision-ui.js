@@ -13,6 +13,8 @@ const VisionUI = (function() {
   const API_KEY_STORAGE = 'alephy_hf_api_key';
   const MODE_STORAGE = 'alephy_vision_mode';
 
+  let toastTimer = null;
+
   let state = {
     mode: localStorage.getItem(MODE_STORAGE) || 'huggingface',
     currentBase64: null,
@@ -29,12 +31,28 @@ const VisionUI = (function() {
     setMode(state.mode);
   }
 
+  // Выбранный режим показываем золотой заливкой сегмента и aria-pressed,
+  // а не подменой базовых lab-btn классов — иначе теряется база сегмента.
   function setMode(mode) {
     state.mode = mode;
     localStorage.setItem(MODE_STORAGE, mode);
-    document.querySelectorAll('#vision .lab-btn[data-mode]').forEach(function(btn) {
-      btn.className = 'lab-btn ' + (btn.dataset.mode === mode ? 'lab-btn-primary' : 'lab-btn-secondary');
+    document.querySelectorAll('#vision .vi-segment-btn').forEach(function(btn) {
+      var active = btn.dataset.mode === mode;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
+    var note = document.getElementById('vi-mode-note');
+    if (note) {
+      note.textContent = mode === 'local'
+        ? 'Локальный сервер: изображение не покидает машину. Ключ не нужен.'
+        : 'Hugging Face Inference API: нужен бесплатный ключ, снимок уходит на внешний сервис.';
+    }
+    var endpoint = document.getElementById('vi-endpoint');
+    if (endpoint) endpoint.textContent = mode === 'local' ? LOCAL_API_URL : HF_API_URL;
+    var rMode = document.getElementById('vi-r-mode');
+    if (rMode) {
+      rMode.textContent = mode === 'local' ? 'локальный сервер' : 'Hugging Face API';
+    }
   }
 
   function saveKey() {
@@ -48,10 +66,28 @@ const VisionUI = (function() {
     }
   }
 
-  function load(event) {
-    var file = event.target.files[0];
-    if (!file) return;
+  // Drag & drop: файл приходит в dataTransfer, а не в input.files, поэтому
+  // проверку формата и размера выносим в общий acceptFile.
+  function dragOver(event) {
+    event.preventDefault();
+    var drop = event.currentTarget;
+    if (drop) drop.classList.add('is-over');
+  }
 
+  function dragLeave(event) {
+    var drop = event.currentTarget;
+    if (drop) drop.classList.remove('is-over');
+  }
+
+  function drop(event) {
+    event.preventDefault();
+    var zone = event.currentTarget;
+    if (zone) zone.classList.remove('is-over');
+    var files = event.dataTransfer && event.dataTransfer.files;
+    if (files && files[0]) acceptFile(files[0]);
+  }
+
+  function acceptFile(file) {
     if (!ALLOWED_TYPES.includes(file.type)) {
       showError('Неподдерживаемый формат. Используйте PNG, JPG или WEBP.');
       return;
@@ -65,33 +101,82 @@ const VisionUI = (function() {
     reader.onload = function(e) {
       state.currentBase64 = e.target.result;
       var img = document.getElementById('vi-img');
-      if (img) img.src = state.currentBase64;
+      if (img) {
+        img.onload = function() { renderFileMeta(file, img.naturalWidth, img.naturalHeight); };
+        img.src = state.currentBase64;
+      }
       var preview = document.getElementById('vi-preview');
-      if (preview) preview.style.display = 'block';
+      if (preview) preview.style.display = 'flex';
       var placeholder = document.getElementById('vi-placeholder');
       if (placeholder) placeholder.style.display = 'none';
       var btn = document.getElementById('vi-analyze-btn');
       if (btn) btn.disabled = false;
+      setStatus('Изображение загружено. Можно запускать анализ.', 'success');
       hideError();
     };
     reader.readAsDataURL(file);
+  }
+
+  // Имя, вес и реальные пиксели: пользователь должен видеть, что именно
+  // уйдёт в модель, иначе результат невозможно соотнести со снимком.
+  function renderFileMeta(file, width, height) {
+    var meta = document.getElementById('vi-file-meta');
+    if (!meta) return;
+    var parts = [file.name, formatBytes(file.size)];
+    if (width && height) parts.push(width + '×' + height);
+    meta.textContent = parts.join(' · ');
+    var rFile = document.getElementById('vi-r-file');
+    if (rFile) rFile.textContent = file.name + ' · ' + formatBytes(file.size);
+  }
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' Б';
+    if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' КБ';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' МБ';
+  }
+
+  function load(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    acceptFile(file);
   }
 
   function remove() {
     state.currentBase64 = null;
     var img = document.getElementById('vi-img');
     if (img) img.src = '';
+    var meta = document.getElementById('vi-file-meta');
+    if (meta) meta.textContent = '';
+    var rFile = document.getElementById('vi-r-file');
+    if (rFile) rFile.textContent = 'не выбран';
     var preview = document.getElementById('vi-preview');
     if (preview) preview.style.display = 'none';
     var placeholder = document.getElementById('vi-placeholder');
-    if (placeholder) placeholder.style.display = 'block';
+    if (placeholder) placeholder.style.display = 'flex';
     var fileInput = document.getElementById('vi-file');
     if (fileInput) fileInput.value = '';
     var btn = document.getElementById('vi-analyze-btn');
     if (btn) btn.disabled = true;
     var result = document.getElementById('vi-result');
     if (result) result.style.display = 'none';
+    setStatus('');
     hideError();
+  }
+
+  function copyResult() {
+    var body = document.getElementById('vi-result-body');
+    var text = body ? body.textContent.trim() : '';
+    if (!text) {
+      showToast('Пока нечего копировать');
+      return;
+    }
+    var done = function() { showToast('Описание скопировано'); };
+    var failed = function() { showToast('Браузер запретил доступ к буферу'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, failed);
+    } else {
+      failed();
+    }
   }
 
   async function analyze() {
@@ -114,6 +199,7 @@ const VisionUI = (function() {
     if (spinner) spinner.classList.add('show');
     var result = document.getElementById('vi-result');
     if (result) result.style.display = 'none';
+    setStatus('Модель читает изображение…');
     hideError();
 
     try {
@@ -130,7 +216,8 @@ const VisionUI = (function() {
       if (badge) badge.textContent = state.mode === 'huggingface' ? 'SmolVLM-256M (HF)' : 'SmolVLM-256M (Local)';
       var ts = document.getElementById('vi-timestamp');
       if (ts) ts.textContent = new Date().toLocaleString('ru-RU');
-      if (result) result.style.display = 'block';
+      if (result) result.style.display = 'flex';
+      setStatus('Описание готово.', 'success');
 
     } catch (err) {
       showError(err.message || 'Ошибка анализа.');
@@ -208,6 +295,7 @@ const VisionUI = (function() {
       el.textContent = msg;
       el.style.display = 'block';
     }
+    setStatus('', 'error');
   }
 
   function hideError() {
@@ -215,17 +303,30 @@ const VisionUI = (function() {
     if (el) el.style.display = 'none';
   }
 
+  // Строка статуса в ячейке «Анализ» — служебный текст без рамки (§4.1/§4.6).
+  function setStatus(text, tone) {
+    var el = document.getElementById('vi-status');
+    if (!el) return;
+    el.textContent = text || '';
+    el.classList.remove('is-success', 'is-error');
+    if (tone === 'success' || tone === 'error') el.classList.add('is-' + tone);
+  }
+
+  // Тост оформлен классом .vi-toast (css/vision.css): оверлей на токенах,
+  // литералы цветов в JS запрещены DESIGN-SYSTEM §1.1.
   function showToast(msg) {
     var t = document.getElementById('vision-toast');
     if (!t) {
       t = document.createElement('div');
       t.id = 'vision-toast';
-      t.style.cssText = 'position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#2c1810;color:#ede0c8;padding:10px 24px;font-size:14px;font-family:"EB Garamond",serif;opacity:0;pointer-events:none;z-index:9999;border-radius:4px;border:1px solid #b8860b;transition:opacity 0.4s;';
+      t.className = 'vi-toast';
+      t.setAttribute('role', 'status');
       document.body.appendChild(t);
     }
     t.textContent = msg;
-    t.style.opacity = '1';
-    setTimeout(function() { t.style.opacity = '0'; }, 2000);
+    t.classList.add('is-open');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function() { t.classList.remove('is-open'); }, 2000);
   }
 
   return {
@@ -234,6 +335,10 @@ const VisionUI = (function() {
     saveKey: saveKey,
     load: load,
     remove: remove,
-    analyze: analyze
+    analyze: analyze,
+    copyResult: copyResult,
+    dragOver: dragOver,
+    dragLeave: dragLeave,
+    drop: drop
   };
 })();
