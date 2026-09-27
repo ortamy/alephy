@@ -253,8 +253,10 @@
 
 <!-- Shared runtime: deployed beside the site locales, before lab modules. -->
 <script defer src="../../js/i18n.js"></script>
-<!-- Общие утилиты (escapeHtml) — первыми из js/: остальные модули вызывают их при рендере. -->
+<!-- Общие утилиты (escapeHtml) и реестр маршрутов — первыми из js/:
+     остальные модули вызывают escapeHtml при рендере, а роутер читает реестр. -->
 <script defer src="js/utils.js"></script>
+<script defer src="js/module-registry.js"></script>
 <!-- Vendored Lucide: UI-иконки (навигация, кнопки). См. js/lucide-init.js. -->
 <script defer src="js/vendor/lucide.min.js"></script>
 <script defer src="js/lucide-init.js"></script>

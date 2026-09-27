@@ -75,6 +75,37 @@ products/website/
 └── build/                   # производный deploy-слой
 ```
 
+### Реестр модулей
+
+`js/module-registry.js` — единственный источник правды по маршрутам лаборатории.
+Раньше список жил отдельно в `router.js` (`routedModules`), а рендеринг — в
+`switch` внутри `page-controller.js`; расхождение между ними не ловилось ничем,
+и маршрут мог «исчезнуть» молча.
+
+```text
+{ id: 'vision', kind: 'panel' }     → рендерится кодом в page-controller
+{ id: 'method-tree', kind: 'markdown' } → отдаётся .md через fetchPage
+```
+
+Реестр также хранит `ALIASES` (`settings` → `admin-settings`,
+`research-library` → `researches` и другие), поэтому роутер не держит
+собственных веток-редиректов.
+
+**Добавляешь модуль — правишь три места, а не четыре:** запись в реестре,
+`case` в `page-controller` (или путь в `mdPaths`), и реестр в UI
+(`lab-hero`/сайдбар). Согласованность проверяется гейтом:
+
+```bash
+node tools/design-baseline/registry-check.mjs
+```
+
+Падение означает: модуль есть в реестре, но не рендерится (или наоборот) —
+пользователь увидит пустую страницу. Тот же гард продублирован в smoke
+(`describe('module registry')`) и в CI отдельным шагом.
+
+**Неизвестный хеш** больше не игнорируется: `router.showUnknownRoute()`
+показывает сообщение «маршрут не зарегистрирован» и ссылку на рабочий стол.
+
 ### Публичный лендинг
 
 `products/website/index.html` содержит:
@@ -107,6 +138,7 @@ products/website/apps/researchlab/
 ├── css/                     # базовый слой и стили модулей
 ├── js/
 │   ├── utils.js             # AlephyUtils: канон escapeHtml (первый из js/)
+│   ├── module-registry.js   # ModuleRegistry: единственный список маршрутов
 │   ├── router.js            # hash-router LabRouter
 │   ├── page-controller.js   # центральный рендеринг модулей
 │   ├── lab-hero.js          # единая шапка и представления маршрутов

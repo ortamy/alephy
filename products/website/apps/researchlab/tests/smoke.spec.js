@@ -2,16 +2,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { test, expect } = require('@playwright/test');
 
-const routerPath = path.resolve(__dirname, '..', 'js', 'router.js');
+const routerPath = path.resolve(__dirname, '..', 'js', 'module-registry.js');
 const screenshotDir = path.resolve(__dirname, 'screenshots');
-function routesFromRouter() {
+// Маршруты берём из js/module-registry.js — единственного источника правды.
+// Раньше список дублировался в router.js, и реестр молча расходился с рендером.
+function routesFromRegistry() {
   const source = fs.readFileSync(routerPath, 'utf8');
-  const match = source.match(/var routedModules = \[(.*?)\];/s);
-  if (!match) throw new Error('Could not find routedModules registry in router.js');
-  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
+  const entries = [...source.matchAll(/\{ id: '([^']+)', kind: '([^']+)' \}/g)];
+  if (!entries.length) throw new Error('Could not find MODULES in js/module-registry.js');
+  return entries.map((item) => item[1]);
 }
 
-const routes = routesFromRouter();
+const routes = routesFromRegistry();
 const quickRoutes = new Set([
   'dashboard',
   'root-dictionary',
@@ -194,6 +196,53 @@ test.describe('route loading finishes', () => {
 
 // Гард шапок: реестр LabHero — источник истины для заголовков модулей, и его
 // служебный текст («Нет записи шапки») не должен доходить до пользователя.
+// Гард реестра: js/module-registry.js — единственный источник правды по
+// маршрутам. Если модуль есть в реестре, но не отрисован, или наоборот,
+// пользователь получит пустую страницу или «не зарегистрирован» — ловим здесь.
+test.describe('module registry', () => {
+  test('реестр загружен и совпадает с рендером page-controller', async ({ page }) => {
+    await page.goto('/#dashboard', { waitUntil: 'domcontentloaded' });
+
+    const report = await page.evaluate(() => {
+      const registry = window.ModuleRegistry;
+      if (!registry) return { error: 'ModuleRegistry не загружен' };
+      return {
+        total: registry.MODULES.length,
+        panels: registry.MODULES.filter((m) => m.kind === 'panel').length,
+        markdown: registry.MODULES.filter((m) => m.kind === 'markdown').length,
+        aliases: Object.keys(registry.ALIASES).length,
+        duplicates: registry.MODULES
+          .map((m) => m.id)
+          .filter((id, index, all) => all.indexOf(id) !== index)
+      };
+    });
+
+    expect(report.error, report.error).toBeUndefined();
+    expect(report.total).toBeGreaterThan(50);
+    expect(report.panels).toBeGreaterThan(20);
+    expect(report.markdown).toBeGreaterThan(20);
+    expect(report.duplicates, `дубли id в реестре: ${report.duplicates}`).toEqual([]);
+  });
+
+  test('алиас открывает свой модуль, неизвестный маршрут даёт понятную ошибку', async ({ page }) => {
+    // #settings → #admin-settings
+    await page.goto('/#settings', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(600);
+    expect(await page.evaluate(() => window.location.hash), '#settings → #admin-settings').toBe('#admin-settings');
+    await expect(page.locator('#admin-settings .up-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+    // Неизвестный маршрут обязан сказать об этом, а не показать пустую страницу.
+    await page.evaluate(() => { window.location.hash = 'no-such-module'; });
+    await page.waitForTimeout(600);
+    const unknown = await page.evaluate(() => {
+      const active = document.querySelector('#labContent .module.active');
+      return { id: active ? active.id : null, text: active ? active.textContent : '' };
+    });
+    expect(unknown.id, 'неизвестный маршрут должен показать error-state').toBe('unknown-route');
+    expect(unknown.text).toContain('не зарегистрирован');
+  });
+});
+
 // Обход реестра — тот же приём, что в route loading grid.
 test.describe('hero guard', () => {
   test('маршруты реестра LabHero не показывают служебный текст шапки', async ({ page }) => {

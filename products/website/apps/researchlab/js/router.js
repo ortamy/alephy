@@ -200,114 +200,58 @@ const LabRouter = (function() {
   function handleHash() {
     var parsed = parseHash();
     var hash = parsed.module;
-    var routedModules = [
-      'manifest', 'dashboard', 'workbench', 'learn', 'dictionaries', 'researches',
-      'methodology', 'paleo-mechanics', 'paleo-linguistics',
-      'language-map', 'religionisms', 'root-dictionary', 'paleo-glossary', 'paleo-builder',
-      'word-analyzer', 'scripture-reader', 'generators',
-      'checkers', 'religionism-checker', 'etymology-checker', 'translation-comparator', 'state-checker', 'investigation', 'heraldry',
-      'cartography', 'states', 'timeline', 'ai-agents', 'pipelines', 'agent-server', 'ed-chat', 'vision',
-      'paleo-keyboard', 'admin-settings', 'analyzers', 'layer-analyzer', 'ai-analyzer', 'dialect-analyzer', 'state-analyzer', 'exposure-editor', 'clue-generator',
-      'video-lab', 'prompt-generator', 'board-generator', 'research-generator', 'hypothesis-generator', 'timescale-generator', 'context-generator', 'davar-checker', 'tree-checker', 'board', 'name-decoder', 'linguistic-tensor',
-      'club',
-      // Маршруты разоблачений (обрабатываются в default-кейсе PageController через mdPaths)
-      'exposure-dictionary', 'exposure-principles', 'exposure-distortions',
-      'exposure-mechanisms', 'exposure-linguistic-methods', 'exposure-methods',
-      'exposure-language', 'exposure-language-shifts', 'exposure-bavelisms',
-      'exposure-masoretic', 'exposure-philosophemes', 'exposure-system-architecture',
-      'exposure-religionism-theory', 'exposure-techniques',
-      'method-archeology', 'method-hebrew-reconstruction', 'method-layers',
-      'method-translation', 'method-transliteration', 'method-tree'
-    ];
 
-    // #settings is an alias for #admin-settings
-    if (hash === 'settings') {
-      navigate('admin-settings');
+    // Список маршрутов — не здесь: единственный источник правды в
+    // js/module-registry.js. Дублирование списка в роутере и в page-controller
+    // позволяло маршруту «исчезнуть» молча; теперь расхождение ловит
+    // tools/design-baseline/registry-check.mjs.
+    var registry = window.ModuleRegistry;
+
+    // Устаревшие маршруты живут в реестре (ALIASES) и редиректят на актуальные.
+    if (registry && registry.ALIASES[hash]) {
+      navigate(registry.ALIASES[hash]);
       return;
     }
 
-    // #research-library — устаревший маршрут, объединён с #researches
-    if (hash === 'research-library') {
-      navigate('researches');
-      return;
-    }
-
-    // Точки входа манифеста ведут к существующим модулям платформы
-    if (hash === 'laboratory') {
-      showModule('dashboard', parsed);
-      return;
-    }
-    if (hash === 'agents') {
-      showModule('ai-agents', parsed);
-      return;
-    }
-    if (hash === 'library') {
-      showModule('researches', parsed);
-      return;
-    }
-
-    // #prompt-generator — сборщик промптов исследователя
-    if (hash === 'prompt-generator') {
-      showModule('prompt-generator', parsed);
-      return;
-    }
-
-    // #clue-generator — сборка цепочки улик
-    if (hash === 'clue-generator') {
-      showModule('clue-generator', parsed);
-      return;
-    }
-
-    // #video-lab — генератор видео-образов
-    if (hash === 'video-lab') {
-      showModule('video-lab', parsed);
-      return;
-    }
-
-    // #davar-checker — проверка воплощаемости слова
-    if (hash === 'davar-checker') {
-      showModule('davar-checker', parsed);
-      return;
-    }
-
-    // #tree-checker — проверка учения по шести уровням дерева
-    if (hash === 'tree-checker') {
-      showModule('tree-checker', parsed);
-      return;
-    }
-
-    // #translation-comparator — отдельный экран сравнения переводов
-    if (hash === 'translation-comparator') {
-      showModule('translation-comparator', parsed);
-      return;
-    }
-
-    // #paleo-builder — сборка слова из палео-букв
-    if (hash === 'paleo-builder') {
-      showModule('paleo-builder', parsed);
-      return;
-    }
-
-    // #language-map — диагностика живых языков и их переходов
-    if (hash === 'language-map') {
-      showModule('language-map', parsed);
-      return;
-    }
-
-    // #board — интерактивная доска сборки кейса
-    if (hash === 'board') {
-      showModule('board', parsed);
-      return;
-    }
-
-    if (modules[hash] || routedModules.indexOf(hash) !== -1) {
-      showModule(hash, parsed);
-    } else if (hash === 'exposure-editor') {
-      // Dynamic module — будет создан в showModule
+    // Маршруты, которые раньше шли отдельными if-ветками (laboratory, agents,
+    // library, prompt-generator, clue-generator, video-lab, davar-checker,
+    // tree-checker, translation-comparator, paleo-builder, language-map, board),
+    // теперь покрыты реестром: каждая такая ветка делала ровно showModule(hash).
+    // Известный модуль открывается напрямую; неизвестный — понятная ошибка
+    // вместо молчаливого игнорирования хеша.
+    if (modules[hash] || (registry && registry.has(hash))) {
       showModule(hash, parsed);
     } else if (hash === 'dashboard') {
       showModule('dashboard', parsed);
+    } else {
+      showUnknownRoute(hash);
     }
+  }
+
+  // Неизвестный хеш: сообщаем пользователю, что такого маршрута нет, и
+  // предлагаем вернуться на рабочий стол. Раньше он просто игнорировался.
+  function showUnknownRoute(hash) {
+    var root = document.getElementById('labContent');
+    if (!root) return;
+    var id = 'unknown-route';
+    var el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = id;
+      el.className = 'module active';
+      root.appendChild(el);
+      modules[id] = el;
+    }
+    Object.keys(modules).forEach(function(moduleId) {
+      if (moduleId !== id) modules[moduleId].classList.remove('active');
+    });
+    currentModule = id;
+    el.innerHTML =
+      '<div class="lab-alert lab-alert-info">' +
+      '<p>Маршрут <code>#' + escapeHtml(hash) + '</code> не зарегистрирован в лаборатории.</p>' +
+      '<p><a href="#dashboard">Вернуться на рабочий стол</a></p>' +
+      '</div>';
+    if (window.LabRouter) LabRouter.renderBreadcrumbs(id, { segments: ['dashboard'] });
   }
 
   // ===== НАВИГАЦИЯ =====

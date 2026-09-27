@@ -45,11 +45,14 @@ jobs:
       - name: Run smoke suite
         working-directory: products/website/apps/researchlab
         env:
-          # '0' = полный обход всех маршрутов из реестра router.js.
+          # '0' = полный обход всех маршрутов из js/module-registry.js.
           # Наивное значение `0` в YAML превратилось бы в false, а тесты
           # читают строку: "0" !== "1", поэтому полный прогон сохраняется.
           SMOKE_QUICK: '0'
         run: npx playwright test
+
+      - name: Registry matches page-controller
+        run: node tools/design-baseline/registry-check.mjs
 
       - name: Upload report
         if: always()
