@@ -1,0 +1,564 @@
+/* ============================================================
+   design-system.css — модуль «Дизайн-система» (#design-system), bento.
+
+   Третий эталон bento (после #vision и #settings). Префикс `ds-`.
+   Канон: DESIGN-SYSTEM §5.2a — 12 колонок, hairline --line, radius -8,
+   тени = 0, только токены, mobile = одна колонка (§5.3).
+
+   Специфика модуля: он показывает сам себя, поэтому почти каждое правило
+   здесь демонстрируется живьём (реальный токен, реальный компонент).
+
+   ВАЖНО: `.ds-cell` сбрасывает margin/padding у всех потомков. Глобальные
+   стили лаборатории дают блочным элементам вертикальный отступ, из-за чего
+   ячейки расходились на 2–3 экрана при трёх строках текста. Плотность здесь
+   намеренная: витрина токенов должна читаться таблицей, а не параграфом.
+   ============================================================ */
+
+.ds-shell {
+  max-width: var(--shell-page);
+  margin: 0 auto;
+}
+
+/* ===== Липкая навигация по разделам ===== */
+.ds-nav {
+  position: sticky;
+  top: var(--header-compact, 48px);
+  z-index: var(--z-topbar);
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+  padding: var(--space-1);
+  overflow-x: auto;
+  background: var(--header-bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  scrollbar-width: none;
+}
+
+.ds-nav::-webkit-scrollbar { display: none; }
+
+.ds-nav-link {
+  flex: 0 0 auto;
+  padding: 3px var(--space-2);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  font-size: var(--ui-12);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
+}
+
+.ds-nav-link:hover {
+  color: var(--text-primary);
+  background: var(--surface-2);
+}
+
+.ds-nav-link.is-active {
+  color: var(--gold-text);
+  background: rgb(var(--accent-gold-rgb) / 0.12);
+  box-shadow: inset 0 -2px 0 var(--accent-gold);
+}
+
+/* Статус копирования: появляется у навигации, чтобы не перекрывать контент. */
+.ds-copy-status {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: var(--z-toast);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-primary);
+  background: var(--header-bg);
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-8);
+  font-size: var(--ui-12);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+}
+
+.ds-copy-status.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ds-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+
+/* ===== Ячейка ===== */
+.ds-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  /* Якорь навигации не должен заезжать под липкую шапку лаборатории. */
+  scroll-margin-top: calc(var(--header-compact, 48px) + var(--space-8));
+}
+
+/* Плотность витрины: сброс глобальных отступов лаборатории.
+   Селектор повторяет приём components/panels.css: `.lab-content .module p`
+   из манифестного слоя даёт абзацам margin-bottom: 20px и max-width: 750px
+   (мера читателя). Инструмент — не читалка, поэтому и то и другое снимаем.
+   Только margin и max-width: padding у .ds-code/.ds-chip/.ds-empty задаётся
+   их собственными правилами, и общий сброс перебил бы их по специфичности. */
+.lab-content .module .ds-cell > *,
+.lab-content .module .ds-cell p,
+.lab-content .module .ds-cell ul,
+.lab-content .module .ds-cell ol,
+.lab-content .module .ds-cell li,
+.lab-content .module .ds-cell h2,
+.lab-content .module .ds-cell h3 {
+  margin: 0;
+  max-width: none;
+}
+
+.lab-content .module .ds-cell ul,
+.lab-content .module .ds-cell ol {
+  padding: 0;
+  list-style: none;
+}
+
+/* Пропорции: 01 — догма во всю ширину, остальные — парные 7/5.
+   Сумма каждой пары строго 12: при 7+7 вторая ячейка строки переносилась
+   вниз и оставляла справа пять пустых колонок. */
+.ds-cell--doctrine { grid-column: 1 / -1; }
+.ds-cell--color,
+.ds-cell--radius,
+.ds-cell--motion,
+.ds-cell--statuses,
+.ds-cell--patterns { grid-column: span 7; }
+.ds-cell--type,
+.ds-cell--space,
+.ds-cell--shadow,
+.ds-cell--components,
+.ds-cell--a11y { grid-column: span 5; }
+
+/* ===== Шапка ячейки: номер + капитель + ссылка на раздел канона ===== */
+.ds-cell-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.ds-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+
+.module .ds-cell .ds-cell-title {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.ds-cell-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  white-space: nowrap;
+}
+
+.ds-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+}
+
+.ds-code {
+  padding: 1px 6px;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+/* Кликабельный токен: значение копируется по клику (см. bindTokenCopy). */
+[data-ds-token] {
+  cursor: copy;
+  border-bottom: 1px dashed var(--border-light);
+  transition: color var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+
+[data-ds-token]:hover {
+  color: var(--gold-text);
+  border-color: var(--accent-gold);
+}
+
+/* ===== Типографическая лестница: образцы реальных токенов ===== */
+.ds-type-sample { display: block; }
+
+.ds-type-3xl {
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  line-height: 1.1;
+}
+
+.ds-type-2xl {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  line-height: 1.15;
+}
+
+.ds-type-xl {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+}
+
+.ds-type-lg {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  line-height: 1.25;
+}
+
+.ds-type-md { font-size: var(--text-md); }
+
+.ds-type-base { font-size: var(--text-base); }
+
+.ds-type-sm { font-size: var(--text-sm); }
+
+.ds-type-ui {
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+}
+
+/* ===== 01 Доктрина трёх голосов ===== */
+
+/* ===== 01 Доктрина трёх голосов ===== */
+.ds-voices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.ds-voice {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+}
+
+.ds-voice-name {
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  line-height: 1.2;
+}
+
+/* Метка «владеет» идёт в строку с названием: голос — это строка, а не карточка. */
+.ds-voice-owns {
+  color: var(--gold-text);
+  font-size: var(--ui-11);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.ds-voice-owns::before {
+  content: '· ';
+  color: var(--text-muted);
+}
+
+.ds-voice-means {
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+  overflow-wrap: anywhere;
+}
+
+/* ===== Цветовые роли: живой образец из getComputedStyle ===== */
+.ds-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-2);
+}
+
+.ds-swatch {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+}
+
+.ds-swatch-chip {
+  height: var(--space-5);
+  border-bottom: 1px solid var(--line);
+}
+
+.ds-swatch-body { padding: var(--space-1) var(--space-2); }
+
+.ds-swatch-name {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  overflow-wrap: anywhere;
+}
+
+.ds-swatch-uses {
+  color: var(--text-secondary);
+  font-size: var(--ui-11);
+  line-height: var(--leading-ui);
+  overflow-wrap: anywhere;
+}
+
+/* ===== Типографика: лестница ===== */
+.ds-type-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  min-width: 0;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ds-type-row:last-child { border-bottom: none; }
+
+.ds-type-sample {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ds-type-token {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+/* ===== Spacing и радиусы: полоски-образцы ===== */
+.ds-meters {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin: 0;
+}
+
+.ds-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.ds-meter-label {
+  flex: 0 0 52px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+.ds-meter-bar {
+  flex: 0 0 auto;
+  height: var(--space-3);
+  background: var(--accent-gold);
+  border-radius: var(--radius-xs);
+}
+
+.ds-meter-value {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+/* ===== Компоненты: живые образцы ===== */
+.ds-samples {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.ds-samples-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Метка-разделитель внутри колонки: ширина во всю ячейку, но высота — своя.
+   Раньше здесь стояло `flex: 0 0 100%` — приём для flex-строки с переносом.
+   В колоночном контейнере `.ds-samples` процентная база считается от высоты
+   ячейки, и каждая из четырёх меток становилась блоком во всю её высоту:
+   содержимое вылезало за границу ячейки на тысячи пикселей. */
+.ds-samples-label {
+  align-self: stretch;
+  width: 100%;
+  margin-top: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--ui-11);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Первая метка открывает блок — отступ сверху лишний, он съедал бы строку. */
+.ds-samples-label:first-child { margin-top: 0; }
+
+.ds-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--space-3);
+  color: var(--text-primary);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: var(--ui-12);
+}
+
+/* Акцентный чип: §1.1 запрещает `--text-on-accent` на `--accent-gold`
+   (контраст 3.1:1), поэтому акцент несёт рамка и тонированная подложка,
+   а текст остаётся основным. */
+.ds-chip--gold {
+  color: var(--gold-text);
+  background: rgb(var(--accent-gold-rgb) / 0.12);
+  border-color: var(--accent-gold);
+}
+
+/* Пустое состояние §4.6 — пунктир, глиф по центру, подсказка. */
+.ds-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: var(--space-2);
+  text-align: center;
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-8);
+}
+
+.ds-empty-glyph {
+  width: var(--space-5);
+  height: var(--space-5);
+  color: var(--text-primary);
+  opacity: 0.35;
+}
+
+.ds-empty-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+}
+
+.ds-empty-hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+}
+
+/* Статусная точка §6 — та же кодировка, что в остальных модулях. */
+.ds-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.ds-dot--fact { background: var(--accent-gold); }
+.ds-dot--work { background: var(--text-secondary); }
+.ds-dot--guess { background: var(--text-secondary); opacity: 0.6; }
+.ds-dot--break { background: var(--accent-red); }
+
+/* ===== Оговорка о статусе: модуль описывает правила, а не факты ===== */
+.ds-caveat {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-left: 2px solid var(--accent-gold);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+}
+
+.ds-caveat svg {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  color: var(--accent-gold);
+}
+
+.ds-caveat b { color: var(--text-primary); font-weight: 600; }
+
+/* ===== Адаптив: §5.3 — одна колонка ===== */
+@media (max-width: 900px) {
+  .ds-cell--doctrine,
+  .ds-cell--color,
+  .ds-cell--type,
+  .ds-cell--space,
+  .ds-cell--components,
+  .ds-cell--statuses,
+  .ds-cell--radius,
+  .ds-cell--shadow,
+  .ds-cell--motion,
+  .ds-cell--a11y,
+  .ds-cell--patterns {
+    grid-column: 1 / -1;
+  }
+  .ds-voices { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 560px) {
+  /* Две колонки вместо одной: 12 цветов в столбик растягивали страницу
+     до четырёх экранов на телефоне (§5.3 — одна колонка относится к ячейкам). */
+  .ds-swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ds-actions { flex-direction: column; }
+  .ds-actions .lab-btn { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-cell,
+  .ds-swatch,
+  .ds-nav-link,
+  .ds-copy-status,
+  [data-ds-token] { transition: none; }
+  .ds-copy-status { transform: none; }
+}
+
+/* ===== Клавиатурный фокус §7: кольцо, не свечение ===== */
+.ds-nav-link:focus-visible,
+.ds-cell :focus-visible {
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-radius: var(--radius-xs);
+}
+}

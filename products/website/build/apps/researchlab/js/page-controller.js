@@ -2940,6 +2940,18 @@ const PageController = (function() {
         if (window.AdminSettings) AdminSettings.render();
         break;
 
+      case 'design-system':
+        // Модуль целиком в DesignSystem.render(): он читает токены из
+        // getComputedStyle, поэтому перерисовывается на каждом входе —
+        // иначе образцы остались бы от прошлой темы.
+        if (window.DesignSystem) {
+          DesignSystem.render(container);
+        } else {
+          container.innerHTML = '<div class="lab-empty"><p class="lab-empty-hint">Модуль дизайн-системы не загружен</p></div>';
+        }
+        container.dataset.loaded = '1';
+        break;
+
       // ===== МОДУЛИ С FETCH HTML-СТРАНИЦЫ =====
       case 'paleo-builder':
       case 'video-lab':

@@ -89,6 +89,7 @@ window.ModuleRegistry = (function () {
     { id: 'video-lab', kind: 'panel' },
     { id: 'exposure-editor', kind: 'panel' },
     { id: 'admin-settings', kind: 'panel' },
+    { id: 'design-system', kind: 'panel' },
 
     // --- словари-разоблачения (dict-*.md) ---
     { id: 'dict-religionims', kind: 'markdown' },

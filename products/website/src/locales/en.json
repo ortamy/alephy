@@ -176,6 +176,11 @@
         "subtitle": "",
         "title": ""
       },
+      "design-system": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "dictionaries": {
         "kicker": "",
         "subtitle": "",
@@ -470,6 +475,7 @@
       "checkers": "",
       "club": "",
       "dashboard": "",
+      "design-system": "",
       "dictionaries": "",
       "ed-chat": "",
       "generators": "",

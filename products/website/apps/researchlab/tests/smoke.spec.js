@@ -135,7 +135,8 @@ const moduleAnchors = {
   'context-generator': '.cx-shell',
   'paleo-keyboard': '#pk-keys .pk-key',
   vision: '.vi-bento',
-  analyzers: '.analyzers-shell'
+  analyzers: '.analyzers-shell',
+  'design-system': '.ds-bento'
 };
 
 const gridRoutes = process.env.SMOKE_QUICK === '1' ? routes.filter((route) => quickRoutes.has(route)) : routes;
@@ -443,6 +444,8 @@ const parameterizedSamples = (() => {
     { route: `researches/case/${researches[0].slug}`, anchor: '.exposure-case-page' },
     ...checkerRoutesFromHub().map((route) => ({ route, anchor: moduleAnchors[route] || null }))
   ];
+
+
 })();
 
 test('substitution checker hero never titles «Расследование»', async ({ page }) => {
@@ -494,4 +497,80 @@ test.describe('parameterized routes render detail', () => {
 
     });
   }
+});
+
+// Модуль «Дизайн-система» показывает токены из живой темы, поэтому проверяем
+// не только наличие разметки, но и то, что образцы совпадают с computed-стилями.
+test.describe('design system module', () => {
+  test('bento показывает токены темы и живые компоненты', async ({ page }) => {
+    const errors = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error' && !message.text().startsWith('Failed to load resource:')) errors.push(`console: ${message.text()}`);
+    });
+    page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+    await page.goto('/#design-system', { waitUntil: 'domcontentloaded' });
+
+    const bento = page.locator('#labContent .ds-bento');
+    await expect(bento).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+    const report = await page.evaluate(() => {
+      const styles = getComputedStyle(document.documentElement);
+      const swatch = document.querySelector('.ds-swatch-name');
+      const typeRow = document.querySelector('.ds-type-row');
+      return {
+        cells: document.querySelectorAll('#labContent .ds-cell').length,
+        swatches: document.querySelectorAll('.ds-swatch').length,
+        // Подпись образца должна содержать реальное значение токена, а не прочерк.
+        swatchValue: swatch ? swatch.parentNode.querySelector('[data-ds-token]').textContent.trim() : '',
+        tokenValue: styles.getPropertyValue('--bg-primary').trim(),
+        typeSamplePx: typeRow ? getComputedStyle(typeRow.querySelector('.ds-type-sample')).fontSize : '',
+        tokens3xl: styles.getPropertyValue('--text-3xl').trim(),
+        hasButtons: document.querySelectorAll('.ds-cell--components .lab-btn').length,
+        hasEmpty: document.querySelectorAll('.ds-empty').length,
+        hasStatusDots: document.querySelectorAll('.ds-cell--statuses .ds-dot').length
+      };
+    });
+
+    expect(report.cells, 'ячейки bento').toBeGreaterThanOrEqual(10);
+    expect(report.swatches, 'образцы цветовых ролей').toBeGreaterThanOrEqual(10);
+    expect(report.tokenValue, '--accent-gold должен быть задан темой').not.toBe('');
+    expect(report.swatchValue, 'подпись образца показывает значение токена').toContain(report.tokenValue);
+    expect(report.typeSamplePx, 'лестница типов использует реальный токен').toBe(report.tokens3xl);
+    expect(report.hasButtons, 'живые кнопки §4.4').toBeGreaterThanOrEqual(4);
+    expect(report.hasEmpty, 'живое пустое состояние §4.6').toBe(1);
+    expect(report.hasStatusDots, 'легенда статусов §6').toBe(4);
+    expect(errors, `uncaught errors on #design-system`).toEqual([]);
+  });
+
+  test('образцы перечитывают токены при смене темы', async ({ page }) => {
+    await page.goto('/#design-system', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#labContent .ds-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+    // --bg-primary различается в светлой и тёмной теме. page-controller не
+    // перерисовывает уже загруженную панель, поэтому модуль обязан обновлять
+    // подписи сам — иначе он показывал бы цвета предыдущей темы.
+    const readLabel = () => page.evaluate(() => {
+      const node = document.querySelector('#labContent [data-ds-token="--bg-primary"]');
+      return node ? node.textContent.trim() : '';
+    });
+
+    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); });
+    await expect
+      .poll(readLabel, { timeout: SPINNER_BUDGET_MS, message: 'подписи не обновились после смены темы' })
+      .toBe(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim()));
+    const light = await readLabel();
+
+    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'dark'); });
+    await expect
+      .poll(readLabel, { timeout: SPINNER_BUDGET_MS, message: 'подписи не обновились после смене темы' })
+      .not.toBe(light);
+    const dark = await readLabel();
+
+    expect(light, 'подпись образца в светлой теме').toMatch(/#[0-9a-f]{3,8}/i);
+    expect(dark, 'подпись образца в тёмной теме').toMatch(/#[0-9a-f]{3,8}/i);
+    expect(dark, 'образцы обязаны показывать цвет своей темы').not.toBe(light);
+
+    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); });
+  });
 });
