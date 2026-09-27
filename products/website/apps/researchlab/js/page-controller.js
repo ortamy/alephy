@@ -13,9 +13,10 @@ const PageController = (function() {
   // ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
 
   function escapeHtml(text) {
-    var d = document.createElement('div');
-    d.textContent = text == null ? '' : String(text);
-    return d.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
   var htmlCache = {};

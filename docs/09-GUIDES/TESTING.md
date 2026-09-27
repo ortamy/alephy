@@ -4,6 +4,46 @@
 **Статус:** актуальный минимум проверки
 **Опора:** `docs/01-ARCHITECTURE/ARCHITECTURE.md`
 
+## Автоматические гейты (CI)
+
+Локальные проверки ниже — минимум. Репозиторий держит четыре гейта, каждый
+запускается в GitHub Actions и блокирует merge при падении:
+
+| Workflow | Что проверяет | Команда |
+|---|---|---|
+| `docs-check.yml` | целостность docs + **паритет build** | `python tools/check-docs.py check`, `python tools/check-build-sync.py` |
+| `i18n-check.yml` | словари, паритет локалей, рантайм | `python tools/i18n-check.py check`, `node tools/i18n-verify.mjs` |
+| `smoke.yml` | **Playwright: все маршруты лаборатории** | `npx playwright test` |
+| `deploy.yml` | сборка и публикация на Pages | `bash tools/build.sh` |
+
+### smoke
+
+Playwright гоняет реестр маршрутов из `js/router.js` — добавил модуль, и
+тест поедет за ним автоматически. Проверяет отсутствие uncaught-ошибок,
+мохибейка, горизонтальный overflow на mobile и вечные спиннеры.
+
+```bash
+cd products/website/apps/researchlab
+npm run test:smoke          # полный прогон
+npm run test:smoke:quick    # 8 ключевых маршрутов
+SMOKE_QUICK=1 npx playwright test --grep "registered routes"
+```
+
+`@playwright/test` объявлен в `apps/researchlab/package.json`, а не в
+`products/website/package.json` — `npm ci` нужно выполнять именно там.
+
+### Паритет build
+
+`products/website/build/` — зеркало `apps/researchlab`, а не источник
+истины. Источник истины — `apps/researchlab`. Проверка ловит расхождение:
+
+```bash
+python tools/check-build-sync.py
+```
+
+Файл отсутствует в build, отличается побайтно или остался лишним — гейт
+падает с exit 1. После правки исходников: `bash products/website/tools/build.sh`.
+
 ## Перед изменением
 
 ```bash

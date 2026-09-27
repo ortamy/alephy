@@ -1,0 +1,62 @@
+name: Smoke tests
+
+# Регрессии лаборатории ловит Playwright, а не docs/i18n-гейты. Без этого
+# workflow правило «smoke в CI на каждый push» не выполняется: 3 500 строк
+# тестов запускались только вручную, и регресс мог уйти в main незамеченным.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'products/website/apps/researchlab/**'
+      - 'products/website/package.json'
+      - '.github/workflows/smoke.yml'
+  pull_request:
+    paths:
+      - 'products/website/apps/researchlab/**'
+      - 'products/website/package.json'
+      - '.github/workflows/smoke.yml'
+concurrency:
+  group: smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Playwright and browsers
+        # npm ci здесь не годится: @playwright/test объявлен в
+        # apps/researchlab/package.json, а не в products/website/package.json.
+        working-directory: products/website/apps/researchlab
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Run smoke suite
+        working-directory: products/website/apps/researchlab
+        env:
+          # '0' = полный обход всех маршрутов из реестра router.js.
+          # Наивное значение `0` в YAML превратилось бы в false, а тесты
+          # читают строку: "0" !== "1", поэтому полный прогон сохраняется.
+          SMOKE_QUICK: '0'
+        run: npx playwright test
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-report
+          path: |
+            products/website/apps/researchlab/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

@@ -104,9 +104,10 @@ LabModal.show('<img src="assets/icons/32/scribe/scrolls.png" width="32" height="
   }
 
   function escapeHtml(text) {
-    var d = document.createElement('div');
-    d.textContent = text;
-    return d.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
   return {

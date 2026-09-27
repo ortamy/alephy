@@ -33,9 +33,10 @@ const LoadResearches = (function() {
   }
 
   function escapeHtml(text) {
-    var d = document.createElement('div');
-    d.textContent = text == null ? '' : text;
-    return d.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
   function generateId() {

@@ -1,8 +1,8 @@
 /**
- * paleo-linguistics.js — Модуль «Палео-лингвистика»
+ * paleo-linguistics.js пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
  *
- * Эволюция алфавита: прото-ханаанский > палео-иврит > финикийский.
- * Маршрут: #paleo-linguistics, #paleo-linguistics/<language-id>
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ > пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ > пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+ * пїЅпїЅпїЅпїЅпїЅпїЅпїЅ: #paleo-linguistics, #paleo-linguistics/<language-id>
  */
 
 const PaleoLinguistics = (function() {
@@ -18,12 +18,14 @@ const PaleoLinguistics = (function() {
   let routeVersion = 0;
 
   function escapeHtml(text) {
-    var d = document.createElement('div');
-    d.textContent = text == null ? '' : String(text);
-    return d.innerHTML;
+    // РљР°РЅРѕРЅ РІ js/utils.js. Р¤Р°Р№Р» РїСЂР°РІРёРј РІСЂСѓС‡РЅСѓСЋ: РІ РЅС‘Рј Р±С‹Р» Р±Р°Р№С‚ cp1251 (0x97)
+    // РІ РєРѕРјРјРµРЅС‚Р°СЂРёРё, Рё РјР°СЃСЃРѕРІР°СЏ РїРµСЂРµРєРѕРґРёСЂРѕРІРєР° РµРіРѕ РѕР±РЅСѓР»СЏР»Р°.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
-  // В карточке оставляем только имя языка; подробности открываются по клику.
+  // пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
   function cardLanguageName(name) {
     return String(name == null ? '' : name).replace(/\s*\([^)]*\)/g, '').trim();
   }
@@ -43,7 +45,7 @@ const PaleoLinguistics = (function() {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
   }
 
-  // ===== ИНИЦИАЛИЗАЦИЯ =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ =====
   function init(parsed) {
     var container = document.getElementById('paleo-linguistics');
     if (!container) return;
@@ -53,13 +55,13 @@ const PaleoLinguistics = (function() {
       route(container, parsed, version);
     }).catch(function(error) {
       if (version !== routeVersion) return;
-      container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки: ' + escapeHtml(error.message) + '</div>';
+      container.innerHTML = '<div class="lab-alert lab-alert-error">пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: ' + escapeHtml(error.message) + '</div>';
     });
   }
 
-  // ===== МАРШРУТИЗАЦИЯ ВНУТРИ МОДУЛЯ =====
-  // #paleo-linguistics — карточки языков
-  // #paleo-linguistics/<lang-id> — страница языка (таб по умолчанию "Алфавит")
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ =====
+  // #paleo-linguistics пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+  // #paleo-linguistics/<lang-id> пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "пїЅпїЅпїЅпїЅпїЅпїЅпїЅ")
   function isCurrentRoute(langId) {
     var hash = window.location.hash.replace(/^#/, '').split('?')[0].split('/');
     return hash[0] === 'paleo-linguistics' && (langId ? hash[1] === langId : !hash[1]);
@@ -75,7 +77,7 @@ const PaleoLinguistics = (function() {
     }
   }
 
-  // ===== ЗАГРУЗКА ОБЩИХ ДАННЫХ (список языков + буквы эволюции) =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ + пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ) =====
   function loadCore() {
     if (languages.length && letters.length) return Promise.resolve();
     if (dataPromise) return dataPromise;
@@ -100,7 +102,7 @@ const PaleoLinguistics = (function() {
     return dataPromise;
   }
 
-  // ===== ЗАГРУЗКА ДАННЫХ ОДНОГО ЯЗЫКА =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ =====
   function loadLanguage(langMeta) {
     if (langCache[langMeta.id]) return Promise.resolve(langCache[langMeta.id]);
     return fetch(dataPath(langMeta.file)).then(function(r) {
@@ -112,12 +114,12 @@ const PaleoLinguistics = (function() {
     });
   }
 
-  // ===== СЕТКА КАРТОЧЕК ЯЗЫКОВ =====
+  // ===== пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ =====
   function renderLangGrid(container, version) {
     Promise.all(languages.map(loadLanguage)).then(function(metas) {
       if (version !== routeVersion || !isCurrentRoute()) return;
       var cards = metas.map(function(lang, i) {
-        return '<div class="lab-card pl-lang-card" data-id="' + escapeHtml(lang.id) + '" role="button" tabindex="0" aria-label="Открыть язык: ' + escapeHtml(cardLanguageName(lang.name)) + '" style="animation-delay:' + (i * 60) + 'ms">' +
+        return '<div class="lab-card pl-lang-card" data-id="' + escapeHtml(lang.id) + '" role="button" tabindex="0" aria-label="пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ: ' + escapeHtml(cardLanguageName(lang.name)) + '" style="animation-delay:' + (i * 60) + 'ms">' +
           '<div class="pl-lang-card-icon"><img src="assets/icons/32/' + escapeHtml(languages[i].icon) + '.png" width="32" height="32" alt="" onerror="this.style.display=\'none\'"></div>' +
           '<h2 class="pl-lang-title">' + escapeHtml(cardLanguageName(lang.name)) + '</h2>' +
           '<div class="pl-lang-role">' + escapeHtml(lang.role) + '</div>' +
@@ -125,8 +127,8 @@ const PaleoLinguistics = (function() {
       }).join('');
 
       container.innerHTML =
-        '<h1><img src="assets/icons/32/scribe/scroll.png" class="lab-icon" alt=""> Палео-лингвистика</h1>' +
-        '<p class="subtitle">Эволюция алфавита от прото-ханаанского письма через палео-иврит к финикийскому. Выберите язык для изучения.</p>' +
+        '<h1><img src="assets/icons/32/scribe/scroll.png" class="lab-icon" alt=""> пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</h1>' +
+        '<p class="subtitle">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</p>' +
         '<div class="pl-lang-grid">' + cards + '</div>';
 
       container.querySelectorAll('.pl-lang-card').forEach(function(card) {
@@ -146,16 +148,16 @@ const PaleoLinguistics = (function() {
       });
     }).catch(function(error) {
       if (version !== routeVersion || !isCurrentRoute()) return;
-      container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки языков: ' + escapeHtml(error.message) + '</div>';
+      container.innerHTML = '<div class="lab-alert lab-alert-error">пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ: ' + escapeHtml(error.message) + '</div>';
     });
   }
 
-  // ===== СТРАНИЦА ЯЗЫКА =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ =====
   function showLanguage(container, langId, version) {
     var meta = languages.filter(function(l) { return l.id === langId; })[0];
     if (!meta) {
-      container.innerHTML = '<div class="lab-alert lab-alert-error">Язык «' + escapeHtml(langId) + '» не найден.</div>' +
-        '<button class="lab-btn lab-btn-secondary pl-back-btn" onclick="LabRouter.navigate(\'paleo-linguistics\')">< Назад к языкам</button>';
+      container.innerHTML = '<div class="lab-alert lab-alert-error">пїЅпїЅпїЅпїЅ пїЅ' + escapeHtml(langId) + 'пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.</div>' +
+        '<button class="lab-btn lab-btn-secondary pl-back-btn" onclick="LabRouter.navigate(\'paleo-linguistics\')">< пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</button>';
       return;
     }
 
@@ -181,23 +183,23 @@ const PaleoLinguistics = (function() {
       });
     }).catch(function(error) {
       if (version !== routeVersion || !isCurrentRoute(langId)) return;
-      container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки языка: ' + escapeHtml(error.message) + '</div>';
+      container.innerHTML = '<div class="lab-alert lab-alert-error">пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ: ' + escapeHtml(error.message) + '</div>';
     });
   }
 
   function renderLangPage(lang) {
     return '<div class="pl-lang-page">' +
-      '<button class="lab-btn lab-btn-secondary lab-btn-sm pl-back-btn" onclick="LabRouter.navigate(\'paleo-linguistics\')">< Назад к языкам</button>' +
+      '<button class="lab-btn lab-btn-secondary lab-btn-sm pl-back-btn" onclick="LabRouter.navigate(\'paleo-linguistics\')">< пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
       '<div class="pl-lang-head">' +
         '<div class="pl-lang-title-wrap"><img src="assets/icons/32/scribe/scroll.png" class="lab-icon" alt="">' + escapeHtml(lang.name) + '</div>' +
         '<p class="subtitle">' + escapeHtml(lang.role) + '</p>' +
-        '<div class="pl-lang-meta">' + escapeHtml(lang.period) + ' · ' + escapeHtml(lang.script) + '</div>' +
+        '<div class="pl-lang-meta">' + escapeHtml(lang.period) + ' пїЅ ' + escapeHtml(lang.script) + '</div>' +
       '</div>' +
       '<div class="lab-tabs">' +
-        '<button type="button" class="lab-tab active" data-tab="alphabet">Алфавит</button>' +
-        '<button type="button" class="lab-tab" data-tab="roots">Корни</button>' +
-        '<button type="button" class="lab-tab" data-tab="texts">Тексты</button>' +
-        '<button type="button" class="lab-tab" data-tab="grammar">Грамматика</button>' +
+        '<button type="button" class="lab-tab active" data-tab="alphabet">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
+        '<button type="button" class="lab-tab" data-tab="roots">пїЅпїЅпїЅпїЅпїЅ</button>' +
+        '<button type="button" class="lab-tab" data-tab="texts">пїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
+        '<button type="button" class="lab-tab" data-tab="grammar">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
       '</div>' +
       '<div id="pl-tab-alphabet" class="pl-tab-panel">' + renderAlphabetTab() + '</div>' +
       '<div id="pl-tab-roots" class="pl-tab-panel" style="display:none;">' + renderRootsTab(lang) + '</div>' +
@@ -210,15 +212,15 @@ const PaleoLinguistics = (function() {
     return langId.replace(/-/g, '_');
   }
 
-  // ===== ТАБ «АЛФАВИТ» =====
+  // ===== пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅТ» =====
   function renderAlphabetTab() {
     if (currentLang.alphabet_mode === 'standalone') return renderStandaloneAlphabetTab();
     return renderEvolutionAlphabetTab();
   }
 
-  // Языки общей ветви письма (прото-ханаанский, палео-иврит, финикийский, арамейский)
+  // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
   function renderEvolutionAlphabetTab() {
-    if (!letters.length) return '<div class="lab-alert lab-alert-info">Буквы пока не загружены.</div>';
+    if (!letters.length) return '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</div>';
     var cards = letters.map(function(letter) {
       var stage = letter.stages[stageKey(currentLang.id)];
       var glyph = stage && stage.glyph ? escapeHtml(stage.glyph) :
@@ -229,14 +231,14 @@ const PaleoLinguistics = (function() {
         '<div class="pl-letter-sound">' + escapeHtml(letter.sound) + '</div>' +
       '</div>';
     }).join('');
-    return '<p class="subtitle">22 буквы. Нажмите на букву, чтобы увидеть её эволюцию через стадии письма.</p>' +
+    return '<p class="subtitle">22 пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.</p>' +
       '<div class="pl-alphabet-grid">' + cards + '</div>';
   }
 
-  // Языки без общей эволюции с 22-буквенным алфавитом (клинопись, арабский, угаритский)
+  // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ 22-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
   function renderStandaloneAlphabetTab() {
     var signs = currentLang.own_alphabet || [];
-    if (!signs.length) return '<div class="lab-alert lab-alert-info">Знаки пока не загружены.</div>';
+    if (!signs.length) return '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</div>';
     var note = currentLang.alphabet_note
       ? '<p class="subtitle">' + escapeHtml(currentLang.alphabet_note) + '</p>' : '';
     var fontClass = 'pl-script-' + escapeHtml(currentLang.id);
@@ -250,16 +252,16 @@ const PaleoLinguistics = (function() {
     return note + '<div class="pl-alphabet-grid">' + cards + '</div>';
   }
 
-  // ===== МОДАЛКА ЭВОЛЮЦИИ БУКВЫ =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ =====
   function showEvolution(letterId) {
     var letter = letters.filter(function(l) { return l.id === letterId; })[0];
     if (!letter) return;
 
     var order = [
-      { key: 'proto_canaanite', label: 'Прото-ханаанский' },
-      { key: 'paleo_hebrew', label: 'Палео-иврит' },
-      { key: 'phoenician', label: 'Финикийский' },
-      { key: 'imperial_aramaic', label: 'Арамейский' }
+      { key: 'proto_canaanite', label: 'пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ' },
+      { key: 'paleo_hebrew', label: 'пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅ' },
+      { key: 'phoenician', label: 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ' },
+      { key: 'imperial_aramaic', label: 'пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ' }
     ].filter(function(o) { return letter.stages[o.key]; });
 
     var stages = order.map(function(o, i) {
@@ -276,17 +278,17 @@ const PaleoLinguistics = (function() {
     }).join('');
 
     var html = '<div class="pl-evolution-row">' + stages + '</div>' +
-      '<div class="lab-alert lab-alert-info">Звук: <strong>' + escapeHtml(letter.sound) + '</strong> · Образ: <strong>' + escapeHtml(letter.meaning) + '</strong></div>';
+      '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅ: <strong>' + escapeHtml(letter.sound) + '</strong> пїЅ пїЅпїЅпїЅпїЅпїЅ: <strong>' + escapeHtml(letter.meaning) + '</strong></div>';
 
     LabModal.show(
       '<img src="assets/icons/32/paleo/track.png" width="24" height="24" alt=""> ' + escapeHtml(letter.name) + ' (' + escapeHtml(letter.hebrew) + ')',
       html,
-      '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>' +
-      '<button class="lab-btn lab-btn-primary lab-btn-sm" onclick="PaleoLinguistics.addToCompare(\'evolution\',\'' + letter.id + '\')">Добавить в сравнение</button>'
+      '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
+      '<button class="lab-btn lab-btn-primary lab-btn-sm" onclick="PaleoLinguistics.addToCompare(\'evolution\',\'' + letter.id + '\')">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>'
     );
   }
 
-  // ===== МОДАЛКА ЗНАКА (STANDALONE-АЛФАВИТЫ) =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ (STANDALONE-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ) =====
   function showSignDetail(signId) {
     var signs = (currentLang && currentLang.own_alphabet) || [];
     var sign = signs.filter(function(s) { return s.id === signId; })[0];
@@ -295,22 +297,22 @@ const PaleoLinguistics = (function() {
     var html = '<div class="pl-sign-detail">' +
         '<div class="pl-sign-detail-glyph lang-' + escapeHtml(currentLang.id) + '">' + escapeHtml(sign.symbol) + '</div>' +
         '<div class="pl-sign-detail-reading">' + escapeHtml(sign.reading) + '</div>' +
-        '<div class="lab-alert lab-alert-info">Тип: <strong>' + escapeHtml(sign.type) + '</strong></div>' +
+        '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅ: <strong>' + escapeHtml(sign.type) + '</strong></div>' +
         '<div class="pl-sign-detail-meaning">' + escapeHtml(sign.meaning) + '</div>' +
       '</div>';
 
     LabModal.show(
       '<img src="assets/icons/32/scribe/scroll.png" width="24" height="24" alt=""> ' + escapeHtml(sign.reading),
       html,
-      '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>' +
-      '<button class="lab-btn lab-btn-primary lab-btn-sm" onclick="PaleoLinguistics.addToCompare(\'' + currentLang.id + '\',\'' + sign.id + '\')">Добавить в сравнение</button>'
+      '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>' +
+      '<button class="lab-btn lab-btn-primary lab-btn-sm" onclick="PaleoLinguistics.addToCompare(\'' + currentLang.id + '\',\'' + sign.id + '\')">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</button>'
     );
   }
 
-  // ===== ТАБ «КОРНИ» =====
+  // ===== пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅИ» =====
   function renderRootsTab(lang) {
     var roots = lang.common_roots || [];
-    if (!roots.length) return '<div class="lab-alert lab-alert-info">Общие корни пока не описаны.</div>';
+    if (!roots.length) return '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</div>';
     var rows = roots.map(function(r) {
       return '<tr class="pl-root-row" data-hebrew="' + escapeHtml(r.hebrew) + '">' +
         '<td>' + escapeHtml(r.language) + '</td>' +
@@ -318,14 +320,14 @@ const PaleoLinguistics = (function() {
         '<td>' + escapeHtml(r.meaning) + '</td>' +
       '</tr>';
     }).join('');
-    return '<p class="subtitle">Нажмите на корень, чтобы найти его в Корневом словаре.</p>' +
-      '<table class="lab-table"><thead><tr><th>Форма</th><th>Иврит</th><th>Значение</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    return '<p class="subtitle">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</p>' +
+      '<table class="lab-table"><thead><tr><th>пїЅпїЅпїЅпїЅпїЅ</th><th>пїЅпїЅпїЅпїЅпїЅ</th><th>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
-  // ===== ТАБ «ТЕКСТЫ» =====
+  // ===== пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅЫ» =====
   function renderTextsTab(lang) {
     var texts = lang.texts || [];
-    if (!texts.length) return '<div class="lab-alert lab-alert-info">Примеры текстов пока не подобраны.</div>';
+    if (!texts.length) return '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</div>';
     return texts.map(function(t) {
       return '<div class="lab-card pl-text-card"><div class="lab-card-body">' +
         '<div class="pl-text-original">' + linkifyWords(t.original) + '</div>' +
@@ -335,7 +337,7 @@ const PaleoLinguistics = (function() {
     }).join('');
   }
 
-  // Оборачивает ивритские слова в клик-ссылки на #word-analyzer
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ #word-analyzer
   function linkifyWords(original) {
     return original.split(' ').map(function(w) {
       var clean = escapeHtml(w);
@@ -344,21 +346,21 @@ const PaleoLinguistics = (function() {
     }).join(' ');
   }
 
-  // ===== ТАБ «ГРАММАТИКА» =====
+  // ===== пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ =====
   function renderGrammarTab(lang) {
     var g = lang.grammar || {};
     var items = [
-      ['Порядок слов', g.order],
-      ['Падежи', g.cases],
-      ['Примечание', g.note]
+      ['пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ', g.order],
+      ['пїЅпїЅпїЅпїЅпїЅпїЅ', g.cases],
+      ['пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ', g.note]
     ].filter(function(pair) { return pair[1]; });
-    if (!items.length) return '<div class="lab-alert lab-alert-info">Грамматика пока не описана.</div>';
+    if (!items.length) return '<div class="lab-alert lab-alert-info">пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</div>';
     return items.map(function(pair) {
       return '<div class="pl-grammar-item"><strong>' + escapeHtml(pair[0]) + ':</strong> ' + escapeHtml(pair[1]) + '</div>';
     }).join('');
   }
 
-  // ===== ОБРАБОТЧИКИ СОБЫТИЙ СТРАНИЦЫ ЯЗЫКА =====
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ =====
   function bindLangPageEvents(container, lang) {
     container.querySelectorAll('.lab-tab').forEach(function(btn) {
       btn.addEventListener('click', function() { switchTab(container, this.dataset.tab); });
@@ -402,15 +404,15 @@ const PaleoLinguistics = (function() {
     });
   }
 
-  // ===== СРАВНЕНИЕ (localStorage) =====
-  // Ключ — "source:id", т.к. знаки разных языков (напр. алеф эволюции и
-  // аккадский силлабознак) не должны схлопываться в один id.
+  // ===== пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (localStorage) =====
+  // пїЅпїЅпїЅпїЅ пїЅ "source:id", пїЅ.пїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ
+  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ) пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ id.
   function addToCompare(source, signId) {
     var key = source + ':' + signId;
     var list = read(COMPARE_KEY, []);
     if (list.indexOf(key) === -1) list.push(key);
     write(COMPARE_KEY, list);
-    if (typeof LabToast !== 'undefined') LabToast.show('Добавлено в сравнение');
+    if (typeof LabToast !== 'undefined') LabToast.show('пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ');
   }
 
   function getCompareList() {

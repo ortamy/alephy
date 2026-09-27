@@ -4,13 +4,19 @@ on:
   push:
     paths:
       - 'docs/**'
+      - 'products/website/apps/researchlab/**'
+      - 'products/website/build/apps/researchlab/**'
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
+      - 'tools/check-build-sync.py'
   pull_request:
     paths:
       - 'docs/**'
+      - 'products/website/apps/researchlab/**'
+      - 'products/website/build/apps/researchlab/**'
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
+      - 'tools/check-build-sync.py'
 
 jobs:
   check:
@@ -21,6 +27,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Check build parity
+        run: python tools/check-build-sync.py
 
       - name: Check docs integrity
         run: python tools/check-docs.py check

@@ -202,12 +202,10 @@
   ];
 
   function escapeHtml(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(value)
+      : String(value == null ? '' : value);
   }
 
   function parsePaleoTranslationCards(markdown) {
@@ -751,9 +749,9 @@
       var cardNumber = ('0' + (index + 1)).slice(-2);
       var infoButton = '<button type="button" class="methodology-icon-btn methodology-info-btn" data-id="' + escapeHtml(card.id) + '" onclick="MethodologyLab.openCard(this.dataset.id); return false;" title="Открыть полный текст" aria-label="Открыть полный текст карточки">' + INFO_ICON + '</button>';
       return '<article class="methodology-card" data-id="' + escapeHtml(card.id) + '">' +
-        '<span class="methodology-card-index" aria-hidden="true">' + cardNumber + '</span>' +
         '<div class="methodology-card-body">' +
-          '<div class="methodology-card-head">' + cardIcon + '<h3 class="methodology-card-title">' + escapeHtml(cardTitle) + '</h3></div>' +
+          '<div class="methodology-card-head"><span class="methodology-card-index" aria-hidden="true">' + cardNumber + '</span>' + cardIcon +
+          '<h3 class="methodology-card-title">' + escapeHtml(cardTitle) + '</h3></div>' +
           '<p class="methodology-card-text">' + escapeHtml(cardText) + '</p>' +
         '</div>' +
         '<div class="methodology-card-actions">' +

@@ -21,6 +21,13 @@
 исходники → проверка → tools/build.sh → build/ → деплой
 ```
 
+`build/` коммитится в репозиторий (его читает Pages), поэтому расхождение
+с исходниками — реальный класс багов: отлаживаешь одну копию, а пользователю
+уезжает другая. Паритет держит гейт `python tools/check-build-sync.py`
+(шаг `Check build parity` в `.github/workflows/docs-check.yml`): отсутствующий,
+изменившийся или лишний файл валит CI. Правь всегда `apps/researchlab/`,
+затем пересобирай.
+
 ## 2. Карта репозитория
 
 ```text
@@ -99,6 +106,7 @@ products/website/apps/researchlab/
 ├── index.html               # HTML-точка входа и список подключений
 ├── css/                     # базовый слой и стили модулей
 ├── js/
+│   ├── utils.js             # AlephyUtils: канон escapeHtml (первый из js/)
 │   ├── router.js            # hash-router LabRouter
 │   ├── page-controller.js   # центральный рендеринг модулей
 │   ├── lab-hero.js          # единая шапка и представления маршрутов

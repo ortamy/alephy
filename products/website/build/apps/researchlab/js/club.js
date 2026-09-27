@@ -11,9 +11,10 @@ const ClubModule = (function() {
   var isCreateRoute = false;
 
   function escapeHtml(text) {
-    var el = document.createElement('div');
-    el.textContent = text == null ? '' : String(text);
-    return el.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
   function isValidEmail(email) {

@@ -54,12 +54,10 @@ const EtyLab = (function() {
   var currentAnalysis = null;
 
   function escapeHTML(value) {
-    return String(value == null ? '' : value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(value)
+      : String(value == null ? '' : value);
   }
 
   function normalize(value) {

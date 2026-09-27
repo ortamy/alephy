@@ -93,14 +93,9 @@
 }
 
 .methodology-card {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   flex: 1 1 20rem;
-  grid-template-columns: 1.75rem minmax(0, 1fr);
-  grid-template-areas:
-    "index body"
-    "actions actions";
-  align-content: start;
-  gap: var(--space-1) var(--space-3);
   min-width: 0;
   padding: var(--space-3) var(--space-4);
   background: var(--surface);
@@ -122,24 +117,22 @@
 }
 
 .methodology-card-index {
-  grid-area: index;
+  flex: 0 0 1.75rem;
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--ui-11);
   font-variant-numeric: tabular-nums;
-  line-height: 1.8;
 }
 .methodology-card-body {
-  grid-area: body;
   min-width: 0;
+  margin-bottom: var(--space-1);
 }
 .methodology-card-actions {
-  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 2px;
-  margin-top: var(--space-1);
+  margin-top: auto;
 }
 .methodology-card.is-editing {
   background: var(--surface-hover);
@@ -356,7 +349,6 @@ html[data-theme="dark"] .methodology-toolbar .lab-btn-secondary:active {
   .methodology-heading { padding: 20px; }
   .methodology-card {
     flex-basis: 100%;
-    grid-template-columns: minmax(0, 1fr);
     padding: var(--space-3);
   }
   .methodology-card-index { display: none; }

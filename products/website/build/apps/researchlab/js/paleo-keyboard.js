@@ -565,12 +565,10 @@ const PaleoKey = (function() {
   }
 
   function escapeHtml(value) {
-    return String(value)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(value)
+      : String(value == null ? '' : value);
   }
 
   /* ===== СОБЫТИЯ ===== */

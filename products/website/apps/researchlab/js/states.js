@@ -32,9 +32,10 @@ const AlephyStates = (function() {
 
   // ===== УТИЛИТЫ =====
   function escapeHtml(text) {
-    var d = document.createElement('div');
-    d.textContent = text == null ? '' : String(text);
-    return d.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(text)
+      : String(text == null ? '' : text);
   }
 
   // Делегат i18n: литералы t('key', 'русский резерв') читает tools/i18n-extract.py.

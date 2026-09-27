@@ -65,4 +65,9 @@ reports/STATS_*.md
 # Playwright / test artifacts
 .playwright-mcp/
 **/test-results/
+**/playwright-report/
 **/smoke-*.txt
+
+# Бэкапы редактора (метки оставляли .bak в js/ — ломали сборку и кодировку)
+*.bak
+*.orig

@@ -28,9 +28,10 @@
   }
 
   function escapeHtml(value) {
-    var node = document.createElement('div');
-    node.textContent = String(value == null ? '' : value);
-    return node.innerHTML;
+    // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
+    return window.AlephyUtils
+      ? AlephyUtils.escapeHtml(value)
+      : String(value == null ? '' : value);
   }
 
   // Иконки вставляются через LabIcons (js/lucide-init.js): без lucide разметка
