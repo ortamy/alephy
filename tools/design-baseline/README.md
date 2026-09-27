@@ -110,3 +110,31 @@ Ctrl+K открывает палитру; палитра содержит 24 п�
 - Золотой акцент задан токенами `--accent-gold`, `--text-gold`, `--border-gold` и `--accent-gold-rgb`.
 - CSS-модули не используют золотые HEX-fallback и raw RGB-значения; прозрачные слои используют `rgb(var(--accent-gold-rgb) / alpha)`.
 - `--border-gold` наследует текущий `--accent-gold` во всех темах, включая dark и white.
+
+## Пробники (не скриншоты, а проверки поведения)
+
+Скриншот-базлайн ловит дрейф вёрстки. Перечисленные ниже пробники отвечают на
+другие вопросы и запускаются отдельно.
+
+```bash
+node tools/design-baseline/registry-check.mjs            # реестр ↔ page-controller
+node tools/design-baseline/route-probe.mjs cartography    # один маршрут: DOM, спиннеры, консоль
+node tools/design-baseline/load-probe.mjs                 # FCP, размер бандла, счётчик запросов
+node tools/design-baseline/settings-probe.mjs desktop     # bento #settings + повторный вход
+node tools/design-baseline/vision-probe.mjs desktop      # bento #vision
+```
+
+- **`registry-check.mjs`** — сверяет `js/module-registry.js` с `switch` в
+  `page-controller` и с картой `mdPaths` в обе стороны. Падает, если маршрут
+  есть в реестре, но не рендерится (или наоборот). Шаг CI в `smoke.yml`.
+- **`route-probe.mjs <route>`** — открывает маршрут и печатает состояние панели:
+  `activeId`, число детей, видимые спиннеры, `data-module-error`, ширину
+  (overflow) и ошибки консоли. Первое средство, когда smoke падает на одном
+  маршруте: отличает реальный баг от упавшего web-сервера
+  (`ERR_CONNECTION_REFUSED` в логе = проблема окружения, а не кода).
+- **`load-probe.mjs`** — метрики старта: FCP, готовность дашборда, число
+  запросов и разбивка по типам. Основание для решений о ленивой загрузке:
+  на момент замера FCP 1.19 с при бюджете 2.5 с, поэтому модули не дробились.
+
+Все пробники поднимают свой статический сервер на отдельном порту и используют
+системный Chrome (`channel: 'chrome'`) — скачивание браузеров не требуется.

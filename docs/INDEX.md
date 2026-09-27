@@ -176,6 +176,7 @@
 - **CHECKERS.md** — Полный справочник по всем чекерам проекта — что делает, как запускать, какие флаги ⚠️ исторический
 - **DOCS-AUDIT-2026-09-02.md** — Аудит документации Alephy — 2026-09-02
 - **EXPOSURE-AUDIT.md** — Аудит docs/06-METHODOLOGY/
+- **KNOWN-SMOKE-FAILURES.md** — Известные падения smoke (baseline 2026-09-27)
 - **README.md** — 08-AUDITS — аудиты, чекеры и отчёты качества
 - **WEBSITE-AUDIT.md** — Аудит products/website
 

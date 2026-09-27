@@ -18,8 +18,8 @@
 
 ### smoke
 
-Playwright гоняет реестр маршрутов из `js/router.js` — добавил модуль, и
-тест поедет за ним автоматически. Проверяет отсутствие uncaught-ошибок,
+Playwright гоняет реестр маршрутов из `js/module-registry.js` — добавил модуль,
+и тест поедет за ним автоматически. Проверяет отсутствие uncaught-ошибок,
 мохибейка, горизонтальный overflow на mobile и вечные спиннеры.
 
 ```bash
@@ -31,6 +31,23 @@ SMOKE_QUICK=1 npx playwright test --grep "registered routes"
 
 `@playwright/test` объявлен в `apps/researchlab/package.json`, а не в
 `products/website/package.json` — `npm ci` нужно выполнять именно там.
+
+**Полный прогон — 96 тестов и около 25 минут.** Перед локальным запуском
+закрой висящие процессы: `Get-Process chrome, python | Stop-Process -Force`.
+Убитый web-сервер даёт `ERR_CONNECTION_REFUSED` в логе, и тесты падают
+как будто сломан модуль — это не регресс. Различить помогает пробник
+`node tools/design-baseline/route-probe.mjs <route>`.
+
+### Реестр модулей
+
+`js/module-registry.js` — единственный список маршрутов. Сверяется с
+`page-controller` в обе стороны:
+
+```bash
+node tools/design-baseline/registry-check.mjs
+```
+
+Падение: маршрут есть в реестре, но не рендерится, или наоборот.
 
 ### Паритет build
 
