@@ -17,7 +17,6 @@ html[data-theme="parchment"] .investigation-evidence-trigger:focus-visible,
 html[data-theme="parchment"] .investigation-creator:hover,
 html[data-theme="parchment"] .investigation-creator:focus-visible,
 html[data-theme="parchment"] .investigation-creator.is-open,
-html[data-theme="parchment"] .dw-list-item:hover,
 html[data-theme="parchment"] .admin-btn-secondary:hover,
 html[data-theme="parchment"] .settings-nav-btn:hover {
   background: var(--bg-tertiary);
@@ -109,17 +108,16 @@ html[data-theme="parchment"] .board-dialog textarea {
   color: var(--text-primary);
 }
 
-/* Жёстко заданные статусы и подсветки переводим в бежевую шкалу. */
-html[data-theme="parchment"] .book-card--completed,
-html[data-theme="parchment"] .book-card--in-progress,
+/* Жёстко заданные статусы и подсветки переводим в бежевую шкалу.
+   Состояния книг рабочего стола здесь не переопределяются: их тон строится
+   из --accent-gold-rgb темы и уже адаптивен (§5.2d). */
 html[data-theme="parchment"] .vl-synthesis,
 html[data-theme="parchment"] .br-callout,
 html[data-theme="parchment"] .br-text-card {
   background: var(--bg-secondary);
 }
 
-html[data-theme="parchment"] .book-card:hover,
-html[data-theme="parchment"] .book-card:focus-visible,
+/* Тень в новом UI запрещена (§0.2): .book-card рабочего стола — плоская (§5.2d). */
 html[data-theme="parchment"] .evidence-card:hover,
 html[data-theme="parchment"] .attachment-card:hover,
 html[data-theme="parchment"] .language-map-card:hover,

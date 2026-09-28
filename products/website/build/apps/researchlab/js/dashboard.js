@@ -11,6 +11,8 @@ const Dashboard = (function() {
   // Dashboard needs a lightweight overview. Full scripture corpus is over 117 MB;
   // load books only in their dedicated route.
   var MAX_PROGRESS_BOOKS = 0;
+  // Нейтральная подпись среза не печатается в разметке: она дублировала бы мету шапки ячейки (§5.2d).
+  var SNAPSHOT_DELTA_TEXT = 'срез данных';
 
   function esc(text) {
     var d = document.createElement('div');
@@ -214,8 +216,8 @@ const Dashboard = (function() {
     var totalTerms = dictEntries.reduce(function(sum, d) { return sum + d.count; }, 0);
 
     container.innerHTML =
-      renderCounters(data, dictEntries, totalTerms) +
-      '<div class="dw-grid">' +
+      '<div class="dw-bento">' +
+        renderCounters(data, dictEntries, totalTerms) +
         renderActivityTicker(data.researches) +
         renderBooksProgress(data.qumranBooks, data.bookProgress) +
         renderMechanismsBars(dictEntries) +
@@ -223,7 +225,6 @@ const Dashboard = (function() {
         renderResearchActivity(data.researches) +
         renderReliabilityContour(data.researches) +
         renderCompletenessMap(data.researches) +
-        renderReviewQueue(data.researches) +
       '</div>';
 
     bindDictClicks(container);
@@ -231,10 +232,34 @@ const Dashboard = (function() {
     if (window.RevealObserver) window.RevealObserver.scan(container);
   }
 
+  /* ─── Bento-ячейки (§5.2d канона) ───
+     Каждая зона рабочего стола — ячейка сетки со шапкой по §4.1: номер главы,
+     капительный заголовок, мета справа. Пропорции задаёт модификатор ячейки. */
+
+  function plural(n, one, few, many) {
+    return window.LabPluralWord ? LabPluralWord(n, one, few, many) : many;
+  }
+
+  /* Число с согласованным словом для меты шапки: «29 книг», а не «книг». */
+  function count(n, one, few, many) {
+    return n + ' ' + plural(n, one, few, many);
+  }
+
+  function renderCell(modifier, num, title, hint, body, hintClass) {
+    return '<section class="dw-cell dw-cell--' + modifier + '">' +
+      '<div class="dw-cell-head">' +
+        '<span class="dw-num" aria-hidden="true">' + esc(num) + '</span>' +
+        '<h3 class="dw-cell-title">' + esc(title) + '</h3>' +
+        (hint ? '<span class="dw-cell-hint' + (hintClass ? ' ' + hintClass : '') + '">' + esc(hint) + '</span>' : '') +
+      '</div>' +
+      body +
+    '</section>';
+  }
+
   function renderCounters(data, dictEntries, totalTerms) {
     var deltas = calculateCounterDeltas(data.researches);
     var researchMetrics = calculateResearchMetrics(data.researches);
-    var w = function(n, o, f, m) { return window.LabPluralWord ? LabPluralWord(n, o, f, m) : m; };
+    var w = plural;
     var items = [
       { num: data.roots.length, label: w(data.roots.length, 'корень', 'корня', 'корней'), delta: deltas.snapshot, href: '#root-dictionary' },
       { num: totalTerms, label: w(totalTerms, 'термин', 'термина', 'терминов') + ' подмен', delta: deltas.snapshot, href: '#dictionaries' },
@@ -242,13 +267,14 @@ const Dashboard = (function() {
       { num: dictEntries.length, label: w(dictEntries.length, 'словарь', 'словаря', 'словарей'), delta: deltas.snapshot, href: '#dictionaries' },
       { num: data.heraldry.length, label: w(data.heraldry.length, 'империя/герб', 'империи/герба', 'империй/гербов'), delta: deltas.snapshot, href: '#heraldry' }
     ];
-    return '<section class="dw-summary" aria-labelledby="dw-summary-title">' +
-      '<div class="dw-summary-heading"><div><span class="dw-summary-kicker">Срез корпуса</span><h2 id="dw-summary-title">Сводка исследований</h2></div>' +
-        '<span class="dw-summary-date">' + esc(researchMetrics.referenceDate ? 'Срез данных: ' + researchMetrics.referenceDate : 'Дата среза не указана') + '</span></div>' +
+    return '<section class="dw-cell dw-cell--summary" aria-labelledby="dw-summary-title">' +
+      '<div class="dw-cell-head"><span class="dw-num" aria-hidden="true">01</span>' +
+        '<h3 class="dw-cell-title" id="dw-summary-title">Сводка исследований</h3>' +
+        '<span class="dw-cell-hint">' + esc(researchMetrics.referenceDate ? 'Срез данных: ' + researchMetrics.referenceDate : 'Дата среза не указана') + '</span></div>' +
       '<div class="dw-summary-grid">' + items.map(function(item, i) {
         var tag = item.href ? 'a' : 'div';
         var href = item.href ? ' href="' + item.href + '"' : '';
-        return '<' + tag + ' class="dw-summary-item' + (item.href ? ' dw-summary-item--link' : '') + '"' + href + ' style="--i:' + i + '">' +
+        return '<' + tag + ' class="dw-summary-item' + (item.href ? ' dw-summary-item--link' : '') + '"' + href + '>' +
           '<span class="dw-summary-value">' + esc(item.num) + '</span><span class="dw-summary-label">' + esc(item.label) + '</span>' +
           renderCounterDelta(item.delta) + '</' + tag + '>';
       }).join('') + '</div>' +
@@ -265,7 +291,7 @@ const Dashboard = (function() {
     var records = Array.isArray(researches) ? researches : [];
     var dates = records.map(function(item) { return parseDate(item.createdAt); }).filter(Boolean);
     var anchor = dates.reduce(function(latest, date) { return !latest || date > latest ? date : latest; }, null);
-    var snapshot = { kind: 'neutral', text: 'срез данных' };
+    var snapshot = { kind: 'neutral', text: SNAPSHOT_DELTA_TEXT };
     if (!anchor) return { researches: { kind: 'neutral', text: 'нет истории' }, snapshot: snapshot };
     var boundary = new Date(anchor.getTime());
     boundary.setUTCDate(boundary.getUTCDate() - 29);
@@ -280,7 +306,10 @@ const Dashboard = (function() {
   }
 
   function renderCounterDelta(delta) {
-    return '<div class="dw-counter-delta dw-counter-delta--' + esc(delta.kind) + '">' +
+    // Нейтральный срез повторялся под каждым показателем, хотя стоит в шапке ячейки:
+    // печатаем строку-заполнитель, чтобы цифры пяти показателей остались на одной линии.
+    if (delta.text === SNAPSHOT_DELTA_TEXT) return '<div class="dw-counter-delta" aria-hidden="true"></div>';
+    return '<div class="dw-counter-delta' + (delta.kind === 'up' ? ' dw-counter-delta--up' : '') + '">' +
       (delta.kind === 'up' ? '<span aria-hidden="true">▲</span> ' : '') + esc(delta.text) +
     '</div>';
   }
@@ -337,29 +366,25 @@ const Dashboard = (function() {
   function renderResearchActivity(researches) {
     var metrics = calculateResearchMetrics(researches);
     var reference = metrics.referenceDate ? 'Срез данных: ' + metrics.referenceDate : 'Даты материалов не указаны';
-    return '<div class="dw-widget">' +
-      '<h3>Движение исследований</h3>' +
+    return renderCell('movement', '06', 'Движение исследований', reference,
       '<div class="dw-metric-grid">' +
         renderMetric('Новые · 7 дней', metrics.new7, 'new') +
         renderMetric('Обновлённые · 7 дней', metrics.updated7, 'updated') +
         renderMetric('Новые · 30 дней', metrics.new30, 'new') +
         renderMetric('Обновлённые · 30 дней', metrics.updated30, 'updated') +
-      '</div>' +
-      '<p class="dw-widget-note">' + esc(reference) + '</p>' +
-    '</div>';
+      '</div>');
   }
 
   function renderReliabilityContour(researches) {
     var metrics = calculateResearchMetrics(researches);
-    return '<div class="dw-widget">' +
-      '<h3>Контур надёжности</h3>' +
+    var total = Array.isArray(researches) ? researches.length : 0;
+    return renderCell('reliability', '07', 'Контур надёжности', count(total, 'материал', 'материала', 'материалов'),
       '<div class="dw-metric-grid">' +
         renderMetric('Проверено', metrics.verified, 'verified') +
         renderMetric('Требует проверки', metrics.needsReview, 'review') +
         renderMetric('Гипотезы', metrics.hypothesis, 'hypothesis') +
         renderMetric('Опубликовано', metrics.published, 'published') +
-      '</div>' +
-    '</div>';
+      '</div>');
   }
 
   function calculateCompletenessMap(researches) {
@@ -403,10 +428,14 @@ const Dashboard = (function() {
         '<span class="dw-completeness-missing">' + (item.missing.length ? 'Разрывы: ' + esc(item.missing.join(', ')) : 'Все опоры собраны') + '</span>' +
       '</a>';
     }).join('');
-    return '<div class="dw-widget dw-widget-wide">' +
-      '<div class="dw-widget-heading"><h3>Карта полноты материалов</h3><strong class="dw-completeness-average">' + esc(map.average) + '% <span>средняя полнота</span></strong></div>' +
+    return '<section class="dw-cell dw-cell--completeness">' +
+      '<div class="dw-cell-head">' +
+        '<span class="dw-num" aria-hidden="true">08</span>' +
+        '<h3 class="dw-cell-title">Карта полноты материалов</h3>' +
+        '<span class="dw-cell-hint dw-cell-hint--accent">' + esc(map.average) + '% · средняя полнота</span>' +
+      '</div>' +
       '<div class="dw-completeness-list">' + (rows || '<div class="lab-alert lab-alert-info">Материалов пока нет.</div>') + '</div>' +
-    '</div>';
+    '</section>';
   }
 
   function renderMechanismsBars(dictEntries) {
@@ -420,10 +449,8 @@ const Dashboard = (function() {
         '<span class="dw-bar-value">' + esc(d.count) + '</span>' +
       '</div>';
     }).join('');
-    return '<div class="dw-widget">' +
-      '<h3>Топ словарей подмен</h3>' +
-      '<div class="dw-bars">' + bars + '</div>' +
-    '</div>';
+    return renderCell('dicts', '04', 'Топ словарей подмен', top.length + ' из ' + dictEntries.length,
+      '<div class="dw-bars">' + bars + '</div>');
   }
 
   function renderLatestResearches(researches) {
@@ -436,10 +463,8 @@ const Dashboard = (function() {
         '<div class="dw-list-meta">' + esc(item.category || '') + (item.date ? ' · ' + esc(item.date) : '') + '</div>' +
       '</a>';
     }).join('');
-    return '<div class="dw-widget">' +
-      '<h3>Последние разборы</h3>' +
-      '<div class="dw-list">' + (items || '<div class="lab-alert lab-alert-info">Пока пусто.</div>') + '</div>' +
-    '</div>';
+    return renderCell('latest', '05', 'Последние разборы', count(latest.length, 'разбор', 'разбора', 'разборов'),
+      '<div class="dw-list">' + (items || '<div class="lab-alert lab-alert-info">Пока пусто.</div>') + '</div>');
   }
 
   function collectResearchActivity(researches) {
@@ -475,7 +500,8 @@ const Dashboard = (function() {
   function renderActivityTicker(researches) {
     var events = collectResearchActivity(researches);
     if (!events.length) {
-      return '<div class="dw-widget dw-widget-wide"><h3>Живая лента активности</h3><div class="lab-alert lab-alert-info">Датированные события пока не зафиксированы.</div></div>';
+      return renderCell('ticker', '02', 'Живая лента активности', '',
+        '<div class="lab-alert lab-alert-info">Датированные события пока не зафиксированы.</div>');
     }
     var items = events.map(function(event) {
       var href = event.slug ? '#researches/case/' + encodeURIComponent(event.slug) : '#researches';
@@ -488,53 +514,8 @@ const Dashboard = (function() {
     var copies = events.map(function(event) {
       return '<span class="dw-ticker-item" aria-hidden="true"><span class="dw-ticker-date">' + esc(event.date) + '</span><span class="dw-ticker-type dw-ticker-type--' + esc(event.type) + '">' + esc(event.type === 'new' ? 'Новое' : event.type === 'updated' ? 'Обновлено' : 'Запись') + '</span><span class="dw-ticker-text"><strong>' + esc(event.title) + '</strong> — ' + esc(event.note) + '</span></span>';
     }).join('');
-    return '<div class="dw-widget dw-widget-wide">' +
-      '<h3>Живая лента активности</h3>' +
-      '<div class="dw-ticker" aria-label="Последние изменения исследований"><div class="dw-ticker-track">' + items + copies + '</div></div>' +
-    '</div>';
-  }
-
-  function getReviewQueue(researches) {
-    var requirements = [
-      { label: 'тезис', hasValue: function(item) { return item.sections && item.sections.thesis; } },
-      { label: 'исходный контур', hasValue: function(item) { return item.sections && item.sections.original; } },
-      { label: 'сдвиг', hasValue: function(item) { return item.sections && item.sections.shift; } },
-      { label: 'цепочка', hasValue: function(item) { return item.sections && Array.isArray(item.sections.transmissionChain) && item.sections.transmissionChain.length; } },
-      { label: 'источники', hasValue: function(item) { return Array.isArray(item.sources) && item.sources.length; } },
-      { label: 'корни', hasValue: function(item) { return Array.isArray(item.roots) && item.roots.length; } },
-      { label: 'свидетельства', hasValue: function(item) { return item.sections && Array.isArray(item.sections.evidence) && item.sections.evidence.length; } },
-      { label: 'реконструкция', hasValue: function(item) { return item.sections && item.sections.reconstruction; } }
-    ];
-    return (Array.isArray(researches) ? researches : []).filter(function(item) {
-      return item.confidence === 'needs-review';
-    }).map(function(item) {
-      var missing = requirements.filter(function(requirement) { return !requirement.hasValue(item); }).map(function(requirement) { return requirement.label; });
-      return {
-        title: item.title || item.id || 'Материал без названия',
-        slug: item.slug || item.id || '',
-        updatedAt: parseDate(item.updatedAt) ? item.updatedAt : '',
-        missing: missing
-      };
-    }).sort(function(a, b) {
-      return b.missing.length - a.missing.length || String(b.updatedAt).localeCompare(String(a.updatedAt)) || String(a.title).localeCompare(String(b.title), 'ru');
-    }).slice(0, 6);
-  }
-
-  function renderReviewQueue(researches) {
-    var queue = getReviewQueue(researches);
-    var items = queue.map(function(item) {
-      var href = item.slug ? '#researches/case/' + encodeURIComponent(item.slug) : '#researches';
-      return '<a class="dw-review-item" href="' + href + '">' +
-        '<span class="dw-review-title">' + esc(item.title) + '</span>' +
-        '<span class="dw-review-meta">' + esc(item.missing.length) + ' разрывов' + (item.updatedAt ? ' · ' + esc(item.updatedAt) : '') + '</span>' +
-        '<span class="dw-review-missing">' + item.missing.map(function(label) { return '<span>' + esc(label) + '</span>'; }).join('') + '</span>' +
-      '</a>';
-    }).join('');
-    return '<div class="dw-widget dw-widget-wide">' +
-      '<h3>Очередь проверки</h3>' +
-      '<p class="dw-widget-note">Материалы со статусом «требует проверки», где разорваны опоры разбора.</p>' +
-      '<div class="dw-review-list">' + (items || '<div class="lab-alert lab-alert-info">Материалов, ожидающих проверки, нет.</div>') + '</div>' +
-    '</div>';
+    return renderCell('ticker', '02', 'Живая лента активности', count(events.length, 'событие', 'события', 'событий'),
+      '<div class="dw-ticker" aria-label="Последние изменения исследований"><div class="dw-ticker-track">' + items + copies + '</div></div>');
   }
 
   var paleoBookIcons = {
@@ -568,10 +549,9 @@ const Dashboard = (function() {
         '<span class="book-card-status">' + esc(status) + '</span>' +
       '</button>';
     }).join('');
-    return '<div class="dw-widget dw-widget-wide">' +
-      '<h3>Древо Книг</h3>' +
-      '<div class="book-grid" role="list">' + (cards || '<div class="lab-alert lab-alert-info">Данные загружаются…</div>') + '</div>' +
-    '</div>';
+    var total = (books || []).length;
+    return renderCell('books', '03', 'Древо Книг', count(total, 'книга', 'книги', 'книг'),
+      '<div class="book-grid">' + (cards || '<div class="lab-alert lab-alert-info">Данные загружаются…</div>') + '</div>');
   }
 
   function bindDictClicks(container) {
@@ -606,7 +586,6 @@ const Dashboard = (function() {
     renderCounters: renderCounters,
     getResearchMetrics: calculateResearchMetrics,
     getResearchActivity: collectResearchActivity,
-    getReviewQueue: getReviewQueue,
     getCounterDeltas: calculateCounterDeltas,
     getCompletenessMap: calculateCompletenessMap
   };

@@ -7,6 +7,8 @@ const fs = require('fs');
 const vm = require('vm');
 
 const source = fs.readFileSync(require('path').join(__dirname, '..', 'js', 'dashboard.js'), 'utf8');
+const css = fs.readFileSync(require('path').join(__dirname, '..', 'css', 'dashboard.css'), 'utf8');
+const cssFlat = css.replace(/\s+/g, ' ');
 const sandbox = {
   window: {},
   document: {
@@ -70,22 +72,11 @@ function testResearchActivity() {
   console.log('OK  dashboard: живая лента активности');
 }
 
-function testReviewQueue() {
-  const queue = sandbox.window.Dashboard.getReviewQueue([
-    { id: 'complete', title: 'Полный', confidence: 'needs-review', updatedAt: '2026-08-20', roots: ['dbr'], sources: ['source'], sections: { thesis: 'Тезис', original: 'Контур', shift: 'Сдвиг', transmissionChain: ['Шаг'], evidence: ['Свидетельство'], reconstruction: 'Сборка' } },
-    { id: 'broken', title: 'Разрывы', confidence: 'needs-review', updatedAt: '2026-08-10', roots: [], sources: [], sections: {} },
-    { id: 'newer', title: 'Новый разрыв', confidence: 'needs-review', updatedAt: '2026-08-21', roots: [], sources: [], sections: {} },
-    { id: 'verified', title: 'Проверенный', confidence: 'verified', updatedAt: '2026-08-30', roots: [], sources: [], sections: {} }
-  ]);
-
-  assert.strictEqual(queue.length, 3, 'В очередь попадают только needs-review');
-  assert.strictEqual(queue[0].title, 'Новый разрыв', 'При равной неполноте выше более свежий материал');
-  assert.strictEqual(queue[0].missing.length, 8);
-  assert.strictEqual(queue[2].title, 'Полный');
-  assert.strictEqual(queue[2].missing.length, 0);
-  assert.ok(queue[0].missing.includes('источники'));
-  assert.ok(queue[0].missing.includes('реконструкция'));
-  console.log('OK  dashboard: очередь проверки');
+function testReviewQueueRemoved() {
+  assert.ok(!source.includes('Очередь проверки'), 'Блок «Очередь проверки» удалён из разметки модуля');
+  assert.ok(!/dw-review/.test(source), 'Разметка очереди проверки не возвращается');
+  assert.strictEqual(typeof sandbox.window.Dashboard.getReviewQueue, 'undefined', 'Публичный API без очереди проверки');
+  console.log('OK  dashboard: очередь проверки удалена');
 }
 
 function testCounterDeltas() {
@@ -143,11 +134,90 @@ function testDashboardWidgetOrder() {
   console.log('OK  dashboard: порядок виджетов');
 }
 
+const CELL_MODIFIERS = ['summary', 'ticker', 'books', 'dicts', 'latest', 'movement', 'reliability', 'completeness'];
+
+function testBentoCells() {
+  assert.ok(source.includes('<div class="dw-bento">'), 'Ячейки собраны в bento-сетку');
+  assert.ok(source.includes('"dw-cell dw-cell--summary"'), 'Сводка — ячейка сетки, а не отдельный блок над ней');
+  // Модификаторы приходят аргументом общего helper'а, поэтому ищем их вызовы.
+  ['ticker', 'books', 'dicts', 'latest', 'movement', 'reliability'].forEach(function(modifier) {
+    assert.ok(source.includes("renderCell('" + modifier + "'"), 'Ячейка объявлена в разметке: ' + modifier);
+  });
+  assert.ok(source.includes('dw-cell--completeness'), 'Карта полноты — ячейка сетки со своим телом');
+  assert.ok(!/dw-widget|dw-grid|dw-summary-heading/.test(source), 'Старые карточки рабочего стола удалены');
+  // Шапку §4.1 ставит общий helper; сводка и карта полноты строят её сами.
+  assert.ok(source.includes('function renderCell('), 'Ячейки строятся общей функцией с шапкой §4.1');
+  const headLiterals = (source.match(/dw-cell-head/g) || []).length;
+  assert.ok(headLiterals >= 3, 'Шапка объявлена у helper, сводки и карты полноты: ' + headLiterals);
+  assert.ok(source.includes('dw-num'), 'Шапка несёт номер главы (§4.1)');
+  console.log('OK  dashboard: bento-ячейки и шапки');
+}
+
+function testBentoSpans() {
+  assert.ok(/grid-template-columns: repeat\(12, minmax\(0, 1fr\)\)/.test(cssFlat), 'Bento-сетка — 12 колонок');
+
+  // Контракт разметки и CSS: у каждого модификатора из JS есть правило пропорции.
+  CELL_MODIFIERS.forEach(function(modifier) {
+    assert.ok(new RegExp('\\.dw-cell--' + modifier + '\\b[^{]*\\{').test(cssFlat),
+      'Модификатор ячейки объявлен в CSS: .dw-cell--' + modifier);
+  });
+  ['summary', 'ticker'].forEach(function(modifier) {
+    assert.ok(new RegExp('\\.dw-cell--' + modifier + '\\b[^{]*\\{[^}]*grid-column: 1 / -1').test(cssFlat),
+      'Ячейка занимает строку целиком: .dw-cell--' + modifier);
+  });
+  [['books', 'dicts'], ['latest', 'movement'], ['reliability', 'completeness']].forEach(function(pair) {
+    const spans = pair.map(function(modifier) {
+      const match = cssFlat.match(new RegExp('\\.dw-cell--' + modifier + '\\s*\\{[^}]*grid-column: span (\\d+)'));
+      assert.ok(match, 'Пропорция ячейки объявлена в CSS: .dw-cell--' + modifier);
+      return Number(match[1]);
+    });
+    assert.strictEqual(spans[0] + spans[1], 12,
+      'Пара ячеек заполняет строку без пустых колонок: ' + pair.join(' + '));
+  });
+  console.log('OK  dashboard: пропорции bento-ячеек');
+}
+
+function testCompletenessTrack() {
+  // Дорожка была без стилей: inline-спаны игнорируют width/height, и полоса не рисовалась.
+  assert.ok(/\.dw-completeness-track \{[^}]*display: block/.test(cssFlat), 'Дорожка полноты отрисована блочно');
+  assert.ok(/\.dw-completeness-fill \{[^}]*height: 100%/.test(cssFlat), 'Заливка полноты тянется по дорожке');
+  console.log('OK  dashboard: дорожка полноты');
+}
+
+function testFlatUiTokens() {
+  const clean = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  assert.ok(!/box-shadow/.test(clean), 'Тени в новом UI запрещены (§0.2, §1.5)');
+  assert.ok(!/#[0-9a-f]{3,8}\b/i.test(clean), 'Литералы цветов запрещены: только var() (§1.1, §8.3)');
+  assert.ok(!/border-radius:\s*\d/.test(clean), 'Радиусы только через --radius-* (§1.4)');
+  assert.ok(!/\bz-index/.test(clean), 'Литеральный z-index запрещён (§1.6)');
+  // Ловушка «*/ внутри комментария»: при преждевременном закрытии текст утекает
+  // в тело стилей и съедает следующее правило. В таблице стилей кириллицы быть не может.
+  assert.ok(!/[а-яё§]/i.test(clean), 'Комментарий не выходит за границы /* */');
+  console.log('OK  dashboard: плоский UI и токены');
+}
+
+function testSingleStylesheetOwner() {
+  // Рабочий стол имеет одного владельца стилей: копия .dw-*/.book-card в файле,
+  // подключённом позже, молча перебивает бенто — так и случилось с redesign.css.
+  ['redesign.css', 'theme-parchment.css'].forEach(function(file) {
+    const raw = fs.readFileSync(require('path').join(__dirname, '..', 'css', file), 'utf8');
+    const clean = raw.replace(/\/\*[\s\S]*?\*\//g, '');
+    assert.ok(!/\.dw-/.test(clean), file + ': стили рабочего стола объявлены только в css/dashboard.css');
+    assert.ok(!/\.book-card/.test(clean), file + ': карточки книг рабочего стола объявлены только в css/dashboard.css');
+  });
+  console.log('OK  dashboard: единственный владелец стилей');
+}
+
 testResearchMetrics();
 testEmptyMetrics();
 testResearchActivity();
-testReviewQueue();
+testReviewQueueRemoved();
 testCounterDeltas();
 testCompletenessMap();
 testSummaryRendering();
 testDashboardWidgetOrder();
+testBentoCells();
+testBentoSpans();
+testCompletenessTrack();
+testFlatUiTokens();
+testSingleStylesheetOwner();
