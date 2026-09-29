@@ -34,6 +34,12 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Run unit tests
+        # Быстрый слой до браузеров: node-скрипты tests/*.test.js не требуют
+        # ни playwright, ни npm ci — падение видно за секунды.
+        working-directory: products/website/apps/researchlab
+        run: npm run test:unit
+
       - name: Install Playwright and browsers
         # npm ci здесь не годится: @playwright/test объявлен в
         # apps/researchlab/package.json, а не в products/website/package.json.

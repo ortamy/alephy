@@ -123,6 +123,14 @@
     return error;
   }
 
+  // LabPlural — глобал браузера (js/plural.js). Реестр объявлен UMD и обязан
+  // работать без DOM: в headless-прогоне (node tests/workbench.test.js) глобала
+  // нет, поэтому обращаемся к нему через typeof, а не напрямую.
+  function pluralCount(count, one, few, many) {
+    if (typeof LabPlural !== 'function') return count + ' ' + many;
+    return LabPlural(count, one, few, many);
+  }
+
   // Разбор текста на фрагменты: абзацы, длинные — режутся, лимит — для памяти.
   function splitChunks(text, limit) {
     var source = String(text || '');
@@ -162,7 +170,7 @@
       await pace(context, 500); guard();
       var chunks = splitChunks(text, 40);
       if (!chunks.length) chunks = splitChunks(DEMO_SAMPLE, 40);
-      fire(0, 'done', 100, 'Прочитано ' + text.length + ' ' + (window.LabPlural ? LabPlural(text.length, 'знак', 'знака', 'знаков') : text.length + ' знаков'));
+      fire(0, 'done', 100, 'Прочитано ' + pluralCount(text.length, 'знак', 'знака', 'знаков'));
 
       // Этап 2: разбор на фрагменты
       fire(1, 'active', 0, 'Разбираю на фрагменты…');
