@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://ortamy.github.io/alephy/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/index.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://ortamy.github.io/alephy/apps/researchlab/index.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/about/index.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/research/index.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/research/methods.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/research/methodology.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/research/dictionaries.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://ortamy.github.io/alephy/pages/tanakh/index.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/about/index.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/index.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://ortamy.github.io/alephy/pages/interlinear/index.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/research/dictionaries.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/research/index.html</loc><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/research/methodology.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/research/methods.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://ortamy.github.io/alephy/pages/tanakh/index.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>

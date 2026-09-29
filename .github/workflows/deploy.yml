@@ -26,6 +26,11 @@ jobs:
       - name: Install Python dependencies
         run: pip install markdown rich
 
+      - name: Check sitemap freshness
+        # Публикуемый sitemap обязан совпадать с src/pages + лабораторией:
+        # расхождение блокирует публикацию, а не уезжает в прод.
+        run: python tools/generate-sitemap.py --check
+
       - name: Build website
         working-directory: products/website
         run: |

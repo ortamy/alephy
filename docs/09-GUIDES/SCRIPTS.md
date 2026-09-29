@@ -50,7 +50,7 @@ python -m http.server 8000
 
 ## Генераторы
 
-В корне `tools/` сейчас находятся два Python-генератора:
+В корне `tools/` сейчас находятся три Python-генератора:
 
 ### `generate-bereshit-paleo.py`
 
@@ -63,6 +63,18 @@ python tools/generate-bereshit-paleo.py --help
 ```bash
 python tools/generate-paleo-meanings.py --help
 ```
+
+### `generate-sitemap.py`
+
+```bash
+python tools/generate-sitemap.py          # перезаписать sitemap.xml (+ build-зеркало)
+python tools/generate-sitemap.py --check  # CI-гейт: exit 1 при расхождении
+```
+
+Источники URL: корень, `apps/researchlab/index.html`, `src/pages/**` — ровно то,
+что публикует `build.sh`. `src/content/html/**` (фрагменты контента) в sitemap
+не входят сознательно: у них нет canonical. Дрейф ловят `docs-check.yml` и
+`deploy.yml`.
 
 Перед запуском генератора проверь целевые файлы и результат через `git diff`.
 

@@ -9,6 +9,12 @@ on:
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
+      - 'tools/generate-sitemap.py'
+      - 'products/website/index.html'
+      - 'products/website/apps/researchlab/index.html'
+      - 'products/website/src/pages/**'
+      - 'products/website/sitemap.xml'
+      - 'products/website/build/sitemap.xml'
   pull_request:
     paths:
       - 'docs/**'
@@ -17,6 +23,12 @@ on:
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
+      - 'tools/generate-sitemap.py'
+      - 'products/website/index.html'
+      - 'products/website/apps/researchlab/index.html'
+      - 'products/website/src/pages/**'
+      - 'products/website/sitemap.xml'
+      - 'products/website/build/sitemap.xml'
 
 jobs:
   check:
@@ -39,5 +51,12 @@ jobs:
           python tools/generate-docs-index.py > /dev/null
           git diff --exit-code -- docs/ || {
             echo '::error::docs/ расходится с генератором tools/generate-docs-index.py — запусти его локально и закоммить результат';
+            exit 1;
+          }
+
+      - name: Check sitemap freshness (routes → sitemap must match)
+        run: |
+          python tools/generate-sitemap.py --check || {
+            echo '::error::sitemap.xml расходится с маршрутами src/pages — запусти python tools/generate-sitemap.py и закоммить';
             exit 1;
           }
