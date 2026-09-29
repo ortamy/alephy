@@ -1,6 +1,9 @@
 // products/website/config/server.js — сервер для локальной разработки
 const http = require('http');
 const fs = require('fs').promises;
+// Синхронная проверка существования нужна отдельно: fs.promises — только async-методы,
+// и fs.accessSync на ней падает с TypeError (это гасило статику в 404 и баннер).
+const fsSync = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
@@ -218,7 +221,7 @@ function resolveFilePath(filePath) {
         path.join(WEB_DIR, 'apps', filePath),
     ];
     for (const c of candidates) {
-        try { fs.accessSync(c); return c; } catch (_) {}
+        try { fsSync.accessSync(c); return c; } catch (_) {}
     }
     return null;
 }
@@ -315,7 +318,7 @@ server.listen(PORT, () => {
     console.log('  Категории:');
     SCAN_DIRS.forEach(({ folder, label }) => {
         const dirPath = path.join(ROOT, folder);
-        try { fs.accessSync(dirPath); console.log(`    ✅ ${label} (${folder})`); }
+        try { fsSync.accessSync(dirPath); console.log(`    ✅ ${label} (${folder})`); }
         catch { console.log(`    ⚠️  ${label} (${folder}) — не найдена`); }
     });
     console.log('========================================\n');
