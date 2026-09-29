@@ -120,7 +120,12 @@ test.describe('registered routes', () => {
 // Модуль, который не закончил загрузку, обязан либо показать контент, либо
 // error-state с кнопкой «Повторить» (гард в page-controller.js). Видимый
 // спиннер дольше бюджета — это баг, а не состояние ожидания.
-const SPINNER_BUDGET_MS = 5_000;
+// Бюджет ожидания панели/спиннера. Держим его ниже WATCHDOG_MS (8 с) в
+// page-controller: до этого порога медленный модуль — «ещё грузится», после —
+// error-state. Под полной нагрузкой (96 тестов подряд, холодный кэш) первый
+// рендер тяжёлых маршрутов (#manifest, #root-dictionary, #researches,
+// #state-analyzer) выходит за 5 с — отсюда были падения «вечного спиннера».
+const SPINNER_BUDGET_MS = 7_000;
 
 // Ключевой узел для модулей с fetch-разметкой (pages/<route>.html): ловит
 // случай «разметка скачалась, но панель осталась пустой».
@@ -321,7 +326,12 @@ test.describe('root etymology modal', () => {
     await expect(page.locator('#modalBody')).toContainText('Разбор готовится');
   });
 
-  test('retries a failed etymology request', async ({ page }) => {
+  test('retries a failed etymology request', async ({ browser }) => {
+    // Приложение регистрирует sw.js, а Playwright не перехватывает запросы,
+    // которые обслуживает Service Worker: с активным SW route.abort() не
+    // срабатывает, и error-state модалки остаётся непроверенным.
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block' });
+    const page = await context.newPage();
     let requests = 0;
     // Glob-паттерны Playwright не гарантируют матчинг percent-encoded Hebrew,
     // поэтому перехватываем по декодированному pathname.

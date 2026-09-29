@@ -524,8 +524,10 @@ const Timeline = (function() {
 
     // Шапку детального экрана рисует LabHero. Внутри — back-ссылка,
     // мета-строка, тулбар поиска, мини-ось и события.
+    // data-timeline-id на корне детали: deep-link #timeline/<id> обязан нести
+    // идентификатор ленты в DOM (по нему работают smoke-проверки и кросс-ссылки).
     timelineContainer.innerHTML =
-      '<section class="tl-detail" aria-label="Таймлайн: ' + escapeHtml(timeline.title) + '">' +
+      '<section class="tl-detail" data-timeline-id="' + escapeHtml(timeline.id) + '" aria-label="Таймлайн: ' + escapeHtml(timeline.title) + '">' +
         '<div class="tl-detail-toolbar"><button class="tl-detail-back" type="button">← К каталогу</button><button class="tl-detail-link" type="button" data-no-icon aria-label="Скопировать ссылку с текущим состоянием"><i data-lucide="link" aria-hidden="true"></i><span>Ссылка</span></button></div>' +
         '<div class="tl-detail-meta tl-meta-line">' +
           '<span class="tl-detail-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(timeline.paleoIcon) + '</span>' +

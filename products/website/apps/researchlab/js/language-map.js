@@ -468,8 +468,12 @@
   }
 
   function renderDetail(container, language, id) {
+    // Override дублируем в container._labHeroOverride: applyModuleHero и mount
+    // восстанавливают шапку из этого объекта, а не из базового каталога.
+    var heroOverride = detailHeroConfig(language, id || language.id);
+    container._labHeroOverride = heroOverride;
     if (window.LabHero && window.LabHero.setView) {
-      window.LabHero.setView('language-map', 'detail', detailHeroConfig(language, id || language.id));
+      window.LabHero.setView('language-map', 'detail', heroOverride);
     }
     var code = String(id || language.id).toUpperCase();
     container.innerHTML = '<section class="language-map-detail" aria-labelledby="language-map-detail-title">' +
@@ -507,8 +511,10 @@
 
   /* Fallback параметризованного маршрута: служебных деталей наружу нет. */
   function renderNotFound(container, id) {
+    var heroOverride = detailHeroConfig(null, id);
+    container._labHeroOverride = heroOverride;
     if (window.LabHero && window.LabHero.setView) {
-      window.LabHero.setView('language-map', 'detail', detailHeroConfig(null, id));
+      window.LabHero.setView('language-map', 'detail', heroOverride);
     }
     container.innerHTML = '<section class="language-map-detail" aria-labelledby="language-map-detail-title">' +
       '<p class="language-map-kicker">ПАСПОРТ ЯЗЫКА · ' + escapeHtml(String(id).toUpperCase()) + '</p>' +
@@ -547,6 +553,8 @@
       return;
     }
 
+    // Список — состояние хаба: динамический override детали в шапке снимаем.
+    container._labHeroOverride = null;
     readView(parsed);
     container.innerHTML = state.markup;
     populateTypeFilter(container);

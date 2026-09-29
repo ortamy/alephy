@@ -570,6 +570,14 @@
 
   function mount(container) {
     if (!container || !container.id || !TARGETS[container.id]) return;
+    // Модуль мог перерисовать контейнер целиком (innerHTML) и снести шапку.
+    // Тогда её нужно собрать из последнего запрошенного вида: базовый каталог
+    // вернул бы деталь на заголовок хаба (deep-link #language-map/<id>).
+    var active = activeViews[container.id];
+    if (active) {
+      setView(container.id, active.viewId || null, active.override);
+      return;
+    }
     ensureHero(container, container.id, resolveConfig(container.id, TARGETS[container.id]));
   }
 
