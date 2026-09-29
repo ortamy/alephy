@@ -17,9 +17,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -30,6 +30,13 @@ jobs:
         working-directory: products/website
         run: |
           bash tools/build.sh
+
+      # build.sh ставит зависимости прямо в build/ (npm install), поэтому артефакт
+      # надо очистить: node_modules уже публиковался на Pages (проверено 2026-09-29
+      # запросом /node_modules/tailwindcss/package.json → 200).
+      - name: Prune build-only files from artifact
+        working-directory: products/website
+        run: rm -rf build/node_modules build/package.json build/package-lock.json
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
