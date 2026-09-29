@@ -13,8 +13,25 @@
 |---|---|---|
 | `docs-check.yml` | целостность docs + **паритет build** | `python tools/check-docs.py check`, `python tools/check-build-sync.py` |
 | `i18n-check.yml` | словари, паритет локалей, рантайм | `python tools/i18n-check.py check`, `node tools/i18n-verify.mjs` |
-| `smoke.yml` | **Playwright: все маршруты лаборатории** | `npx playwright test` |
+| `smoke.yml` | unit-тесты + **Playwright: все маршруты лаборатории** | `npm run test:unit`, `npx playwright test` |
 | `deploy.yml` | сборка и публикация на Pages | `bash tools/build.sh` |
+
+### unit
+
+`tests/*.test.js` — обычные node-скрипты (`assert` + `vm`, без браузера) для расчётных
+модулей: dashboard, lab-search, paleo-battle, root-graph, scripture-reader, workbench.
+Идут первым шагом `smoke.yml` — до установки браузеров, поэтому падение видно за секунды.
+
+```bash
+cd products/website/apps/researchlab
+npm run test:unit                      # все файлы tests/*.test.js
+node tests/unit-runner.mjs dashboard   # один файл по фильтру
+```
+
+Тест обязан работать без DOM: модули и реестры объявлены UMD
+(`typeof window !== 'undefined' ? window : globalThis`), а браузерные глобалы
+(`LabPlural`, `AlephyUtils`) берутся через `typeof` и имеют запасной вариант.
+Прямое обращение к `window` в модуле роняет headless-прогон.
 
 ### smoke
 
