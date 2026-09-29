@@ -1,6 +1,7 @@
 /* =============================================
    workbench.css — «Мастерская» (#workbench)
-   Хаб конвейеров, раннер, проект. Токены lab.css.
+   Проекты, раннер, результат. Токены lab.css.
+   Каталог конвейеров вынесен в #conveyors (css/components/dashboard.css).
    Minimalist design — чистая типографика, компактные отступы.
    ============================================= */
 
@@ -25,6 +26,11 @@
   max-width: 100%;
   min-width: 0;
 }
+
+/* Каталог конвейеров живёт в #conveyors; здесь остаётся только подсказка
+   со ссылкой на него — чтобы пустой хаб объяснял, где искать конвейеры. */
+.wb-hub-hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); line-height: 1.5; }
+.wb-hub-hint a { color: var(--text-secondary); }
 
 .wb-pipeline-section .wb-section-head,
 .wb-project-section .wb-section-head {

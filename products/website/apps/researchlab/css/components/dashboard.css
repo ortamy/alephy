@@ -84,6 +84,21 @@
 .agent-list-view.is-list-view .agent-group-label { font-size: var(--ui-10); line-height: 1; }
 .agent-list-view.is-list-view .agent-group-count { padding: 0; border: 0; font-size: var(--ui-10); }
 
+/* ===== КОНВЕЙЕРЫ (#conveyors) ===== */
+/* Карточки и строки переиспользуют классы агентов целиком: тот же паспорт
+   (.agent-role-card), тот же икон-чип и та же сетка .agent-group-body. Здесь
+   только оболочка — панель управления и правило раскладки списка. */
+.conveyors-controls-panel { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); overflow: hidden; }
+.conveyors-list-view .agent-group-body { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
+.conveyors-list-view.is-list-view .agent-group-body { grid-template-columns: 1fr; gap: 2px; }
+@media (max-width: 560px) {
+  .conveyors-controls-panel { padding: var(--space-2) var(--space-3); }
+  .conveyors-controls-panel .agents-search { flex: 1 1 100%; }
+  .conveyors-list-view .agent-group-body { grid-template-columns: 1fr; }
+  .conveyors-list-view .agent-list-row { flex-wrap: wrap; }
+  .conveyors-list-view .agent-list-row-desc { flex: 1 1 100%; order: 5; }
+}
+
 /* Паспорт-цепочка: иконка-чип 32 + сериф-имя + статус-точка; описание ellipsis ×2; модель mono. */
 .agent-list-card { appearance: none; width: 100%; margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .agent-role-card { display: flex; flex-direction: column; gap: var(--space-2); min-height: 140px; box-sizing: border-box; padding: var(--space-3) var(--space-4); background: var(--bg-secondary); border: 1px solid var(--border-light); border-radius: var(--radius-8); box-shadow: none; transition: border-color var(--motion-fast); }

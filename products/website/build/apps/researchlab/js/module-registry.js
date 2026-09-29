@@ -55,6 +55,11 @@ window.ModuleRegistry = (function () {
     // --- генераторы и чекеры ---
     { id: 'generators', kind: 'panel' },
     { id: 'checkers', kind: 'panel' },
+    // Конвейеры «Мастерской»: перенесены из #workbench в самостоятельный модуль
+    // и живут в разделе «Инструменты». Отличаются от 'pipelines' ниже: там —
+    // цепочки конкретных агентов (data/pipelines.json), здесь — исполняемые
+    // конвейеры пользователя (workbench-pipelines.js: вход → смета → этапы → результат).
+    { id: 'conveyors', kind: 'panel' },
     { id: 'religionisms', kind: 'panel' },
     { id: 'religionism-checker', kind: 'panel' },
     { id: 'state-checker', kind: 'panel' },

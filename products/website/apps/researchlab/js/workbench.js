@@ -1,11 +1,12 @@
 /**
- * workbench.js — «Мастерская» (#workbench): визуальный хаб действий.
+ * workbench.js — «Мастерская» (#workbench): проекты и результаты работ.
  *
  * Экраны (внутри одного модуля, как #pipelines):
- *   #workbench                  — хаб: каталог конвейеров + мои проекты
+ *   #workbench                  — хаб: мои проекты + ссылка на каталог конвейеров
  *   #workbench/run/<id>         — запуск: форма из конфига → смета → прогресс
  *   #workbench/project/<runId>  — проект: результат во вьювере pipeline.viewer
  *
+ * Каталог конвейеров вынесен в модуль #conveyors; раннер здесь общий с ним.
  * Реестр конвейеров и движки — в workbench-pipelines.js.
  * Метаданные проектов — localStorage (alephy.workbench.projects).
  * Результаты (большие) — только в памяти + «Скачать»; в localStorage мета.
@@ -113,28 +114,12 @@ const Workbench = (function() {
   }
 
   // ===== ЭКРАН 1: ХАБ =====
+  // Каталог конвейеров уехал в самостоятельный модуль #conveyors: карточки
+  // там повторяют карточки агентов. Мастерская осталась местом проектов —
+  // того, что уже запущено, с продолжением и открытием результата.
   function renderHub(container) {
     container._labHeroOverride = null;
-    var pipelines = window.WorkbenchPipelines ? WorkbenchPipelines.list() : [];
     var projects = loadProjects();
-
-    var cards = pipelines.map(function(pipeline) {
-      return '' +
-        '<article class="wb-pipeline-card">' +
-          '<header class="wb-pipeline-head">' +
-            '<img class="wb-pipeline-icon" src="assets/icons/32/' + esc(pipeline.icon) + '" alt="" aria-hidden="true">' +
-            '<h3 class="wb-pipeline-title">' + esc(pipeline.title) + '</h3>' +
-          '</header>' +
-          '<p class="wb-pipeline-desc">' + esc(pipeline.description) + '</p>' +
-          '<div class="wb-tags" aria-label="Входы конвейера">' +
-            pipeline.tags.map(function(tag) { return '<span class="wb-tag">' + esc(tag) + '</span>'; }).join('') +
-          '</div>' +
-          '<footer class="wb-pipeline-foot">' +
-            '<span class="wb-steps-hint">' + pipeline.steps.length + ' этапов</span>' +
-            '<a class="lab-btn lab-btn-primary lab-btn-sm" href="#workbench/run/' + esc(pipeline.id) + '">Запустить</a>' +
-          '</footer>' +
-        '</article>';
-    }).join('');
 
     var rows = projects.map(projectRowHtml).join('');
     var projectsHtml = projects.length
@@ -143,11 +128,6 @@ const Workbench = (function() {
 
     container.innerHTML =
       '<div class="wb-hub">' +
-        '<section class="wb-pipeline-section" aria-labelledby="wb-pipelines-heading">' +
-          '<h2 class="wb-section-title" id="wb-pipelines-heading">Конвейеры</h2>' +
-          '<p class="wb-section-sub">Подключаемые цепочки действий: вход → смета → этапы → результат.</p>' +
-          '<div class="wb-pipeline-grid">' + cards + '</div>' +
-        '</section>' +
         '<section class="wb-project-section" aria-labelledby="wb-projects-heading">' +
           '<div class="wb-section-head">' +
             '<h2 class="wb-section-title" id="wb-projects-heading">Мои проекты</h2>' +
@@ -155,6 +135,7 @@ const Workbench = (function() {
           '</div>' +
           projectsHtml +
         '</section>' +
+        '<p class="wb-hub-hint">Каталог конвейеров — в разделе «Инструменты»: <a href="#conveyors">Конвейеры</a>.</p>' +
       '</div>';
 
     bindHubActions(container);

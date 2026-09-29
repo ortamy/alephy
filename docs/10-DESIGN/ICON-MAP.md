@@ -46,7 +46,7 @@ UI-иконки Research Lab переведены на **Lucide** (vendored: `re
 | Агенты | `ui/user.png` | `users` |
 | Пайплайны | `paleo/track.png` | `workflow` |
 | Запуск сервера / Система / Настройки | `ui/settings.png` | `server` / `settings` |
-| Нейрочат | `ui/bell.png` | `bell` |
+| Нейрочат | `ui/bell.png` (не используется) | `message-circle` |
 | Анализ изображений | `archaeology/lamp.png` | `image` |
 | Секции (свёрнутые) | текстовый `▼` | `chevron-down` (+rotate −90°) |
 | Закрытие модалки | `nav/alert.png` | `x` |

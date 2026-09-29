@@ -183,6 +183,11 @@ const PageController = (function() {
   };
   var agentsUiState = { view: 'cards', status: 'all', query: '' };
 
+  // Конвейеры (#conveyors): свой вид списка и своя память о нём, чтобы
+  // переключатель карточек/списка не путал настройку с агентской.
+  var CONVEYORS_VIEW_KEY = 'alephy_conveyors_view';
+  var conveyorsUiState = { view: 'cards', query: '' };
+
   function getAgentStatus(agent) {
     if (agent.featured) return 'active';
     if (!agent.model || agent.model === '—') return 'stub';
@@ -242,6 +247,137 @@ const PageController = (function() {
       '<span class="agent-list-row-desc">' + a.desc + '</span>' +
       '<span class="agent-model-chip agent-list-model">' + model + '</span>' +
       '<span class="agent-list-row-status">' + agentStatusMarkup(status, true) + '</span></button>';
+  }
+
+  // ===== КОНВЕЙЕРЫ (#conveyors) =====
+  // Карточка повторяет карточку агента (renderAgentCard): тот же каркас
+  // agent-role-card, тот же икон-чип и та же статус-метка. Отличие — в подписи
+  // статуса: у агента это состояние роли, у конвейера — число этапов.
+  var CONVEYOR_ICON = {
+    'book-translation': 'book-open-text',
+    'exposure-check': 'lamp',
+    'root-assembly': 'git-merge'
+  };
+
+  function conveyorIcon(pipeline) {
+    return CONVEYOR_ICON[pipeline.id] || 'workflow';
+  }
+
+  function pluralizeSteps(n) {
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'этап';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'этапа';
+    return 'этапов';
+  }
+
+  function conveyorStatusMarkup(pipeline) {
+    var steps = pipeline.steps.length;
+    return '<span class="agent-status agent-status--active">' +
+      '<span class="agent-status-dot" aria-hidden="true"></span>' +
+      '<span class="agent-status-label">' + steps + ' ' + pluralizeSteps(steps) + '</span></span>';
+  }
+
+  function conveyorList() {
+    return window.WorkbenchPipelines ? WorkbenchPipelines.list() : [];
+  }
+
+  function renderConveyorCard(pipeline) {
+    return '<button type="button" class="agent-list-card agent-role-card" data-conveyor-id="' + escapeHtml(pipeline.id) + '" aria-label="Открыть конвейер: ' + escapeHtml(pipeline.title) + '">' +
+      '<span class="agent-role-head"><span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + conveyorIcon(pipeline) + '"></i></span>' +
+      '<span class="agent-role-name">' + escapeHtml(pipeline.title) + '</span>' + conveyorStatusMarkup(pipeline) + '</span>' +
+      '<span class="agent-role-desc">' + escapeHtml(pipeline.description) + '</span>' +
+      '<span class="agent-role-foot">' + pipeline.tags.map(function(tag) {
+        return '<span class="agent-model-chip agent-list-model">' + escapeHtml(tag) + '</span>';
+      }).join('') + '</span></button>';
+  }
+
+  function renderConveyorRow(pipeline) {
+    return '<button type="button" class="agent-list-card agent-list-row" data-conveyor-id="' + escapeHtml(pipeline.id) + '" aria-label="Открыть конвейер: ' + escapeHtml(pipeline.title) + '">' +
+      '<span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + conveyorIcon(pipeline) + '"></i></span>' +
+      '<span class="agent-list-row-name">' + escapeHtml(pipeline.title) + '</span>' +
+      '<span class="agent-list-row-desc">' + escapeHtml(pipeline.description) + '</span>' +
+      conveyorStatusMarkup(pipeline) + '</button>';
+  }
+
+  function filterConveyors(list, state) {
+    var query = state.query.trim().toLowerCase();
+    if (!query) return list;
+    return list.filter(function(pipeline) {
+      var haystack = (pipeline.title + ' ' + pipeline.description + ' ' + pipeline.tags.join(' ')).toLowerCase();
+      return haystack.indexOf(query) !== -1;
+    });
+  }
+
+  function renderConveyorsList() {
+    var all = conveyorList();
+    var shown = filterConveyors(all, conveyorsUiState);
+    var cards = shown.length
+      ? '<div class="agent-group-body' + (conveyorsUiState.view === 'list' ? ' is-list' : '') + '">' +
+        shown.map(conveyorsUiState.view === 'list' ? renderConveyorRow : renderConveyorCard).join('') + '</div>'
+      : '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>';
+
+    return '<section class="conveyors-controls-panel" aria-label="Управление конвейерами">' +
+      '<div class="agent-toolbar-row">' +
+      '<input type="search" class="lab-input agents-search" data-conveyors-search placeholder="Поиск по конвейерам…" aria-label="Поиск по конвейерам">' +
+      '<div class="agent-toolbar-actions">' +
+      '<span class="pipeline-count" data-conveyors-count aria-live="polite"><strong>' + shown.length + '</strong> из ' + all.length + '</span>' +
+      '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+      '<button type="button" class="res-view-btn' + (conveyorsUiState.view === 'cards' ? ' active' : '') + '" data-conveyors-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+      '<button type="button" class="res-view-btn' + (conveyorsUiState.view === 'list' ? ' active' : '') + '" data-conveyors-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button></div>' +
+      '</div></div></section>' +
+      '<div class="conveyors-list-view' + (conveyorsUiState.view === 'list' ? ' is-list-view' : '') + '">' + cards + '</div>';
+  }
+
+  function bindConveyorCards(container) {
+    container.querySelectorAll('[data-conveyor-id]').forEach(function(card) {
+      card.addEventListener('click', function() {
+        LabRouter.navigate('workbench', ['run', card.dataset.conveyorId]);
+      });
+    });
+  }
+
+  function initConveyorsToolbar(container) {
+    try { conveyorsUiState.view = localStorage.getItem(CONVEYORS_VIEW_KEY) === 'list' ? 'list' : 'cards'; } catch (error) { /* приватный режим */ }
+    var view = container.querySelector('.conveyors-list-view');
+    if (view) view.classList.toggle('is-list-view', conveyorsUiState.view === 'list');
+    container.querySelectorAll('[data-conveyors-view]').forEach(function(btn) {
+      btn.classList.toggle('active', btn.dataset.conveyorsView === conveyorsUiState.view);
+      btn.addEventListener('click', function() {
+        conveyorsUiState.view = btn.dataset.conveyorsView;
+        try { localStorage.setItem(CONVEYORS_VIEW_KEY, conveyorsUiState.view); } catch (error) { /* приватный режим */ }
+        container.querySelectorAll('[data-conveyors-view]').forEach(function(other) {
+          other.classList.toggle('active', other === btn);
+        });
+        refreshConveyorsList(container);
+      });
+    });
+    var search = container.querySelector('[data-conveyors-search]');
+    if (search) {
+      search.value = conveyorsUiState.query;
+      search.addEventListener('input', function() {
+        conveyorsUiState.query = this.value;
+        refreshConveyorsList(container);
+      });
+    }
+    bindConveyorCards(container);
+    if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
+  }
+
+  function refreshConveyorsList(container) {
+    var view = container.querySelector('.conveyors-list-view');
+    if (!view) return;
+    var all = conveyorList();
+    var shown = filterConveyors(all, conveyorsUiState);
+    view.innerHTML = shown.length
+      ? '<div class="agent-group-body' + (conveyorsUiState.view === 'list' ? ' is-list' : '') + '">' +
+        shown.map(conveyorsUiState.view === 'list' ? renderConveyorRow : renderConveyorCard).join('') + '</div>'
+      : '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>';
+    view.classList.toggle('is-list-view', conveyorsUiState.view === 'list');
+    var count = container.querySelector('[data-conveyors-count]');
+    if (count) count.innerHTML = '<strong>' + shown.length + '</strong> из ' + all.length;
+    bindConveyorCards(container);
+    if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
   }
 
   function renderAgentGroups(agents, state) {
@@ -2604,6 +2740,16 @@ const PageController = (function() {
         else openAgentPipelines(container);
         break;
 
+      case 'conveyors':
+        // Конвейеры пользователя. Карточки — по образцу модуля «Агенты»
+        // (agent-role-card + agent-icon-chip + статус-метка), список — из
+        // WorkbenchPipelines. Запуск ведёт в #workbench/run/<id>: раннер
+        // с этапами и вьювером остаётся общим с мастерской.
+        container.innerHTML = renderConveyorsList();
+        initConveyorsToolbar(container);
+        container.dataset.loaded = '1';
+        break;
+
       case 'workbench':
         container.innerHTML = '<div id="workbench-app" aria-live="polite"></div>';
         container.dataset.loaded = '1';
@@ -2940,7 +3086,7 @@ const PageController = (function() {
         break;
 
       case 'ed-chat':
-        container.innerHTML = '<h1><img src="assets/icons/32/crafts/hammer-and-chisel.png" width="32" height="32" alt="Нейрочат" style="vertical-align: middle; margin-right: 6px;"> Нейрочат</h1>' +
+        container.innerHTML = '<h1><i data-lucide="message-circle" aria-hidden="true"></i> Нейрочат</h1>' +
           '<p class="subtitle">Чат с исследовательской нейросетью для анализа, разбора слов и поиска подмен.</p>' +
           '<div class="ec-layout"><main class="ec-main" aria-labelledby="ec-dialog-title">' +
           '<header class="ec-head"><h2 class="ec-head-title" id="ec-dialog-title">Диалог</h2><span class="ec-count" id="ec-count" aria-label="Сообщений в диалоге">0</span><div class="ec-model"><button type="button" id="ec-model" class="ec-model-trigger" aria-haspopup="listbox" aria-expanded="false" aria-controls="ec-model-list" aria-label="Модель"><span class="ec-model-name" id="ec-model-name"></span><i data-lucide="chevron-down" aria-hidden="true"></i></button><ul id="ec-model-list" class="ec-model-list" role="listbox" aria-label="Список моделей" hidden></ul></div></header>' +

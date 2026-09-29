@@ -85,8 +85,14 @@
     'workbench': {
       kicker: 'АЛЕФИ · МАСТЕРСКАЯ',
       title: 'Мастерская',
-      subtitle: 'Хаб действий: каталог конвейеров, запуски, прогресс и результаты работ.',
+      subtitle: 'Запущенные работы: проекты, продолжение и результаты.',
       icon: 'crafts/hammer-and-chisel.png'
+    },
+    'conveyors': {
+      kicker: 'АЛЕФИ · КОНВЕЙЕРЫ',
+      title: 'Конвейеры',
+      subtitle: 'Подключаемые цепочки действий: вход → смета → этапы → результат.',
+      glyphIcon: 'git-merge'
     },
     'learn': {
       kicker: 'АЛЕФИ · ОБУЧЕНИЕ',
@@ -315,7 +321,9 @@
       kicker: 'АЛЕФИ · НЕЙРОЧАТ',
       title: 'Нейрочат',
       subtitle: 'Диалоговое поле для уточнения наблюдений и сборки следующего шага.',
-      icon: 'crafts/hammer-and-chisel.png'
+      // §5.1: в шапке — глиф-чип с lucide-иконкой; прежний растровый
+      // crafts/hammer-and-chisel.png означал «генераторы», а не диалог.
+      glyphIcon: 'message-circle'
     },
     'paleo-keyboard': {
       kicker: 'АЛЕФИ · ПАЛЕО-КЛАВИАТУРА',
