@@ -17,11 +17,6 @@ const Cartography = (function() {
   const GENDER_MATRIX_PATH = 'data/gender-matrix.json';
   const MODERN_COUNTRIES_PATH = 'data/modern-countries.json';
   const TYPE_LABELS = { country: 'Страна', 'modern-state': 'Современное государство', city: 'Город', region: 'Регион', empire: 'Империя' };
-  const ERA_LABELS = { ancient: 'Древние', modern: 'Современные' };
-  const REGION_LABELS = {
-    Levant: 'Левант', Egypt: 'Египет', Mesopotamia: 'Месопотамия',
-    Arabia: 'Аравия', Europe: 'Европа', Persia: 'Персия'
-  };
 
   let entries = [];
   let entriesById = {};
@@ -31,7 +26,11 @@ const Cartography = (function() {
   let countryDescriptions = {};
   let countryStates = {};
   let stateMatrixCountries = [];
-  let filters = { era: '', type: '', region: '' };
+  // Слой каталога: карты и исследования лежат в одной сетке (MAP_THEMES),
+  // но читаются по-разному — фильтр отделяет их, а не прячет.
+  const LAYER_LABELS = { all: 'Все слои', theme: 'Карты', research: 'Исследования' };
+  const catalog = { query: '', layer: 'all' };
+  let countryQuery = '';
   let mapView = false;
   let mapZoom = 1;
   let mapPan = { x: 0, y: 0 };
@@ -241,91 +240,6 @@ const Cartography = (function() {
     mapView = themeId === 'gender-images' ? 'gender' : (themeId === 'obelisks' ? 'obelisks' : true);
   }
 
-  function miniVisualSvg(kind) {
-    var svg = {
-      'silhouette-east':
-        '<path fill="currentColor" opacity=".88" d="M8 26c3-9 11-16 22-17 8-.8 14 2 18 7 3 4 4 9 2 13-2 5-7 8-14 9H18c-6 0-10-4-10-12z"/>' +
-        '<circle cx="22" cy="24" r="1.6" fill="currentColor"/>' +
-        '<circle cx="30" cy="21" r="1.4" fill="currentColor"/>' +
-        '<circle cx="36" cy="27" r="1.3" fill="currentColor"/>',
-      'silhouette-europe':
-        '<path fill="currentColor" opacity=".88" d="M16 14c6-6 16-7 24-2 5 3 8 8 7 13-1 6-6 9-12 11l-8 3c-6 1-11-2-13-8-2-5 0-11 2-17z"/>' +
-        '<path fill="none" stroke="currentColor" stroke-width="1.2" d="M20 32c4 2 9 3 14 1"/>',
-      blobs:
-        '<circle cx="16" cy="22" r="8" fill="currentColor" opacity=".28"/>' +
-        '<circle cx="30" cy="18" r="10" fill="currentColor" opacity=".42"/>' +
-        '<circle cx="34" cy="30" r="7" fill="currentColor" opacity=".22"/>' +
-        '<circle cx="22" cy="30" r="5" fill="currentColor" opacity=".55"/>',
-      route:
-        '<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3 2.5" d="M6 34 C14 28, 18 18, 28 16 S42 12, 44 8"/>' +
-        '<circle cx="6" cy="34" r="2.2" fill="currentColor"/>' +
-        '<circle cx="20" cy="20" r="2" fill="currentColor"/>' +
-        '<circle cx="32" cy="15" r="2" fill="currentColor"/>' +
-        '<circle cx="44" cy="8" r="2.2" fill="currentColor"/>'
-    };
-    return miniVisualSvgRest(kind, svg);
-  }
-
-  function miniVisualSvgRest(kind, svg) {
-    svg.scatter =
-      '<circle cx="10" cy="14" r="1.6" fill="currentColor" opacity=".9"/>' +
-      '<circle cx="18" cy="10" r="1.2" fill="currentColor" opacity=".55"/>' +
-      '<circle cx="28" cy="16" r="1.8" fill="currentColor"/>' +
-      '<circle cx="38" cy="12" r="1.3" fill="currentColor" opacity=".7"/>' +
-      '<circle cx="8" cy="26" r="1.4" fill="currentColor" opacity=".6"/>' +
-      '<circle cx="16" cy="22" r="1.1" fill="currentColor" opacity=".4"/>' +
-      '<circle cx="24" cy="28" r="1.7" fill="currentColor"/>' +
-      '<circle cx="34" cy="24" r="1.2" fill="currentColor" opacity=".75"/>' +
-      '<circle cx="42" cy="28" r="1.5" fill="currentColor"/>' +
-      '<circle cx="14" cy="36" r="1.3" fill="currentColor" opacity=".5"/>' +
-      '<circle cx="26" cy="38" r="1.6" fill="currentColor" opacity=".85"/>' +
-      '<circle cx="36" cy="36" r="1.2" fill="currentColor" opacity=".45"/>';
-    svg.matrix =
-      '<g fill="currentColor">' +
-        '<rect x="6" y="8" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="16" y="8" width="7" height="7" opacity=".85" rx="1"/>' +
-        '<rect x="26" y="8" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="36" y="8" width="7" height="7" opacity=".85" rx="1"/>' +
-        '<rect x="6" y="18" width="7" height="7" opacity=".85" rx="1"/>' +
-        '<rect x="16" y="18" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="26" y="18" width="7" height="7" opacity=".85" rx="1"/>' +
-        '<rect x="36" y="18" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="6" y="28" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="16" y="28" width="7" height="7" opacity=".85" rx="1"/>' +
-        '<rect x="26" y="28" width="7" height="7" opacity=".22" rx="1"/>' +
-        '<rect x="36" y="28" width="7" height="7" opacity=".85" rx="1"/>' +
-      '</g>';
-    svg.chips =
-      '<rect x="4" y="16" width="12" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
-      '<rect x="18" y="16" width="12" height="16" rx="3" fill="currentColor" opacity=".28"/>' +
-      '<rect x="32" y="16" width="12" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="1.3"/>' +
-      '<circle cx="10" cy="22" r="2" fill="currentColor"/>' +
-      '<circle cx="24" cy="22" r="2" fill="currentColor"/>' +
-      '<circle cx="38" cy="22" r="2" fill="currentColor"/>';
-    svg.needles =
-      '<path fill="currentColor" d="M10 38 L13 10 L16 38 Z" opacity=".85"/>' +
-      '<path fill="currentColor" d="M22 38 L24.5 8 L27 38 Z"/>' +
-      '<path fill="currentColor" d="M33 38 L36 14 L39 38 Z" opacity=".7"/>';
-    svg.feature =
-      '<g fill="currentColor">' +
-        '<circle cx="10" cy="12" r="2.2" opacity=".28"/>' +
-        '<circle cx="20" cy="12" r="2.2"/>' +
-        '<circle cx="30" cy="12" r="2.2" opacity=".28"/>' +
-        '<circle cx="40" cy="12" r="2.2"/>' +
-        '<circle cx="10" cy="24" r="2.2"/>' +
-        '<circle cx="20" cy="24" r="2.2" opacity=".28"/>' +
-        '<circle cx="30" cy="24" r="2.2"/>' +
-        '<circle cx="40" cy="24" r="2.2" opacity=".28"/>' +
-        '<circle cx="10" cy="36" r="2.2" opacity=".28"/>' +
-        '<circle cx="20" cy="36" r="2.2"/>' +
-        '<circle cx="30" cy="36" r="2.2" opacity=".28"/>' +
-        '<circle cx="40" cy="36" r="2.2"/>' +
-      '</g>';
-    return '<svg class="cartography-mini-svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false">' +
-      (svg[kind] || svg.scatter) +
-      '</svg>';
-  }
-
   // ===== ИНИЦИАЛИЗАЦИЯ =====
   function init(el) {
     var container = el || document.getElementById('cartography');
@@ -430,33 +344,25 @@ const Cartography = (function() {
   }
 
   // ===== ФИЛЬТРАЦИЯ =====
-  function getFiltered() {
-    return entries.filter(function(e) {
-      if (filters.era && e.era !== filters.era) return false;
-      if (filters.type && e.type !== filters.type) return false;
-      if (filters.region && e.region !== filters.region) return false;
-      return true;
+  function visibleThemes() {
+    var query = String(catalog.query || '').trim().toLowerCase();
+    return MAP_THEMES.filter(function(theme) {
+      if (catalog.layer !== 'all' && theme.kind !== catalog.layer) return false;
+      if (!query) return true;
+      return [theme.title, theme.description, theme.topic].join(' ').toLowerCase().indexOf(query) !== -1;
     });
   }
 
-  function setFilter(kind, value) {
-    filters[kind] = filters[kind] === value ? '' : value;
-    var container = document.getElementById('cartography');
-    if (container) renderPage(container);
+  function catalogFiltersActive() {
+    return catalog.layer !== 'all' || String(catalog.query || '').trim() !== '';
   }
 
-  // ===== СБОРКА НАБОРА ЗНАЧЕНИЙ ДЛЯ ФИЛЬТРОВ =====
-  function buildFilterGroup(kind, labels) {
-    var seen = {};
-    entries.forEach(function(e) { if (e[kind]) seen[e[kind]] = true; });
-    var values = Object.keys(seen);
-    if (!values.length) return '';
-    var buttons = values.map(function(v) {
-      var active = filters[kind] === v ? ' active' : '';
-      var label = (labels[v] || v);
-      return '<button type="button" class="cartography-filter-btn' + active + '" data-filter-kind="' + kind + '" data-filter-value="' + escapeHtml(v) + '">' + escapeHtml(label) + '</button>';
-    }).join('');
-    return '<div class="cartography-filter-group" data-filter-group="' + kind + '">' + buttons + '</div>';
+  function visibleCountries() {
+    var query = String(countryQuery || '').trim().toLowerCase();
+    if (!query) return stateMatrixCountries;
+    return stateMatrixCountries.filter(function(country) {
+      return String(country.name || '').toLowerCase().indexOf(query) !== -1;
+    });
   }
 
   function renderWorldMap(fullscreen, gender) {
@@ -479,35 +385,68 @@ const Cartography = (function() {
     '</section>';
   }
 
-  function renderThemeCard(theme, index) {
-    var count = themeObjectCount(theme);
-    return '<article class="cartography-theme-card" tabindex="0" role="button" data-theme-id="' + escapeHtml(theme.id) + '" aria-label="Открыть карту: ' + escapeHtml(theme.title) + '" style="animation-delay:' + (index * 40) + 'ms">' +
-      '<div class="cartography-theme-body">' +
-        '<span class="cartography-theme-glyph" aria-hidden="true">' + miniVisualSvg(theme.visual) + '</span>' +
-        '<h2 class="cartography-card-title">' + escapeHtml(theme.title) + '</h2>' +
-        '<span class="cartography-theme-count" aria-label="' + count + ' объектов">' + count + '</span>' +
-        '<p class="cartography-card-summary">' + escapeHtml(theme.description) + '</p>' +
-      '</div></article>';
+  // Иконки тем — из lucide, как в паспорте агента. Раньше здесь стояли
+  // самописные мини-превью (miniVisualSvg): у них не было ни общего
+  // калибра, ни подписи, и они гасли на всех темах кроме картографических.
+  const THEME_ICON = {
+    'near-east': 'pyramid',
+    'europe': 'compass',
+    'empires': 'crown',
+    'ancient-routes': 'route',
+    'modern-states': 'flag',
+    'state-matrix': 'grid-3x3',
+    'gender-images': 'users',
+    'obelisks': 'navigation'
+  };
+
+  function themeIcon(theme) {
+    return THEME_ICON[theme.id] || 'map';
   }
 
+  // Карта и слой считаются по-разному: у темы это узлы на карте, у
+  // исследования — реестр городов. Единой единицы в данных нет, поэтому
+  // подпись в статус-пилюле нейтральная.
+  function pluralizeObjects(n) {
+    var mod10 = n % 10;
+    var mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'объект';
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'объекта';
+    return 'объектов';
+  }
+
+  function themeKindLabel(theme) {
+    return theme.kind === 'research' ? 'Исследование' : 'Карта';
+  }
+
+  // Паспорт карточки повторяет карточку агента (renderAgentCard): тот же
+  // икон-чип, то же серифное имя, та же статус-пилюля и подвал с чипом.
+  function renderThemeCard(theme, index) {
+    var count = themeObjectCount(theme);
+    return '<article class="cartography-theme-card" data-theme-id="' + escapeHtml(theme.id) + '" tabindex="0" role="button" aria-label="Открыть карту: ' + escapeHtml(theme.title) + '" style="animation-delay:' + (index * 40) + 'ms">' +
+      '<div class="cartography-theme-head">' +
+        '<span class="cartography-theme-chip" aria-hidden="true"><i data-lucide="' + themeIcon(theme) + '" class="lab-icon"></i></span>' +
+        '<h2 class="cartography-theme-name">' + escapeHtml(theme.title) + '</h2>' +
+        '<span class="cartography-theme-count" aria-label="' + count + ' ' + pluralizeObjects(count) + '">' + count + '</span>' +
+      '</div>' +
+      '<p class="cartography-theme-desc">' + escapeHtml(theme.description) + '</p>' +
+      '<div class="cartography-theme-foot">' +
+        '<span class="cartography-theme-kind">' + themeKindLabel(theme) + '</span>' +
+        (theme.topic ? '<span class="cartography-theme-topic">' + escapeHtml(theme.topic) + '</span>' : '') +
+      '</div>' +
+    '</article>';
+  }
+
+  // Заголовок группы — формула секций агентов (§4.1): микро-лейбл, за ним
+  // волосяная линия до счётчика. Прежняя рамка снизу дублировала линию.
   function renderCatalogGroup(label, items) {
     return '<section class="cartography-catalog-group">' +
       '<header class="cartography-section-head">' +
         '<h2 class="cartography-section-label">' + escapeHtml(label) + '</h2>' +
+        '<span class="cartography-section-rule" aria-hidden="true"></span>' +
         '<span class="cartography-section-count">' + items.length + '</span>' +
       '</header>' +
       '<div class="cartography-theme-grid">' + items.map(function(theme, i) { return renderThemeCard(theme, i); }).join('') + '</div>' +
     '</section>';
-  }
-
-  function renderFeatureCell() {
-    return '<article class="cartography-feature" data-open-map="1" tabindex="0" role="button" aria-label="Открыть глобальную карту состояний">' +
-      '<span class="cartography-feature-glyph" aria-hidden="true">' + miniVisualSvg('feature') + '</span>' +
-      '<div class="cartography-feature-body">' +
-        '<h2 class="cartography-feature-title">Глобальная карта состояний</h2>' +
-        '<p class="cartography-feature-lead">Поле Хошех и Ор: диагностика стран на одной карте мира.</p>' +
-        '<span class="lab-btn lab-btn-primary cartography-world-launch" aria-hidden="true">Открыть карту</span>' +
-      '</div></article>';
   }
 
   function renderStateCard(country, index) {
@@ -520,22 +459,64 @@ const Cartography = (function() {
   }
 
   function renderStateMatrixPage(container) {
-    container.innerHTML = '<div class="cartography-state-page"><div class="cartography-map-shell">' + renderWorldMap(true, false) + '</div><div class="cartography-state-search"><label for="cartography-country-search">Поиск страны</label><input id="cartography-country-search" type="search" placeholder="Введите название страны" autocomplete="off"></div><div class="cartography-state-grid">' + stateMatrixCountries.map(renderStateCard).join('') + '</div></div>';
+    var shown = visibleCountries();
+    container.innerHTML = '<div class="cartography-state-page"><div class="cartography-map-shell">' + renderWorldMap(true, false) + '</div>' +
+      '<div class="lab-toolbar" role="search" aria-label="Управление списком стран">' +
+        '<input type="search" class="lab-input lab-toolbar-search" id="cartography-country-search" autocomplete="off" placeholder="Поиск страны…" aria-label="Поиск страны" value="' + escapeHtml(countryQuery) + '">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Фильтры каталога">' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-country-reset" title="Сбросить поиск" aria-label="Сбросить поиск"' + (countryQuery ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" aria-live="polite"><strong>' + shown.length + '</strong> из ' + stateMatrixCountries.length + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div id="cartography-country-body">' + countryCardsMarkup(shown) + '</div></div>';
     bindMapInteractions(container);
-    var openCountry = function(card) {
-      var country = stateMatrixCountries.find(function(item) { return item.name === card.getAttribute('data-country-name'); });
-      if (country) showStateCountryDetail(country);
-    };
-    container.querySelector('.cartography-back').addEventListener('click', function() { mapView = false; renderPage(container); });
-    container.querySelector('#cartography-country-search').addEventListener('input', function() {
-      var query = this.value.trim().toLocaleLowerCase();
-      container.querySelectorAll('.cartography-state-card').forEach(function(card) {
-        card.hidden = query && card.getAttribute('data-country-name').toLocaleLowerCase().indexOf(query) === -1;
+    var search = container.querySelector('#cartography-country-search');
+    var reset = container.querySelector('#cartography-country-reset');
+    if (search) {
+      search.addEventListener('input', function() {
+        countryQuery = search.value;
+        refreshCountryBody(container);
       });
-    });
+    }
+    if (reset) {
+      reset.addEventListener('click', function() {
+        countryQuery = '';
+        renderStateMatrixPage(container);
+      });
+    }
+    bindCountryCards(container);
+    refreshIcons();
+  }
+
+  function countryCardsMarkup(countries) {
+    if (!countries.length) return '<div class="lab-alert lab-alert-info">Страна не найдена.</div>';
+    return '<div class="cartography-state-grid">' + countries.map(renderStateCard).join('') + '</div>';
+  }
+
+  /* Обновляется только сетка стран: карта сверху остаётся на месте,
+     поэтому ввод в поиске не перерисовывает SVG. */
+  function refreshCountryBody(container) {
+    var body = container.querySelector('#cartography-country-body');
+    if (!body) return renderStateMatrixPage(container);
+    var shown = visibleCountries();
+    body.innerHTML = countryCardsMarkup(shown);
+    var count = container.querySelector('.lab-toolbar-count strong');
+    if (count) count.textContent = String(shown.length);
+    var reset = container.querySelector('#cartography-country-reset');
+    if (reset) reset.hidden = !countryQuery;
+    bindCountryCards(container);
+  }
+
+  function bindCountryCards(container) {
     container.querySelectorAll('.cartography-state-card').forEach(function(card) {
-      card.addEventListener('click', function() { openCountry(this); });
-      card.addEventListener('keydown', function(event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCountry(this); } });
+      function openCard() {
+        var country = stateMatrixCountries.find(function(item) { return item.name === card.getAttribute('data-country-name'); });
+        if (country) showStateCountryDetail(country);
+      }
+      card.addEventListener('click', openCard);
+      card.addEventListener('keydown', function(event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCard(); } });
     });
   }
 
@@ -563,12 +544,91 @@ const Cartography = (function() {
     }
 
     // Исследования — такой же слой каталога, поэтому живут в одной сетке с темами.
+    var shown = visibleThemes();
     container.innerHTML = '<div class="cartography-page">' +
-      renderFeatureCell() +
-      renderCatalogGroup('Темы карт', MAP_THEMES) +
+      catalogToolbarMarkup(shown.length) +
+      '<div id="cartography-catalog-body">' +
+        (shown.length
+          ? renderCatalogGroup('Темы карт', shown)
+          : '<div class="lab-alert lab-alert-info">По фильтру карт не осталось.</div>') +
+      '</div>' +
     '</div>';
 
     bindCatalog(container);
+    bindCatalogToolbar(container);
+    refreshIcons();
+  }
+
+  function catalogToolbarMarkup(shown) {
+    var options = Object.keys(LAYER_LABELS).map(function(value) {
+      return '<option value="' + value + '"' + (value === catalog.layer ? ' selected' : '') + '>' + LAYER_LABELS[value] + '</option>';
+    }).join('');
+
+    return '<div class="lab-toolbar" role="search" aria-label="Управление каталогом карт">' +
+      '<input type="search" class="lab-input lab-toolbar-search" id="cartography-search" autocomplete="off" placeholder="Поиск по картам и исследованиям…" aria-label="Поиск по картам и исследованиям" value="' + escapeHtml(catalog.query) + '">' +
+      '<div class="lab-toolbar-group" role="group" aria-label="Фильтры каталога">' +
+        '<select id="cartography-layer" class="lab-input lab-toolbar-select' + (catalog.layer !== 'all' ? ' is-filtered' : '') + '" aria-label="Слой каталога">' + options + '</select>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-reset" title="Сбросить фильтры" aria-label="Сбросить фильтры"' + (catalogFiltersActive() ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
+      '</div>' +
+      '<div class="lab-toolbar-actions">' +
+        '<span class="lab-toolbar-count" aria-live="polite"><strong>' + shown + '</strong> из ' + MAP_THEMES.length + '</span>' +
+        // Шапка-фича «Глобальная карта состояний» стала кнопкой в панели:
+        // целая строка ради одного перехода. data-open-map — штатный
+        // делегированный хук модуля (bindCatalog), отдельная привязка не нужна.
+        '<button type="button" class="lab-btn lab-btn-primary lab-toolbar-btn" id="cartography-open-map" data-open-map="1" title="Открыть глобальную карту состояний"><i data-lucide="globe" class="lab-icon" aria-hidden="true"></i>Глобальная карта</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  /* Обновляется только тело каталога: перерисовка всей страницы сбрасывала
+     бы фокус в поиске на каждом символе. */
+  function refreshCatalogBody(container) {
+    var body = container.querySelector('#cartography-catalog-body');
+    if (!body) return renderPage(container);
+    var shown = visibleThemes();
+    body.innerHTML = shown.length
+      ? renderCatalogGroup('Темы карт', shown)
+      : '<div class="lab-alert lab-alert-info">По фильтру карт не осталось.</div>';
+    var count = container.querySelector('.lab-toolbar-count strong');
+    if (count) count.textContent = String(shown.length);
+    var reset = container.querySelector('#cartography-reset');
+    if (reset) reset.hidden = !catalogFiltersActive();
+    // Фильтр пересобрал карточки: их data-lucide надо материализовать заново,
+    // иначе после первого ввода в поиск чипы останутся пустыми.
+    refreshIcons();
+  }
+
+  function bindCatalogToolbar(container) {
+    var search = container.querySelector('#cartography-search');
+    var layer = container.querySelector('#cartography-layer');
+    var reset = container.querySelector('#cartography-reset');
+
+    if (search) {
+      search.addEventListener('input', function() {
+        catalog.query = search.value;
+        refreshCatalogBody(container);
+      });
+    }
+    if (layer) {
+      layer.addEventListener('change', function() {
+        catalog.layer = layer.value;
+        layer.classList.toggle('is-filtered', layer.value !== 'all');
+        refreshCatalogBody(container);
+      });
+    }
+    if (reset) {
+      reset.addEventListener('click', function() {
+        catalog.query = '';
+        catalog.layer = 'all';
+        renderPage(container);
+      });
+    }
+  }
+
+  function refreshIcons() {
+    if (window.lucide && window.lucide.createIcons) {
+      try { window.lucide.createIcons(); } catch (error) { /* иконки не критичны */ }
+    }
   }
 
   function bindCatalog(container) {
