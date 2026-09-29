@@ -24,7 +24,8 @@ dev-сервер `products/website/config/server.js` (порт 8080).
   `deploy.yml` (добавлен этой ревизией, подтверждается первым успешным деплоем);
 - `innerHTML` и inline-обработчики в `app.js` (6 / 2) и `src/js/ui.js` (14 / 6);
 - отсутствие минификации JavaScript вообще (сборка есть только для CSS);
-- неполная SEO-разметка контентных страниц (title/description/canonical/hreflang);
+- неполная SEO-разметка снята (10/10 маршрутов закрыты 2026-09-29); осталось
+  `src/content/html`: 565 из 1228 файлов с `<title>Без названия` (вне sitemap, P2);
 - зависимость `motion` объявлена, но не используется ни в одном файле сайта.
 
 Path traversal в dev-сервере и HTML-экранирование в парсере — закрыты (§3, §4).
@@ -80,7 +81,7 @@ products/website/
 | P1 | Несколько Markdown-рендереров | **открыто (уточнено)** | в браузере — `src/js/parser.js`; `pip install markdown rich` в `deploy.yml` не используется ни одним скриптом репо (0 импортов `markdown`/`rich`) |
 | P1 | JS minify отсутствует | **открыто** | `package.json` — только CSS-сборка (`tailwindcss --minify`); `src/js/*` и `apps/researchlab/js/*` отдаются как есть |
 | P1 | `node_modules` в deploy-artifact | **исправлено в CI** | утечка подтверждена 200 в проде; prune-шаг добавлен в `deploy.yml` (2026-09-29) — подтверждается первым успешным деплоем |
-| P1 | Неполная SEO-разметка | **открыто** | контентные страницы: нет description/canonical/hreflang, `<title>` шаблонизирован |
+| P1 | Неполная SEO-разметка | **закрыто** | 10/10 маршрутов (8 страниц + лендинг + лаборатория): title, description, canonical, hreflang x-default, og-набор ×6; два битых `og:url` с легаси `/ru/` исправлены 2026-09-29. Отдельный P2: `src/content/html` — 565 из 1228 с `<title>Без названия`, 1 без title (вне sitemap) |
 | P2 | Полная перерисовка списка | **открыто** | `src/js/ui.js` рендерит список целиком, без DocumentFragment/virtual list |
 | P2 | Внешний Google Fonts | **частично закрыто** | `index.html`: preconnect ×2 + preload + noscript; self-host WOFF2 не сделан |
 | P2 | Неиспользуемая зависимость `motion@13` | **открыто (новое)** | 0 импортов в коде сайта (единственное упоминание — `.agents/skills/apple-design/SKILL.md`) |
@@ -172,10 +173,10 @@ products/website/
 
 Сверено с живым сайтом 2026-09-29:
 
-- `sitemap.xml` — 9 URL: лендинг, `pages/index.html`, 7 контентных страниц
-  (`src/pages/**` → `build/pages/**`) и, с этой ревизией, лаборатория
-  `/apps/researchlab/index.html` (в проде — 200). Все URL существуют;
-  утверждение прежней редакции о `/ru/`, `/en/`, `/he/` неактуально.
+- `sitemap.xml` — 10 URL (генерируется `tools/generate-sitemap.py`): лендинг,
+  лаборатория `/apps/researchlab/index.html` (в проде — 200) и 8 страниц
+  `src/pages/**` → `build/pages/**`. Утверждение прежней редакции о `/ru/`,
+  `/en/`, `/he/` неактуально; URL и метаданные сверены 2026-09-29.
 - `index.html`: лендинг ссылается на `apps/researchlab/index.html` напрямую;
   задержанного JS-redirect на `pages/index.html` нет — из `setTimeout`/
   `location.href`/`redirect` в корневом `index.html` находится только фокус
@@ -183,8 +184,10 @@ products/website/
 - `robots.txt`: `Allow: /`, `Disallow: /api/` (путь существует только у локального
   dev-сервера — для Pages это no-op, оставлен как защита на случай поднятия
   сервера), `Sitemap:` — корректный.
-- Метаданные контентных страниц: description/canonical/hreflang отсутствуют —
-  открыто (P1); sitemap вручную, генератора из route-манифеста нет.
+- Метаданные: у всех 10 маршрутов title, description, canonical, hreflang
+  `x-default` и og-набор ×6 (закрыто 2026-09-29; исправлены два `og:url` с легаси
+  `/ru/`). Открытый остаток: `src/content/html` — 565/1228 `<title>Без названия`
+  и 1 файл без title; эти файлы вне sitemap (P2).
 
 Для accessibility остаётся в силе (операционный минимум —
 `docs/09-GUIDES/A11Y-MINIMUM.md`):
@@ -208,14 +211,17 @@ products/website/
 5. Сняты пункты о несуществующих файлах (`webapp/`, `tanakh/`, `researchlab/`,
    `build/server.js`), устаревшие цифры и «заглушка» `build:js:minify`.
 6. Обновлены версии actions в `deploy.yml`: `checkout@v4`, `setup-python@v5`.
+7. Метаданные всех 10 маршрутов (title/description/canonical/hreflang/og ×6),
+   фикс `og:url` с легаси `/ru/`; sitemap генерируется из маршрутов
+   (`tools/generate-sitemap.py`, коммит `417ea297`).
 
 ### Осталось (по приоритетам §3)
 
 1. **P1** — `innerHTML`/inline → DOM API и `addEventListener` (`src/js/ui.js`, `app.js`).
 2. **P1** — production-сборка JS: esbuild/terser, hash-имена, sourcemap; перед
    внедрением — ADR, если зависимость > 20 KB gzipped.
-3. **P1** — SEO-шаблон метаданных (title/description/canonical/hreflang) и
-   генерация sitemap из route-манифеста.
+3. **P2** — `<title>Без названия>` в `src/content/html` (565 из 1228, 1 файл без
+   title): генерация title из H1; файлы остаются вне sitemap.
 4. **P1** — убрать неиспользуемый `pip install markdown rich` из `deploy.yml`
    (0 импортов в репо).
 5. **P2** — virtual list/индексация; WebP/AVIF; self-host WOFF2; удаление `motion`;
@@ -240,8 +246,8 @@ products/website/
   (`resolveAllowedFile`, whitelist, `.md/.html`) — §4.1.
 - [x] Markdown-вывод экранируется (`escHtml`) — §4.2; остаточный риск — `innerHTML`
   в `src/js/ui.js` и `app.js`.
-- [x] Все sitemap URL существуют (9/9: лендинг, `pages/**`, лаборатория — 200 в проде);
-  canonical отсутствует (P1).
+- [x] Все sitemap URL существуют (10/10) и имеют canonical/метаданные
+  (title, description, hreflang, og) — закрыто 2026-09-29.
 - [x] Нет console errors — закрыто smoke-прогоном `smoke.yml` (маршруты desktop/mobile,
   кодировка, offline-fallback) и `test:unit`; фактический прогон CI смотреть в Actions.
 - [ ] Поиск и открытие файла при пустом/повреждённом JSON изолированно не проверены
