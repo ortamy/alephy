@@ -32,6 +32,32 @@
         };
     }
 
+    // Ошибка загрузки — текстовый узел: путь из state мог содержать кавычки,
+    // а раньше он попадал в разметку через esc().
+    function showError(host, p) {
+        const box = document.createElement('div');
+        box.style.color = '#c0392b';
+        box.style.padding = '40px';
+        box.textContent = 'Ошибка: ' + p;
+        host.replaceChildren(box);
+    }
+
+    // Имя иконки приходит из files.json и уходит в src картинки: без whitelist
+    // строка с кавычками дала бы произвольный атрибут.
+    function contentIcon(file) {
+        if (!file || !file.icon || file.icon === 'scrolls.png') return '';
+        if (!/^[A-Za-z0-9._-]+$/.test(file.icon)) return '';
+        return '<img src="assets/icons/32/' + file.icon + '" class="content-icon" alt="" style="width:28px;height:28px;vertical-align:middle;margin-right:10px;">';
+    }
+
+    // Markdown рендерится парсером, который экранирует каждую строку (escHtml),
+    // поэтому это единственная оставшаяся точка разбора строки в разметку.
+    function appendMarkdown(host, md, icon) {
+        const holder = document.createElement('div');
+        holder.innerHTML = AlephyParser.parseMD(md, icon);
+        while (holder.firstChild) host.appendChild(holder.firstChild);
+    }
+
     function openFile(p) {
         AlephyState.state.currentPath = p;
         
@@ -45,31 +71,47 @@
             filePathHint.textContent = p;
             bm.textContent = isBm ? '★' : '☆';
             bm.className = 'bookmark-btn' + (isBm ? ' active' : '');
-            bm.onclick = function() { toggleBookmark(p); };
+            bm.addEventListener('click', function() { toggleBookmark(p); });
             document.getElementById('mobile-list-view').style.display = 'none';
             document.getElementById('stats-mobile').style.display = 'none';
         } else {
             const c = document.getElementById('content');
             c.classList.remove('fade-in');
-            c.innerHTML = '<div class="spinner"></div>';
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            c.replaceChildren(spinner);
         }
         
         AlephyAPI.loadFile(p, function(md) {
             const isBm = AlephyState.isBookmarked(p);
             const file = AlephyState.state.FILES.find(function(x) { return x.path === p; });
-            const iconHtml = (file && file.icon && file.icon !== 'scrolls.png')
-                ? '<img src="assets/icons/32/' + file.icon + '" class="content-icon" alt="" style="width:28px;height:28px;vertical-align:middle;margin-right:10px;">'
-                : '';
             
             if (AlephyUI.isMobile()) {
                 const c = document.getElementById('file-content-mobile');
-                c.innerHTML = AlephyParser.parseMD(md, iconHtml) + AlephyUI.renderRelatedMobile(p);
+                c.replaceChildren();
+                appendMarkdown(c, md, contentIcon(file));
+                const related = AlephyUI.renderRelatedMobile(p);
+                if (related) c.appendChild(related);
             } else {
                 const c = document.getElementById('content');
-                c.innerHTML = '<div id="breadcrumbs">' + AlephyUI.renderBreadcrumbs(p) + '</div>' +
-                    '<div class="path-hint">' + AlephyUI.esc(p) + ' <span class="bookmark-btn' + (isBm ? ' active' : '') +
-                    '" onclick="toggleBookmark(\'' + p.replace(/'/g, "\\'") + '\')">' + (isBm ? '★' : '☆') + '</span></div>' +
-                    AlephyParser.parseMD(md, iconHtml) + AlephyUI.renderRelated(p);
+                c.replaceChildren();
+                const crumbs = document.createElement('div');
+                crumbs.id = 'breadcrumbs';
+                const crumbsNode = AlephyUI.renderBreadcrumbs(p);
+                if (crumbsNode) crumbs.appendChild(crumbsNode);
+                c.appendChild(crumbs);
+                const hint = document.createElement('div');
+                hint.className = 'path-hint';
+                hint.appendChild(document.createTextNode(p + ' '));
+                const star = document.createElement('span');
+                star.className = 'bookmark-btn' + (isBm ? ' active' : '');
+                star.textContent = isBm ? '★' : '☆';
+                star.addEventListener('click', function() { toggleBookmark(p); });
+                hint.appendChild(star);
+                c.appendChild(hint);
+                appendMarkdown(c, md, contentIcon(file));
+                const related = AlephyUI.renderRelated(p);
+                if (related) c.appendChild(related);
                 AlephyState.addToHistory(p);
                 AlephyUI.buildTOC(md);
                 AlephyUI.setupQuoteCopy();
@@ -78,12 +120,9 @@
             }
             AlephyState.addToHistory(p);
         }, function() { 
-            const errorHtml = '<div style="color:#c0392b;padding:40px;">Ошибка: ' + AlephyUI.esc(p) + '</div>';
-            if (AlephyUI.isMobile()) {
-                document.getElementById('file-content-mobile').innerHTML = errorHtml;
-            } else {
-                document.getElementById('content').innerHTML = errorHtml;
-            }
+            showError(AlephyUI.isMobile()
+                ? document.getElementById('file-content-mobile')
+                : document.getElementById('content'), p);
         });
     }
 
@@ -203,8 +242,7 @@
             const errorDiv = document.createElement('div');
             errorDiv.style.cssText = 'padding:20px;color:#c0392b;';
             errorDiv.textContent = 'Ошибка загрузки';
-            el.innerHTML = '';
-            el.appendChild(errorDiv);
+            el.replaceChildren(errorDiv);
         }
     });
 

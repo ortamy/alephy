@@ -8,12 +8,18 @@ on:
     branches: [main]
     paths:
       - 'products/website/apps/researchlab/**'
+      - 'products/website/src/js/**'
+      - 'products/website/app.js'
       - 'products/website/package.json'
+      - 'tools/design-baseline/dom-render-check.mjs'
       - '.github/workflows/smoke.yml'
   pull_request:
     paths:
       - 'products/website/apps/researchlab/**'
+      - 'products/website/src/js/**'
+      - 'products/website/app.js'
       - 'products/website/package.json'
+      - 'tools/design-baseline/dom-render-check.mjs'
       - '.github/workflows/smoke.yml'
 concurrency:
   group: smoke-${{ github.ref }}
@@ -59,6 +65,11 @@ jobs:
 
       - name: Registry matches page-controller
         run: node tools/design-baseline/registry-check.mjs
+
+      - name: Website DOM render check
+        # Регрессия рефакторинга innerHTML→DOM API в src/js/ui.js и app.js:
+        # скрипт рендерит реальные функции на минимальном DOM без браузера.
+        run: node tools/design-baseline/dom-render-check.mjs
 
       - name: Upload report
         if: always()

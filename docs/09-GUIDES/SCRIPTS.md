@@ -82,6 +82,22 @@ python tools/generate-sitemap.py --check  # CI-гейт: exit 1 при расх�
 
 `tools/design-baseline/` содержит сценарии визуальной проверки и локальную зависимость Playwright. Это отдельный контур, не общий `tools/alephy.py`.
 
+### Проверка рендера сайта без браузера
+
+```bash
+node tools/design-baseline/dom-render-check.mjs
+```
+
+Скрипт поднимает минимальный DOM, грузит `src/js/parser.js` и `src/js/ui.js` и
+прогоняет рендер списка, крошек, селектов и related-ссылок на враждебных данных
+из `files.json`. Служит гейтом после правок UI-разметки; в CI идёт шагом
+`Website DOM render check` в `smoke.yml`. Для проверки синтаксиса:
+
+```bash
+node --check products/website/app.js
+node --check products/website/src/js/ui.js
+```
+
 ## Агентный сервер
 
 ```bash

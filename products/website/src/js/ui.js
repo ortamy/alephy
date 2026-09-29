@@ -14,14 +14,25 @@
         return d.innerHTML;
     }
 
+    // Заголовок приходит из files.json (данные), поэтому собираем узел, а не HTML-строку:
+    // текст идёт через textContent, иконка — одиночный <img> с заданными полями.
     function renderTitle(file) {
-        let title = file.title || file.path;
+        let title = file.title || file.path || '';
         title = title.replace(EMOJI_REGEX, '').trim();
+        const frag = document.createDocumentFragment();
         if (file.icon && file.icon !== 'scrolls.png') {
-            const iconPath = '../../assets/icons/32/' + file.icon;
-            return '<img src="' + iconPath + '" class="icon" alt="' + esc(file.category || 'Иконка') + '" style="width:20px;height:20px;vertical-align:middle;margin-right:8px;">' + esc(title);
+            const icon = document.createElement('img');
+            icon.src = '../../assets/icons/32/' + file.icon;
+            icon.className = 'icon';
+            icon.alt = file.category || 'Иконка';
+            icon.style.width = '20px';
+            icon.style.height = '20px';
+            icon.style.verticalAlign = 'middle';
+            icon.style.marginRight = '8px';
+            frag.appendChild(icon);
         }
-        return esc(title);
+        frag.appendChild(document.createTextNode(title));
+        return frag;
     }
 
     function renderBreadcrumbs(p) {
@@ -38,7 +49,7 @@
             container.appendChild(sep);
             container.appendChild(document.createTextNode(' ' + parts[i].replace('.md', '')));
         }
-        return container.innerHTML;
+        return container;
     }
 
     function buildSelects() {
@@ -51,9 +62,9 @@
         ['category-select', 'category-select-mobile'].forEach(function(elId) {
             const sel = $(elId); if (!sel) return;
             const val = sel.value;
-            sel.innerHTML = '<option value="">Все категории</option>';
-            cats.forEach(function(cat) { 
-                sel.innerHTML += '<option value="' + esc(cat) + '">' + esc(cat) + ' (' + counts[cat] + ')</option>'; 
+            sel.replaceChildren(new Option('Все категории', ''));
+            cats.forEach(function(cat) {
+                sel.appendChild(new Option(cat + ' (' + counts[cat] + ')', cat));
             });
             if (val) sel.value = val;
         });
@@ -88,9 +99,9 @@
             if (sn.length) {
                 const cur = ss.value;
                 ss.style.display = 'block';
-                ss.innerHTML = '<option value="">Все подкатегории</option>';
-                sn.forEach(function(s) { 
-                    ss.innerHTML += '<option value="' + esc(s) + '"' + (s === cur ? ' selected' : '') + '>' + esc(s) + '</option>'; 
+                ss.replaceChildren(new Option('Все подкатегории', ''));
+                sn.forEach(function(s) {
+                    ss.appendChild(new Option(s, s, false, s === cur));
                 });
             } else { 
                 ss.style.display = 'none'; 
@@ -111,7 +122,7 @@
 
     function renderList(container, itemClass, headerClass, clickHandler) {
         if (!container) return;
-        container.innerHTML = '';
+        container.replaceChildren();
         const filtered = getFiltered();
         let cc = '';
         filtered.forEach(function(f) {
@@ -126,7 +137,7 @@
             d.className = itemClass;
             const titleDiv = document.createElement('div');
             titleDiv.className = 'title';
-            titleDiv.innerHTML = renderTitle(f);
+            titleDiv.replaceChildren(renderTitle(f));
             d.appendChild(titleDiv);
             if (f.topic) {
                 const topicDiv = document.createElement('div');
@@ -134,9 +145,9 @@
                 topicDiv.textContent = (f.topic || '').substring(0, 90);
                 d.appendChild(topicDiv);
             }
-            d.onclick = (function(p) { 
-                return function() { clickHandler(p); }; 
-            })(f.path);
+            d.addEventListener('click', (function(p) {
+                return function() { clickHandler(p); };
+            })(f.path));
             container.appendChild(d);
         });
         const statsEl = isMobile() ? $('stats-mobile') : $('total-count');
@@ -163,16 +174,19 @@
         const bl = $('bookmarks-list'), bm = $('burger-bookmarks-list');
         [bl, bm].forEach(function(list) {
             if (!list) return; 
-            list.innerHTML = '';
+            list.replaceChildren();
             AlephyState.state.bookmarks.forEach(function(p) {
                 const d = document.createElement('div'); 
                 d.className = 'bookmark-item';
                 const bf = AlephyState.state.FILES.find(function(x) { return x.path === p; });
-                const titleText = bf ? renderTitle(bf) : esc(p);
                 const titleDiv = document.createElement('div');
-                titleDiv.innerHTML = titleText;
+                if (bf) {
+                    titleDiv.appendChild(renderTitle(bf));
+                } else {
+                    titleDiv.textContent = p;
+                }
                 d.appendChild(titleDiv);
-                d.onclick = function() { openFile(p); };
+                d.addEventListener('click', function() { openFile(p); });
                 list.appendChild(d);
             });
         });
@@ -184,16 +198,19 @@
         const hl = $('history-list'), bh = $('burger-history-list');
         [hl, bh].forEach(function(list) {
             if (!list) return; 
-            list.innerHTML = '';
+            list.replaceChildren();
             AlephyState.state.fileHistory.slice(0, 8).forEach(function(p) {
                 const d = document.createElement('div'); 
                 d.className = 'history-item';
                 const f = AlephyState.state.FILES.find(function(x) { return x.path === p; });
-                const titleText = f ? renderTitle(f) : esc((p || '').substring(0, 40));
                 const titleDiv = document.createElement('div');
-                titleDiv.innerHTML = titleText;
+                if (f) {
+                    titleDiv.appendChild(renderTitle(f));
+                } else {
+                    titleDiv.textContent = (p || '').substring(0, 40);
+                }
                 d.appendChild(titleDiv);
-                d.onclick = function() { openFile(p); };
+                d.addEventListener('click', function() { openFile(p); });
                 list.appendChild(d);
             });
         });
@@ -209,7 +226,7 @@
             return; 
         }
         pn.style.display = 'block'; 
-        ls.innerHTML = '';
+        ls.replaceChildren();
         hd.forEach(function(h) {
             const lv = h.indexOf('### ') === -1 ? 'h2' : 'h3';
             let tt = h.replace(/^#{2,3} /, '').trim();
@@ -217,17 +234,17 @@
             const d = document.createElement('div'); 
             d.className = 'toc-item ' + lv; 
             d.textContent = tt;
-            d.onclick = function() { 
+            d.addEventListener('click', function() {
                 const el = $(cleanTt); 
-                if (el) el.scrollIntoView({ behavior: 'smooth' }); 
-            };
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+            });
             ls.appendChild(d);
         });
     }
 
     function renderLinks(p, clickFn) {
         const f = AlephyState.state.FILES.find(function(x) { return x.path === p; });
-        if (!f || !f.related || !f.related.length) return '';
+        if (!f || !f.related || !f.related.length) return null;
         const container = document.createElement('div');
         const hr = document.createElement('hr');
         hr.className = 'meander';
@@ -242,13 +259,15 @@
             const li = document.createElement('li');
             const span = document.createElement('span');
             span.className = 'related-link';
-            span.setAttribute('onclick', clickFn.name + "('" + r.replace(/'/g, "\\'") + "')");
+            span.addEventListener('click', (function(target) {
+                return function() { clickFn(target); };
+            })(r));
             span.textContent = tt;
             li.appendChild(span);
             ul.appendChild(li);
         });
         container.appendChild(ul);
-        return container.innerHTML;
+        return container;
     }
 
     function renderRelated(p) { 
@@ -262,9 +281,9 @@
     function setupQuoteCopy() {
         const qs = document.querySelectorAll('#content blockquote');
         for (let i = 0; i < qs.length; i++) {
-            qs[i].onclick = function() { 
-                navigator.clipboard.writeText(this.textContent.trim()).then(showToast); 
-            };
+            qs[i].addEventListener('click', function() {
+                navigator.clipboard.writeText(this.textContent.trim()).then(showToast);
+            });
         }
     }
 
