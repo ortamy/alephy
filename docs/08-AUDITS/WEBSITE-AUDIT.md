@@ -77,7 +77,7 @@ products/website/
 | P0 | Path traversal в API чтения файлов | **закрыто** | `config/server.js`: `resolveAllowedFile()`, whitelist `ALLOWED_FILE_FOLDERS`, расширения только `.md/.html`, лимит 5 MB → 413, `FORBIDDEN_PATH` → 403. Публичного сервера у сайта нет (Pages — статика) |
 | P0 | Сломанное HTML-экранирование | **закрыто** | `src/js/parser.js`: `escHtml` экранирует `& < > " '`, весь сырой текст проходит через `escHtml` до инлайн-разметки |
 | P0 | SEO URL ≠ структура | **частично закрыто** | все 9 URL `sitemap.xml` существуют (`src/pages/**` → `build/pages/**`); лаборатория добавлена в sitemap этой ревизией |
-| P1 | `innerHTML` и inline-обработчики | **открыто** | `src/js/ui.js`: innerHTML×14, onclick×6; `app.js`: innerHTML×6, onclick×2 |
+| P1 | `innerHTML` и inline-обработчики | **закрыто** | `src/js/ui.js` и `app.js` переведены на DOM API: `textContent`, `new Option`, `addEventListener`, `replaceChildren`. Данные из `files.json` (заголовки, категории, пути related, имя иконки) больше не собираются конкатенацией строк. Осталась одна точка разбора строки — `appendMarkdown` в `app.js`: строка приходит от `parseMD`, который экранирует каждую строку. Гейт: `tools/design-baseline/dom-render-check.mjs` (16 проверок, включая инъекции) в `smoke.yml` |
 | P1 | Несколько Markdown-рендереров | **открыто (уточнено)** | в браузере — `src/js/parser.js`; `pip install markdown rich` в `deploy.yml` не используется ни одним скриптом репо (0 импортов `markdown`/`rich`) |
 | P1 | JS minify отсутствует | **открыто** | `package.json` — только CSS-сборка (`tailwindcss --minify`); `src/js/*` и `apps/researchlab/js/*` отдаются как есть |
 | P1 | `node_modules` в deploy-artifact | **исправлено в CI** | утечка подтверждена 200 в проде; prune-шаг добавлен в `deploy.yml` (2026-09-29) — подтверждается первым успешным деплоем |
@@ -107,7 +107,7 @@ products/website/
 
 ### 4.2 XSS и HTML injection
 
-**Статус: экранирование закрыто; генерация DOM — открыта.**
+**Статус: закрыто (2026-09-29).**
 
 `src/js/parser.js` (проверено 2026-09-29): `escHtml` экранирует `& < > " '`;
 каждая строка Markdown проходит через `escHtml` до инлайн-разметки (код, жирный,
@@ -115,15 +115,19 @@ products/website/
 экранируются. Прежняя редакция этого аудита приводила сломанный сниппет — он не
 воспроизводится.
 
-Открыто — счётчики по исходникам (`Select-String`, 2026-09-29):
+Генерация разметки переведена на DOM API (`src/js/ui.js`, `app.js`): данные из
+`files.json` — заголовки, категории, подкатегории, пути related, имя иконки —
+попадают в узлы через `textContent`, `new Option` и `addEventListener`, а не
+через конкатенацию строк. Имя иконки дополнительно проходит whitelist
+`/^[A-Za-z0-9._-]+$/`, потому что уходит в `src` картинки.
 
-- `src/js/ui.js` — `innerHTML` ×14, inline `onclick` ×6;
-- `app.js` — `innerHTML` ×6, inline `onclick` ×2.
+Осталась одна точка разбора строки в разметку — `appendMarkdown` в `app.js`:
+вход приходит от `parseMD`, который экранирует каждую строку, поэтому это не
+недоверенный ввод.
 
-Направление: `createElement`/`textContent` вместо `innerHTML`, `addEventListener`
-вместо inline-атрибутов, URL изображений/ссылок валидировать по схеме
-(относительные, `http`, `https`). Контрольный чек-лист —
-`docs/09-GUIDES/SECURITY-CHECKLIST.md`.
+Контрольный чек-лист — `docs/09-GUIDES/SECURITY-CHECKLIST.md`; регрессия
+закреплена `tools/design-baseline/dom-render-check.mjs` (16 проверок, включая
+инъекции из `files.json` и отсутствие inline-обработчиков).
 
 ### 4.3 localStorage
 
@@ -142,8 +146,9 @@ products/website/
   в репо) — удалить или обосновать.
 - `src/js/api.js`: проверка `response.ok` в `fetchJSON` есть (1 место); переход с
   callbacks на `async/await` не сделан.
-- Глобальные `window.Alephy*` и inline-обработчики в `app.js` сохранены;
-  ES modules — отдельная задача на все 6 файлов `src/js`.
+- `innerHTML`/inline-обработчики в `app.js` и `src/js/ui.js`;
+- Глобальные `window.Alephy*` и ES modules — открыто: это отдельная задача на все
+  6 файлов `src/js` (архитектура не менялась, поведение то же).
 - `app.js`: двойная инициализация `setFontSize` (см. `loadFromStorage` → init) и
   двойной `addToHistory(p)` в колбэке `openFile` — воспроизводятся, убрать.
 - `products/website/pages/` — legacy-дубль `src/pages/index.html` (1 tracked-файл);
@@ -217,7 +222,8 @@ products/website/
 
 ### Осталось (по приоритетам §3)
 
-1. **P1** — `innerHTML`/inline → DOM API и `addEventListener` (`src/js/ui.js`, `app.js`).
+1. ~~`innerHTML`/inline → DOM API~~ — закрыто 2026-09-29 (см. §3 P1, §4.2);
+   гейт `dom-render-check.mjs` в `smoke.yml`.
 2. **P1** — production-сборка JS: esbuild/terser, hash-имена, sourcemap; перед
    внедрением — ADR, если зависимость > 20 KB gzipped.
 3. **P2** — `<title>Без названия>` в `src/content/html` (565 из 1228, 1 файл без
@@ -242,10 +248,12 @@ products/website/
 
 - [x] `npm run build` создаёт production CSS (`tailwindcss --minify` → `style.css`);
   production-сборки JS нет — §3 P1.
+- [x] `node --check` на `app.js` и `src/js/ui.js`; рендер проверяется
+  `tools/design-baseline/dom-render-check.mjs` без браузера.
 - [x] API dev-сервера не отдаёт `..`, абсолютные пути и не-Markdown
   (`resolveAllowedFile`, whitelist, `.md/.html`) — §4.1.
-- [x] Markdown-вывод экранируется (`escHtml`) — §4.2; остаточный риск — `innerHTML`
-  в `src/js/ui.js` и `app.js`.
+- [x] Markdown-вывод экранируется (`escHtml`), а разметка строится DOM API —
+  §4.2; гейт `dom-render-check.mjs` (16 проверок) в `smoke.yml`.
 - [x] Все sitemap URL существуют (10/10) и имеют canonical/метаданные
   (title, description, hreflang, og) — закрыто 2026-09-29.
 - [x] Нет console errors — закрыто smoke-прогоном `smoke.yml` (маршруты desktop/mobile,
