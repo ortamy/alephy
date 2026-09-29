@@ -3,181 +3,258 @@
 **Дата:** 2026-07-12  
 **Область:** структура, архитектура, JavaScript, сервер, сборка, производительность, SEO, доступность и безопасность.  
 **Статус:** статический аудит; production-код не изменялся.
+**Ревизия:** 2026-09-29 — структура, статусы и доказательства перепроверены по репозиторию и живому сайту (`ortamy.github.io/alephy`); пункты, ссылавшиеся на удалённые файлы (`webapp/`, `tanakh/`, `researchlab/` в корне, `build/server.js`), сняты.
 
 ## 1. Краткий итог
 
-Проект представляет собой гибрид статического сайта, динамического Markdown-каталога и набора исследовательских инструментов. Фактическая структура уже отличается от прежней версии этого документа: используются `pages/`, `assets/`, `data/`, `build/`, `webapp/`, `researchlab/` и `tanakh/`. Поэтому прежние рекомендации о безусловном удалении `webapp/`, переносе каталогов и массовом обновлении ссылок нельзя выполнять без dependency-map и проверки всех маршрутов.
+Проект — статический сайт-каталог плюс SPA Research Lab. Серверной части в репозитории
+для публичного сайта нет: GitHub Pages отдаёт `products/website/build`, собранный
+`products/website/tools/build.sh` (bash + tailwind); единственный сервер — локальный
+dev-сервер `products/website/config/server.js` (порт 8080).
 
-Критические зоны: потенциальный path traversal в API чтения файлов, некорректное HTML-экранирование в `js/parser.js`, большое количество `innerHTML` и inline-обработчиков, рассинхрон `sitemap.xml` с фактическими URL, отсутствие минификации JavaScript и наличие `node_modules` внутри website.
+Прежнее дерево (`webapp/`, `tanakh/`, `researchlab/` в корне, `js/`, `content/`,
+`data/`, `locales/` как корневые каталоги) не существует: контент и страницы живут
+в `src/`, лаборатория — в `apps/researchlab/`. Рекомендации прежней редакции о
+перемещении этих каталогов сняты.
+
+Критические зоны на 2026-09-29:
+
+- **публикация `node_modules` в артефакт Pages** — доказано в проде
+  (запрос `/node_modules/tailwindcss/package.json` → 200); чинится prune-шагом в
+  `deploy.yml` (добавлен этой ревизией, подтверждается первым успешным деплоем);
+- `innerHTML` и inline-обработчики в `app.js` (6 / 2) и `src/js/ui.js` (14 / 6);
+- отсутствие минификации JavaScript вообще (сборка есть только для CSS);
+- неполная SEO-разметка контентных страниц (title/description/canonical/hreflang);
+- зависимость `motion` объявлена, но не используется ни в одном файле сайта.
+
+Path traversal в dev-сервере и HTML-экранирование в парсере — закрыты (§3, §4).
 
 ## 2. Фактическая структура и масштаб
 
+Источник истины — исходники; `build/` — зеркало-артефакт, пересобираемое
+`build.sh` (скрипт стирает `build/` и копирует заново).
+
 ```text
 products/website/
-├── index.html, app.js, style.css, files.json
-├── pages/                 # основные страницы
-├── content/               # контент
-├── assets/                # иконки, изображения, шрифты
-├── data/                  # данные ТаНаХа и навигация
-├── js/                    # API, state, UI, parser, i18n
-├── locales/               # ru/en/he
-├── webapp/                # отдельные инструменты
-├── researchlab/           # исследовательские данные
-├── tanakh/                # тестовый interlinear
-├── build/                 # Node server и build-конфигурация
-└── node_modules/          # зависимости
+├── index.html, app.js, site.css  # лендинг и классический каталог
+├── style.css                     # сгенерированный tailwind (--minify)
+├── files.json                    # 450 KB (460 436 B) — индекс каталога
+├── sitemap.xml, robots.txt, favicon.svg, package.json
+├── src/
+│   ├── pages/          # 8 HTML: index, about, interlinear, tanakh, research/*
+│   ├── js/             # api, state, ui, parser, i18n, burger-menu
+│   ├── locales/        # ru / en / he
+│   ├── content/        # контент md + html
+│   ├── data/, styles/
+├── apps/researchlab/   # SPA Research Lab (562 tracked-файлов)
+├── assets/             # icons, images, maps (2.6 MB)
+├── config/             # tailwind/postcss/purgecss + server.js (dev :8080)
+├── tools/              # build.sh, index.html
+├── artifacts/          # 20 PNG-скриншотов (6 MB), ссылок на них нет
+├── pages/              # 1 legacy-файл: дубль src/pages/index.html
+├── docs/               # STRUCTURE.md, supabase-waitlist.sql
+├── build/              # артефакт сборки (3 025 tracked-файлов)
+└── node_modules/       # только локально; в git — 0 tracked
 ```
 
-По инвентаризации: около **5 599 файлов / 53,5 MB** вместе с зависимостями; без `node_modules` — около **1 735 файлов / 16,3 MB**. `files.json` занимает примерно 579 KB, крупные PNG-иконки — до 112 KB.
+Масштаб (`git ls-files` + размеры на диске, 2026-09-29): `products/website` —
+**6 125 tracked-файлов**; внутри: `src` 2 411, `build` 3 025, `apps` 562,
+`pages` 1. Диски без `node_modules`: `build` 216.1 MB, `apps` 150.1 MB
+(в основном `data/scripture/*.json` до 9 MB каждый), `src` 19.9 MB,
+`artifacts` 6.0 MB, `assets` 2.6 MB — суммарно ~316 MB (исходники + зеркало).
+
+> Прежние цифры этой секции (5 599 файлов / 53,5 MB, `files.json` 579 KB) не
+> воспроизводились: источники данных выросли, а часть каталогов не существовала
+> и в 2026-07-12.
 
 ## 3. Приоритеты
 
-| Приоритет | Проблема | Файлы | Действие |
+Статусы перепроверены 2026-09-29 по файлам репозитория и живому сайту.
+
+| Приоритет | Проблема | Статус | Доказательство / файлы |
 |---|---|---|---|
-| P0 | Неочевидная защита API-путей | `build/server.js` | canonical path, проверка выхода из `ROOT`, whitelist каталогов, лимит ответа |
-| P0 | Сломано HTML-экранирование | `js/parser.js` | исправить `escHtml`, считать Markdown недоверенным |
-| P0 | SEO URL не совпадают со структурой | `index.html`, `sitemap.xml`, `robots.txt` | сверить реальные маршруты, убрать задержанный JS-redirect |
-| P1 | `innerHTML` и inline events | `app.js`, `js/ui.js`, `webapp/js/*` | DOM API, `textContent`, `addEventListener`, санитизация |
-| P1 | Несколько Markdown-рендереров | `js/parser.js`, `pages/research/index.html`, `build/server.js` | единый parser и тесты |
-| P1 | JS minify — заглушка | `build/package.json` | подключить esbuild или terser |
-| P1 | `node_modules` внутри website | `products/website/node_modules` | исключить из репозитория и deploy-artifact |
-| P1 | Неполная SEO-разметка | HTML-п страницы | уникальные title/description/canonical/hreflang |
-| P2 | Полная перерисовка списка | `js/ui.js` | индексация, `DocumentFragment`, virtual list или pagination |
-| P2 | Внешний `@import` шрифтов | CSS-файлы | self-host WOFF2 или preconnect |
+| P0 | Path traversal в API чтения файлов | **закрыто** | `config/server.js`: `resolveAllowedFile()`, whitelist `ALLOWED_FILE_FOLDERS`, расширения только `.md/.html`, лимит 5 MB → 413, `FORBIDDEN_PATH` → 403. Публичного сервера у сайта нет (Pages — статика) |
+| P0 | Сломанное HTML-экранирование | **закрыто** | `src/js/parser.js`: `escHtml` экранирует `& < > " '`, весь сырой текст проходит через `escHtml` до инлайн-разметки |
+| P0 | SEO URL ≠ структура | **частично закрыто** | все 9 URL `sitemap.xml` существуют (`src/pages/**` → `build/pages/**`); лаборатория добавлена в sitemap этой ревизией |
+| P1 | `innerHTML` и inline-обработчики | **открыто** | `src/js/ui.js`: innerHTML×14, onclick×6; `app.js`: innerHTML×6, onclick×2 |
+| P1 | Несколько Markdown-рендереров | **открыто (уточнено)** | в браузере — `src/js/parser.js`; `pip install markdown rich` в `deploy.yml` не используется ни одним скриптом репо (0 импортов `markdown`/`rich`) |
+| P1 | JS minify отсутствует | **открыто** | `package.json` — только CSS-сборка (`tailwindcss --minify`); `src/js/*` и `apps/researchlab/js/*` отдаются как есть |
+| P1 | `node_modules` в deploy-artifact | **исправлено в CI** | утечка подтверждена 200 в проде; prune-шаг добавлен в `deploy.yml` (2026-09-29) — подтверждается первым успешным деплоем |
+| P1 | Неполная SEO-разметка | **открыто** | контентные страницы: нет description/canonical/hreflang, `<title>` шаблонизирован |
+| P2 | Полная перерисовка списка | **открыто** | `src/js/ui.js` рендерит список целиком, без DocumentFragment/virtual list |
+| P2 | Внешний Google Fonts | **частично закрыто** | `index.html`: preconnect ×2 + preload + noscript; self-host WOFF2 не сделан |
+| P2 | Неиспользуемая зависимость `motion@13` | **открыто (новое)** | 0 импортов в коде сайта (единственное упоминание — `.agents/skills/apple-design/SKILL.md`) |
+| P2 | Скриншоты `artifacts/` (6 MB) в корне продукта | **открыто (новое)** | 20 tracked-файлов, 0 ссылок из docs; по DESIGN-SYSTEM §8.4 скрины живут в `tasks/<task>/` — нужно решение владельца |
+| P2 | Развёрнутые dev-файлы в `build/`-зеркале | **открыто (новое)** | tracked: `build/probe-cards.cjs`, `build/tasks/*`, `build/docs/STRUCTURE.md`, `build/src/styles/input.css`, `build/config/server.js` — в CI-артефакт не попадают (build.sh пересоздаёт `build/`), но загрязняют репозиторий |
 
 ## 4. Безопасность
 
-### 4.1 API чтения файлов
+### 4.1 API чтения файлов — закрыто
 
-В `build/server.js` query-параметр `path` участвует в построении пути через `path.join`. Нужна проверка после `path.resolve`:
+Публичного API у сайта нет: GitHub Pages отдаёт статику. Единственный сервер —
+локальный dev-сервер `products/website/config/server.js` (порт 8080), и в нём
+защита уже реализована (проверено 2026-09-29):
 
-```js
-const requested = url.searchParams.get('path') || '';
-const candidate = path.resolve(ROOT, requested);
-const root = path.resolve(ROOT) + path.sep;
-if (!candidate.startsWith(root) || !candidate.endsWith('.md')) {
-  res.writeHead(400);
-  res.end('Invalid path');
-  return;
-}
-```
+- `resolveAllowedFile()` — `path.resolve` от корня + проверка выхода за пределы `ROOT`;
+- `ALLOWED_FILE_FOLDERS` — whitelist каталогов (`src/content/**`, `src/pages`, `pages`);
+- `ALLOWED_FILE_EXTENSIONS = {'.md', '.html'}` — только текстовые источники;
+- `MAX_RESPONSE_SIZE` 5 MB → 413; `FORBIDDEN_PATH` → 403.
 
-Дополнительно: whitelist разрешённых каталогов, запрет symlink escape, rate limit и лимит размера файла.
+Не проверялось этим аудитом: symlink escape и rate limit (на dev-сервере при
+статической публикации неприменимы). Агентный сервер `products/agents/server.py`
+(127.0.0.1:5000) — вне области этого аудита.
 
 ### 4.2 XSS и HTML injection
 
-В `js/parser.js` текущая функция фактически не экранирует HTML:
+**Статус: экранирование закрыто; генерация DOM — открыта.**
 
-```js
-function escHtml(s) {
-    return s.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>');
-}
-```
+`src/js/parser.js` (проверено 2026-09-29): `escHtml` экранирует `& < > " '`;
+каждая строка Markdown проходит через `escHtml` до инлайн-разметки (код, жирный,
+курсив); `id` заголовков строятся из очищенного текста; URL иконок тоже
+экранируются. Прежняя редакция этого аудита приводила сломанный сниппет — он не
+воспроизводится.
 
-Исправить:
+Открыто — счётчики по исходникам (`Select-String`, 2026-09-29):
 
-```js
-function escHtml(value) {
-    return String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-```
+- `src/js/ui.js` — `innerHTML` ×14, inline `onclick` ×6;
+- `app.js` — `innerHTML` ×6, inline `onclick` ×2.
 
-В `js/ui.js` заменить генерацию inline-handler:
-
-```js
-span.setAttribute('onclick', "openFile('" + path + "')");
-```
-
-на обработчик:
-
-```js
-span.addEventListener('click', () => openFile(path));
-```
-
-Проверить все места `innerHTML` в `webapp/js/*`, Markdown через `marked` и URL изображений/ссылок. HTML допустим только после строгой санитизации.
+Направление: `createElement`/`textContent` вместо `innerHTML`, `addEventListener`
+вместо inline-атрибутов, URL изображений/ссылок валидировать по схеме
+(относительные, `http`, `https`). Контрольный чек-лист —
+`docs/09-GUIDES/SECURITY-CHECKLIST.md`.
 
 ### 4.3 localStorage
 
-`js/state.js` и `webapp/js/vision*.js` используют `localStorage`. Нужно проверять типы после `JSON.parse`, ограничить историю, валидировать пути по `FILES` и не хранить секретные API-ключи в браузере в production. Предпочтительно использовать серверный proxy.
+**Статус: открыто (уточнено).** Реальный файл — `src/js/state.js` (7 обращений к
+`localStorage`); `webapp/js/vision*.js` не существует. Настройки лаборатория хранит
+через свой модуль `#settings` (`css/user-preferences.css`).
+
+Требуется: проверять типы после `JSON.parse`, ограничивать историю, валидировать
+пути по `FILES`; в статическом приложении в `localStorage` не должно попадать
+ничего, что не предназначено для публичного показа (API-ключи, токены).
 
 ## 5. Архитектура и качество кода
 
-- Объединить реализации Markdown из `js/parser.js`, `pages/research/index.html` и `build/server.js`.
-- Перейти в `js/api.js` с callbacks на `async/await`; проверять `response.ok` в `fetchJSON`.
-- Убрать глобальные функции `window.Alephy*` и inline-обработчики в пользу ES modules.
-- В `app.js` убрать повторную инициализацию `setFontSize` и двойной вызов `addToHistory`.
-- Разделить исходный контент, generated HTML и runtime data; закрепить правила в `docs/STRUCTURE.md`.
-- Не удалять `webapp/`, `researchlab/` или `tanakh/` без проверки их ссылок и назначения.
+- Единый Markdown-рендерер: в браузере остался один — `src/js/parser.js`; шаг
+  `pip install markdown rich` в `deploy.yml` не нужен (0 импортов `markdown`/`rich`
+  в репо) — удалить или обосновать.
+- `src/js/api.js`: проверка `response.ok` в `fetchJSON` есть (1 место); переход с
+  callbacks на `async/await` не сделан.
+- Глобальные `window.Alephy*` и inline-обработчики в `app.js` сохранены;
+  ES modules — отдельная задача на все 6 файлов `src/js`.
+- `app.js`: двойная инициализация `setFontSize` (см. `loadFromStorage` → init) и
+  двойной `addToHistory(p)` в колбэке `openFile` — воспроизводятся, убрать.
+- `products/website/pages/` — legacy-дубль `src/pages/index.html` (1 tracked-файл);
+  удалить после сверки ссылок.
+- Пункт «не удалять `webapp/`, `researchlab/`, `tanakh/`» снят: этих каталогов в
+  корне нет; содержимое живёт в `apps/researchlab/` и `src/`.
 
 ## 6. Производительность и сборка
 
-- `files.json` загружается целиком (~579 KB): добавить build-time индекс, pagination или search endpoint.
-- Кэшировать нормализованные поля поиска; использовать `DocumentFragment`; для больших списков применить virtual list.
-- Оптимизировать PNG и подготовить WebP/AVIF; добавить `width`, `height`, `loading="lazy"`, `decoding="async"`.
-- Убрать блокирующий Google Fonts `@import`, self-host WOFF2 либо добавить `preconnect`.
-- В `build/package.json` заменить заглушку:
-
-```json
-"build:js:minify": "echo 'js minify skipped'"
-```
-
-на реальную сборку esbuild/terser с sourcemap и hash-именами.
-- Расширить `tailwind.config.js` путями `pages/**/*.html`, `webapp/**/*`, `js/**/*` либо удалить неиспользуемый Tailwind pipeline.
-- Не публиковать `node_modules`; deploy должен содержать только build-artifact.
+- `files.json` — 450 KB (460 436 B), грузится целиком: нужен build-time индекс,
+  пагинация или предфильтрация поиска.
+- Полный ре-рендер списка при каждом вводе — кэш нормализованных полей поиска, `DocumentFragment`; для больших списков применить virtual list.
+- Изображения (`assets/`, `artifacts/`): подготовить WebP/AVIF, проставить
+  `width`, `height`, `loading="lazy"`, `decoding="async"` — вживую не проверялось.
+- Google Fonts: `<link>` с preconnect ×2 + preload + noscript уже стоит
+  (`index.html:23–27`); осталось self-host WOFF2.
+- JS minify: шага сборки нет вообще — только `tailwindcss --minify` для `style.css`
+  (`products/website/package.json`); прежней заглушки `build:js:minify` уже нет.
+  Решение: esbuild/terser + hash-имена + sourcemap; зависимость > 20 KB gzipped → ADR.
+- `config/tailwind.config.js` актуален (content = `../index.html`, `../app.js`,
+  `../src/pages/**/*.html`, `../src/js/**/*.js`, `../src/locales/**/*.json`) —
+  пункт «расширить путями» снят.
+- `node_modules`: в git — 0 tracked; в артефакт Pages попадал (доказано 200 в проде),
+  prune-шаг добавлен в `deploy.yml` (2026-09-29).
 
 ## 7. SEO и доступность
 
-`index.html` вычисляет язык, но всегда отправляет в `pages/index.html` через 1,2 секунды. Использовать HTTP redirect или мгновенную навигацию на реальные locale URL. `sitemap.xml` указывает `/ru/`, `/en/`, `/he/`, тогда как фактическая структура содержит `pages/`; все URL надо проверить на HTTP 200.
+Сверено с живым сайтом 2026-09-29:
 
-Многие content HTML имеют `<title>Без названия — Alephy`; отсутствуют description, canonical и hreflang. Нужны шаблон метаданных и генерация sitemap из route manifest. Не запрещать в `robots.txt` CSS/JS, необходимые для рендеринга; `Disallow: /api/` оставить.
+- `sitemap.xml` — 9 URL: лендинг, `pages/index.html`, 7 контентных страниц
+  (`src/pages/**` → `build/pages/**`) и, с этой ревизией, лаборатория
+  `/apps/researchlab/index.html` (в проде — 200). Все URL существуют;
+  утверждение прежней редакции о `/ru/`, `/en/`, `/he/` неактуально.
+- `index.html`: лендинг ссылается на `apps/researchlab/index.html` напрямую;
+  задержанного JS-redirect на `pages/index.html` нет — из `setTimeout`/
+  `location.href`/`redirect` в корневом `index.html` находится только фокус
+  после закрытия teaser (строка 982), в `src/pages/index.html` — 0 вхождений.
+- `robots.txt`: `Allow: /`, `Disallow: /api/` (путь существует только у локального
+  dev-сервера — для Pages это no-op, оставлен как защита на случай поднятия
+  сервера), `Sitemap:` — корректный.
+- Метаданные контентных страниц: description/canonical/hreflang отсутствуют —
+  открыто (P1); sitemap вручную, генератора из route-манифеста нет.
 
-Для accessibility:
+Для accessibility остаётся в силе (операционный минимум —
+`docs/09-GUIDES/A11Y-MINIMUM.md`):
 
-- использовать `<main>`, `<nav>`, `<header>`, `<article>`;
-- интерактивные элементы сделать `<button>`/`<a>`, а не `div[onclick]`;
-- добавить `:focus-visible`, `aria-label`, `aria-live` для загрузки и ошибок;
-- проверить контраст золотого текста;
-- для иврита добавить `dir="rtl"` и проверить sidebar/breadcrumbs;
-- всем содержательным изображениям назначить осмысленный `alt`.
+- семантика `<main>/<nav>/<header>/<article>`: лендинг `#main-content`,
+  лаборатория `#labContent`;
+- интерактив — `<button>`/`<a>`, не `div[onclick]`;
+- `:focus-visible`, `aria-label`, `aria-live` для загрузки и ошибок;
+- контраст золотого текста — токены `--gold-text` / `--red-text` (DESIGN-SYSTEM §1.1);
+- иврит — `lang="he" dir="rtl"`, библейский иврит — `lang="hbo"`;
+- осмысленный `alt` у содержательных изображений.
 
-## 8. План исправлений
+## 8. План исправлений (состояние на 2026-09-29)
 
-### Этап 1 — P0
+### Сделано этой ревизией и раньше
 
-1. Закрыть path traversal и ограничить API.
-2. Исправить `escHtml`.
-3. Проверить `innerHTML` с контентными данными.
-4. Сверить routes, `sitemap.xml` и `robots.txt`.
+1. Path traversal закрыт в `config/server.js` (§4.1).
+2. `escHtml` корректен (§4.2).
+3. sitemap сверен с `src/pages`; лаборатория добавлена в `sitemap.xml`.
+4. `node_modules` вычищается из артефакта Pages (prune-шаг в `deploy.yml`).
+5. Сняты пункты о несуществующих файлах (`webapp/`, `tanakh/`, `researchlab/`,
+   `build/server.js`), устаревшие цифры и «заглушка» `build:js:minify`.
+6. Обновлены версии actions в `deploy.yml`: `checkout@v4`, `setup-python@v5`.
 
-### Этап 2 — P1
+### Осталось (по приоритетам §3)
 
-1. Вынести единый Markdown parser.
-2. Добавить production-сборку JS/CSS.
-3. Убрать `node_modules` из deploy.
-4. Ввести шаблон SEO-метаданных и semantic HTML.
+1. **P1** — `innerHTML`/inline → DOM API и `addEventListener` (`src/js/ui.js`, `app.js`).
+2. **P1** — production-сборка JS: esbuild/terser, hash-имена, sourcemap; перед
+   внедрением — ADR, если зависимость > 20 KB gzipped.
+3. **P1** — SEO-шаблон метаданных (title/description/canonical/hreflang) и
+   генерация sitemap из route-манифеста.
+4. **P1** — убрать неиспользуемый `pip install markdown rich` из `deploy.yml`
+   (0 импортов в репо).
+5. **P2** — virtual list/индексация; WebP/AVIF; self-host WOFF2; удаление `motion`;
+   решение по `artifacts/` (6 MB скриншотов) и legacy `pages/`; чистка dev-файлов
+   в `build/`-зеркале.
+6. **P2** — automated checks ссылок, HTML, accessibility в CI (сейчас в CI — unit-тесты
+   и smoke: `smoke.yml`).
 
-### Этап 3 — P2
+### Этапы (для новых работ)
 
-1. Оптимизировать JSON, изображения и шрифты.
-2. Внедрить virtual list/индексацию.
-3. Добавить automated checks ссылок, HTML, accessibility и security.
+- Этап 1 (P0) — закрыт полностью.
+- Этап 2 (P1) — пункты 1–4 выше.
+- Этап 3 (P2) — пункт 5–6 выше.
 
 ## 9. Чек-лист приёмки
 
-- [ ] `npm run build` реально создаёт production CSS/JS.
-- [ ] API не отдаёт `..`, абсолютные пути, symlink targets и не-Markdown.
-- [ ] Markdown с `<script>`, атрибутами и опасными URL безопасен.
-- [ ] Все sitemap URL возвращают 200 и соответствуют canonical.
-- [ ] Нет console errors на desktop/mobile/RTL.
-- [ ] Поиск и открытие файла работают при пустом/повреждённом JSON.
-- [ ] Клавиатурой доступны поиск, список, закладки и модальные окна.
-- [ ] Lighthouse/axe и проверка ссылок выполняются в CI.
+`[x]` — выполнено статически по файлам и живому сайту 2026-09-29; `[ ]` — не выполнено.
+
+- [x] `npm run build` создаёт production CSS (`tailwindcss --minify` → `style.css`);
+  production-сборки JS нет — §3 P1.
+- [x] API dev-сервера не отдаёт `..`, абсолютные пути и не-Markdown
+  (`resolveAllowedFile`, whitelist, `.md/.html`) — §4.1.
+- [x] Markdown-вывод экранируется (`escHtml`) — §4.2; остаточный риск — `innerHTML`
+  в `src/js/ui.js` и `app.js`.
+- [x] Все sitemap URL существуют (9/9: лендинг, `pages/**`, лаборатория — 200 в проде);
+  canonical отсутствует (P1).
+- [x] Нет console errors — закрыто smoke-прогоном `smoke.yml` (маршруты desktop/mobile,
+  кодировка, offline-fallback) и `test:unit`; фактический прогон CI смотреть в Actions.
+- [ ] Поиск и открытие файла при пустом/повреждённом JSON изолированно не проверены
+  (в `app.js` есть error-колбэк с «Ошибка загрузки»).
+- [ ] Клавиатурная доступность поиска, списка, закладок и модалок вживую не
+  проверялась; минимум — `docs/09-GUIDES/A11Y-MINIMUM.md`.
+- [ ] Lighthouse/axe и проверка ссылок в CI не внедрены (P2).
 
 ## 10. Ограничения аудита
 
-Аудит выполнен статически по файлам репозитория. Lighthouse, axe, нагрузочные тесты, браузерное E2E и production reverse-proxy не проверялись. Эксплуатируемость API и Core Web Vitals нужно подтвердить отдельным тестовым прогоном.
+Аудит статический. Факты перепроверены 2026-09-29: файлы и `git ls-files` репозитория
+плюс 3 запроса к живому сайту (`sitemap.xml`, `/apps/researchlab/index.html`,
+`/node_modules/tailwindcss/package.json`). Lighthouse, axe, нагрузочные тесты,
+браузерное E2E и production reverse-proxy не проверялись; Core Web Vitals не
+измерялись. Результаты CI (`smoke.yml`, `docs-check.yml`, `deploy.yml`) из этой сессии
+не читаются — их нужно сверять в GitHub Actions.

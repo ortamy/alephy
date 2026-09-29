@@ -199,6 +199,7 @@
 
 ### 10-DESIGN — дизайн-система и иконки
 
+- **ANTI-SLOP-CHECKLIST.md** — Анти-slop чек-лист: Research Lab и лендинг
 - **DESIGN-INSPIRATION.md** — Linear → ALEPHY: карта заимствований (2026-09-06)
 - **DESIGN-SYSTEM.md** — ALEPHY · Дизайн-система «Современный манускрипт»
 - **ICON-MAP.md** — Карта иконок
