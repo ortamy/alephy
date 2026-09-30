@@ -35,6 +35,7 @@
 <link rel="stylesheet" href="css/context-generator.css">
 <link rel="stylesheet" href="css/board.css">
 <link rel="stylesheet" href="css/word-analyzer.css">
+<link rel="stylesheet" href="css/word-analyzer-bento.css">
 <link rel="stylesheet" href="css/investigation.css">
 <link rel="stylesheet" href="css/research-library.css?v=20260916-polish">
 <link rel="stylesheet" href="css/block-renderer.css">
@@ -209,7 +210,6 @@
         <a href="#pipelines" class="sidebar-item" data-module="pipelines"><i data-lucide="workflow" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.pipelines">Пайплайны</span></a>
         <a href="#agent-server" class="sidebar-item" data-module="agent-server"><i data-lucide="server" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.agent-server">Запуск сервера</span></a>
         <a href="#ed-chat" class="sidebar-item" data-module="ed-chat"><i data-lucide="message-circle" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.ed-chat">Нейрочат</span></a>
-        <a href="#vision" class="sidebar-item" data-module="vision"><i data-lucide="image" class="lab-icon" aria-hidden="true"></i><span data-i18n="lab.nav.vision">Анализ изображений</span></a>
       </div>
     </div>
     <div class="sidebar-section" id="sidebar-admin-section">
@@ -317,6 +317,7 @@
 <script defer src="js/agent-map.js"></script>
 <script defer src="js/agent-server.js"></script>
 <script defer src="js/workbench-pipelines.js"></script>
+<script defer src="js/word-analyzer-bento.js"></script>
 <script defer src="js/workbench.js"></script>
 <script defer src="js/plural.js"></script>
 <script defer src="js/page-controller.js"></script>
@@ -904,6 +905,32 @@ const WordAnalyzer = {
     status.className = 'wa-status wa-status--ok';
     status.textContent = 'Разобрано: ' + found + ' найдено, ' + notFound + ' не найдено.';
     if (exportBar) exportBar.style.display = 'flex';
+
+    // Развёрнутый разбор (бенто, DESIGN-SYSTEM §5.2d) — для первого найденного
+    // слова. Остальные слова остаются в карточках; чипы бенто переключают выбор.
+    var host = document.getElementById('wa-bento');
+    if (host && window.WordBento) {
+      var first = results.filter(function(r) { return r.data && r.data.found; })[0];
+      if (first) {
+        var d0 = first.data.data || {};
+        WordBento.show(first.data.hebrew || first.word, {
+          hebrew: first.data.hebrew || first.word,
+          root: d0.root,
+          paleo: WordAnalyzer.PALEO,
+          pending: words
+        });
+        if (!host.__wabBound) {
+          host.__wabBound = true;
+          WordBento.bindChips(host, function(word) {
+            var input = document.getElementById('wa-input');
+            if (input) input.value = word;
+            WordAnalyzer.analyze();
+          });
+        }
+      } else {
+        host.innerHTML = '';
+      }
+    }
   },
 
   clear: function() {
@@ -918,6 +945,8 @@ const WordAnalyzer = {
       status.className = 'wa-status';
       status.textContent = 'Введите слова для разбора.';
     }
+    var bento = document.getElementById('wa-bento');
+    if (bento) bento.innerHTML = '';
   },
 
   renderCard: function(word, data) {

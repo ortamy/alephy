@@ -1,0 +1,230 @@
+/* =============================================
+   word-analyzer-bento.css — развёрнутый разбор слова
+   Бенто по DESIGN-SYSTEM §5.2d (префикс wab-):
+   12 колонок, hairline-рамки, тени = 0, radius -8.
+   ============================================= */
+
+.wab-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.wab-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+}
+
+.wab-cell--root { grid-column: span 7; grid-row: span 2; }
+.wab-cell--letters { grid-column: span 5; }
+.wab-cell--chain { grid-column: 1 / -1; }
+/* Буквы садятся в правую колонку рядом с паспортом корня (строки 1–2),
+   поэтому форма слова встаёт в строку 2 справа, а не уходит вниз. */
+.wab-cell--morph { grid-column: 8 / -1; }
+.wab-cell--kin { grid-column: span 5; }
+.wab-cell--more { grid-column: span 7; }
+
+/* ===== Страничный каркас (#word-analyzer): ячейки 01–04 =====
+   Повторяет пропорции §5.2a: ввод 7 колонок и две строки,
+   служебные ячейки по 5, результат — на всю ширину. */
+.wab-page {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.wab-cell--input { grid-column: span 7; grid-row: span 2; }
+.wab-cell--run,
+.wab-cell--guide { grid-column: span 5; }
+.wab-cell--cards { grid-column: 1 / -1; }
+
+.wab-cell--input .wa-input { flex: 1 1 auto; min-height: 140px; resize: vertical; }
+.wab-hint { margin: 0; color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.5; }
+
+/* Легенда статусов §6: та же пиллюля, что и в карточке результата. */
+.wab-legend { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.wab-legend-item { display: flex; align-items: baseline; gap: var(--space-2); min-width: 0; }
+.wab-legend-text { color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.5; }
+
+/* Пустые зоны скрываются — сетка не оставляет дыр (§5.2d).
+   :has используется и в cartography.css, поддержка браузера уже проверена. */
+.wab-cell--cards:has(#wa-grid:empty) { display: none; }
+.wa-bento-host { grid-column: 1 / -1; min-width: 0; }
+.wa-bento-host:empty { display: none; }
+/* Хост — ребёнок сетки с gap: внутренний отступ bento не нужен. */
+.wa-bento-host .wab-bento { margin-top: 0; }
+.wab-cell--cards .wa-grid { margin-top: 0; }
+
+/* Шапка ячейки: номер главы + лейбл капителью + подпись справа (§4.1). */
+.wab-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
+.wab-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  line-height: 1;
+}
+.wab-cell-title {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.wab-cell-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  white-space: nowrap;
+}
+
+/* Паспорт корня. */
+.wab-root-word {
+  color: var(--text-primary);
+  font-family: var(--font-hebrew);
+  font-size: var(--text-2xl);
+  line-height: 1.2;
+  direction: rtl;
+}
+.wab-paleo-strip { display: flex; flex-wrap: wrap; gap: var(--space-1); margin: 0; }
+.wab-paleo-glyph { color: var(--text-primary); font-size: var(--text-xl); line-height: 1; }
+.wab-root-meaning { margin: 0; color: var(--text-primary); font-size: var(--text-sm); line-height: 1.5; }
+.wab-root-image {
+  margin: 0;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--accent-gold);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.wab-examples { margin: 0; padding: 0; list-style: none; display: grid; gap: var(--space-1); }
+.wab-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 2px var(--space-2);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+.wab-example-heb { font-family: var(--font-hebrew); direction: rtl; color: var(--text-primary); }
+.wab-example-note { color: var(--text-secondary); }
+
+/* Буквы как орудия: буква, палео-знак, смысл. */
+.wab-letters { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: var(--space-2); }
+.wab-letter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--space-2) var(--space-1);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  text-align: center;
+}
+.wab-letter-heb { color: var(--text-primary); font-family: var(--font-hebrew); font-size: var(--text-lg); line-height: 1.2; direction: rtl; }
+.wab-letter-paleo { color: var(--accent-gold); font-size: var(--text-md); line-height: 1; }
+.wab-letter-meaning { color: var(--text-secondary); font-size: var(--ui-10, 10px); line-height: 1.3; overflow-wrap: anywhere; }
+
+/* Слои подмены. */
+.wab-chain { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-2); }
+.wab-chain-item {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
+  min-width: 0;
+}
+.wab-chain-layer { color: var(--text-secondary); font-family: var(--font-ui); font-size: var(--ui-10, 10px); font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.wab-chain-term { color: var(--text-primary); font-size: var(--text-sm); line-height: 1.4; overflow-wrap: anywhere; }
+.wab-chain-heb { color: var(--text-secondary); font-family: var(--font-hebrew); font-size: var(--text-sm); direction: rtl; }
+.wab-chain-restored { color: var(--text-secondary); font-size: var(--text-xs); line-height: 1.45; overflow-wrap: anywhere; }
+
+/* Морфология: корень + форма. Интерпретация, не факт (§6). */
+.wab-morph-form {
+  color: var(--text-primary);
+  font-family: var(--font-hebrew);
+  font-size: var(--text-lg);
+  line-height: 1.3;
+  direction: rtl;
+  overflow-wrap: anywhere;
+}
+.wab-morph-parts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.wab-morph-part {
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-hebrew);
+  font-size: var(--text-sm);
+  direction: rtl;
+}
+.wab-morph-part--root { border-color: var(--accent-gold); color: var(--gold-text); }
+.wab-morph-part--affix { color: var(--text-secondary); }
+.wab-caveat {
+  margin: auto 0 0;
+  padding-left: var(--space-2);
+  border-left: 2px solid var(--accent-gold);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+}
+
+/* Родственники и соседние слова. */
+.wab-chips { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.wab-chip {
+  padding: 2px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  line-height: 1.6;
+  cursor: pointer;
+  transition: border-color var(--motion-fast);
+}
+.wab-chip:hover { border-color: var(--accent-gold); }
+.wab-chip:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.wab-chip:disabled { color: var(--text-muted); border-style: dashed; cursor: default; }
+
+/* Честная пустота: нет данных — не выдумываем (§5.2d). */
+.wab-empty { margin: 0; color: var(--text-muted); font-size: var(--text-xs); line-height: 1.5; }
+
+@media (max-width: 760px) {
+  .wab-cell--input,
+  .wab-cell--run,
+  .wab-cell--guide,
+  .wab-cell--cards,
+  .wab-cell--root,
+  .wab-cell--letters,
+  .wab-cell--morph,
+  .wab-cell--kin,
+  .wab-cell--more,
+  .wab-cell--chain { grid-column: 1 / -1; grid-row: auto; }
+  .wab-chain { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wab-chip { transition: none; }
+}
+
