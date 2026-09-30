@@ -5,6 +5,13 @@
   padding: var(--space-3) 0 var(--space-8);
 }
 
+/* Шапку рисует LabHero (margin-bottom 14px), а .methodology-heading при
+   активном hero скрыта. Верхний паддинг обёртки складывался с этим и
+   раздвигал тулбар — убираем, как в «Картографии» (padding-top 0). */
+.lab-hero-module--methodology .methodology-shell {
+  padding-top: 0;
+}
+
 .methodology-heading {
   margin-bottom: 22px;
   padding: 26px 30px;
@@ -20,25 +27,11 @@
 .methodology-heading > div { transition: opacity .18s ease, transform .18s ease; }
 .methodology-heading.is-updating > div { opacity: .45; transform: translateY(2px); }
 
-.methodology-select-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  color: var(--text-secondary);
-  font: 600 var(--ui-13, 13px)/1.3 var(--font-ui);
-  white-space: nowrap;
-}
-
 /* Плашка управления: каркас — components/toolbar.css (.lab-toolbar).
-   Здесь только локальные размеры полей модуля. */
-.methodology-toolbar .methodology-select-label {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-.methodology-toolbar .methodology-select-label .lab-input {
-  min-width: 180px;
+   Здесь только локальный размер селекта раздела: подпись «Раздел
+   методологии» убрана, имя доступно через aria-label. */
+.methodology-toolbar .lab-toolbar-select {
+  min-width: 220px;
   margin: 0;
 }
 
@@ -117,13 +110,6 @@
   background: var(--surface-hover);
 }
 
-.methodology-card-icon {
-  flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
-}
-
 /* Вся строка реестра кликабельна: открывает полный текст карточки. */
 .methodology-panel .methodology-card { cursor: pointer; }
 .methodology-card:focus-within { cursor: default; }
@@ -147,7 +133,7 @@
   color: var(--text-secondary);
 }
 
-/* Заголовок строки реестра: иконка 18px + имя, выключка влево. */
+/* Заголовок строки реестра: номер слева + имя, выключка влево. */
 .methodology-card-head {
   display: flex;
   flex-wrap: nowrap;
@@ -305,8 +291,8 @@ html[data-theme="dark"] .methodology-panel {
   border-color: var(--border-light);
 }
 
-html[data-theme="dark"] .methodology-select-label .lab-input,
-html[data-theme="dark"] .methodology-select-label .lab-input option {
+html[data-theme="dark"] .methodology-toolbar .lab-toolbar-select,
+html[data-theme="dark"] .methodology-toolbar .lab-toolbar-select option {
   background-color: var(--bg-card);
   color: var(--text-primary);
 }
@@ -333,13 +319,8 @@ html[data-theme="dark"] .methodology-toolbar .lab-btn-secondary:active {
   .methodology-card-index { display: none; }
   .methodology-card-actions { justify-content: flex-start; }
   .methodology-icon-btn { width: 44px; height: 44px; }
-  /* Плашка уже переносится сама (flex-wrap в компоненте): лейблы
-     растягиваются на ширину группы, селекты занимают её целиком. */
-  .methodology-toolbar .methodology-select-label {
-    flex: 1 1 100%;
-    white-space: normal;
-  }
-  .methodology-toolbar .methodology-select-label .lab-input {
+  /* Селект занимает всю ширину группы: подписи рядом больше нет. */
+  .methodology-toolbar .lab-toolbar-select {
     min-width: 0;
     width: 100%;
   }

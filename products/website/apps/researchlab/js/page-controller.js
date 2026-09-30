@@ -1089,7 +1089,6 @@ const PageController = (function() {
       return;
     }
     var mechanismIndex = 0;
-    var mechanismIcons = ['ui/question.png', 'ui/scales.png', 'paleo/track.png', 'ui/anchor.png', 'ui/diff.png', 'ui/arrows.png', 'ui/markbook.png'];
     var firstMechanismSummary = 'Система берёт два понятия, которые в иврите имеют ясное функциональное различие, и заменяет их моральной оценкой. Функция становится моралью. Пригодность становится «добром». Непригодность — «злом».';
     var sections = (documentData.sections || []).map(function(section) {
       var isMechanism = page === 'methodology' && /^\s*\d+[.)\-:]?\s+/.test(section.title || '');
@@ -1100,12 +1099,12 @@ const PageController = (function() {
           .replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
         if (mechanismIndex === 0) summary = firstMechanismSummary;
         summary = summary ? summary.charAt(0).toLocaleUpperCase('ru-RU') + summary.slice(1) : 'Краткое описание механизма подмены.';
-        var icon = mechanismIcons[mechanismIndex % mechanismIcons.length];
         mechanismIndex++;
-        // Та же строка реестра, что и в methodology.js: номер, иконка, имя, короткий текст.
+        // Та же строка реестра, что и в methodology.js: номер, имя, короткий текст.
+        var mechanismIndexLabel = ('0' + mechanismIndex).slice(-2);
         return '<article class="research-section methodology-card">' +
           '<div class="methodology-card-body">' +
-            '<div class="methodology-card-head"><img src="assets/icons/32/' + icon + '" class="methodology-card-icon" alt="" aria-hidden="true">' +
+            '<div class="methodology-card-head"><span class="methodology-card-index" aria-hidden="true">' + mechanismIndexLabel + '</span>' +
             '<h2 class="methodology-card-title">' + escapeHtml(section.title || '').replace(/^\s*\d+[.)\-:]?\s*/, '') + '</h2></div>' +
             '<div class="research-section-content"><p>' + escapeHtml(summary) + '</p></div>' +
           '</div>' +

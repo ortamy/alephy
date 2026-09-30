@@ -9,12 +9,13 @@
   var PAGE_TEMPLATE = '<section class="methodology-shell" aria-labelledby="methodology-title">' +
     '<header class="methodology-heading"><div><p class="methodology-kicker" id="methodology-hero-kicker">АЛЕФИ · ПРИНЦИПЫ РАЗОБЛАЧЕНИЯ</p><h1 id="methodology-title">Методология</h1><p class="subtitle methodology-hero-description" id="methodology-hero-description">Базовые правила, по которым выявляется подмена смысла и возвращается физика текста.</p></div></header>' +
     // Общая плашка .lab-toolbar: поиск по карточкам раздела слева,
-// два селекта-фильтра рядом, счётчик и «Добавить карточку» справа.
+    // селект раздела и «Добавить карточку» справа. Второго фильтра
+    // («Документ») нет: он вёл в один документ и только раздувал
+    // строку — карточка открывается кнопкой ⓘ в самом реестре.
     '<div class="lab-toolbar methodology-toolbar" role="search" aria-label="Управление методологией">' +
     '<input type="search" class="lab-input lab-toolbar-search" id="methodology-search" placeholder="Поиск по карточкам раздела…" aria-label="Поиск по карточкам раздела" autocomplete="off">' +
     '<div class="lab-toolbar-group">' +
-    '<label class="methodology-select-label" for="methodology-category-select">Раздел методологии<select id="methodology-category-select" class="lab-input" aria-label="Раздел методологии"><option value="principles">Принципы разоблачения</option><option value="methods">Методы разоблачения</option><option value="mechanisms">Механизмы подмены</option><option value="shifts">Языковые сдвиги</option><option value="techniques">Приёмы подмены</option><option value="philosophemes">Греческие философемы</option><option value="distortions">Типы искажений</option><option value="matrices">Культурные матрицы</option><option value="paleo-translation">Принципы палео-перевода</option></select></label>' +
-    '<label class="methodology-select-label" for="methodology-document-select">Документ<select id="methodology-document-select" class="lab-input" aria-label="Документ внутри раздела"><option value="">Все документы</option></select></label>' +
+    '<select id="methodology-category-select" class="lab-input lab-toolbar-select" aria-label="Раздел методологии"><option value="principles">Принципы разоблачения</option><option value="methods">Методы разоблачения</option><option value="mechanisms">Механизмы подмены</option><option value="shifts">Языковые сдвиги</option><option value="techniques">Приёмы подмены</option><option value="philosophemes">Греческие философемы</option><option value="distortions">Типы искажений</option><option value="matrices">Культурные матрицы</option><option value="paleo-translation">Принципы палео-перевода</option></select>' +
     '</div>' +
     '<div class="lab-toolbar-actions">' +
     '<span class="lab-toolbar-count" id="methodology-count" aria-live="polite"></span>' +
@@ -81,8 +82,6 @@
 
   var store = null; // { categories: {...}, cards: [...] }
   var activeTab = CATEGORIES[0].key;
-  var activeDocument = '';
-  var activeTechniqueCategory = '';
   var activeQuery = '';
   var exposureDocuments = null;
   var paleoTranslationCards = [];
@@ -368,7 +367,6 @@
       if (validCategory) {
         // При переходе из поиска — переключение вкладки и повторный рендер.
         activeTab = requestedCategory;
-        activeDocument = '';
         container.dataset.methodologyReady = '0';
       }
     }
@@ -378,9 +376,7 @@
 
     container.innerHTML = PAGE_TEMPLATE;
     bindCategorySelect(container);
-    bindDocumentSelect(container);
     bindAddButton(container);
-    bindBackButton(container);
     bindSearch(container);
     loadStore(container);
   }
@@ -461,21 +457,6 @@
     select.value = activeTab;
     select.addEventListener('change', function() {
       activeTab = select.value;
-      activeDocument = '';
-      showTab(container, activeTab);
-    });
-  }
-
-  function bindDocumentSelect(container) {
-    var select = container.querySelector('#methodology-document-select');
-    if (!select) return;
-    select.addEventListener('change', function() {
-      if (activeTab === 'techniques') {
-        activeTechniqueCategory = select.value;
-        activeDocument = '';
-      } else {
-        activeDocument = select.value;
-      }
       showTab(container, activeTab);
     });
   }
@@ -504,32 +485,11 @@
     });
   }
 
-  function bindBackButton(container) {
-    var btn = container.querySelector('#methodology-back-btn');
-    if (!btn) return;
-    btn.addEventListener('click', function() {
-      activeDocument = '';
-      showTab(container, activeTab);
-    });
-  }
-
-  function updateDocumentSelect(container, cards) {
-    var select = container.querySelector('#methodology-document-select');
-    if (!select) return;
-
-    var options = ['<option value="">' + (activeTab === 'techniques' ? 'Выберите категорию' : 'Все документы') + '</option>'];
-    cards.forEach(function(card) {
-      options.push('<option value="' + escapeHtml(card.id) + '">' + escapeHtml(card.title || 'Документ') + '</option>');
-    });
-    select.innerHTML = options.join('');
-    var hasActiveDocument = cards.some(function(card) { return card.id === activeDocument; });
-    if (!hasActiveDocument) activeDocument = '';
-    select.value = activeDocument;
-  }
-
+  // Категории приёмов больше не фильтруются отдельным селектом: раздел
+  // «Приёмы подмены» показывает все TECHNIQUE_CATEGORIES целиком, поиск
+  // и карточки работают по общему набору.
   function parseTechniqueCards(section, categoryIndex) {
     var lines = String(section && section.content || '').split(/\n+/);
-    categoryIndex = categoryIndex == null ? TECHNIQUE_CATEGORIES.indexOf(activeTechniqueCategory) : categoryIndex;
     return lines.map(function(line, index) {
       var match = line.trim().match(/^[-*]\s+\*\*(.+?):\*\*\s*(.*)$/);
       if (!match) return null;
@@ -621,21 +581,19 @@
     };
   }
 
-  function updateHero(container, key, documentCard) {
+  function updateHero(container, key) {
     var heroData = METHODOLOGY_HERO[key] || METHODOLOGY_HERO.principles;
     var kicker = container.querySelector('#methodology-hero-kicker');
     var title = container.querySelector('#methodology-title');
     var description = container.querySelector('#methodology-hero-description');
-    var back = container.querySelector('#methodology-back-btn');
     var heading = container.querySelector('.methodology-heading');
     if (!kicker || !description) return;
 
     if (heading) heading.classList.add('is-updating');
     setTimeout(function() {
-      kicker.textContent = documentCard ? 'АЛЕФИ · ДОКУМЕНТ' : heroData.kicker;
-      if (title) title.textContent = documentCard ? (documentCard.title || 'Документ') : 'Методология';
-      description.textContent = documentCard ? (documentCard.summary || documentCard.text || heroData.description) : heroData.description;
-      if (back) back.hidden = !documentCard;
+      kicker.textContent = heroData.kicker;
+      if (title) title.textContent = 'Методология';
+      description.textContent = heroData.description;
       if (heading) heading.classList.remove('is-updating');
     }, 100);
   }
@@ -690,12 +648,7 @@
         var techniqueCategorySections = (documentData.sections || []).filter(function(section) {
           return TECHNIQUE_CATEGORIES.indexOf(section.title) !== -1;
         });
-        var selectedTechniqueSections = activeTechniqueCategory
-          ? techniqueCategorySections.filter(function(section) {
-              return section.title === activeTechniqueCategory;
-            })
-          : techniqueCategorySections;
-        cards = selectedTechniqueSections.reduce(function(allCards, section) {
+        cards = techniqueCategorySections.reduce(function(allCards, section) {
           return allCards.concat(parseTechniqueCards(section, TECHNIQUE_CATEGORIES.indexOf(section.title)));
         }, []);
       } else if (key === 'philosophemes') {
@@ -742,24 +695,7 @@
         }];
       }
     }
-    if (key === 'techniques') {
-      var categorySelect = container.querySelector('#methodology-document-select');
-      if (categorySelect) {
-        categorySelect.innerHTML = ['<option value="">Все документы</option>'].concat(TECHNIQUE_CATEGORIES.map(function(category) {
-          return '<option value="' + escapeHtml(category) + '">' + escapeHtml(category) + '</option>';
-        })).join('');
-        categorySelect.value = activeTechniqueCategory;
-      }
-    } else {
-      updateDocumentSelect(container, cards);
-    }
-    var selectedDocument = activeDocument && key !== 'techniques'
-      ? cards.filter(function(card) { return card.id === activeDocument; })[0]
-      : null;
-    updateHero(container, key, selectedDocument);
-    if (activeDocument && key !== 'techniques') {
-      cards = cards.filter(function(card) { return card.id === activeDocument; });
-    }
+    updateHero(container, key);
     // Поиск режет уже отфильтрованный набор и обновляет счётчик, чтобы
     // «N карточек» всегда описывало то, что реально видно в реестре.
     var totalCards = cards.length;
@@ -785,15 +721,13 @@
     panel.innerHTML = cards.map(function(card, index) {
       var cardText = displayCardSummary(card.summary || card.text);
       var cardTitle = displayCardTitle(card.title);
-      var cardIcon = card.icon
-        ? '<img src="' + escapeHtml(card.icon) + '" class="methodology-card-icon" alt="" aria-hidden="true">'
-        : '';
       // Порядковый номер держит строку реестра читаемой без рамок и теней.
+      // Иконка карточки убрана: номер слева — единственный маркер строки.
       var cardNumber = ('0' + (index + 1)).slice(-2);
       var infoButton = '<button type="button" class="methodology-icon-btn methodology-info-btn" data-id="' + escapeHtml(card.id) + '" onclick="MethodologyLab.openCard(this.dataset.id); return false;" title="Открыть полный текст" aria-label="Открыть полный текст карточки">' + INFO_ICON + '</button>';
       return '<article class="methodology-card" data-id="' + escapeHtml(card.id) + '">' +
         '<div class="methodology-card-body">' +
-          '<div class="methodology-card-head"><span class="methodology-card-index" aria-hidden="true">' + cardNumber + '</span>' + cardIcon +
+          '<div class="methodology-card-head"><span class="methodology-card-index" aria-hidden="true">' + cardNumber + '</span>' +
           '<h3 class="methodology-card-title">' + escapeHtml(cardTitle) + '</h3></div>' +
           '<p class="methodology-card-text">' + escapeHtml(cardText) + '</p>' +
         '</div>' +
