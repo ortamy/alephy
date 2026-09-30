@@ -248,14 +248,15 @@ const Timeline = (function() {
     var sortOptions = Object.keys(SORT_LABELS).map(function(key) {
       return '<option value="' + key + '"' + (catalogState.sort === key ? ' selected' : '') + '>' + SORT_LABELS[key] + '</option>';
     }).join('');
-    return '<div class="tl-toolbar">' +
-      '<div class="tl-toolbar-row">' +
-        '<input class="lab-input tl-search" id="tl-catalog-search" type="search" placeholder="Поиск по лентам и событиям…" aria-label="Поиск по таймлайнам" value="' + escapeHtml(catalogState.query) + '">' +
+    // Одна плашка: поиск+сортировка слева, чипы эр в горизонтальной
+    // прокрутке, счётчик справа. Чипы не переносятся: их число не
+    // фиксировано, а перенос ломал бы высоту панели при каждой эре.
+    return '<div class="lab-toolbar" role="search" aria-label="Управление лентами">' +
+        '<input class="lab-input tl-search lab-toolbar-search" id="tl-catalog-search" type="search" placeholder="Поиск по лентам и событиям…" aria-label="Поиск по таймлайнам" value="' + escapeHtml(catalogState.query) + '">' +
         '<select class="lab-input tl-select" id="tl-catalog-sort" aria-label="Сортировка лент">' + sortOptions + '</select>' +
-        '<span class="tl-count" aria-live="polite"></span>' +
-      '</div>' +
-      '<div class="tl-filters" role="tablist" aria-label="Фильтры по эрам">' + chips + '</div>' +
-    '</div>';
+        '<div class="lab-toolbar-group" role="tablist" aria-label="Фильтры по эрам">' + chips + '</div>' +
+        '<div class="lab-toolbar-actions"><span class="lab-toolbar-count tl-count" aria-live="polite"></span></div>' +
+      '</div>';
   }
 
   // Сетка каталога: перерисовывается тулбаром (поиск/эры/сортировка) и хранит

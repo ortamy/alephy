@@ -45,6 +45,45 @@ const PaleoLinguistics = (function() {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
   }
 
+  // ===== КАТАЛОГ ЯЗЫКОВ: ПОИСК, ФИЛЬТР, ВИД =====
+  var LANG_VIEW_KEY = 'alephy_pl_view';
+  var LANG_SOURCES = [
+    { value: 'all', label: 'Все источники алфавита' },
+    { value: 'letters', label: 'Общий реестр знаков' },
+    { value: 'own', label: 'Собственный алфавит' }
+  ];
+  var langCatalog = {
+    query: '',
+    source: 'all',
+    view: read(LANG_VIEW_KEY, 'cards') === 'list' ? 'list' : 'cards',
+    items: []
+  };
+
+  /* Источник алфавита читаем из данных, а не вводим новую классификацию:
+     own_alphabet — своя таблица знаков языка, alphabet_ref — общий
+     реестр лаборатории (см. data/paleo-linguistics/*.json). */
+  function langSourceKey(lang) {
+    if (!lang) return 'letters';
+    if (lang.own_alphabet) return 'own';
+    if (lang.alphabet_ref) return String(lang.alphabet_ref);
+    return 'letters';
+  }
+
+  function langSearchText(lang) {
+    return [lang && lang.name, lang && lang.role, lang && lang.period, lang && lang.script]
+      .join(' ').toLowerCase();
+  }
+
+  function langFiltersActive() {
+    return langCatalog.source !== 'all' || String(langCatalog.query || '').trim() !== '';
+  }
+
+  function refreshIcons() {
+    if (window.lucide && window.lucide.createIcons) {
+      try { window.lucide.createIcons(); } catch (error) { /* иконки не критичны */ }
+    }
+  }
+
   // ===== ������������� =====
   function init(parsed) {
     var container = document.getElementById('paleo-linguistics');
@@ -118,37 +157,137 @@ const PaleoLinguistics = (function() {
   function renderLangGrid(container, version) {
     Promise.all(languages.map(loadLanguage)).then(function(metas) {
       if (version !== routeVersion || !isCurrentRoute()) return;
-      var cards = metas.map(function(lang, i) {
-        return '<div class="lab-card pl-lang-card" data-id="' + escapeHtml(lang.id) + '" role="button" tabindex="0" aria-label="������� ����: ' + escapeHtml(cardLanguageName(lang.name)) + '" style="animation-delay:' + (i * 60) + 'ms">' +
-          '<div class="pl-lang-card-icon"><img src="assets/icons/32/' + escapeHtml(languages[i].icon) + '.png" width="32" height="32" alt="" onerror="this.style.display=\'none\'"></div>' +
-          '<h2 class="pl-lang-title">' + escapeHtml(cardLanguageName(lang.name)) + '</h2>' +
-          '<div class="pl-lang-role">' + escapeHtml(lang.role) + '</div>' +
-        '</div>';
-      }).join('');
-
-      container.innerHTML =
-        '<h1><img src="assets/icons/32/scribe/scroll.png" class="lab-icon" alt=""> �����-�����������</h1>' +
-        '<p class="subtitle">�������� �������� �� �����-����������� ������ ����� �����-����� � ������������. �������� ���� ��� ��������.</p>' +
-        '<div class="pl-lang-grid">' + cards + '</div>';
-
-      container.querySelectorAll('.pl-lang-card').forEach(function(card) {
-        function openCard() {
-          var id = card.getAttribute('data-id');
-          if (!id) return;
-          if (typeof LabRouter !== 'undefined') LabRouter.navigate('paleo-linguistics', [id]);
-          route(container, { segments: ['paleo-linguistics', id] });
-        }
-        card.addEventListener('click', openCard);
-        card.addEventListener('keydown', function(event) {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openCard();
-          }
-        });
-      });
+      langCatalog.items = metas;
+      renderLangCatalog(container);
     }).catch(function(error) {
       if (version !== routeVersion || !isCurrentRoute()) return;
-      container.innerHTML = '<div class="lab-alert lab-alert-error">������ �������� ������: ' + escapeHtml(error.message) + '</div>';
+      container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки языков: ' + escapeHtml(error.message) + '</div>';
+    });
+  }
+
+  function visibleLangs() {
+    var query = String(langCatalog.query || '').trim().toLowerCase();
+    return langCatalog.items.filter(function(lang) {
+      if (langCatalog.source !== 'all' && langSourceKey(lang) !== langCatalog.source) return false;
+      if (!query) return true;
+      return langSearchText(lang).indexOf(query) !== -1;
+    });
+  }
+
+  function langToolbarMarkup(shown) {
+    var listView = langCatalog.view === 'list';
+    var options = LANG_SOURCES.map(function(item) {
+      return '<option value="' + item.value + '"' + (item.value === langCatalog.source ? ' selected' : '') + '>' + item.label + '</option>';
+    }).join('');
+
+    return '<div class="lab-toolbar" role="search" aria-label="Управление каталогом языков">' +
+        '<input type="search" class="lab-input lab-toolbar-search" id="pl-lang-search" autocomplete="off" placeholder="Поиск по языкам, эпохам, письму…" aria-label="Поиск по языкам" value="' + escapeHtml(langCatalog.query) + '">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Фильтры каталога">' +
+          '<select id="pl-lang-source" class="lab-input lab-toolbar-select' + (langCatalog.source !== 'all' ? ' is-filtered' : '') + '" aria-label="Источник алфавита">' + options + '</select>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="pl-lang-reset" title="Сбросить фильтры" aria-label="Сбросить фильтры"' + (langFiltersActive() ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" aria-live="polite"><strong>' + shown + '</strong> из ' + langCatalog.items.length + '</span>' +
+          '<div class="lab-toolbar-segment" role="group" aria-label="Вид каталога">' +
+            '<button type="button" class="res-view-btn' + (listView ? '' : ' active') + '" data-pl-lang-view="cards" aria-label="Карточки" title="Карточки" aria-pressed="' + (listView ? 'false' : 'true') + '"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+            '<button type="button" class="res-view-btn' + (listView ? ' active' : '') + '" data-pl-lang-view="list" aria-label="Список" title="Список" aria-pressed="' + (listView ? 'true' : 'false') + '"><i data-lucide="list" aria-hidden="true"></i></button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function langCardsMarkup(items) {
+    return items.map(function(lang, i) {
+      // lab-card снят намеренно: класс тянет margin-bottom из redesign.css,
+      // который перебивал margin:0 и оставлял коричневые полосы (см. §5.2e).
+      var meta = languages.filter(function(l) { return l.id === lang.id; })[0] || {};
+      return '<div class="pl-lang-card" data-id="' + escapeHtml(lang.id) + '" role="button" tabindex="0" aria-label="Открыть язык: ' + escapeHtml(cardLanguageName(lang.name)) + '" style="animation-delay:' + Math.min(i * 50, 350) + 'ms">' +
+        '<div class="pl-lang-card-icon"><img src="assets/icons/32/' + escapeHtml(meta.icon) + '.png" width="32" height="32" alt="" onerror="this.style.display=\'none\'"></div>' +
+        '<h2 class="pl-lang-title">' + escapeHtml(cardLanguageName(lang.name)) + '</h2>' +
+        '<div class="pl-lang-role">' + escapeHtml(lang.role) + '</div>' +
+        (lang.period ? '<div class="pl-lang-period">' + escapeHtml(lang.period) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  function langBodyMarkup(shown) {
+    if (!shown.length) return '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>';
+    return '<div class="pl-lang-grid">' + langCardsMarkup(shown) + '</div>';
+  }
+
+  /* Перерисовывается только тело каталога: панель остаётся на месте,
+     поэтому фокус и позиция каретки в поиске не «дёргаются» на вводе. */
+  function refreshLangCatalog(container) {
+    var body = container.querySelector('#pl-lang-body');
+    if (!body) return renderLangCatalog(container);
+    var shown = visibleLangs();
+    body.classList.toggle('is-list', langCatalog.view === 'list');
+    body.innerHTML = langBodyMarkup(shown);
+    var count = container.querySelector('.lab-toolbar-count strong');
+    if (count) count.textContent = String(shown.length);
+    var reset = container.querySelector('#pl-lang-reset');
+    if (reset) reset.hidden = !langFiltersActive();
+    bindLangCards(container);
+  }
+
+  function renderLangCatalog(container) {
+    var shown = visibleLangs();
+    container.innerHTML = langToolbarMarkup(shown.length) +
+      '<div id="pl-lang-body"' + (langCatalog.view === 'list' ? ' class="is-list"' : '') + '>' + langBodyMarkup(shown) + '</div>';
+    bindLangCards(container);
+    bindLangCatalogEvents(container);
+    refreshIcons();
+  }
+
+  function bindLangCards(container) {
+    container.querySelectorAll('.pl-lang-card').forEach(function(card) {
+      function openCard() {
+        var id = card.getAttribute('data-id');
+        if (!id) return;
+        if (typeof LabRouter !== 'undefined') LabRouter.navigate('paleo-linguistics', [id]);
+        route(container, { segments: ['paleo-linguistics', id] });
+      }
+      card.addEventListener('click', openCard);
+      card.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          openCard();
+        }
+      });
+    });
+  }
+
+  function bindLangCatalogEvents(container) {
+    var search = container.querySelector('#pl-lang-search');
+    var source = container.querySelector('#pl-lang-source');
+    var reset = container.querySelector('#pl-lang-reset');
+
+    if (search) {
+      search.addEventListener('input', function() {
+        langCatalog.query = search.value;
+        refreshLangCatalog(container);
+      });
+    }
+    if (source) {
+      source.addEventListener('change', function() {
+        langCatalog.source = source.value;
+        source.classList.toggle('is-filtered', source.value !== 'all');
+        refreshLangCatalog(container);
+      });
+    }
+    if (reset) {
+      reset.addEventListener('click', function() {
+        langCatalog.query = '';
+        langCatalog.source = 'all';
+        renderLangCatalog(container);
+      });
+    }
+    container.querySelectorAll('[data-pl-lang-view]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        langCatalog.view = button.getAttribute('data-pl-lang-view');
+        write(LANG_VIEW_KEY, langCatalog.view);
+        renderLangCatalog(container);
+      });
     });
   }
 
@@ -341,7 +480,10 @@ const PaleoLinguistics = (function() {
   function linkifyWords(original) {
     return original.split(' ').map(function(w) {
       var clean = escapeHtml(w);
-      if (!/[?-?]/.test(w)) return clean;
+      // Раньше здесь был битый диапазон /[?-?]/ — после повреждения кодировки
+      // он перестал ловить иврит и ссылки-слова не работали. Unicode-экраны
+      // не зависят от кодировки файла, в отличие от литеральных букв.
+      if (!/[\u0590-\u05FF]/.test(w)) return clean;
       return '<span class="pl-text-word" data-word="' + clean + '">' + clean + '</span>';
     }).join(' ');
   }

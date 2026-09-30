@@ -506,13 +506,6 @@
   white-space: nowrap;
 }
 
-.exposure-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
 .research-confidence-bar {
   display: flex;
   align-items: center;
@@ -526,23 +519,6 @@
   white-space: nowrap;
 }
 
-.exposure-chip {
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: var(--radius-pill);
-  background: var(--bg-secondary, #f7f1e5);
-  color: var(--text-secondary, #675848);
-  font-size: .82rem;
-  padding: 5px var(--space-3);
-  cursor: pointer;
-  transition: border-color .18s ease, color .18s ease;
-}
-
-.exposure-chip.active {
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-  font-weight: 600;
-}
-
 .exposure-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -553,7 +529,6 @@
   .exposure-filters { grid-template-columns: 1fr; }
   .exposure-filters .exposure-new-btn { width: 100%; }
   .research-confidence-bar { align-items: flex-start; flex-direction: column; }
-  .research-confidence-bar .exposure-chips { margin-bottom: 0; }
 }
 
 .exposure-card {
@@ -888,30 +863,33 @@ html[data-theme="dark"] .exposure-caveat-card {
 
 /* ===== Исследования: компактный архив-панель (res-*) ===== */
 
-.res-toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: var(--space-4);
-}
-
-.res-toolbar-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.res-search {
-  flex: 1 1 220px;
-  min-width: 0;
-}
-
 .res-select {
   flex: 0 0 auto;
   width: auto;
   min-height: 40px;
 }
+
+/* Значение фильтра, отличное от «Все …»: чипы показывали выбор заливкой,
+   селект показывает золотой рамкой — фильтр виден без раскрытия списка. */
+.res-select.is-filtered {
+  border-color: var(--accent-gold);
+  color: var(--text-primary);
+}
+
+/* Сброс фильтров: иконка в ряду селектов, скрыта, пока фильтры не заданы. */
+.res-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+}
+
+.res-reset-btn[hidden] { display: none; }
+
+.res-reset-btn .lab-icon { width: 16px; height: 16px; }
 
 .res-new-btn {
   display: inline-flex;
@@ -923,16 +901,6 @@ html[data-theme="dark"] .exposure-caveat-card {
 }
 
 .res-new-btn .lab-icon { width: 16px; height: 16px; }
-
-.res-toolbar-row--secondary { align-items: center; }
-
-.res-toolbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-}
 
 .research-meta {
   font-size: .82rem;
@@ -1145,15 +1113,6 @@ html[data-theme="dark"] .res-dot-disputed { background: #e08a8a; }
   #researches {
     overflow-x: clip;
     padding-inline: var(--space-3);
-  }
-
-  .res-search { flex: 1 1 100%; }
-  .res-select--sort { flex: 1 1 auto; }
-
-  .res-toolbar-right {
-    margin-left: 0;
-    width: 100%;
-    justify-content: space-between;
   }
 
   #researches .exposure-grid {

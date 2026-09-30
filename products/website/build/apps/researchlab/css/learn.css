@@ -43,6 +43,31 @@
 .learn-hub-empty h2 { margin:0 0 2px; font:600 17px/1.2 var(--font-heading); }
 .learn-hub-empty p { margin:0; color:var(--text-secondary); font-size:13px; }
 .learn-hub-empty .lab-btn { flex:0 0 auto; margin-left:auto; }
+
+/* ===== Тулбар хаба и вид «список» =====
+   Плашку (поиск, чипы, счётчик, тумблер вида) целиком держит общий
+   компонент components/toolbar.css (.lab-toolbar): здесь только
+   список-режим — строки 56px, как у агентов и конвейеров (§4.8). */
+.learn-hub-body.is-list .learn-hub-cards,
+.learn-hub-body.is-list .course-hub-cards { grid-template-columns:1fr; gap:2px; }
+.learn-hub-body.is-list .learn-hub-card { flex-direction:row; align-items:center; gap:10px; min-height:56px; padding:8px 10px; }
+.learn-hub-body.is-list .course-hub-card { flex-direction:row; align-items:center; gap:10px; min-height:56px; padding:8px 34px 8px 10px; }
+.learn-hub-body.is-list .learn-hub-card .learn-hub-glyph { width:32px; height:32px; font-size:18px; }
+.learn-hub-body.is-list .learn-hub-card-top { flex:0 1 260px; min-width:0; }
+.learn-hub-body.is-list .learn-hub-card-title { min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.learn-hub-body.is-list .learn-hub-card-desc,
+.learn-hub-body.is-list .course-hub-desc { flex:1 1 auto; min-width:0; -webkit-line-clamp:1; }
+.learn-hub-body.is-list .learn-hub-card-foot { flex:0 0 auto; margin-top:0; }
+.learn-hub-body.is-list .course-hub-head { flex:0 0 auto; }
+.learn-hub-body.is-list .course-hub-meta { flex:0 0 auto; gap:4px; }
+.learn-hub-body.is-list .course-hub-title { flex:0 0 auto; max-width:230px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.learn-hub-body.is-list .course-hub-progress { flex:0 0 72px; margin:0; }
+@media (max-width:600px) {
+  .learn-hub-body.is-list .learn-hub-card,
+  .learn-hub-body.is-list .course-hub-card { flex-wrap:wrap; row-gap:4px; }
+  .learn-hub-body.is-list .learn-hub-card-desc,
+  .learn-hub-body.is-list .course-hub-desc { flex:1 1 100%; order:5; }
+}
 .learn-review { max-width:680px; margin:32px auto; padding:36px; text-align:center; border:1px solid var(--border-light); border-radius:14px; background:var(--bg-card); box-shadow:var(--shadow-soft); }
 .learn-review-kicker { color:var(--text-gold); font:700 13px var(--font-heading); letter-spacing:.12em; text-transform:uppercase; }
 .learn-review-symbol { margin:30px 0 20px; color:var(--accent-gold); font:110px/1 var(--font-paleo); }

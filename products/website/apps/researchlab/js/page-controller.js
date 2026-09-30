@@ -637,7 +637,11 @@ const PageController = (function() {
       '<h1><i data-lucide="library" class="lab-icon" aria-hidden="true"></i>' +
       dictT('lab.dictionaries.title', 'Словари') + '</h1>' +
       '<p class="subtitle">Словарные карты подмен с ивритским соответствием и палео-формой.</p></div>';
-    var toolbar = '<div class="agent-toolbar-row dict-toolbar-row">' +
+    // Панель повторяет оболочку одноимённого тулбара агентов (§4.7): без неё
+    // .agent-toolbar-row { display: contents } выплёскивает контролы в блочный
+    // поток страницы и те растягиваются в четыре отдельные полосы.
+    var toolbar = '<section class="agent-controls-panel dict-controls-panel" aria-label="Управление словарями">' +
+      '<div class="agent-toolbar-row">' +
       '<input type="search" class="lab-input agents-search" id="dict-registry-search" value="' + escapeHtml(dictUiState.query) + '" ' +
       'placeholder="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '" ' +
       'aria-label="' + dictT('lab.dictionaries.searchPlaceholder', 'Поиск по словарям…') + '">' +
@@ -652,7 +656,7 @@ const PageController = (function() {
       '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
       '<button type="button" class="res-view-btn' + (view === 'grid' ? ' active' : '') + '" data-dict-view="grid" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
       '<button type="button" class="res-view-btn' + (view === 'list' ? ' active' : '') + '" data-dict-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
-      '</div></div></div>';
+      '</div></div></section>';
     return head + toolbar +
       (sectionsHtml || dictEmptyHtml());
   }
@@ -884,9 +888,12 @@ const PageController = (function() {
     }
 
     container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
-      '<div class="mech-bar">' + backBtn +
+      '<div class="lab-toolbar mech-bar" role="search" aria-label="Выбор документа">' +
+        backBtn +
+        '<div class="lab-toolbar-group">' +
         '<label class="mech-field"><span>Документ</span>' +
-        '<select id="research-paleo-mechanics-select" class="lab-input">' + options + '</select></label>' +
+        '<select id="research-paleo-mechanics-select" class="lab-input" aria-label="Документ палео-механики">' + options + '</select></label>' +
+        '</div>' +
       '</div>' +
       '<article class="mech-sheet">' +
         '<header class="mech-head"><span class="mech-kicker">Палео-механика</span><h2>' + escapeHtml(title) + '</h2></header>' +
@@ -962,12 +969,12 @@ const PageController = (function() {
       '</a>';
     }).join('');
 
+    // Плашка индекса знаков: поиск + счётчик в одной строке.
     container.innerHTML = '<div id="paleo-mechanics" class="paleo-mechanics-page">' +
-      '<div class="mech-index-bar">' +
-        '<label class="mech-index-field"><span>Поиск по знакам</span>' +
-        '<input id="mech-index-search" class="lab-input" type="search" autocomplete="off" ' +
-        'placeholder="Алеф, бык, различать"></label>' +
-        '<p class="mech-index-count" id="mech-index-count" role="status"></p>' +
+      '<div class="lab-toolbar" role="search" aria-label="Поиск по знакам">' +
+        '<input id="mech-index-search" class="lab-input lab-toolbar-search" type="search" autocomplete="off" ' +
+        'placeholder="Алеф, бык, различать" aria-label="Поиск по знакам">' +
+        '<div class="lab-toolbar-actions"><p class="lab-toolbar-count" id="mech-index-count" role="status"></p></div>' +
       '</div>' +
       '<div class="mech-index" id="mech-index">' + rows + '</div>' +
       '<p class="mech-index-empty" id="mech-index-empty" hidden>Знаки не найдены.</p>' +
@@ -2785,18 +2792,40 @@ const PageController = (function() {
         break;
 
       case 'word-analyzer':
-        container.innerHTML = '<div class="wa-shell">' +
-          '<textarea id="wa-input" class="lab-textarea wa-input" rows="3" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
-          '<div class="wa-toolbar">' +
-            '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="WordAnalyzer.analyze()">Разобрать</button>' +
-            '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.clear()">Очистить</button>' +
-            '<div id="wa-export" class="wa-export" style="display:none">' +
-              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
-              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
+        // Бенто-каркас страницы (DESIGN-SYSTEM §5.2d): ячейки 01–04,
+        // развёрнутый разбор (#wa-bento) продолжает нумерацию с 05.
+        // Пустые зоны (карточки, бенто) скрываются — сетка не оставляет дыр.
+        container.innerHTML = '<div class="wa-shell wab-page">' +
+          '<section class="wab-cell wab-cell--input" aria-label="Слова для разбора">' +
+            '<header class="wab-cell-head"><span class="wab-num">01</span><span class="wab-cell-title">Слова</span><span class="wab-cell-hint">иврит · транслит</span></header>' +
+            '<textarea id="wa-input" class="lab-textarea wa-input" rows="3" placeholder="אמת, תורה, שלום&#10;משיח&#10;צדק, חסד"></textarea>' +
+            '<p class="wab-hint">Несколько слов через запятую или с новой строки: для каждого будут корень, палео-образ и карта смысловых сдвигов.</p>' +
+          '</section>' +
+          '<section class="wab-cell wab-cell--run" aria-label="Запуск разбора">' +
+            '<header class="wab-cell-head"><span class="wab-num">02</span><span class="wab-cell-title">Запуск</span><span class="wab-cell-hint">разбор и экспорт</span></header>' +
+            '<div class="wa-toolbar">' +
+              '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="WordAnalyzer.analyze()">Разобрать</button>' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.clear()">Очистить</button>' +
+              '<div id="wa-export" class="wa-export" style="display:none">' +
+                '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.copyMarkdown()">Копировать Markdown</button>' +
+                '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="WordAnalyzer.downloadTxt()">Скачать TXT</button>' +
+              '</div>' +
             '</div>' +
-          '</div>' +
-          '<p id="wa-status" class="wa-status">Введите слова для разбора.</p>' +
-          '<div id="wa-grid" class="wa-grid"></div>' +
+            '<p id="wa-status" class="wa-status">Введите слова для разбора.</p>' +
+          '</section>' +
+          '<section class="wab-cell wab-cell--guide" aria-label="Как читать результат">' +
+            '<header class="wab-cell-head"><span class="wab-num">03</span><span class="wab-cell-title">Как читать</span><span class="wab-cell-hint">легенда §6</span></header>' +
+            '<ul class="wab-legend">' +
+              '<li class="wab-legend-item"><span class="wa-flag wa-flag--found">Найдено</span><span class="wab-legend-text">слово есть в базе: карточка с корнем, палео-образами и слоями подмены</span></li>' +
+              '<li class="wab-legend-item"><span class="wa-flag wa-flag--missing">Не найдено</span><span class="wab-legend-text">слова нет в базе — остаётся карточка со статусом и кнопкой «Спросить AI»</span></li>' +
+            '</ul>' +
+            '<p class="wab-caveat">Разбор — интерпретация, а не факт: сверьте корень через Ор и Хук, прежде чем опираться на него.</p>' +
+          '</section>' +
+          '<section class="wab-cell wab-cell--cards" aria-label="Результаты разбора">' +
+            '<header class="wab-cell-head"><span class="wab-num">04</span><span class="wab-cell-title">Результаты</span><span class="wab-cell-hint">по одному на слово</span></header>' +
+            '<div id="wa-grid" class="wa-grid"></div>' +
+          '</section>' +
+          '<div id="wa-bento" class="wa-bento-host" aria-live="polite"></div>' +
         '</div>';
         container.dataset.loaded = '1';
         applyQueryParam(parsed, 'wa-input',
@@ -2941,10 +2970,21 @@ const PageController = (function() {
       case 'religionisms':
         container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Религионизмы" style="vertical-align: middle; margin-right: 6px;"> Религионизмы</h1>' +
           '<p class="subtitle">Каждая сфера, учреждённая человеком вне откровения Яхве — структурированный шекер со своим алтарём, жрецами и жертвами. 9 компонентов на каждую сферу.</p>' +
-          '<div class="search-wrap"><input type="text" id="rel-search" class="lab-input" placeholder="Медицина, алтарь, жрец..." oninput="if(window.Religionisms)Religionisms.filter(this.value)"></div>' +
+          '<div class="lab-toolbar" role="search" aria-label="Управление каталогом сфер">' +
+            '<input type="search" class="lab-input lab-toolbar-search" id="rel-search" autocomplete="off" placeholder="Название сферы, корень, роль…" aria-label="Поиск по сферам">' +
+            '<div class="lab-toolbar-group" role="group" aria-label="Действия панели">' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="rel-reset" title="Сбросить поиск" aria-label="Сбросить поиск" hidden><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
+            '</div>' +
+            '<div class="lab-toolbar-actions">' +
+              '<span class="lab-toolbar-count" id="rel-count" aria-live="polite"></span>' +
+              '<div class="lab-toolbar-segment" role="group" aria-label="Вид каталога">' +
+                '<button type="button" class="res-view-btn active" data-rel-view="cards" aria-label="Карточки" title="Карточки" aria-pressed="true"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+                '<button type="button" class="res-view-btn" data-rel-view="list" aria-label="Список" title="Список" aria-pressed="false"><i data-lucide="list" aria-hidden="true"></i></button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
           '<div id="rel-grid" class="rel-grid"></div>' +
-          '<div id="rel-detail" class="rel-detail" style="display:none;"></div>' +
-          '<div id="rel-empty" class="lab-alert lab-alert-info" style="display:none">Ничего не найдено.</div>';
+          '<div id="rel-detail" class="rel-detail" style="display:none;"></div>';
         container.dataset.loaded = '1';
         if (window.Religionisms) Religionisms.init();
         break;

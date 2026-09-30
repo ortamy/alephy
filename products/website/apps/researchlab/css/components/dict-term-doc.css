@@ -131,6 +131,26 @@
 
 /* ===== DICT SORT SELECT: 36px, стрелка и рамка по токенам (все темы) ===== */
 .dict-sort-wrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+/* ===== DICT TOOLBAR PANEL: одна горизонтальная плашка между шапкой и карточками =====
+   Оболочка повторяет .agent-controls-panel (§4.7): .agent-toolbar-row имеет
+   display: contents, поэтому раскладку задаёт именно панель-родитель. */
+.dict-controls-panel { gap: var(--space-2); }
+.dict-controls-panel .agents-search { flex: 1 1 240px; order: 1; }
+.dict-controls-panel .dict-sort-wrap { order: 2; }
+.dict-controls-panel .agent-toolbar-actions {
+  order: 3;
+  gap: var(--space-3);
+  margin-left: auto;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-light);
+}
+/* Сегментированный переключатель: общая рамка, кнопки без разрыва. */
+.dict-controls-panel .res-view-toggle { flex: 0 0 auto; }
+.dict-controls-panel .res-view-btn + .res-view-btn { border-left: 1px solid var(--border-light); }
+/* Счётчик прижат к своим соседям, а не к правому краю группы (margin-left
+   из .pipeline-count рассчитан на тулбар без обёртки). */
+.dict-controls-panel .pipeline-count { margin-left: 0; }
+
 .dict-sort-select {
   height: 36px;
   min-height: 36px;
@@ -191,11 +211,19 @@
 .dict-empty-glyph svg.lucide { width: 16px; height: 16px; }
 .dict-empty-hint { margin: 0; font: 500 var(--ui-13, 13px)/1.4 var(--font-ui); color: var(--text-muted); }
 
-/* ===== MOBILE: list по умолчанию при JS-переключателе ===== */
+/* ===== MOBILE: list по умолчанию при JS-переключателе =====
+   Родитель раскладки — панель: .agent-toolbar-row имеет display: contents. */
 @media (max-width: 640px) {
-  .dict-toolbar-row { flex-wrap: wrap; }
-  .dict-toolbar-row .agents-search { flex: 1 1 100%; }
-  .dict-toolbar-row .agent-toolbar-actions { margin-left: 0; width: 100%; justify-content: space-between; }
+  .dict-controls-panel .agents-search { flex: 1 1 100%; }
+  .dict-controls-panel .dict-sort-wrap { flex: 1 1 auto; }
+  .dict-controls-panel .dict-sort-select { width: 100%; }
+  .dict-controls-panel .agent-toolbar-actions {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

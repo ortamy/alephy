@@ -30,6 +30,14 @@ const AlephyStates = (function() {
     completed: false
   };
 
+  // Каталог карточек состояний: поиск по названию/олиму/физике и порядок
+  // вывода. Сжатость (intensity) — родной порядок модуля, он же по умолчанию.
+  let gridState = { query: '', sort: 'intensity' };
+  const STATE_SORTS = {
+    intensity: 'По сжатости',
+    name: 'По алфавиту'
+  };
+
   // ===== УТИЛИТЫ =====
   function escapeHtml(text) {
     // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
@@ -181,6 +189,9 @@ const AlephyStates = (function() {
 
     container.innerHTML = html;
     attachHandlers(container);
+    if (currentView !== 'detail' && currentView !== 'landscape' && currentView !== 'diagnostic') {
+      bindGridToolbar(container);
+    }
   }
 
   function attachHandlers(container) {
@@ -260,16 +271,22 @@ const AlephyStates = (function() {
   }
 
   // ===== РЕНДЕР СЕТКИ КАРТОЧЕК =====
-  function renderGrid() {
-    // Сортируем: сначала сжатые, потом открытые
-    var sorted = states.slice().sort(function(a, b) {
-      return (a.intensity || 0) - (b.intensity || 0);
+  function visibleStates() {
+    var query = String(gridState.query || '').trim().toLowerCase();
+    var list = states.filter(function(s) {
+      if (!query) return true;
+      return normalizeText(s.name + ' ' + (s.olam || '') + ' ' + (s.physics || '') + ' ' + (s.meaning || '')).indexOf(query) !== -1;
     });
+    // Сжатые — потом открытые; по алфавиту порядок задаёт имя.
+    return list.sort(gridState.sort === 'name'
+      ? function(a, b) { return (a.name || '').localeCompare(b.name || '', 'ru'); }
+      : function(a, b) { return (a.intensity || 0) - (b.intensity || 0); });
+  }
 
-    var cardsHtml = sorted.map(function(s, i) {
+  function stateCardsMarkup(list) {
+    return list.map(function(s, i) {
       var color = s.color || '#b8860b';
       var paleo = s.paleo || '';
-      var paleoFirst = paleo ? paleo.charAt(0) : '';
       var paleoInline = paleo ? '<span class="state-paleo-inline">' + escapeHtml(paleo) + '</span>' : '';
       var lucideIcon = getLucideForState(s.id);
       return '<div class="state-card" data-state-id="' + escapeHtml(s.id) + '" role="button" aria-label="Открыть состояние: ' + escapeHtml(s.name) + '" tabindex="0" style="animation-delay:' + (i * 70) + 'ms; --state-color: ' + color + '">' +
@@ -288,20 +305,100 @@ const AlephyStates = (function() {
         '</div>' +
       '</div>';
     }).join('');
+  }
+
+  function statesBodyMarkup(list) {
+    if (!list.length) return '<div class="lab-alert lab-alert-info">Состояние не найдено.</div>';
+    return '<div class="states-grid">' + stateCardsMarkup(list) + '</div>';
+  }
+
+  function statesToolbarMarkup(shown) {
+    var sortOptions = Object.keys(STATE_SORTS).map(function(value) {
+      return '<option value="' + value + '"' + (value === gridState.sort ? ' selected' : '') + '>' + STATE_SORTS[value] + '</option>';
+    }).join('');
+
+    return '<div class="lab-toolbar" role="search" aria-label="Управление каталогом состояний">' +
+      '<input type="search" class="lab-input lab-toolbar-search" id="states-search" autocomplete="off" placeholder="Поиск по состояниям…" aria-label="Поиск по состояниям" value="' + escapeHtml(gridState.query) + '">' +
+      '<div class="lab-toolbar-group" role="group" aria-label="Сортировка каталога">' +
+        '<select id="states-sort" class="lab-input lab-toolbar-select" aria-label="Порядок состояний">' + sortOptions + '</select>' +
+      '</div>' +
+      '<div class="lab-toolbar-actions">' +
+        '<span class="lab-toolbar-count" aria-live="polite"><strong>' + shown + '</strong> из ' + states.length + '</span>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="states-reset"' + (gridState.query ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i>Сбросить</button>' +
+        // Плитка-запуск ушла в панель: на сетке карточек она занимала целую
+        // строку ради одного перехода. Формулировка совпадает с заголовком
+        // ландшафта, чтобы её не путали с h1 «Карта состояний».
+        '<button type="button" class="lab-btn lab-btn-primary lab-toolbar-btn" id="states-open-map" title="Открыть визуальную карту переходов"><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Визуальная карта</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  function refreshIcons() {
+    if (window.lucide && window.lucide.createIcons) {
+      try { window.lucide.createIcons(); } catch (error) { /* иконки не критичны */ }
+    }
+  }
+
+  /* Перерисовывается только сетка: шапка и ландшафтная кнопка остаются
+     на месте, поэтому ввод в поиске не пересобирает страницу целиком. */
+  function refreshStatesGrid(container) {
+    var body = container.querySelector('#states-grid-body');
+    if (!body) return renderView(container);
+    var list = visibleStates();
+    body.innerHTML = statesBodyMarkup(list);
+    var count = container.querySelector('.lab-toolbar-count strong');
+    if (count) count.textContent = String(list.length);
+    var reset = container.querySelector('#states-reset');
+    if (reset) reset.hidden = !gridState.query;
+    attachHandlers(container);
+    refreshIcons();
+  }
+
+  function renderGrid() {
+    var list = visibleStates();
 
     return '<div class="states-page">' +
-      '<button type="button" class="states-map-launch" onclick="AlephyStates.openLandscape()">' +
-        '<span aria-hidden="true">𐤌</span>' +
-        '<span><strong>Карта состояний</strong><small>Открыть полный слой состояний</small></span>' +
-      '</button>' +
       '<div class="states-head">' +
         '<h1><img src="assets/icons/32/ui/web.png" class="lab-icon" alt=""> Карта состояний</h1>' +
         '<p class="subtitle">Семь пространств палео-механики — от запертости (Тоху) до завершённости (Эден). Каждое состояние — это не метафора, а физика: степень сжатости или открытости твоего пространства.</p>' +
       '</div>' +
+      statesToolbarMarkup(list.length) +
       '<div class="states-map">' +
-        '<div class="states-grid">' + cardsHtml + '</div>' +
+        '<div id="states-grid-body">' + statesBodyMarkup(list) + '</div>' +
       '</div>' +
     '</div>';
+  }
+
+  function bindGridToolbar(container) {
+    var search = container.querySelector('#states-search');
+    var sort = container.querySelector('#states-sort');
+    var reset = container.querySelector('#states-reset');
+
+    if (search) {
+      search.addEventListener('input', function() {
+        gridState.query = search.value;
+        refreshStatesGrid(container);
+      });
+    }
+    if (sort) {
+      sort.addEventListener('change', function() {
+        gridState.sort = sort.value;
+        refreshStatesGrid(container);
+      });
+    }
+    if (reset) {
+      reset.addEventListener('click', function() {
+        gridState.query = '';
+        renderView(container);
+      });
+    }
+    var openMap = container.querySelector('#states-open-map');
+    if (openMap) {
+      openMap.addEventListener('click', function() { openLandscape(); });
+    }
+    // Панель приходит из строки выше, её иконки lucide нужно materialize
+    // после каждого входа в сетку.
+    refreshIcons();
   }
 
   // ===== СЕКЦИИ-ГЛАВЫ: номер + uppercase-лейбл вместо сериф-заголовков =====

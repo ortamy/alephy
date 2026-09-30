@@ -85,6 +85,10 @@
   text-overflow: ellipsis;
 }
 
+/* Пересказ сферы. В сетке карточек он лишний (девять компонентов
+   важнее), поэтому блок скрыт и раскрывается только в виде «список». */
+.rel-card .rel-card-desc { display: none; }
+
 /* Стрелка при наведении — как в .pl-lang-card, без правки разметки */
 .rel-card::after {
   grid-column: 3;
@@ -99,6 +103,42 @@
 .rel-card:focus-visible::after {
   opacity: 1;
   transform: translateX(2px);
+}
+
+/* ===== ВИД «СПИСОК» ===== */
+/* Девятнадцать сфер в сетке — это квадрат мелких карточек; строкой
+   они читаются как оглавление: имя, ключевой корень, короткий пересказ. */
+.rel-grid.is-list {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+}
+.rel-grid.is-list .rel-card {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+  padding: 8px 14px;
+}
+.rel-grid.is-list .rel-card .rel-card-title {
+  grid-column: 2;
+  grid-row: 1;
+}
+.rel-grid.is-list .rel-card .rel-card-role {
+  grid-column: 3;
+  grid-row: 1;
+  align-self: center;
+  max-width: 30ch;
+  text-align: right;
+}
+.rel-grid.is-list .rel-card .rel-card-desc {
+  display: -webkit-box;
+  grid-column: 2 / 4;
+  grid-row: 2;
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 /* ===== DETAIL VIEW ===== */

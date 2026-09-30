@@ -11,38 +11,24 @@
    реестром: реальный палео-глиф, имя с транслитом, глосса и одна строка
    функции. Разделители — волосяные линии, рамок и теней нет. */
 
-.mech-index-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-}
-.mech-index-field {
-  display: flex;
-  flex: 1 1 18rem;
-  max-width: 26rem;
-  flex-direction: column;
-  gap: var(--space-1);
+/* Плашки индекса и документа — общий компонент .lab-toolbar
+   (components/toolbar.css). Здесь остались только размеры полей. */
+.mech-index-bar .lab-input,
+.mech-field select { min-height: var(--control-h); }
+.mech-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
 }
-.mech-index-field > span {
+.mech-field > span,
+.mech-label {
   color: var(--text-secondary);
   font-family: var(--font-ui);
   font-size: var(--ui-11);
   font-weight: 600;
   letter-spacing: var(--tracking-caps);
   text-transform: uppercase;
-}
-.mech-index-field .lab-input { min-height: var(--control-h); }
-.mech-index-count {
-  margin: 0 0 0 auto;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--ui-11);
   white-space: nowrap;
 }
 

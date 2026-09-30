@@ -8,7 +8,18 @@
 
   var PAGE_TEMPLATE = '<section class="methodology-shell" aria-labelledby="methodology-title">' +
     '<header class="methodology-heading"><div><p class="methodology-kicker" id="methodology-hero-kicker">АЛЕФИ · ПРИНЦИПЫ РАЗОБЛАЧЕНИЯ</p><h1 id="methodology-title">Методология</h1><p class="subtitle methodology-hero-description" id="methodology-hero-description">Базовые правила, по которым выявляется подмена смысла и возвращается физика текста.</p></div></header>' +
-    '<div class="methodology-toolbar methodology-navigation lab-card"><label class="methodology-select-label" for="methodology-category-select">Раздел методологии<select id="methodology-category-select" class="lab-input" aria-label="Раздел методологии"><option value="principles">Принципы разоблачения</option><option value="methods">Методы разоблачения</option><option value="mechanisms">Механизмы подмены</option><option value="shifts">Языковые сдвиги</option><option value="techniques">Приёмы подмены</option><option value="philosophemes">Греческие философемы</option><option value="distortions">Типы искажений</option><option value="matrices">Культурные матрицы</option><option value="paleo-translation">Принципы палео-перевода</option></select></label><label class="methodology-select-label" for="methodology-document-select">Документ<select id="methodology-document-select" class="lab-input" aria-label="Документ внутри раздела"><option value="">Все документы</option></select></label><button type="button" class="lab-btn lab-btn-primary lab-btn-sm" id="methodology-add-btn">Добавить карточку</button></div>' +
+    // Общая плашка .lab-toolbar: поиск по карточкам раздела слева,
+// два селекта-фильтра рядом, счётчик и «Добавить карточку» справа.
+    '<div class="lab-toolbar methodology-toolbar" role="search" aria-label="Управление методологией">' +
+    '<input type="search" class="lab-input lab-toolbar-search" id="methodology-search" placeholder="Поиск по карточкам раздела…" aria-label="Поиск по карточкам раздела" autocomplete="off">' +
+    '<div class="lab-toolbar-group">' +
+    '<label class="methodology-select-label" for="methodology-category-select">Раздел методологии<select id="methodology-category-select" class="lab-input" aria-label="Раздел методологии"><option value="principles">Принципы разоблачения</option><option value="methods">Методы разоблачения</option><option value="mechanisms">Механизмы подмены</option><option value="shifts">Языковые сдвиги</option><option value="techniques">Приёмы подмены</option><option value="philosophemes">Греческие философемы</option><option value="distortions">Типы искажений</option><option value="matrices">Культурные матрицы</option><option value="paleo-translation">Принципы палео-перевода</option></select></label>' +
+    '<label class="methodology-select-label" for="methodology-document-select">Документ<select id="methodology-document-select" class="lab-input" aria-label="Документ внутри раздела"><option value="">Все документы</option></select></label>' +
+    '</div>' +
+    '<div class="lab-toolbar-actions">' +
+    '<span class="lab-toolbar-count" id="methodology-count" aria-live="polite"></span>' +
+    '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm lab-toolbar-btn" id="methodology-add-btn">Добавить карточку</button>' +
+    '</div></div>' +
     '<div class="methodology-panel" id="methodology-panel" role="tabpanel" aria-live="polite"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка материалов…</div></div></div></section>';
   var DATA_PATH = 'data/methodology/cards.json';
   var MECHANISMS_DATA_PATH = 'data/methodology/mechanisms.json';
@@ -72,6 +83,7 @@
   var activeTab = CATEGORIES[0].key;
   var activeDocument = '';
   var activeTechniqueCategory = '';
+  var activeQuery = '';
   var exposureDocuments = null;
   var paleoTranslationCards = [];
   var PALEO_TRANSLATION_FALLBACK = [
@@ -369,6 +381,7 @@
     bindDocumentSelect(container);
     bindAddButton(container);
     bindBackButton(container);
+    bindSearch(container);
     loadStore(container);
   }
 
@@ -470,6 +483,25 @@
   function bindAddButton(container) {
     var btn = container.querySelector('#methodology-add-btn');
     if (btn) btn.addEventListener('click', function() { openForm(container); });
+  }
+
+  // Поиск по карточкам текущего раздела: срез делает showTab, поэтому
+  // счётчик и реестр всегда показывают одно и то же число.
+  function bindSearch(container) {
+    var search = container.querySelector('#methodology-search');
+    if (!search) return;
+    search.value = activeQuery;
+    search.addEventListener('input', function() {
+      activeQuery = search.value.trim();
+      showTab(container, activeTab);
+    });
+  }
+
+  function cardMatchesQuery(card, needle) {
+    if (!needle) return true;
+    return [card.title, card.summary, card.text].some(function(value) {
+      return String(value || '').toLowerCase().indexOf(needle) !== -1;
+    });
   }
 
   function bindBackButton(container) {
@@ -727,6 +759,17 @@
     updateHero(container, key, selectedDocument);
     if (activeDocument && key !== 'techniques') {
       cards = cards.filter(function(card) { return card.id === activeDocument; });
+    }
+    // Поиск режет уже отфильтрованный набор и обновляет счётчик, чтобы
+    // «N карточек» всегда описывало то, что реально видно в реестре.
+    var totalCards = cards.length;
+    var needle = activeQuery.trim().toLowerCase();
+    if (needle) cards = cards.filter(function(card) { return cardMatchesQuery(card, needle); });
+    var counter = container.querySelector('#methodology-count');
+    if (counter) {
+      counter.innerHTML = needle
+        ? '<strong>' + cards.length + '</strong> из ' + totalCards
+        : '<strong>' + totalCards + '</strong>';
     }
     renderPanel(container, panel, cards);
   }

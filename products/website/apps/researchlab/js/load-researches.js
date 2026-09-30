@@ -218,7 +218,9 @@ const LoadResearches = (function() {
     if (parsed && parsed.params) {
       if (parsed.params.q != null) state.query = parsed.params.q;
       if (parsed.params.category) state.category = parsed.params.category;
-      if (parsed.params.confidence) state.confidence = parsed.params.confidence;
+      // Селект статуса — единственный источник правды: неизвестное значение из
+      // URL он не сможет отобразить («Все статусы» при отфильтрованном списке).
+      if (parsed.params.confidence && CONF_ORDER[parsed.params.confidence] != null) state.confidence = parsed.params.confidence;
       if (parsed.params.view === 'list' || parsed.params.view === 'cards') state.view = parsed.params.view;
       if (['date', 'title', 'status'].indexOf(parsed.params.sort) !== -1) state.sort = parsed.params.sort;
     }
@@ -387,14 +389,24 @@ const LoadResearches = (function() {
     return index;
   }
 
-  function renderConfidenceChips() {
+  /* Статусы достоверности: те же ключи и подписи, что были у чипов, но селектом.
+     Пять чипов растягивали панель на вторую строку — селект держит её в одну. */
+  function renderConfidenceOptions() {
     var order = ['all', 'verified', 'needs-review', 'hypothesis', 'disputed'];
-    var labels = { all: 'Все' };
+    var labels = { all: 'Все статусы' };
     order.slice(1).forEach(function(key) { labels[key] = ExposureCase.confidenceMeta(key).label; });
-    return '<div class="exposure-chips" id="researches-confidence-chips">' + order.map(function(key) {
-      return '<button type="button" class="exposure-chip' + (state.confidence === key ? ' active' : '') + '" data-confidence="' + key + '">' + escapeHtml(labels[key]) + '</button>';
-    }).join('') + '</div>';
+    return order.map(function(key) {
+      return '<option value="' + key + '"' + (state.confidence === key ? ' selected' : '') + '>' + escapeHtml(labels[key]) + '</option>';
+    }).join('');
   }
+
+  /* Сброс показываем только когда фильтр-селект ушёл от «Все …»: иначе кнопка
+     появлялась бы при каждом символе в поиске и дёргала строку. */
+  function filtersActive() { return state.category !== 'all' || state.confidence !== 'all'; }
+
+  /* Значение фильтра видно прямо в селекте, поэтому активный помечаем классом,
+     а не отдельным «выбранным» чипом. */
+  function filterSelectClass(active) { return 'lab-input res-select' + (active ? ' is-filtered' : ''); }
 
   function renderList(container) {
     container._labHeroOverride = null;
@@ -409,24 +421,26 @@ const LoadResearches = (function() {
       return '<option value="' + key + '"' + (state.sort === key ? ' selected' : '') + '>' + sortLabels[key] + '</option>';
     }).join('');
 
-    container.innerHTML = '<div class="res-toolbar">' +
-      '<div class="res-toolbar-row">' +
-        '<input id="researches-search" class="lab-input res-search" type="search" placeholder="Поиск по делам…" aria-label="Поиск по делам" value="' + escapeHtml(state.query) + '">' +
-        '<select id="researches-category" class="lab-input res-select" aria-label="Категория"><option value="all">Все категории</option>' + options + '</select>' +
-        '<button type="button" class="lab-btn lab-btn-primary res-new-btn" id="researches-new-btn"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Дело</button>' +
-      '</div>' +
-      '<div class="res-toolbar-row res-toolbar-row--secondary">' +
-        renderConfidenceChips() +
-        '<div class="res-toolbar-right">' +
-          '<span class="research-meta"><strong>' + filtered.length + ' из ' + items.length + '</strong></span>' +
+    // Одна строка: поиск → селекты фильтров (категория, статус) → счётчик,
+    // сортировка, вид и «Дело» справа. Статусы достоверности переехали из чипов
+    // в селект: пять чипов растягивали панель на второй этаж (§4.7).
+    container.innerHTML = '<div class="lab-toolbar" role="search" aria-label="Управление исследованиями">' +
+        '<input id="researches-search" class="lab-input lab-toolbar-search" type="search" placeholder="Поиск по делам…" aria-label="Поиск по делам" value="' + escapeHtml(state.query) + '">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Фильтры каталога">' +
+        '<select id="researches-category" class="' + filterSelectClass(state.category !== 'all') + '" aria-label="Категория"><option value="all">Все категории</option>' + options + '</select>' +
+        '<select id="researches-confidence" class="' + filterSelectClass(state.confidence !== 'all') + '" aria-label="Достоверность">' + renderConfidenceOptions() + '</select>' +
+        '<button type="button" class="lab-btn lab-btn-secondary res-reset-btn" id="researches-reset-filters" title="Сбросить фильтры" aria-label="Сбросить фильтры"' + (filtersActive() ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count research-meta"><strong>' + filtered.length + ' из ' + items.length + '</strong></span>' +
           '<select id="researches-sort" class="lab-input res-select res-select--sort" aria-label="Сортировка">' + sortOptions + '</select>' +
-          '<div class="res-view-toggle" role="group" aria-label="Вид каталога">' +
+          '<div class="lab-toolbar-segment" role="group" aria-label="Вид каталога">' +
             '<button type="button" class="res-view-btn' + (state.view === 'cards' ? ' active' : '') + '" data-view="cards" aria-label="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
             '<button type="button" class="res-view-btn' + (state.view === 'list' ? ' active' : '') + '" data-view="list" aria-label="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
           '</div>' +
+          '<button type="button" class="lab-btn lab-btn-primary res-new-btn lab-toolbar-btn" id="researches-new-btn"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Дело</button>' +
         '</div>' +
       '</div>' +
-    '</div>' +
     '<div id="researches-results">' + renderResults(filtered) + '</div>';
 
     bindListEvents(container);
@@ -438,9 +452,18 @@ const LoadResearches = (function() {
     var results = document.getElementById('researches-results');
     var meta = container.querySelector('.research-meta strong');
     var newBtn = document.getElementById('researches-new-btn');
-    var chipsWrap = document.getElementById('researches-confidence-chips');
+    var confidence = document.getElementById('researches-confidence');
+    var resetFilters = document.getElementById('researches-reset-filters');
     var sortSelect = document.getElementById('researches-sort');
-    var viewToggle = container.querySelector('.res-view-toggle');
+    var viewToggle = container.querySelector('.lab-toolbar-segment');
+
+    /* Подсветка фильтр-селектов и видимость «Сбросить» меняются на месте:
+       полный перерендер сбрасывал бы фокус после каждого выбора в списке. */
+    function syncFilterControls() {
+      if (category) category.classList.toggle('is-filtered', state.category !== 'all');
+      if (confidence) confidence.classList.toggle('is-filtered', state.confidence !== 'all');
+      if (resetFilters) resetFilters.hidden = !filtersActive();
+    }
 
     function update() {
       state.query = search.value || '';
@@ -448,6 +471,7 @@ const LoadResearches = (function() {
       var list = getFiltered();
       if (meta) meta.textContent = list.length + ' из ' + items.length;
       results.innerHTML = renderResults(list);
+      syncFilterControls();
       updateHash();
     }
 
@@ -488,12 +512,15 @@ const LoadResearches = (function() {
       state.view = btn.getAttribute('data-view');
       refreshAll();
     });
-    if (chipsWrap) chipsWrap.addEventListener('click', function(e) {
-      var btn = e.target.closest('[data-confidence]');
-      if (!btn) return;
-      state.confidence = btn.getAttribute('data-confidence');
-      chipsWrap.querySelectorAll('.exposure-chip').forEach(function(c) { c.classList.remove('active'); });
-      btn.classList.add('active');
+    if (confidence) confidence.addEventListener('change', function() {
+      state.confidence = this.value;
+      update();
+    });
+    if (resetFilters) resetFilters.addEventListener('click', function() {
+      state.category = 'all';
+      state.confidence = 'all';
+      if (category) category.value = 'all';
+      if (confidence) confidence.value = 'all';
       update();
     });
   }
