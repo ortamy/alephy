@@ -1,0 +1,6 @@
+#!/bin/sh
+# Гейт перед коммитом проекта «Алефи».
+# Включение: git config core.hooksPath .githooks
+# Обход при необходимости: git commit --no-verify (осознанно, не по привычке).
+set -e
+exec python "$(git rev-parse --show-toplevel)/tools/check-commit.py"

@@ -67,6 +67,7 @@ reports/STATS_*.md
 **/test-results/
 **/playwright-report/
 **/smoke-*.txt
+**/tests/screenshots/
 
 # Бэкапы редактора (метки оставляли .bak в js/ — ломали сборку и кодировку)
 *.bak

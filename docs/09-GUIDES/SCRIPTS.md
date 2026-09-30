@@ -122,6 +122,28 @@ python products/agents/server.py
 python -m unittest discover -s products/agents/tests -p "test_*.py"
 ```
 
+## Гейт перед коммитом
+
+Единая команда вместо списка проверок в голове агента (`docs/decisions.md`, ADR-005):
+
+```bash
+python tools/check-commit.py                     # проверка индекса
+python tools/check-commit.py -m "feat(lab): x"   # с проверкой сообщения коммита
+```
+
+Блокирует коммит: нарушение конвенции сообщения (`.clinerules` §6), секреты в
+добавленных строках, расхождение `build/` с исходниками Research Lab, падение
+`check-docs.py` при затронутом `docs/`. Предупреждает: `console.log`,
+`debugger`, `TODO/FIXME`.
+
+Автозапуск (необязательно):
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Обход осознанный: `git commit --no-verify`.
+
 ## Документационная проверка
 
 В текущем checkout нет рабочего каталога `tools/checkers/`. Команды из исторической документации нельзя использовать как действующие.
