@@ -239,22 +239,25 @@ const Timeline = (function() {
       var era = ERAS[tl.era] ? tl.era : 'concept';
       eraCounts[era] = (eraCounts[era] || 0) + 1;
     });
-    var chips = '<button class="tl-filter-chip' + (catalogState.era === 'all' ? ' active' : '') + '" data-filter="all" role="tab" aria-selected="' + (catalogState.era === 'all') + '">Все<span class="chip-count">' + timelines.length + '</span></button>' +
+    // Фильтр эр — выпадающий список: отдельный ряд чипов не помещался
+    // в одну строку панели, а счётчики смотрятся в подписи пункта.
+    var eraOptions = '<option value="all"' + (catalogState.era === 'all' ? ' selected' : '') + '>Все эры · ' + timelines.length + '</option>' +
       Object.keys(ERAS).filter(function(era) { return eraCounts[era]; }).map(function(era) {
-        var active = catalogState.era === era;
-        return '<button class="tl-filter-chip' + (active ? ' active' : '') + '" data-filter="' + era + '" role="tab" aria-selected="' + active + '">' + ERAS[era] +
-          '<span class="chip-count">' + eraCounts[era] + '</span></button>';
+        return '<option value="' + era + '"' + (catalogState.era === era ? ' selected' : '') + '>' + ERAS[era] + ' · ' + eraCounts[era] + '</option>';
       }).join('');
     var sortOptions = Object.keys(SORT_LABELS).map(function(key) {
       return '<option value="' + key + '"' + (catalogState.sort === key ? ' selected' : '') + '>' + SORT_LABELS[key] + '</option>';
     }).join('');
-    // Одна плашка: поиск+сортировка слева, чипы эр в горизонтальной
-    // прокрутке, счётчик справа. Чипы не переносятся: их число не
-    // фиксировано, а перенос ломал бы высоту панели при каждой эре.
+    // Один ряд: поиск (order:1, слева) → группа селектов (order:2) →
+    // счётчик (order:3). Сортировка как прямая наследница панели получает
+    // order:0 и переставлялась бы влево от поиска — потому оба селекта
+    // живут в .lab-toolbar-group, а не рядом с input.
     return '<div class="lab-toolbar" role="search" aria-label="Управление лентами">' +
         '<input class="lab-input tl-search lab-toolbar-search" id="tl-catalog-search" type="search" placeholder="Поиск по лентам и событиям…" aria-label="Поиск по таймлайнам" value="' + escapeHtml(catalogState.query) + '">' +
-        '<select class="lab-input tl-select" id="tl-catalog-sort" aria-label="Сортировка лент">' + sortOptions + '</select>' +
-        '<div class="lab-toolbar-group" role="tablist" aria-label="Фильтры по эрам">' + chips + '</div>' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Фильтр и сортировка лент">' +
+          '<select class="lab-input lab-toolbar-select' + (catalogState.era !== 'all' ? ' is-filtered' : '') + '" id="tl-catalog-era" aria-label="Фильтр по эрам">' + eraOptions + '</select>' +
+          '<select class="lab-input lab-toolbar-select tl-select" id="tl-catalog-sort" aria-label="Сортировка лент">' + sortOptions + '</select>' +
+        '</div>' +
         '<div class="lab-toolbar-actions"><span class="lab-toolbar-count tl-count" aria-live="polite"></span></div>' +
       '</div>';
   }
@@ -339,17 +342,13 @@ const Timeline = (function() {
       catalogState.sort = sort.value;
       renderGrid(container);
     });
-    container.querySelectorAll('.tl-filter-chip').forEach(function(chip) {
-      chip.addEventListener('click', function() {
-        container.querySelectorAll('.tl-filter-chip').forEach(function(c) {
-          c.classList.remove('active');
-          c.setAttribute('aria-selected', 'false');
-        });
-        chip.classList.add('active');
-        chip.setAttribute('aria-selected', 'true');
-        catalogState.era = chip.getAttribute('data-filter');
-        renderGrid(container);
-      });
+    var era = container.querySelector('#tl-catalog-era');
+    if (era) era.addEventListener('change', function() {
+      catalogState.era = era.value;
+      // Золотая рамка — фильтр включён: значение и так видно в поле,
+      // но без отладки легко забыть, почему список укоротился.
+      era.classList.toggle('is-filtered', catalogState.era !== 'all');
+      renderGrid(container);
     });
   }
 

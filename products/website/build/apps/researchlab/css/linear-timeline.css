@@ -1,63 +1,8 @@
 /* =============================================
    css/linear-timeline.css — LINEAR ROADMAP LAYER
    Подключается ПОСЛЕ redesign.css и timeline.css.
-   Компоненты: filter chips, status dots.
+   Компоненты: status dots, карточки ленты.
    ============================================= */
-
-/* ===== FILTER CHIPS: сегментный фильтр ===== */
-.tl-filters {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: var(--space-4);
-  flex-wrap: wrap;
-}
-
-.tl-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 28px;
-  padding: 4px 12px;
-  font-family: var(--font-ui);
-  font-size: var(--ui-12);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--text-secondary);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: color var(--motion-base), background var(--motion-base), border-color var(--motion-base);
-  white-space: nowrap;
-}
-
-.tl-filter-chip:hover {
-  color: var(--text-primary);
-  background: var(--bg-secondary);
-}
-
-.tl-filter-chip.active {
-  color: var(--accent-gold);
-  background: var(--bg-secondary);
-  border-color: var(--border);
-}
-
-.tl-filter-chip .chip-count {
-  font-size: var(--ui-10);
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--bg-tertiary);
-  padding: 1px 5px;
-  border-radius: 8px;
-  min-width: 18px;
-  text-align: center;
-}
-
-.tl-filter-chip.active .chip-count {
-  color: var(--accent-gold);
-  background: rgba(212, 175, 55, 0.1);
-}
 
 /* ===== STATUS DOTS: цветовые индикаторы ===== */
 .tl-status {
@@ -98,29 +43,9 @@
 .tl-meta-line .meta-sep { color: var(--border); font-weight: 400; }
 
 /* ===== DARK THEME ===== */
-[data-theme="dark"] .tl-filter-chip:hover { background: var(--bg-tertiary, #3a3228); }
-
-[data-theme="dark"] .tl-filter-chip.active {
-  background: var(--bg-tertiary, #3a3228);
-  border-color: var(--border-dark, #3a2a1a);
-}
-
-[data-theme="dark"] .tl-filter-chip .chip-count { background: var(--bg-secondary, #1a1410); }
-
 [data-theme="dark"] .tl-detail-event:hover { background: var(--bg-tertiary, #3a3228); }
 [data-theme="dark"] .tl-event-action-btn { background: var(--bg-card, #2a2218); }
 [data-theme="dark"] .tl-event-action-btn:hover { background: var(--bg-tertiary, #3a3228); }
-
-/* ===== MOBILE ===== */
-@media (max-width: 767px) {
-  .tl-filters {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-  .tl-filters::-webkit-scrollbar { display: none; }
-}
 
 /* ===== INLINE ACTIONS: действия событий ===== */
 .tl-detail-event {

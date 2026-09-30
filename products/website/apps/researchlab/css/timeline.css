@@ -611,10 +611,6 @@
     padding: 28px var(--space-5) var(--space-6);
   }
 
-  .tl-select {
-    width: 100%;
-  }
-
   .tl-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
