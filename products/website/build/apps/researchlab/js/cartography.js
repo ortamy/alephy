@@ -245,6 +245,11 @@ const Cartography = (function() {
   }
 
   function openThemeMap(themeId, openMap) {
+    // Новая тема — новая карта: прошлый масштаб и выбор относятся к другой
+    // карте и в новой были бы ложной подсказкой.
+    mapZoom = 1;
+    mapPan = { x: 0, y: 0 };
+    mapSelection = null;
     if (openMap) {
       mapView = 'states';
       return;
@@ -616,6 +621,26 @@ const Cartography = (function() {
   // к темам» под заголовком карты была вторым способом сделать то же.
   function mapToolbarMarkup() {
     return '<div class="lab-toolbar" role="search" aria-label="Управление картой">' +
+      '<input type="search" class="lab-input lab-toolbar-search" id="cartography-map-search" autocomplete="off" placeholder="Поиск по объектам карты…" aria-label="Поиск по объектам карты" value="' + escapeHtml(countryQuery) + '">' +
+      '<div class="lab-toolbar-group" role="group" aria-label="Масштаб карты">' +
+        '<div class="lab-toolbar-zoom">' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="cartography-zoom-out" title="Уменьшить масштаб" aria-label="Уменьшить масштаб"><i data-lucide="minus" class="lab-icon" aria-hidden="true"></i></button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="cartography-zoom-in" title="Увеличить масштаб" aria-label="Увеличить масштаб"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i></button>' +
+        '</div>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-zoom-reset" title="Сбросить масштаб и сдвиг"><i data-lucide="maximize" class="lab-icon" aria-hidden="true"></i>Сбросить</button>' +
+      '</div>' +
+      '<div class="lab-toolbar-actions">' +
+        '<span class="lab-toolbar-count" aria-live="polite"><strong>' + mapListCount() + '</strong> из ' + mapObjectTotal() + '</span>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-catalog-link" title="Вернуться к темам карт"><i data-lucide="layout-grid" class="lab-icon" aria-hidden="true"></i>Темы</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+
+
+  // Заголовки ячеек и их подсказки зависят от темы карты: у карты
+  // состояний это срез по восьми состояниям, у двух исследовательских
+  // карт — их собственные счётчики.
   function mapPageMeta() {
     if (mapMode() === 'gender') return { title: 'Эшет хаиль и Иш хаиль', slice: 'Зоны образа', list: 'Страны по зонам', hint: 'gender-matrix.json' };
     if (mapMode() === 'obelisks') return { title: 'Обелиски', slice: 'Реестр городов', list: 'Города', hint: 'рабочая выборка, не полный каталог' };
@@ -638,10 +663,33 @@ const Cartography = (function() {
     refreshIcons();
   }
 
+  // Выделение синхронно во всех трёх входах: контур на карте, строка
+  // списка и маркер обелиска. Ключ один — разрешённое имя объекта,
+  // потому что часть стран не имеет пути в SVG.
+  function selectionKey() {
+    if (!mapSelection) return '';
+    if (mapSelection.kind === 'obelisk') return 'obelisk:' + mapSelection.index;
+    if (mapSelection.kind === 'country') {
+      var id = mapSelection.id;
+      return 'country:' + (mapSelection.name || (id ? (MAP_INFO[id] || MAP_COUNTRY_NAMES[id] || [''])[0] : ''));
+    }
+    return '';
+  }
+
   function markSelectedOnMap(container) {
-    var id = mapSelection && mapSelection.kind === 'country' ? mapSelection.id : '';
+    var key = selectionKey();
+    var countryId = key.indexOf('country:') === 0 ? (mapSelection.id || '') : '';
     container.querySelectorAll('.world-country').forEach(function(country) {
-      country.classList.toggle('is-selected', Boolean(id) && country.getAttribute('data-country-id') === id);
+      country.classList.toggle('is-selected', Boolean(countryId) && country.getAttribute('data-country-id') === countryId);
+    });
+    container.querySelectorAll('.cmb-row, .cmb-chip').forEach(function(row) {
+      var own = row.hasAttribute('data-obelisk-index')
+        ? 'obelisk:' + row.getAttribute('data-obelisk-index')
+        : 'country:' + (row.getAttribute('data-country-name') || '');
+      row.classList.toggle('is-selected', own === key);
+    });
+    container.querySelectorAll('.obelisk-map-marker').forEach(function(marker) {
+      marker.classList.toggle('is-selected', 'obelisk:' + marker.getAttribute('data-obelisk-index') === key);
     });
   }
 
@@ -662,21 +710,35 @@ const Cartography = (function() {
     if (viewport) viewport.setAttribute('transform', 'translate(' + mapPan.x + ' ' + mapPan.y + ') scale(' + mapZoom + ')');
   }
 
+  // Масштаб и колесом, и кнопками — точка под курсором остаётся на месте,
+  // иначе карта «уезжала» из-под пользователя при каждом шаге.
+  const MAP_VIEW_W = 950;
+  const MAP_VIEW_H = 620;
+  const ZOOM_MIN = 1;
+  const ZOOM_MAX = 4;
 
-      '<input type="search" class="lab-input lab-toolbar-search" id="cartography-map-search" autocomplete="off" placeholder="Поиск по объектам карты…" aria-label="Поиск по объектам карты" value="' + escapeHtml(countryQuery) + '">' +
-      '<div class="lab-toolbar-group" role="group" aria-label="Масштаб карты">' +
-        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-zoom-out" title="Уменьшить масштаб" aria-label="Уменьшить масштаб"><i data-lucide="minus" class="lab-icon" aria-hidden="true"></i></button>' +
-        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-zoom-in" title="Увеличить масштаб" aria-label="Увеличить масштаб"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i></button>' +
-        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-zoom-reset" title="Сбросить масштаб и сдвиг"><i data-lucide="maximize" class="lab-icon" aria-hidden="true"></i>Сбросить</button>' +
-      '</div>' +
-      '<div class="lab-toolbar-actions">' +
-        '<span class="lab-toolbar-count" aria-live="polite"><strong>' + mapListCount() + '</strong> из ' + mapObjectTotal() + '</span>' +
-        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-catalog-link" title="Вернуться к темам карт"><i data-lucide="layout-grid" class="lab-icon" aria-hidden="true"></i>Темы</button>' +
-      '</div>' +
-    '</div>';
+  function zoomMap(container, factor, clientX, clientY) {
+    var svg = container.querySelector('.cartography-world-svg');
+    var next = Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, mapZoom * factor)) * 100) / 100;
+    if (next === mapZoom) return;
+    if (svg && typeof clientX === 'number') {
+      var rect = svg.getBoundingClientRect();
+      var px = (clientX - rect.left) * MAP_VIEW_W / rect.width;
+      var py = (clientY - rect.top) * MAP_VIEW_H / rect.height;
+      var ratio = next / mapZoom;
+      mapPan.x = px - (px - mapPan.x) * ratio;
+      mapPan.y = py - (py - mapPan.y) * ratio;
+    }
+    mapZoom = next;
+    if (mapZoom === ZOOM_MIN) mapPan = { x: 0, y: 0 };
+    applyViewport(container);
   }
 
-
+  function resetView(container) {
+    mapZoom = ZOOM_MIN;
+    mapPan = { x: 0, y: 0 };
+    applyViewport(container);
+  }
 
   // Иконки тем — из lucide, как в паспорте агента. Раньше здесь стояли
   // самописные мини-превью (miniVisualSvg): у них не было ни общего
@@ -895,9 +957,9 @@ const Cartography = (function() {
     }
     // Масштаб применяется к transform напрямую: перерисовка страницы
     // на каждый шаг зума мигала бы и теряла фокус в поиске.
-    if (zoomIn) zoomIn.addEventListener('click', function() { mapZoom = Math.min(3, +(mapZoom + .25).toFixed(2)); applyViewport(container); });
-    if (zoomOut) zoomOut.addEventListener('click', function() { mapZoom = Math.max(1, +(mapZoom - .25).toFixed(2)); applyViewport(container); });
-    if (zoomReset) zoomReset.addEventListener('click', function() { mapZoom = 1; mapPan = { x: 0, y: 0 }; applyViewport(container); });
+    if (zoomIn) zoomIn.addEventListener('click', function() { zoomMap(container, 1.25); });
+    if (zoomOut) zoomOut.addEventListener('click', function() { zoomMap(container, .8); });
+    if (zoomReset) zoomReset.addEventListener('click', function() { resetView(container); });
     if (toCatalog) toCatalog.addEventListener('click', function() { mapView = false; mapSelection = null; renderPage(container); });
   }
 
@@ -909,6 +971,12 @@ const Cartography = (function() {
       svg.addEventListener('pointermove', function(event) { if (!mapDragging) return; var rect = svg.getBoundingClientRect(); mapPan.x += (event.clientX - mapDragStart.x) * 950 / rect.width; mapPan.y += (event.clientY - mapDragStart.y) * 620 / rect.height; mapDragStart = { x: event.clientX, y: event.clientY }; applyViewport(container); });
       svg.addEventListener('pointerup', function() { mapDragging = false; svg.classList.remove('is-dragging'); });
       svg.addEventListener('pointercancel', function() { mapDragging = false; svg.classList.remove('is-dragging'); });
+      // Колесо зумит карту, а не страницу: preventDefault обязателен, иначе
+      // жест прокручивал модуль и сбивал масштаб мимо ожидания.
+      svg.addEventListener('wheel', function(event) {
+        event.preventDefault();
+        zoomMap(container, event.deltaY < 0 ? 1.15 : 1 / 1.15, event.clientX, event.clientY);
+      }, { passive: false });
     }
 
     container.querySelectorAll('.world-country').forEach(function(country) {

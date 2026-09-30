@@ -106,6 +106,9 @@
   width: 18px;
   height: 18px;
 }
+/* utilities.css даёт .lab-icon margin-right: 10px — отступ до подписи. В
+   icon-only чипе он уводит иконку на 5px влево от центра. */
+.cartography-theme-chip .lab-icon { margin-right: 0; }
 
 /* Имя переносится, а не обрезается: «Современные государства» в 250px
    не помещались в одну строку и рвались многоточием. */
@@ -222,29 +225,79 @@
 }
 .cmb-num {
   flex: 0 0 auto;
-  color: var(--text-secondary);
+  color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: var(--ui-11);
+  font-size: var(--ui-10, 10px);
+  font-weight: 600;
   line-height: 1;
+  letter-spacing: var(--tracking-caps);
 }
-.cmb-cell-title {
+/* Селектор с префиксом .module: базовое `.module h2:not(:last-child)`
+   из layout.css (0,2,1) сильнее одиночного класса и раздувало лейбл
+   ячейки до серифа 2xl с коротким подчёркиванием — как в §5.2a. */
+.module .cmb-cell h2.cmb-cell-title {
+  flex: 0 1 auto;
+  min-width: 0;
   margin: 0;
+  padding: 0;
+  border: 0;
   color: var(--text-secondary);
   font-family: var(--font-ui);
   font-size: var(--ui-11);
   font-weight: 700;
-  letter-spacing: .08em;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-align: left;
   text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cmb-cell-hint {
+  flex: 0 1 auto;
+  min-width: 0;
   margin-left: auto;
-  color: var(--text-secondary);
-  font-family: var(--font-ui);
-  font-size: var(--ui-11);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-10, 10px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Масштаб карты: пара кнопок 28px в общей рамке сегмента (§4.4 compact),
+   40px у .lab-toolbar-reset были вдвое крупнее соседних контролов. */
+.cmb-page .lab-toolbar-zoom {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+}
+.cmb-page .lab-toolbar-zoom .lab-btn {
+  min-height: var(--control-h);
+  width: var(--control-h);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+  justify-content: center;
+}
+.cmb-page .lab-toolbar-zoom .lab-btn + .lab-btn { border-left: 1px solid var(--border-light); }
+.cmb-page .lab-toolbar-zoom .lab-btn:hover { background: var(--bg-tertiary, #efe6d4); color: var(--accent-gold); }
+.cmb-page .lab-toolbar-zoom .lab-btn:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: -2px; }
+.cmb-page .lab-toolbar-zoom .lab-icon { width: 14px; height: 14px; margin-right: 0; }
+
+/* Выбранная строка списка повторяет выделение на карте (§4.2 hover/focus). */
+.cmb-row.is-selected,
+.cmb-chip.is-selected {
+  border-color: var(--accent-gold);
+  background: rgb(var(--accent-gold-rgb) / .08);
+}
+.cmb-row.is-selected .cmb-row-name,
+.cmb-chip.is-selected { color: var(--accent-gold); }
 
 .cartography-map-canvas { position: relative; overflow: hidden; border-radius: 8px; }
 .cartography-world-svg { touch-action: none; cursor: grab; }
@@ -433,6 +486,9 @@
 .obelisk-map-marker circle { fill: #b85b4c; stroke: #fffdf8; stroke-width: 2; }
 .obelisk-map-marker path { stroke: #70462f; stroke-width: 3; stroke-linecap: round; }
 .obelisk-map-marker:hover circle, .obelisk-map-marker:focus circle { fill: var(--accent-gold); }
+/* Выбранный маркер — золотой ободок, чтобы паспорт и строка списка
+   читались как один выбор. */
+.obelisk-map-marker.is-selected circle { stroke: var(--accent-gold); stroke-width: 3; }
 
 .cartography-head {
   margin-bottom: 18px;
