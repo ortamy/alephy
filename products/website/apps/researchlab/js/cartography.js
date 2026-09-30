@@ -23,7 +23,6 @@ const Cartography = (function() {
   let dataPromise = null;
   let worldMapPromise = null;
   let worldMapMarkup = '';
-  let countryDescriptions = {};
   let countryStates = {};
   let stateMatrixCountries = [];
   // Слой каталога: карты и исследования лежат в одной сетке (MAP_THEMES),
@@ -36,6 +35,9 @@ const Cartography = (function() {
   let mapPan = { x: 0, y: 0 };
   let mapDragging = false;
   let mapDragStart = { x: 0, y: 0 };
+  // Выбранный объект карты: { kind: 'country', id } либо
+  // { kind: 'obelisk', index }. Один выбор на карту, список и паспорт.
+  let mapSelection = null;
   let genderMatrix = { zones: {} };
   let genderMapMarkup = '';
 
@@ -160,6 +162,16 @@ const Cartography = (function() {
     if (direct.indexOf(info[0]) !== -1) return 'direct';
     if (indirect.indexOf(info[0]) !== -1) return 'indirect';
     if ((zones.lost && zones.lost.countries || []).indexOf(info[0]) !== -1 || (zones.lost && zones.lost.continents || []).indexOf(info[1]) !== -1) return 'lost';
+    return 'unknown';
+  }
+
+  // Зона образа по названию: не у всех стран из матрицы полов есть
+  // путь на карте, а зона хранится именно по названию.
+  function genderZoneForName(name) {
+    var zones = (genderMatrix && genderMatrix.zones) || {};
+    if (((zones.direct && zones.direct.countries) || []).indexOf(name) !== -1) return 'direct';
+    if (((zones.indirect && zones.indirect.countries) || []).indexOf(name) !== -1) return 'indirect';
+    if (((zones.lost && zones.lost.countries) || []).indexOf(name) !== -1) return 'lost';
     return 'unknown';
   }
 
@@ -298,7 +310,6 @@ const Cartography = (function() {
         });
         registerCountryAliases(countryNames);
         matrix.forEach(function(country) {
-          countryDescriptions[country.name] = country.note || '';
           var states = country.states || {};
           countryStates[country.name] = Object.keys(states).sort(function(a, b) { return Number(states[b]) - Number(states[a]); })[0] || '';
         });
@@ -357,33 +368,315 @@ const Cartography = (function() {
     return catalog.layer !== 'all' || String(catalog.query || '').trim() !== '';
   }
 
-  function visibleCountries() {
+  // ===== ВНУТРЕННЯЯ СТРАНИЦА КАРТЫ =====
+  // Бенто по DESIGN-SYSTEM §5.2a: каркас 12 колонок, ячейки 01–04,
+  // hairline-рамки без теней. Кнопка «Назад к темам» больше не нужна:
+  // выход в каталог — компактная кнопка в панели, а не отдельная
+  // полоса под заголовком карты.
+  const STATE_META = [
+    { key: 'tohu', label: 'Тоху' }, { key: 'hoshekh', label: 'Хошех' },
+    { key: 'mizraim', label: 'Мицраим' }, { key: 'rakia', label: 'Ракиа' },
+    { key: 'shamaim', label: 'Шамаим' }, { key: 'midbar', label: 'Мидбар' },
+    { key: 'erets', label: 'Эрец' }, { key: 'eden', label: 'Эден' }
+  ];
+  const GENDER_ZONE_LABELS = {
+    direct: 'Образ сохранён напрямую',
+    indirect: 'Сохранён косвенно',
+    lost: 'Образ утрачен',
+    unknown: 'Нет данных'
+  };
+
+  function mapMode() {
+    return mapView === 'gender' ? 'gender' : mapView === 'obelisks' ? 'obelisks' : 'states';
+  }
+
+  function dominantStateOf(country) {
+    var states = (country && country.states) || {};
+    return Object.keys(states).sort(function(a, b) { return Number(states[b]) - Number(states[a]); })[0] || '';
+  }
+
+  function stateLabel(key) {
+    var found = STATE_META.filter(function(item) { return item.key === key; })[0];
+    return found ? found.label : 'Нет данных';
+  }
+
+  function countryByName(name) {
+    return stateMatrixCountries.filter(function(item) { return item.name === name; })[0] || null;
+  }
+
+  // Имя из карты приходит как id пути, из списка — как название
+  // государства. Обратный индекс связывает оба входа в один выбор.
+  function mapIdByName(name) {
+    var ids = Object.keys(MAP_INFO);
+    for (var i = 0; i < ids.length; i++) {
+      if (MAP_INFO[ids[i]][0] === name) return ids[i];
+    }
+    return '';
+  }
+
+  // Выбор приходит и из SVG (id пути), и из списка (название).
+  // Часть стран из modern-countries.json не имеет пути на карте,
+  // поэтому источник правды — название, а id восстанавливается.
+  function selectedCountry() {
+    if (!mapSelection || mapSelection.kind !== 'country') return null;
+    var name = mapSelection.name || '';
+    var id = mapSelection.id || (name ? mapIdByName(name) : '');
+    var info = id ? (MAP_INFO[id] || MAP_COUNTRY_NAMES[id]) : null;
+    if (!info && !name) return null;
+    var resolved = info ? info[0] : name;
+    return {
+      id: id,
+      name: resolved,
+      continent: (info && info[1]) || '',
+      data: countryByName(resolved)
+    };
+  }
+  function mapSvgMarkup() {
+    var mode = mapMode();
+    var mapMarkup = mode === 'gender' ? genderMapMarkup : worldMapMarkup;
+    var markers = mode === 'obelisks'
+      ? '<g class="obelisk-map-markers">' + OBELISKS.map(function(item, index) {
+        return '<g class="obelisk-map-marker" data-obelisk-index="' + index + '" tabindex="0" role="button" aria-label="' + escapeHtml(item.city + ': ' + item.name) + '"><circle cx="' + item.x + '" cy="' + item.y + '" r="7"></circle><path d="M' + item.x + ' ' + (item.y - 5) + 'v-13"></path></g>';
+      }).join('') + '</g>'
+      : '';
+    return '<div class="cartography-map-canvas"><svg class="cartography-world-svg" viewBox="0 0 950 620" role="img" aria-label="Интерактивная карта мира" focusable="false">' +
+      '<rect class="world-sea" x="0" y="0" width="950" height="620"></rect>' +
+      '<g class="world-map-viewport" transform="translate(' + mapPan.x + ' ' + mapPan.y + ') scale(' + mapZoom + ')"><g class="world-countries">' + mapMarkup + '</g>' + markers + '</g>' +
+      '</svg></div>';
+  }
+
+  function cellHead(num, title, hint) {
+    return '<header class="cmb-cell-head"><span class="cmb-num" aria-hidden="true">' + num + '</span>' +
+      '<h2 class="cmb-cell-title">' + escapeHtml(title) + '</h2>' +
+      (hint ? '<span class="cmb-cell-hint">' + escapeHtml(hint) + '</span>' : '') + '</header>';
+  }
+
+  function cmbField(label, value) {
+    return '<div class="cmb-field"><span>' + escapeHtml(label) + '</span><b>' + escapeHtml(value) + '</b></div>';
+  }
+
+  function cmbEmpty(text) {
+    return '<p class="cmb-empty">' + escapeHtml(text) + '</p>';
+  }
+
+  function cmbBar(ratio) {
+    return '<span class="cmb-bar"><span style="width:' + Math.max(0, Math.min(100, Math.round(ratio * 100))) + '%"></span></span>';
+  }
+  // Ячейка 02 — срез по теме карты. Для карты состояний это
+  // распределение доминирующих состояний, для исследовательских карт
+  // — их собственные счётчики: зоны образа и реестр городов.
+  function mapSliceMarkup() {
+    var mode = mapMode();
+    var zones = (genderMatrix && genderMatrix.zones) || {};
+
+    if (mode === 'gender') {
+      return ['direct', 'indirect', 'lost'].map(function(zone) {
+        var names = (zones[zone] && zones[zone].countries) || [];
+        return '<li class="cmb-slice"><span class="cmb-slice-name cmb-dot-' + zone + '">' + GENDER_ZONE_LABELS[zone] + '</span>' +
+          cmbBar(names.length ? 1 : 0) +
+          '<span class="cmb-slice-count">' + names.length + '</span></li>';
+      }).join('');
+    }
+
+    if (mode === 'obelisks') {
+      var cities = OBELISKS.map(function(item) { return item.city; })
+        .filter(function(city, index, all) { return all.indexOf(city) === index; });
+      return '<li class="cmb-slice"><span class="cmb-slice-name">Обелисков в реестре</span>' + cmbBar(1) + '<span class="cmb-slice-count">' + OBELISKS.length + '</span></li>' +
+        '<li class="cmb-slice"><span class="cmb-slice-name">Городов</span>' + cmbBar(1) + '<span class="cmb-slice-count">' + cities.length + '</span></li>';
+    }
+
+    var counts = {};
+    var max = 0;
+    stateMatrixCountries.forEach(function(country) {
+      var key = dominantStateOf(country);
+      if (!(key in counts)) counts[key] = 0;
+      counts[key]++;
+      if (counts[key] > max) max = counts[key];
+    });
+    return STATE_META.map(function(item) {
+      var count = counts[item.key] || 0;
+      return '<li class="cmb-slice"><span class="cmb-slice-name"><i class="world-state-' + item.key + '" aria-hidden="true"></i>' + item.label + '</span>' +
+        cmbBar(max ? count / max : 0) + '<span class="cmb-slice-count">' + count + '</span></li>';
+    }).join('');
+  }
+
+  // Ячейка 03 — паспорт выбранного объекта. Раньше те же данные
+  // открывались модалкой поверх карты; в бенто им место в ячейке,
+  // поэтому карта остаётся видимой при выборе.
+  function mapPassportMarkup() {
+    var mode = mapMode();
+
+    if (mode === 'obelisks') {
+      var item = mapSelection && mapSelection.kind === 'obelisk' ? OBELISKS[mapSelection.index] : null;
+      if (!item) return cmbEmpty('Нажмите на маркер обелиска — здесь появятся город и высота.');
+      return '<h3 class="cmb-name">' + escapeHtml(item.name) + '</h3>' +
+        cmbField('Город', item.city + ', ' + item.country) +
+        cmbField('Высота', item.height) +
+        '<p class="cmb-note">' + escapeHtml(item.note) + '</p>';
+    }
+
+    var country = selectedCountry();
+    if (!country) return cmbEmpty('Нажмите на страну или на строку списка — здесь появится её диагноз.');
+
+    if (mode === 'gender') {
+      return '<h3 class="cmb-name">' + escapeHtml(country.name) + '</h3>' +
+        cmbField('Материк', country.continent || 'Материк не указан') +
+        cmbField('Зона', GENDER_ZONE_LABELS[genderZoneForName(country.name)]) +
+        '<p class="cmb-note">Эшет хаиль — женщина-строитель, Иш хаиль — мужчина-созидатель. Карта фиксирует, сохранила ли среда палео-функцию образа.</p>';
+    }
+
+    var data = country.data;
+    var states = (data && data.states) || {};
+    var total = STATE_META.reduce(function(sum, item) { return sum + (Number(states[item.key]) || 0); }, 0);
+    return '<h3 class="cmb-name">' + escapeHtml(country.name) + '</h3>' +
+      cmbField('Материк', (data && data.continent) || country.continent || 'Материк не указан') +
+
+      cmbField('Доминирующее состояние', stateLabel(dominantStateOf(data))) +
+      '<p class="cmb-note">' + escapeHtml((data && (data.diagnosis || data.note)) || 'Данные по этой стране ещё не внесены.') + '</p>' +
+      (total ? '<ul class="cmb-states">' + STATE_META.map(function(meta) {
+        var value = Number(states[meta.key]) || 0;
+        return '<li class="cmb-slice"><span class="cmb-slice-name"><i class="world-state-' + meta.key + '" aria-hidden="true"></i>' + meta.label + '</span>' +
+          cmbBar(value / total) + '<span class="cmb-slice-count">' + Math.round(value / total * 100) + '%</span></li>';
+      }).join('') + '</ul>' : '');
+  }
+
+
+  // Ячейка 04 — список объектов темы. Поиск в панели фильтрует
+  // только её: карта и срез остаются на месте.
+  function mapListMarkup() {
+    var mode = mapMode();
     var query = String(countryQuery || '').trim().toLowerCase();
-    if (!query) return stateMatrixCountries;
-    return stateMatrixCountries.filter(function(country) {
-      return String(country.name || '').toLowerCase().indexOf(query) !== -1;
+
+    if (mode === 'obelisks') {
+      var marks = OBELISKS.filter(function(item) {
+        return !query || (item.name + ' ' + item.city + ' ' + item.country).toLowerCase().indexOf(query) !== -1;
+      });
+      if (!marks.length) return cmbEmpty('Объект не найден.');
+      return marks.map(function(item) {
+        return '<li><button type="button" class="cmb-row" data-obelisk-index="' + OBELISKS.indexOf(item) + '">' +
+          '<i class="cmb-dot-obelisk" aria-hidden="true"></i>' +
+          '<span class="cmb-row-name">' + escapeHtml(item.name) + '</span>' +
+          '<span class="cmb-row-meta">' + escapeHtml(item.city) + ' · ' + escapeHtml(item.height) + '</span>' +
+          '</button></li>';
+      }).join('');
+    }
+
+    if (mode === 'gender') {
+      var zones = (genderMatrix && genderMatrix.zones) || {};
+      var groups = ['direct', 'indirect', 'lost'].map(function(zone) {
+        var names = ((zones[zone] && zones[zone].countries) || []).filter(function(name) {
+          return !query || name.toLowerCase().indexOf(query) !== -1;
+        });
+        if (!names.length) return '';
+        return '<li class="cmb-group"><span class="cmb-group-name cmb-dot-' + zone + '">' + GENDER_ZONE_LABELS[zone] + '</span>' +
+          '<ul class="cmb-chips">' + names.map(function(name) {
+            return '<li><button type="button" class="cmb-chip" data-country-name="' + escapeHtml(name) + '">' + escapeHtml(name) + '</button></li>';
+          }).join('') + '</ul></li>';
+      }).join('');
+      return groups || cmbEmpty('Страна не найдена.');
+    }
+
+    // В списке только страны с диагнозом: modern-countries.json
+    // приносит ещё и материки, а строка без состояний ничего
+    // не сообщает и не открывает паспорт.
+    var list = stateMatrixCountries.filter(function(country) {
+      if (!dominantStateOf(country)) return false;
+      return !query || String(country.name || '').toLowerCase().indexOf(query) !== -1;
+    });
+    if (!list.length) return cmbEmpty('Страна не найдена.');
+    return list.map(function(country) {
+      return '<li><button type="button" class="cmb-row" data-country-name="' + escapeHtml(country.name) + '">' +
+        '<i class="world-state-' + escapeHtml(dominantStateOf(country)) + '" aria-hidden="true"></i>' +
+        '<span class="cmb-row-name">' + escapeHtml(country.name) + '</span>' +
+        '<span class="cmb-row-meta">' + escapeHtml(country.continent || 'Материк не указан') + '</span>' +
+        '</button></li>';
+    }).join('');
+  }
+
+  function mapListCount() {
+    var markup = mapListMarkup();
+    var rows = markup.match(/class="cmb-row"/g);
+    if (rows) return rows.length;
+    return (markup.match(/class="cmb-chip"/g) || []).length;
+  }
+
+  function mapObjectTotal() {
+    if (mapMode() === 'obelisks') return OBELISKS.length;
+    if (mapMode() === 'gender') {
+      var zones = (genderMatrix && genderMatrix.zones) || {};
+      return ['direct', 'indirect', 'lost'].reduce(function(sum, zone) {
+        return sum + ((zones[zone] && zones[zone].countries) || []).length;
+      }, 0);
+    }
+    return stateMatrixCountries.filter(function(country) { return Boolean(dominantStateOf(country)); }).length;
+  }
+
+  // Панель карты повторяет панель каталога (§4.7): поиск слева, масштаб
+  // в группе, счётчик и выход к темам справа. Отдельная кнопка «Назад
+  // к темам» под заголовком карты была вторым способом сделать то же.
+  function mapToolbarMarkup() {
+    return '<div class="lab-toolbar" role="search" aria-label="Управление картой">' +
+  function mapPageMeta() {
+    if (mapMode() === 'gender') return { title: 'Эшет хаиль и Иш хаиль', slice: 'Зоны образа', list: 'Страны по зонам', hint: 'gender-matrix.json' };
+    if (mapMode() === 'obelisks') return { title: 'Обелиски', slice: 'Реестр городов', list: 'Города', hint: 'рабочая выборка, не полный каталог' };
+    return { title: 'Карта мира', slice: 'Срез по состояниям', list: 'Страны', hint: 'state-matrix.json' };
+  }
+
+  function renderMapPage(container) {
+    var meta = mapPageMeta();
+    container.innerHTML = '<div class="cmb-page">' + mapToolbarMarkup() +
+      '<div class="cmb-bento">' +
+        '<section class="cmb-cell cmb-cell--map">' + cellHead('01', meta.title, 'тянуть · колесо') + mapSvgMarkup() + '</section>' +
+        '<section class="cmb-cell cmb-cell--slice">' + cellHead('02', meta.slice, meta.hint) + '<ul class="cmb-slices">' + mapSliceMarkup() + '</ul></section>' +
+        '<section class="cmb-cell cmb-cell--passport">' + cellHead('03', 'Паспорт объекта', 'выбор на карте или в списке') + '<div id="cmb-passport-body">' + mapPassportMarkup() + '</div></section>' +
+        '<section class="cmb-cell cmb-cell--list">' + cellHead('04', meta.list, '') + '<ul class="cmb-list" id="cmb-list-body">' + mapListMarkup() + '</ul></section>' +
+      '</div>' +
+    '</div>';
+    bindMapInteractions(container);
+    bindMapToolbar(container);
+    markSelectedOnMap(container);
+    refreshIcons();
+  }
+
+  function markSelectedOnMap(container) {
+    var id = mapSelection && mapSelection.kind === 'country' ? mapSelection.id : '';
+    container.querySelectorAll('.world-country').forEach(function(country) {
+      country.classList.toggle('is-selected', Boolean(id) && country.getAttribute('data-country-id') === id);
     });
   }
 
-  function renderWorldMap(fullscreen, gender) {
-    var obeliskMap = fullscreen && mapView === 'obelisks';
-    var mapMarkup = gender ? genderMapMarkup : worldMapMarkup;
-    var title = obeliskMap ? 'Обелиски' : (gender ? 'Эшет хаиль и Иш хаиль' : 'Карта мира');
-    var kicker = obeliskMap ? 'КАРТА ГОРОДСКИХ ДОМИНАНТ' : (gender ? 'КАРТА СОХРАНЁННЫХ ОБРАЗОВ' : 'RESEARCH LAB · КАРТА СОСТОЯНИЙ');
-    var legend = obeliskMap ? '<div class="cartography-map-legend" aria-label="Легенда обелисков"><span><i class="obelisk-map-marker" aria-hidden="true"></i>Город с крупным обелиском</span></div>' : (gender ? '<div class="gender-map-legend"><span class="gender-legend-direct">Образ сохранён напрямую</span><span class="gender-legend-indirect">Сохранён косвенно</span><span class="gender-legend-lost">Образ утрачен</span><span class="gender-legend-unknown">Нет данных</span></div>' : '<div class="cartography-map-legend" aria-label="Легенда состояний">' + [['tohu', 'Тоху'], ['hoshekh', 'Хошех'], ['mizraim', 'Мицраим'], ['rakia', 'Ракиа'], ['shamaim', 'Шамаим'], ['midbar', 'Мидбар'], ['erets', 'Эрец'], ['eden', 'Эден']].map(function(item) { return '<span><i class="world-state-' + item[0] + '" aria-hidden="true"></i>' + item[1] + '</span>'; }).join('') + '</div>');
-    var controls = gender ? '' : '<div class="cartography-map-controls" role="group" aria-label="Управление масштабом карты"><button type="button" class="cartography-map-zoom-in" title="Увеличить масштаб">+</button><button type="button" class="cartography-map-zoom-out" title="Уменьшить масштаб">−</button><button type="button" class="cartography-map-zoom-reset">Сбросить масштаб</button></div>';
-    var description = obeliskMap ? 'Маркеры показывают города из рабочего реестра. Нажмите на маркер, чтобы увидеть название и высоту.' : (gender ? 'Зоны показывают, где палео-функция образа сохранилась, сместилась или утрачена.' : 'Наведите на страну, чтобы открыть диагноз по state-matrix.json.');
-    var markers = obeliskMap ? '<g class="obelisk-map-markers">' + OBELISKS.map(function(item, index) { return '<g class="obelisk-map-marker" data-obelisk-index="' + index + '" tabindex="0" role="button" aria-label="' + escapeHtml(item.city + ': ' + item.name) + '"><circle cx="' + item.x + '" cy="' + item.y + '" r="7"></circle><path d="M' + item.x + ' ' + (item.y - 5) + 'v-13"></path></g>'; }).join('') + '</g>' : '';
-    return '<section class="cartography-world' + (fullscreen ? ' cartography-world-fullscreen' : '') + '" aria-labelledby="cartography-world-title">' +
-      '<div class="cartography-world-head"><div><span class="cartography-world-kicker">' + kicker + '</span><h2 id="cartography-world-title">' + title + '</h2><p>' + description + '</p></div>' +
-      (fullscreen ? '<button type="button" class="lab-btn lab-btn-secondary cartography-back">Назад к темам</button>' : '') + '</div>' +
-      '<div class="cartography-map-canvas"><svg class="cartography-world-svg" viewBox="0 0 950 620" role="img" aria-label="Интерактивная карта мира" focusable="false">' +
-        '<rect class="world-sea" x="0" y="0" width="950" height="620"></rect>' +
-        '<g class="world-map-viewport" transform="translate(' + mapPan.x + ' ' + mapPan.y + ') scale(' + mapZoom + ')"><g class="world-countries">' + mapMarkup + '</g>' + markers + '</g>' +
-      '</svg>' + controls + '</div>' +
-      legend + (obeliskMap ? '<div class="obelisk-registry"><h3>Страны и города в реестре</h3><div class="obelisk-registry-grid">' + OBELISKS.map(function(item) { return '<article><strong>' + escapeHtml(item.country) + '</strong><span>' + escapeHtml(item.city) + ' · ' + escapeHtml(item.height) + '</span></article>'; }).join('') + '</div><p class="obelisk-note">Рабочая выборка, не полный мировой каталог. Высота указана для самого обелиска или стелы; состав реестра можно расширять.</p></div>' : '') +
-    '</section>';
+  /* Паспорт и список обновляются точечно: перерисовка всей страницы
+     на каждом клике сбрасывала бы масштаб и сдвиг карты. */
+  function refreshMapPanels(container) {
+    var passport = container.querySelector('#cmb-passport-body');
+    if (passport) passport.innerHTML = mapPassportMarkup();
+    var list = container.querySelector('#cmb-list-body');
+    if (list) list.innerHTML = mapListMarkup();
+    var count = container.querySelector('.lab-toolbar-count strong');
+    if (count) count.textContent = String(mapListCount());
+    markSelectedOnMap(container);
   }
+
+  function applyViewport(container) {
+    var viewport = container.querySelector('.world-map-viewport');
+    if (viewport) viewport.setAttribute('transform', 'translate(' + mapPan.x + ' ' + mapPan.y + ') scale(' + mapZoom + ')');
+  }
+
+
+      '<input type="search" class="lab-input lab-toolbar-search" id="cartography-map-search" autocomplete="off" placeholder="Поиск по объектам карты…" aria-label="Поиск по объектам карты" value="' + escapeHtml(countryQuery) + '">' +
+      '<div class="lab-toolbar-group" role="group" aria-label="Масштаб карты">' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-zoom-out" title="Уменьшить масштаб" aria-label="Уменьшить масштаб"><i data-lucide="minus" class="lab-icon" aria-hidden="true"></i></button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-zoom-in" title="Увеличить масштаб" aria-label="Увеличить масштаб"><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i></button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-zoom-reset" title="Сбросить масштаб и сдвиг"><i data-lucide="maximize" class="lab-icon" aria-hidden="true"></i>Сбросить</button>' +
+      '</div>' +
+      '<div class="lab-toolbar-actions">' +
+        '<span class="lab-toolbar-count" aria-live="polite"><strong>' + mapListCount() + '</strong> из ' + mapObjectTotal() + '</span>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="cartography-catalog-link" title="Вернуться к темам карт"><i data-lucide="layout-grid" class="lab-icon" aria-hidden="true"></i>Темы</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+
 
   // Иконки тем — из lucide, как в паспорте агента. Раньше здесь стояли
   // самописные мини-превью (miniVisualSvg): у них не было ни общего
@@ -449,83 +742,6 @@ const Cartography = (function() {
     '</section>';
   }
 
-  function renderStateCard(country, index) {
-    var states = country.states || {};
-    var dominantState = Object.keys(states).sort(function(a, b) { return Number(states[b]) - Number(states[a]); })[0] || 'unknown';
-    var diagnosis = country.diagnosis || country.note || 'Диагноз уточняется.';
-    return '<article class="cartography-state-card" data-country-name="' + escapeHtml(country.name) + '" tabindex="0" role="button" aria-label="Открыть диагноз: ' + escapeHtml(country.name) + '" style="animation-delay:' + (index * 35) + 'ms">' +
-      '<div class="cartography-state-card-head"><span class="cartography-card-type">Карта состояний</span><span class="cartography-state-dot world-state-' + escapeHtml(dominantState) + '" aria-hidden="true"></span></div>' +
-      '<h2>' + escapeHtml(country.name) + '</h2><p>' + escapeHtml(diagnosis) + '</p></article>';
-  }
-
-  function renderStateMatrixPage(container) {
-    var shown = visibleCountries();
-    container.innerHTML = '<div class="cartography-state-page"><div class="cartography-map-shell">' + renderWorldMap(true, false) + '</div>' +
-      '<div class="lab-toolbar" role="search" aria-label="Управление списком стран">' +
-        '<input type="search" class="lab-input lab-toolbar-search" id="cartography-country-search" autocomplete="off" placeholder="Поиск страны…" aria-label="Поиск страны" value="' + escapeHtml(countryQuery) + '">' +
-        '<div class="lab-toolbar-group" role="group" aria-label="Фильтры каталога">' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-reset" id="cartography-country-reset" title="Сбросить поиск" aria-label="Сбросить поиск"' + (countryQuery ? '' : ' hidden') + '><i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i></button>' +
-        '</div>' +
-        '<div class="lab-toolbar-actions">' +
-          '<span class="lab-toolbar-count" aria-live="polite"><strong>' + shown.length + '</strong> из ' + stateMatrixCountries.length + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div id="cartography-country-body">' + countryCardsMarkup(shown) + '</div></div>';
-    bindMapInteractions(container);
-    var search = container.querySelector('#cartography-country-search');
-    var reset = container.querySelector('#cartography-country-reset');
-    if (search) {
-      search.addEventListener('input', function() {
-        countryQuery = search.value;
-        refreshCountryBody(container);
-      });
-    }
-    if (reset) {
-      reset.addEventListener('click', function() {
-        countryQuery = '';
-        renderStateMatrixPage(container);
-      });
-    }
-    bindCountryCards(container);
-    refreshIcons();
-  }
-
-  function countryCardsMarkup(countries) {
-    if (!countries.length) return '<div class="lab-alert lab-alert-info">Страна не найдена.</div>';
-    return '<div class="cartography-state-grid">' + countries.map(renderStateCard).join('') + '</div>';
-  }
-
-  /* Обновляется только сетка стран: карта сверху остаётся на месте,
-     поэтому ввод в поиске не перерисовывает SVG. */
-  function refreshCountryBody(container) {
-    var body = container.querySelector('#cartography-country-body');
-    if (!body) return renderStateMatrixPage(container);
-    var shown = visibleCountries();
-    body.innerHTML = countryCardsMarkup(shown);
-    var count = container.querySelector('.lab-toolbar-count strong');
-    if (count) count.textContent = String(shown.length);
-    var reset = container.querySelector('#cartography-country-reset');
-    if (reset) reset.hidden = !countryQuery;
-    bindCountryCards(container);
-  }
-
-  function bindCountryCards(container) {
-    container.querySelectorAll('.cartography-state-card').forEach(function(card) {
-      function openCard() {
-        var country = stateMatrixCountries.find(function(item) { return item.name === card.getAttribute('data-country-name'); });
-        if (country) showStateCountryDetail(country);
-      }
-      card.addEventListener('click', openCard);
-      card.addEventListener('keydown', function(event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openCard(); } });
-    });
-  }
-
-  function showStateCountryDetail(country) {
-    var diagnosis = country.diagnosis || country.note || 'Диагноз уточняется.';
-    var html = '<div class="cartography-detail cartography-map-detail"><div class="cartography-detail-section cartography-callout"><p><strong>Диагноз:</strong> ' + escapeHtml(diagnosis) + '</p><p>' + escapeHtml(country.note || '') + '</p></div></div>';
-    if (typeof LabModal !== 'undefined') LabModal.show(escapeHtml(country.name), html, '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>');
-  }
-
   // ===== РЕНДЕРИНГ СТРАНИЦЫ =====
   function renderPage(container) {
     if (!entries.length) {
@@ -534,12 +750,11 @@ const Cartography = (function() {
     }
 
     if (mapView) {
-      if (mapView === 'states') {
-        renderStateMatrixPage(container);
-        return;
-      }
-      container.innerHTML = '<div class="cartography-map-shell">' + renderWorldMap(true, mapView === 'gender') + '</div>';
-      bindMapInteractions(container);
+      // 'states' — тот же бенто, только список стран и счётчик
+      // считаются по матрице состояний; отдельная страница ради
+      // другой сетки карточек больше не нужна.
+      if (mapView === 'states') mapView = true;
+      renderMapPage(container);
       return;
     }
 
@@ -657,62 +872,69 @@ const Cartography = (function() {
     });
   }
 
+  // Выбор объекта идёт через mapSelection: и карта, и список пишут
+  // в одно состояние, поэтому паспорт в ячейке 03 всегда соответствует
+  // последнему клику в любом из двух входов.
+  function selectMapObject(container, selection) {
+    mapSelection = selection;
+    refreshMapPanels(container);
+  }
+
+  function bindMapToolbar(container) {
+    var search = container.querySelector('#cartography-map-search');
+    var zoomIn = container.querySelector('#cartography-zoom-in');
+    var zoomOut = container.querySelector('#cartography-zoom-out');
+    var zoomReset = container.querySelector('#cartography-zoom-reset');
+    var toCatalog = container.querySelector('#cartography-catalog-link');
+
+    if (search) {
+      search.addEventListener('input', function() {
+        countryQuery = search.value;
+        refreshMapPanels(container);
+      });
+    }
+    // Масштаб применяется к transform напрямую: перерисовка страницы
+    // на каждый шаг зума мигала бы и теряла фокус в поиске.
+    if (zoomIn) zoomIn.addEventListener('click', function() { mapZoom = Math.min(3, +(mapZoom + .25).toFixed(2)); applyViewport(container); });
+    if (zoomOut) zoomOut.addEventListener('click', function() { mapZoom = Math.max(1, +(mapZoom - .25).toFixed(2)); applyViewport(container); });
+    if (zoomReset) zoomReset.addEventListener('click', function() { mapZoom = 1; mapPan = { x: 0, y: 0 }; applyViewport(container); });
+    if (toCatalog) toCatalog.addEventListener('click', function() { mapView = false; mapSelection = null; renderPage(container); });
+  }
+
   function bindMapInteractions(container) {
-    var back = container.querySelector('.cartography-back');
-    if (back) back.addEventListener('click', function() { mapView = false; renderPage(container); });
     var svg = container.querySelector('.cartography-world-svg');
-    var zoomIn = container.querySelector('.cartography-map-zoom-in');
-    var zoomOut = container.querySelector('.cartography-map-zoom-out');
-    var zoomReset = container.querySelector('.cartography-map-zoom-reset');
-    function rerenderMap() { renderPage(container); }
-    if (zoomIn) zoomIn.addEventListener('click', function() { mapZoom = Math.min(3, +(mapZoom + .25).toFixed(2)); rerenderMap(); });
-    if (zoomOut) zoomOut.addEventListener('click', function() { mapZoom = Math.max(1, +(mapZoom - .25).toFixed(2)); rerenderMap(); });
-    if (zoomReset) zoomReset.addEventListener('click', function() { mapZoom = 1; mapPan = { x: 0, y: 0 }; rerenderMap(); });
-    if (svg && !container.querySelector('.cartography-map-shell .cartography-state-grid')) {
+
+    if (svg) {
       svg.addEventListener('pointerdown', function(event) { mapDragging = true; mapDragStart = { x: event.clientX, y: event.clientY }; svg.setPointerCapture(event.pointerId); svg.classList.add('is-dragging'); });
-      svg.addEventListener('pointermove', function(event) { if (!mapDragging) return; var rect = svg.getBoundingClientRect(); mapPan.x += (event.clientX - mapDragStart.x) * 950 / rect.width; mapPan.y += (event.clientY - mapDragStart.y) * 620 / rect.height; mapDragStart = { x: event.clientX, y: event.clientY }; var viewport = svg.querySelector('.world-map-viewport'); if (viewport) viewport.setAttribute('transform', 'translate(' + mapPan.x + ' ' + mapPan.y + ') scale(' + mapZoom + ')'); });
+      svg.addEventListener('pointermove', function(event) { if (!mapDragging) return; var rect = svg.getBoundingClientRect(); mapPan.x += (event.clientX - mapDragStart.x) * 950 / rect.width; mapPan.y += (event.clientY - mapDragStart.y) * 620 / rect.height; mapDragStart = { x: event.clientX, y: event.clientY }; applyViewport(container); });
       svg.addEventListener('pointerup', function() { mapDragging = false; svg.classList.remove('is-dragging'); });
       svg.addEventListener('pointercancel', function() { mapDragging = false; svg.classList.remove('is-dragging'); });
     }
+
     container.querySelectorAll('.world-country').forEach(function(country) {
-      country.addEventListener('click', function() { showCountryDetail(this.getAttribute('data-country-id')); });
-      country.addEventListener('keydown', function(event) {
-        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showCountryDetail(this.getAttribute('data-country-id')); }
-      });
+      var open = function() { selectMapObject(container, { kind: 'country', id: country.getAttribute('data-country-id') }); };
+      country.addEventListener('click', open);
+      country.addEventListener('keydown', function(event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
     });
     container.querySelectorAll('.obelisk-map-marker').forEach(function(marker) {
-      var open = function() { showObeliskDetail(OBELISKS[Number(marker.getAttribute('data-obelisk-index'))]); };
+      var open = function() { selectMapObject(container, { kind: 'obelisk', index: Number(marker.getAttribute('data-obelisk-index')) }); };
       marker.addEventListener('click', open);
       marker.addEventListener('keydown', function(event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
     });
-  }
 
-  function showObeliskDetail(item) {
-    if (!item || typeof LabModal === 'undefined') return;
-    var html = '<div class="cartography-detail cartography-map-detail"><div class="cartography-detail-section cartography-callout"><p><strong>Город:</strong> ' + escapeHtml(item.city + ', ' + item.country) + '</p><p><strong>Высота:</strong> ' + escapeHtml(item.height) + '</p><p>' + escapeHtml(item.note) + '</p></div></div>';
-    LabModal.show(escapeHtml(item.name), html, '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>');
-  }
-
-  function showCountryDetail(countryId) {
-    var info = MAP_INFO[countryId] || MAP_COUNTRY_NAMES[countryId] || [countryId.replace(/[-_]/g, ' '), 'Не определён'];
-    if (mapView === 'gender') {
-      var zone = genderZoneForCountry(countryId);
-      var labels = { direct: 'Образ сохранён напрямую', indirect: 'Образ сохранён косвенно', lost: 'Образ утрачен', unknown: 'Нет данных' };
-      var genderHtml = '<div class="cartography-detail cartography-map-detail"><div class="cartography-detail-section cartography-callout"><p><strong>Зона:</strong> ' + escapeHtml(labels[zone]) + '</p><p>Эшет хаиль — женщина-строитель; Иш хаиль — мужчина-созидатель. Карта фиксирует сохранённость функции в культурной среде.</p></div></div>';
-      if (typeof LabModal !== 'undefined') LabModal.show(escapeHtml(info[0]), genderHtml, '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>');
-      return;
-    }
-    var hasData = Boolean(countryStates[info[0]]);
-    var description = countryDescriptions[info[0]] || (hasData
-      ? 'Географическая точка в карте потока.'
-      : 'Данные уточняются. Поток в этой стране пока не диагностирован');
-    var diagnosis = hasData ? countryStates[info[0]] : 'Данные уточняются. Поток в этой стране пока не диагностирован';
-    var html = '<div class="cartography-detail cartography-map-detail"><div class="cartography-detail-section cartography-callout">' +
-      '<p><strong>Материк:</strong> ' + escapeHtml(info[1]) + '</p>' +
-      '<p><strong>Диагноз:</strong> ' + escapeHtml(diagnosis) + '</p>' +
-      '<p>' + escapeHtml(description) + '</p>' +
-      '</div></div>';
-    if (typeof LabModal !== 'undefined') LabModal.show(escapeHtml(info[0]), html, '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Закрыть</button>');
+    // Делегирование на контейнере: строки списка и чипы зон
+    // перерисовываются вместе с паспортом, отдельные слушатели
+    // на каждом элементе пришлось бы вешать заново.
+    container.addEventListener('click', function(event) {
+      var row = event.target.closest ? event.target.closest('.cmb-row, .cmb-chip') : null;
+      if (!row || !container.contains(row)) return;
+      if (row.hasAttribute('data-obelisk-index')) {
+        selectMapObject(container, { kind: 'obelisk', index: Number(row.getAttribute('data-obelisk-index')) });
+        return;
+      }
+      var name = row.getAttribute('data-country-name');
+      if (name) selectMapObject(container, { kind: 'country', name: name });
+    });
   }
 
   function renderCard(e, index) {
