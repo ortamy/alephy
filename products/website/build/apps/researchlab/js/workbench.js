@@ -19,6 +19,10 @@ const Workbench = (function() {
     return window.LabPluralWord ? LabPluralWord(n, 'знак', 'знака', 'знаков') : 'знаков';
   }
 
+  // Состояние хаба живёт между перерисовками: поиск и чип статуса не
+  // сбрасываются при обновлении списка.
+  var hubUiState = { query: '', status: 'all' };
+
   var STORE_KEY = 'alephy.workbench.projects';
   var AGENT_API_URL = 'http://127.0.0.1:5000';
 
@@ -66,8 +70,10 @@ const Workbench = (function() {
     form: {}      // форма запуска: fileText/fileChars/fileName
   };
 
+  // 'draft' — проект, созданный вручную и ещё не запущенный: у него нет
+  // результата, поэтому экран проекта его перенаправляет на запуск.
   function statusLabel(status) {
-    return { running: 'В работе', done: 'Готово', cancelled: 'Отменён', error: 'Ошибка' }[status] || status;
+    return { running: 'В работе', done: 'Готово', cancelled: 'Отменён', error: 'Ошибка', draft: 'Черновик' }[status] || status;
   }
 
   function formatDate(ts) {
@@ -113,70 +119,306 @@ const Workbench = (function() {
     else renderHub(container);
   }
 
-  // ===== ЭКРАН 1: ХАБ =====
-  // Каталог конвейеров уехал в самостоятельный модуль #conveyors: карточки
-  // там повторяют карточки агентов. Мастерская осталась местом проектов —
-  // того, что уже запущено, с продолжением и открытием результата.
+  // ===== ХАБ: ПРОЕКТЫ =====
+  // Каталог конвейеров живёт в #conveyors. Мастерская — место проектов:
+  // список строк слева (7 колонок), продолжение работы и сводка — в правой
+  // колонке (5), обёрнутой в .wb-rail. Тулбар повторяет оболочку агентов
+  // (.agent-controls-panel + .agent-toolbar-row), как тулбар словарей и
+  // Книгочтения: поиск и чипы слева, счётчик и действие справа.
   function renderHub(container) {
     container._labHeroOverride = null;
     var projects = loadProjects();
 
-    var rows = projects.map(projectRowHtml).join('');
-    var projectsHtml = projects.length
-      ? '<div class="wb-projects">' + rows + '</div>'
-      : '<div class="lab-alert lab-alert-info">Пока пусто. Запустите конвейер — проект появится здесь.</div>';
-
     container.innerHTML =
-      '<div class="wb-hub">' +
-        '<section class="wb-project-section" aria-labelledby="wb-projects-heading">' +
-          '<div class="wb-section-head">' +
-            '<h2 class="wb-section-title" id="wb-projects-heading">Мои проекты</h2>' +
-            (projects.length ? '<span class="wb-count">' + projects.length + '</span>' : '') +
+      '<section class="agent-controls-panel wb-controls-panel" aria-label="Управление проектами">' +
+        '<div class="agent-toolbar-row">' +
+          '<input type="search" class="lab-input agents-search" id="wb-search" value="' + esc(hubUiState.query) + '" ' +
+            'placeholder="Поиск по проектам…" aria-label="Поиск по проектам">' +
+          '<div class="wb-filter-chips agent-filter-chips" role="group" aria-label="Фильтр по статусу">' +
+            hubStatusChipsHtml(projects) +
           '</div>' +
-          projectsHtml +
-        '</section>' +
-        '<p class="wb-hub-hint">Каталог конвейеров — в разделе «Инструменты»: <a href="#conveyors">Конвейеры</a>.</p>' +
-      '</div>';
+          '<div class="agent-toolbar-actions">' +
+            '<span class="pipeline-count" id="wb-count" aria-live="polite"></span>' +
+            '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" data-wb-action="new">' +
+              '<i data-lucide="plus" aria-hidden="true"></i>Новый проект</button>' +
+          '</div>' +
+        '</div>' +
+      '</section>' +
+      '<section class="wb-bento" aria-label="Проекты мастерской">' +
+        '<div class="wb-cell wb-cell--projects">' +
+          '<div class="wb-cell-head"><span class="wb-num">01</span>' +
+            '<h2 class="wb-cell-title">Мои проекты</h2>' +
+            '<span class="wb-cell-hint" id="wb-list-hint"></span></div>' +
+          '<div id="wb-projects-body"></div>' +
+          '<form class="wb-new-form" id="wb-new-form" hidden>' +
+            '<div class="wb-new-row">' +
+              '<input type="text" class="lab-input" id="wb-new-name" placeholder="Название работы…" aria-label="Название проекта" maxlength="80">' +
+              '<select class="lab-input" id="wb-new-pipeline" aria-label="Конвейер проекта"></select>' +
+            '</div>' +
+            '<div class="wb-new-actions">' +
+              '<button type="submit" class="lab-btn lab-btn-primary lab-btn-sm">Создать</button>' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="cancel-new">Отмена</button>' +
+            '</div>' +
+            '<p class="wb-note">Проект создаётся сразу и открывает экран запуска выбранного конвейера.</p>' +
+          '</form>' +
+        '</div>' +
+        '<div class="wb-rail">' +
+          '<div class="wb-cell wb-cell--resume wb-cell--ink">' +
+            '<div class="wb-cell-head"><span class="wb-num">02</span>' +
+              '<h2 class="wb-cell-title">Продолжить работу</h2></div>' +
+            '<div class="wb-resume-head">' +
+              '<p class="wb-resume-title" id="wb-resume-title"></p>' +
+              '<p class="wb-resume-meta" id="wb-resume-meta"></p></div>' +
+            '<p class="wb-resume-when" id="wb-resume-when"></p>' +
+            '<div class="wb-progress" id="wb-progress" hidden>' +
+              '<span class="wb-progress-track"><span class="wb-progress-fill" id="wb-progress-fill"></span></span>' +
+              '<span class="wb-progress-value" id="wb-progress-value"></span></div>' +
+            '<button type="button" class="lab-btn lab-btn-primary" id="wb-resume-open">Открыть проект</button>' +
+            '<p class="wb-note" id="wb-resume-note">Проекты хранятся в этом браузере.</p>' +
+          '</div>' +
+          '<div class="wb-cell wb-cell--legend">' +
+            '<div class="wb-cell-head"><span class="wb-num">03</span>' +
+              '<h2 class="wb-cell-title">Сводка</h2></div>' +
+            '<div class="wb-summary" id="wb-summary"></div>' +
+            '<p class="wb-note">Результаты конвейеров живут в памяти до перезагрузки; в браузере остаются метаданные.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="wb-cell wb-cell--wide">' +
+          '<div class="wb-cell-head"><span class="wb-num">04</span>' +
+            '<h2 class="wb-cell-title">Откуда брать наработки</h2></div>' +
+          '<ul class="wb-sources">' +
+            wbSourceHtml('book-open', 'Книгочетение', 'Стих, слово, палео-форма', '#scripture-reader') +
+            wbSourceHtml('footprints', 'Палео-клуб', 'Записи исследований', '#club') +
+            wbSourceHtml('book-text', 'Словари', 'Термины и соответствия', '#dictionaries') +
+            wbSourceHtml('hammer', 'Конвейеры', 'Генераторы и сборки', '#conveyors') +
+          '</ul>' +
+        '</div>'
+      '</section>';
 
+    fillPipelineSelect();
+    renderHubList(container);
     bindHubActions(container);
+    if (window.LabIcons) LabIcons.sync();
+  }
+  function wbSourceHtml(icon, name, hint, hash) {
+    return '<li><a class="wb-source" href="' + hash + '">' +
+      '<i data-lucide="' + icon + '" aria-hidden="true"></i>' +
+      '<span class="wb-source-name">' + esc(name) + '</span>' +
+      '<span class="wb-source-hint">' + esc(hint) + '</span></a></li>';
+  }
+
+  // Чипы считают по всем проектам, а не по отфильтрованным: иначе цифры
+  // менялись бы вслед за выбором чипа и фильтр становился бы слепым.
+  function hubStatusChipsHtml(projects) {
+    var counts = { all: projects.length };
+    ['running', 'done', 'draft'].forEach(function(status) {
+      counts[status] = projects.filter(function(p) { return p.status === status; }).length;
+    });
+    var chips = [['all', 'Все']];
+    if (counts.running) chips.push(['running', 'В работе']);
+    if (counts.done) chips.push(['done', 'Готово']);
+    if (counts.draft) chips.push(['draft', 'Черновики']);
+    return chips.map(function(pair) {
+      var active = hubUiState.status === pair[0];
+      return '<button type="button" class="wb-chip' + (active ? ' is-active' : '') + '" ' +
+        'data-wb-status="' + pair[0] + '" aria-pressed="' + (active ? 'true' : 'false') + '">' +
+        esc(pair[1]) + '<span class="wb-chip-count">' + counts[pair[0]] + '</span></button>';
+    }).join('');
+  }
+
+  function fillPipelineSelect() {
+    var select = document.getElementById('wb-new-pipeline');
+    if (!select || !window.WorkbenchPipelines) return;
+    select.innerHTML = WorkbenchPipelines.list().map(function(pipeline) {
+      return '<option value="' + esc(pipeline.id) + '">' + esc(pipeline.title) + '</option>';
+    }).join('');
+  }
+
+  // Фильтр и поиск живут в состоянии хаба: список перерисовывается на
+  // месте, поэтому введённый запрос и фокус в поле не теряются.
+  function projectMatchesHub(meta) {
+    if (hubUiState.status !== 'all' && meta.status !== hubUiState.status) return false;
+    var query = hubUiState.query.trim().toLowerCase();
+    if (!query) return true;
+    var pipeline = window.WorkbenchPipelines ? WorkbenchPipelines.get(meta.pipelineId) : null;
+    return [meta.name, meta.pipelineId, pipeline ? pipeline.title : ''].join(' ')
+      .toLowerCase().indexOf(query) !== -1;
+  }
+
+  function renderHubList(container) {
+    var projects = loadProjects();
+    var shown = projects.filter(projectMatchesHub);
+    var body = document.getElementById('wb-projects-body');
+    var counter = document.getElementById('wb-count');
+    var hint = document.getElementById('wb-list-hint');
+    if (counter) counter.innerHTML = '<strong>' + shown.length + '</strong> из ' + projects.length;
+    if (hint) hint.textContent = shown.length === projects.length ? '' : 'фильтр';
+
+    if (body) {
+      body.innerHTML = shown.length
+        ? '<div class="wb-projects">' + shown.map(projectRowHtml).join('') + '</div>'
+        : hubEmptyHtml();
+    }
+    renderHubResume(projects);
+    renderHubSummary(projects);
+    if (window.LabIcons) LabIcons.sync();
+  }
+
+  // Пустое состояние §4.6 различает «проектов нет» и «под фильтр ничего не
+  // подошло»: во втором случае действие — сбросить фильтр, а не создать проект.
+  function hubEmptyHtml() {
+    var filtered = hubUiState.status !== 'all' || hubUiState.query.trim() !== '';
+    return '<div class="wb-empty">' +
+      '<span class="wb-empty-glyph"><i data-lucide="' + (filtered ? 'search-x' : 'folder-plus') + '" aria-hidden="true"></i></span>' +
+      '<p class="wb-empty-text">' + (filtered
+        ? 'По текущему фильтру проектов нет. Снимите запрос или верните статус «Все».'
+        : 'Проектов пока нет. Создайте первый — или запустите конвейер из раздела «Инструменты».') + '</p>' +
+      (filtered
+        ? '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="reset-filters">Сбросить фильтры</button>'
+        : '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" data-wb-action="new">Новый проект</button>') +
+      '</div>';
+  }
+  // Продолжить работу: сначала идут незаконченные проекты (черновик, запуск,
+  // ошибка), затем самый свежий готовый — иначе карточка показывала бы
+  // архивное вслед за живой работой.
+  function resumeCandidate(projects) {
+    var open = projects.filter(function(p) { return p.status !== 'done' && p.status !== 'cancelled'; });
+    return open.length ? open[0] : (projects[0] || null);
+  }
+
+  function renderHubResume(projects) {
+    var title = document.getElementById('wb-resume-title');
+    var meta = document.getElementById('wb-resume-meta');
+    var when = document.getElementById('wb-resume-when');
+    var note = document.getElementById('wb-resume-note');
+    var button = document.getElementById('wb-resume-open');
+    var wrap = document.getElementById('wb-progress');
+    if (!title || !button) return;
+
+    var target = resumeCandidate(projects);
+    if (!target) {
+      title.textContent = 'Работ пока нет';
+      if (meta) meta.textContent = '';
+      if (when) when.textContent = '';
+      if (note) note.textContent = 'Создайте проект — и здесь появятся прогресс и результат.';
+      button.textContent = 'Создать проект';
+      button.removeAttribute('data-runid');
+      if (wrap) wrap.hidden = true;
+      return;
+    }
+
+    var pipeline = window.WorkbenchPipelines ? WorkbenchPipelines.get(target.pipelineId) : null;
+    title.textContent = target.name;
+    if (meta) meta.textContent = statusLabel(target.status);
+    if (when) when.textContent = 'Обновлён ' + formatDate(target.updatedAt);
+    if (note) note.textContent = (pipeline ? pipeline.title : target.pipelineId) + ' · ' +
+      ((target.input && target.input.name) || 'вход не задан');
+    button.textContent = target.status === 'running' ? 'Продолжить запуск' : 'Открыть проект';
+    button.setAttribute('data-runid', target.runId);
+
+    var percent = target.progress ? target.progress.percent : (target.status === 'done' ? 100 : 0);
+    var fill = document.getElementById('wb-progress-fill');
+    var value = document.getElementById('wb-progress-value');
+    if (fill) fill.style.width = percent + '%';
+    if (value) value.textContent = percent + '%';
+    if (wrap) wrap.hidden = false;
+  }
+
+  function renderHubSummary(projects) {
+    var summary = document.getElementById('wb-summary');
+    if (!summary) return;
+    var rows = [
+      ['Всего проектов', projects.length],
+      ['В работе', projects.filter(function(p) { return p.status === 'running'; }).length],
+      ['Готово', projects.filter(function(p) { return p.status === 'done'; }).length],
+      ['Черновики', projects.filter(function(p) { return p.status === 'draft'; }).length]
+    ];
+    summary.innerHTML = rows.map(function(row) {
+      return '<div class="wb-summary-row"><span class="wb-summary-label">' + esc(row[0]) + '</span>' +
+        '<span class="wb-summary-value">' + row[1] + '</span></div>';
+    }).join('');
   }
 
   function projectRowHtml(meta) {
     var pipeline = window.WorkbenchPipelines ? WorkbenchPipelines.get(meta.pipelineId) : null;
     var pipelineTitle = pipeline ? pipeline.title : meta.pipelineId;
+    var iconName = meta.status === 'done' ? 'circle-check'
+      : meta.status === 'running' ? 'loader'
+      : meta.status === 'error' ? 'circle-alert' : 'file-pen';
     var actions = '';
-    if (meta.status === 'running') {
-      actions += '<a class="lab-btn lab-btn-primary lab-btn-sm" href="#workbench/run/' + esc(meta.pipelineId) + '?run=' + esc(meta.runId) + '">Продолжить</a>';
+    if (meta.status === 'running' || meta.status === 'draft') {
+      actions += '<a class="lab-btn lab-btn-primary lab-btn-sm" href="#workbench/run/' + esc(meta.pipelineId) +
+        '?run=' + esc(meta.runId) + '">' + (meta.status === 'draft' ? 'Запустить' : 'Продолжить') + '</a>';
     } else if (meta.status === 'done') {
       actions += '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench/project/' + esc(meta.runId) + '">Открыть</a>';
       if (runtime.results[meta.runId]) {
         actions += '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="export" data-runid="' + esc(meta.runId) + '">Экспорт</button>';
       }
     }
-    actions += '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="delete" data-runid="' + esc(meta.runId) + '">Удалить</button>';
+    actions += '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="delete" data-runid="' +
+      esc(meta.runId) + '" aria-label="Удалить проект"><i data-lucide="trash-2" aria-hidden="true"></i></button>';
 
     var percent = meta.progress ? meta.progress.percent : (meta.status === 'done' ? 100 : 0);
 
     return '' +
       '<article class="wb-project-row" data-runid="' + esc(meta.runId) + '">' +
+        '<span class="wb-project-icon"><i data-lucide="' + iconName + '" aria-hidden="true"></i></span>' +
         '<div class="wb-project-main">' +
           '<a class="wb-project-name" href="#workbench/project/' + esc(meta.runId) + '">' + esc(meta.name) + '</a>' +
-          '<div class="wb-project-meta">' + esc(pipelineTitle) + ' · обновлено ' + esc(formatDate(meta.updatedAt)) + '</div>' +
+          '<div class="wb-project-meta">' + esc(pipelineTitle) + ' · ' + esc(formatDate(meta.updatedAt)) + '</div>' +
         '</div>' +
-        '<div class="wb-project-status">' +
-          '<span class="wb-badge is-' + esc(meta.status) + '">' + esc(statusLabel(meta.status)) + '</span>' +
-          '<div class="wb-miniprogress" aria-hidden="true"><i style="width:' + percent + '%"></i></div>' +
-        '</div>' +
+        '<span class="wb-badge is-' + esc(meta.status) + '">' +
+          '<span class="wb-badge-dot" aria-hidden="true"></span>' + esc(statusLabel(meta.status)) + '</span>' +
+        '<div class="wb-miniprogress" role="img" aria-label="Готово на ' + percent + '%"><i style="width:' + percent + '%"></i></div>' +
         '<div class="wb-project-actions">' + actions + '</div>' +
       '</article>';
   }
-
   function bindHubActions(container) {
+    var search = document.getElementById('wb-search');
+    if (search) {
+      search.addEventListener('input', function() {
+        hubUiState.query = search.value;
+        renderHubList(container);
+      });
+    }
+
     container.addEventListener('click', function(event) {
+      var chip = event.target.closest('[data-wb-status]');
+      if (chip) {
+        hubUiState.status = chip.getAttribute('data-wb-status');
+        var chips = container.querySelector('.wb-filter-chips');
+        if (chips) chips.innerHTML = hubStatusChipsHtml(loadProjects());
+        renderHubList(container);
+        return;
+      }
+
+      var resume = event.target.closest('#wb-resume-open');
+      if (resume) {
+        var resumeId = resume.getAttribute('data-runid');
+        if (resumeId) {
+          if (window.LabRouter) LabRouter.navigate('workbench/project/' + resumeId);
+        } else {
+          toggleNewForm(container, true);
+        }
+        return;
+      }
+
       var target = event.target.closest('[data-wb-action]');
       if (!target) return;
+      var action = target.getAttribute('data-wb-action');
       var runId = target.getAttribute('data-runid');
-      if (target.getAttribute('data-wb-action') === 'delete') {
+
+      if (action === 'new') toggleNewForm(container, true);
+      else if (action === 'cancel-new') toggleNewForm(container, false);
+      else if (action === 'reset-filters') {
+        hubUiState.query = '';
+        hubUiState.status = 'all';
+        var input = document.getElementById('wb-search');
+        if (input) input.value = '';
+        var chips = container.querySelector('.wb-filter-chips');
+        if (chips) chips.innerHTML = hubStatusChipsHtml(loadProjects());
+        renderHubList(container);
+      } else if (action === 'delete') {
         if (window.confirm('Удалить проект? Метаданные будут стёрты.')) {
           removeProject(runId);
           delete runtime.results[runId];
@@ -184,10 +426,46 @@ const Workbench = (function() {
           delete runtime.live[runId];
           renderHub(container);
         }
-      } else if (target.getAttribute('data-wb-action') === 'export') {
+      } else if (action === 'export') {
         openExportModal(runId);
       }
     });
+
+    var form = document.getElementById('wb-new-form');
+    if (form) form.addEventListener('submit', function(event) {
+      event.preventDefault();
+      var nameInput = document.getElementById('wb-new-name');
+      var pipelineSelect = document.getElementById('wb-new-pipeline');
+      var name = ((nameInput && nameInput.value) || '').trim();
+      var pipelineId = pipelineSelect && pipelineSelect.value;
+      if (!name || !pipelineId) return;
+      // Проект появляется сразу в статусе «черновик»: он виден в списке
+      // и сразу открывает экран запуска, но не попадает в счётчик готовых.
+      var now = Date.now();
+      var runId = 'draft-' + now;
+      upsertProject({
+        runId: runId,
+        pipelineId: pipelineId,
+        name: name,
+        status: 'draft',
+        progress: { stepIndex: -1, percent: 0 },
+        input: { name: '', chars: 0 },
+        createdAt: now,
+        updatedAt: now
+      });
+      renderHub(container);
+      if (window.LabRouter) LabRouter.navigate('workbench/run/' + pipelineId + '?run=' + runId);
+    });
+  }
+
+  function toggleNewForm(container, open) {
+    var form = document.getElementById('wb-new-form');
+    if (!form) return;
+    form.hidden = !open;
+    if (open) {
+      var nameInput = document.getElementById('wb-new-name');
+      if (nameInput) nameInput.focus();
+    }
   }
 
   // ===== ЭКРАН 2: ЗАПУСК =====
@@ -206,8 +484,10 @@ const Workbench = (function() {
     var meta = resumeRunId ? getProject(resumeRunId) : null;
     if (resumeRunId && !meta) resumeRunId = null;
 
-    // Прерванный или завершённый запуск — показываем монитор вместо пустой формы.
-    if (resumeRunId && (meta.status !== 'running' || runtime.states[resumeRunId])) {
+    // Уже идущий или завершённый запуск — показываем монитор вместо пустой
+    // формы. Черновик (meta.status === 'draft') сюда не попадает: у него
+    // запуска ещё не было, и его экран — форма запуска.
+    if (resumeRunId && (meta.status === 'running' || runtime.states[resumeRunId])) {
       runtime.form = {};
       container.innerHTML = runMonitorHtml(pipeline, meta, resumeRunId);
       syncMonitor(resumeRunId);
@@ -288,9 +568,14 @@ const Workbench = (function() {
     var inputs = pipeline.inputs.map(inputFieldHtml).join('');
     var options = pipeline.options.map(optionFieldHtml).join('');
     var optionsBlock = options ? '<h3 class="wb-group-title">Опции</h3>' + options : '';
-    var heading = resumeRunId && meta
-      ? 'Продолжение запуска «' + esc(meta.name) + '» — проверьте вход и запустите заново (mock-движок).'
-      : '';
+    // Для черновика это первый запуск, а не продолжение: формулировка
+    // зависит от статуса, а не от самого факта, что runId известен.
+    var heading = '';
+    if (resumeRunId && meta) {
+      heading = meta.status === 'draft'
+        ? 'Первый запуск проекта «' + esc(meta.name) + '» — проверьте вход и запустите (mock-движок).'
+        : 'Продолжение запуска «' + esc(meta.name) + '» — проверьте вход и запустите заново (mock-движок).';
+    }
     return '' +
       '<div class="wb-run">' +
         (heading ? '<div class="lab-alert lab-alert-info">' + heading + '</div>' : '') +
@@ -688,6 +973,12 @@ const Workbench = (function() {
       container._labHeroOverride = null;
       container.innerHTML = '<div class="lab-alert lab-alert-error">Проект не найден в этом браузере.</div>' +
         '<p><a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench">К каталогу конвейеров</a></p>';
+      return;
+    }
+    // Черновик результата не имеет: клик по названию отправляет на запуск.
+    if (meta.status === 'draft') {
+      if (window.LabRouter) LabRouter.navigate('workbench/run/' + meta.pipelineId + '?run=' + runId);
+      else renderRun(container, meta.pipelineId, { run: runId });
       return;
     }
     var pipeline = window.WorkbenchPipelines ? WorkbenchPipelines.get(meta.pipelineId) : null;

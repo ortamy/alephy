@@ -1,11 +1,12 @@
 /* =============================================
    workbench.css — «Мастерская» (#workbench)
-   Проекты, раннер, результат. Токены lab.css.
+   Формы запуска, монитор прогресса, вьювер результата. Токены lab.css.
    Каталог конвейеров вынесен в #conveyors (css/components/dashboard.css).
+   Хаб проектов (bento, тулбар, строки) — в workbench-bento.css.
    Minimalist design — чистая типографика, компактные отступы.
    ============================================= */
 
-.wb-hub, #workbench {
+#workbench {
   width: 100%;
   max-width: var(--shell-page);
   min-width: 0;
@@ -14,8 +15,8 @@
 .wb-section { margin-bottom: var(--space-4); }
 .wb-section + .wb-section { margin-top: 0; }
 
-/* --- Секции --- */
-.wb-pipeline-section, .wb-project-section {
+/* --- Секции экранов запуска и просмотра --- */
+.wb-pipeline-section {
   background: var(--bg-card);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
@@ -27,65 +28,18 @@
   min-width: 0;
 }
 
-/* Каталог конвейеров живёт в #conveyors; здесь остаётся только подсказка
-   со ссылкой на него — чтобы пустой хаб объяснял, где искать конвейеры. */
-.wb-hub-hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); line-height: 1.5; }
-.wb-hub-hint a { color: var(--text-secondary); }
-
-.wb-pipeline-section .wb-section-head,
-.wb-project-section .wb-section-head {
-  margin-bottom: var(--space-3);
-}
-
-.wb-pipeline-section .wb-pipeline-grid {
-  gap: var(--space-3);
-  max-width: 100%;
-}
-
-.wb-project-section .wb-projects {
-  gap: var(--space-2);
-  max-width: 100%;
-}
-
 @media (max-width: 720px) {
-  .wb-pipeline-section, .wb-project-section {
+  .wb-pipeline-section {
     padding: var(--space-3);
     border-radius: var(--radius-sm);
   }
 }
 
-/* --- Заголовки --- */
-.wb-section-title { margin: 0; color: var(--text-primary); font-size: var(--text-xl); font-weight: 600; }
-.wb-section-sub { margin: var(--space-1) 0 var(--space-3); color: var(--text-muted); font-size: var(--text-sm); line-height: 1.5; }
-.wb-section-head { display: flex; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-3); }
-.wb-count { color: var(--text-muted); font-size: var(--text-sm); font-family: var(--font-mono); }
+/* --- Заголовки форм --- */
+.wb-group-title { color: var(--text-primary); font-size: var(--text-md); font-weight: 600; }
 
-/* --- Каталог конвейеров --- */
-.wb-pipeline-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr));
-  gap: var(--space-3);
-  min-width: 0;
-  max-width: 100%;
-}
-
-.wb-pipeline-card {
-  display: flex; flex-direction: column; gap: var(--space-2);
-  width: 100%; max-width: 100%; min-width: 0;
-  padding: var(--space-3);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-sizing: border-box;
-  align-self: start;
-  overflow-wrap: anywhere;
-  transition: border-color var(--motion-base);
-}
-.wb-pipeline-card:hover { border-color: var(--accent-gold); }
-
-.wb-pipeline-head { display: flex; align-items: center; gap: var(--space-2); min-width: 0; width: 100%; }
-
-/* Иконки — фиксированный размер, без вылезания */
+/* --- Каталог конвейеров уехал в #conveyors вместе с карточками. Здесь
+   осталась только иконка конвейера — вьювер-заглушка на экране проекта. --- */
 .wb-pipeline-icon {
   width: 24px; height: 24px;
   flex-shrink: 0;
@@ -93,72 +47,9 @@
   border-radius: var(--radius-xs);
 }
 
-.wb-pipeline-title { min-width: 0; margin: 0; font-size: var(--text-md); font-weight: 600; color: var(--text-primary); overflow-wrap: anywhere; }
-.wb-pipeline-desc { margin: 0; color: var(--text-secondary); font-size: var(--text-sm); line-height: 1.5; flex: 1; }
-.wb-tags { display: flex; flex-wrap: wrap; gap: var(--space-1); min-width: 0; }
-.wb-tag {
-  padding: 2px 8px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-pill);
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  line-height: 1.2;
-  white-space: nowrap;
-}
-.wb-pipeline-foot { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-top: auto; }
-.wb-steps-hint { color: var(--text-muted); font-size: var(--text-xs); }
-
-@media (max-width: 390px) {
-  .wb-pipeline-grid {
-    grid-template-columns: 1fr;
-    gap: var(--space-2);
-  }
-  .wb-pipeline-card { padding: var(--space-3); }
-  .wb-pipeline-title { font-size: var(--text-md); }
-  .wb-pipeline-desc { font-size: var(--text-sm); line-height: 1.4; }
-  .wb-tag { font-size: 11px; padding: 2px 6px; }
-  .wb-pipeline-foot .lab-btn { font-size: var(--text-sm); padding: var(--space-2) var(--space-3); }
-  .wb-steps-hint { font-size: 11px; }
-}
-
-@media (max-width: 720px) {
-  .wb-pipeline-foot {
-    align-items: stretch;
-    flex-direction: column;
-    gap: var(--space-2);
-    min-width: 0;
-  }
-  .wb-pipeline-foot .lab-btn { width: 100%; max-width: 100%; }
-}
-
-/* --- Мои проекты --- */
-.wb-projects { display: grid; gap: var(--space-2); max-width: 100%; }
-.wb-project-row {
-  display: grid; grid-template-columns: 1fr auto auto; gap: var(--space-3); align-items: center;
-  padding: var(--space-2) var(--space-3);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-sizing: border-box; min-width: 0; max-width: 100%; width: 100%;
-  align-self: start;
-  transition: border-color var(--motion-base);
-}
-.wb-project-row:hover { border-color: var(--accent-gold); }
-
-@media (max-width: 720px) {
-  .wb-project-row { grid-template-columns: 1fr; }
-}
-@media (max-width: 390px) {
-  .wb-project-row { padding: var(--space-2) var(--space-3); }
-  .wb-project-name { font-size: var(--text-md); }
-  .wb-project-meta { font-size: var(--text-xs); }
-  .wb-badge { font-size: 11px; padding: 2px 6px; }
-  .wb-miniprogress { width: 60px; }
-}
-.wb-project-name { color: var(--text-primary); font-weight: 600; text-decoration: none; font-size: var(--text-md); line-height: 1.2; }
-.wb-project-meta { color: var(--text-muted); font-size: var(--text-xs); margin-top: 2px; }
-.wb-project-status { display: flex; align-items: center; gap: var(--space-2); }
-.wb-project-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); justify-content: flex-end; }
+/* --- Проекты хаба: сетка, строки, статусы и мини-полосы живут в
+   workbench-bento.css (канон §5.2a). Здесь остаётся лишь база .wb-badge:
+   её переиспользуют чекеры и генераторы вне #workbench. --- */
 .wb-badge {
   padding: 2px 8px;
   border-radius: var(--radius-pill);
@@ -274,27 +165,17 @@
 .wb-export-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 
 @media (max-width: 720px) {
-  #workbench, .wb-hub, .wb-section, .wb-pipeline-grid, .wb-pipeline-card {
+  #workbench, .wb-section {
     width: 100%;
     max-width: 100%;
     min-width: 0;
   }
-  .wb-pipeline-grid { grid-template-columns: minmax(0, 1fr); }
-  .wb-project-row { grid-template-columns: 1fr; }
   .wb-pair-cols, .wb-bilingual-head { grid-template-columns: 1fr; }
   .wb-bilingual-head { display: none; }
   .wb-export-actions { width: 100%; }
 
   /* Центрирование контента на мобильных */
-  .wb-pipeline-section, .wb-project-section { text-align: center; }
-  .wb-section-head { justify-content: center; text-align: center; }
-  .wb-pipeline-head { justify-content: center; }
-  .wb-tags { justify-content: center; }
-  .wb-pipeline-foot { align-items: center; justify-content: center; }
-  .wb-project-status { justify-content: center; }
-  .wb-project-actions { justify-content: center; }
-  .wb-project-row { text-align: center; }
-  .wb-viewer-meta { justify-content: center; }
+  .wb-pipeline-section { text-align: center; }
   .wb-project-toolbar { justify-content: center; }
   .wb-export-actions { justify-content: center; }
   .wb-group-title { text-align: center; }
