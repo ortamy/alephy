@@ -2104,7 +2104,7 @@ const PageController = (function() {
   function agentChipRow(names, limit) {
     var shown = names.slice(0, limit);
     var html = shown.map(function(name) {
-      return '<span class="agent-pipeline-chip agent-pipeline-chip--plain">' + escapeHtml(name) + '</span>';
+      return '<span class="agent-pipeline-chip agent-pipeline-chip--plain"><span class="agent-chain-node"><span class="agent-chain-node-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(name) + '"></i></span>' + escapeHtml(name) + '</span></span>';
     }).join('');
     if (names.length > shown.length) html += '<span class="agent-chain-more">+' + (names.length - shown.length) + '</span>';
     return html;
@@ -2149,7 +2149,7 @@ const PageController = (function() {
         '<span class="agent-chain-label">' + t('lab.agents.links.gives', 'передаёт') + '</span>' +
         (neighbours.gives.length ? agentChipRow(neighbours.gives, 4) : '<span class="agent-chain-none">—</span>') +
         '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
-        '<span class="agent-chain-self">' + escapeHtml(agent.name) + '</span>' +
+        '<span class="agent-chain-self"><span class="agent-chain-node-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agent.name) + '"></i></span>' + escapeHtml(agent.name) + '</span>' +
         '<span class="agent-chain-arrow" aria-hidden="true">→</span>' +
         (neighbours.takes.length ? agentChipRow(neighbours.takes, 4) : '<span class="agent-chain-none">—</span>') +
         '<span class="agent-chain-label">' + t('lab.agents.links.takes', 'принимает') + '</span>' +
@@ -2193,55 +2193,46 @@ const PageController = (function() {
     if (window.LabHero && window.LabHero.setView) window.LabHero.setView('ai-agents', null);
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
-    var pipelines = container.querySelector('.agent-pipelines-view');
     if (detail) detail.hidden = true;
-    if (pipelines) pipelines.hidden = true;
     if (list) list.hidden = false;
     setAgentListChrome(container, true);
   }
 
   function openAgentPipelines(container) {
     if (!agentMapData) agentMapData = getAgentMapData();
-    var list = container.querySelector('.agent-list-view');
-    var detail = container.querySelector('#agent-detail-view');
-    var mapView = container.querySelector('.agent-map-view');
-    var pipelines = container.querySelector('.agent-pipelines-view');
+    // Промежуточный контейнер .agent-pipelines-view удалён: рамка с тенью
+    // вокруг тулбара и карточек разрезала блок пополам. Модуль, как «Агенты»,
+    // рендерит панель и список прямо в свой контейнер.
     var pipelineDetail = container.querySelector('.pipeline-detail-page');
     if (pipelineDetail) pipelineDetail.remove();
-    if (!pipelines) {
-      pipelines = document.createElement('section');
-      pipelines.className = 'agent-pipelines-view';
-      container.appendChild(pipelines);
-    }
-    if (list) list.hidden = true;
-    if (detail) detail.hidden = true;
-    if (mapView) mapView.hidden = true;
-    pipelines.hidden = false;
     if (container.id === 'pipelines' && window.LabHero && window.LabHero.setView) window.LabHero.setView('pipelines', null);
+    var pipelines = container;
     pipelines.innerHTML =
-      '<div class="pipeline-control-panel">' +
+      '<section class="pipeline-control-panel" aria-label="Управление пайплайнами">' +
         '<div class="pipeline-toolbar-row">' +
-          '<span class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span class="pipeline-server-label">Проверка сервера…</span></span>' +
           '<input type="search" class="lab-input pl-search" data-pipeline-search placeholder="Поиск по пайплайнам…" aria-label="Поиск по пайплайнам">' +
-          '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
-            '<button type="button" class="res-view-btn" data-pipeline-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
-            '<button type="button" class="res-view-btn" data-pipeline-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
-          '</div>' +
-        '</div>' +
-        '<div class="pipeline-toolbar-row">' +
-          '<div class="pipeline-filter-chips" role="group" aria-label="Фильтр по статусу">' +
-            '<button type="button" class="pipeline-chip active" data-pipeline-filter="all">Все</button>' +
-            '<button type="button" class="pipeline-chip" data-pipeline-filter="ready">Готовые</button>' +
-            '<button type="button" class="pipeline-chip" data-pipeline-filter="pending">Ожидание</button>' +
-            '<button type="button" class="pipeline-chip" data-pipeline-filter="loops">Циклы</button>' +
-          '</div>' +
-          '<span class="pipeline-count" data-pipeline-count aria-live="polite"></span>' +
-          '<div class="pipeline-page-actions">' +
+          // Фильтр по статусу — селект, а не чипы: четыре подписи занимали
+          // второй ряд и растягивали панель. Счётчик рядом показывает, что
+          // именно выбрано, поэтому золотая рамка активна только когда
+          // выбран не «Все».
+          '<select class="lab-input lab-toolbar-select pipeline-filter" data-pipeline-filter aria-label="Фильтр по статусу">' +
+            '<option value="all">Все</option>' +
+            '<option value="ready">Готовые</option>' +
+            '<option value="pending">Ожидание</option>' +
+            '<option value="loops">Циклы</option>' +
+          '</select>' +
+          '<span class="pipeline-server-status" data-pipeline-server-status data-status="checking"><span class="pipeline-server-dot" aria-hidden="true"></span><span class="pipeline-server-label">Проверка сервера…</span></span>' +
+          '<div class="pipeline-toolbar-actions">' +
+            '<span class="pipeline-count" data-pipeline-count aria-live="polite"></span>' +
+            '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
+              '<button type="button" class="res-view-btn" data-pipeline-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
+              '<button type="button" class="res-view-btn" data-pipeline-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button>' +
+            '</div>' +
             '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-create-btn" data-pipeline-create><i data-lucide="plus" class="lab-icon" aria-hidden="true"></i>Создать пайплайн</button>' +
             '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-pipelines-back>К агентам</button>' +
           '</div>' +
         '</div>' +
-      '</div>' +
+      '</section>' +
       '<div class="agent-pipelines-status lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка локальных пайплайнов…</div></div>';
     pipelines.querySelector('[data-pipelines-back]').addEventListener('click', function() {
       LabRouter.navigate('ai-agents');
@@ -2281,7 +2272,7 @@ const PageController = (function() {
 
   var PIPELINE_OFFLINE_HINT = 'Сервер агентов отключен — запуск и редактирование недоступны. Запустите: python products/agents/server.py';
   var PIPELINE_VIEW_KEY = 'alephy-pipelines-view';
-  var pipelinesUiState = { query: '', filter: 'all', view: 'cards', expanded: {}, online: null };
+  var pipelinesUiState = { query: '', filter: 'all', view: 'cards', online: null };
 
   function updatePipelineServerStatus(pipelines, isOnline) {
     var status = pipelines.querySelector('[data-pipeline-server-status]');
@@ -2297,11 +2288,6 @@ const PageController = (function() {
     });
   }
 
-  function pipelineAgentInfo(agentName) {
-    return (agentMapData || []).filter(function(item) { return item.name === agentName; })[0] ||
-      { name: agentName, desc: 'Участник цепочки передачи контекста.', icon: 'paleo/track' };
-  }
-
   function pipelineKind(pipeline) {
     return pipeline.type === 'loop' || pipeline.type === 'spiral' ? 'loops' : 'linear';
   }
@@ -2314,13 +2300,6 @@ const PageController = (function() {
 
   function pipelineResultChip(result) {
     return '<span class="pipeline-result-chip" data-pipeline-run-status data-status="' + (result ? 'done' : 'pending') + '"><span class="pipeline-result-dot" aria-hidden="true"></span><span class="pipeline-result-label">' + (result ? 'Готов' : 'Ожидание') + '</span></span>';
-  }
-
-  function pipelineChain(pipeline) {
-    return (pipeline.agents || []).map(function(agentName, index) {
-      return (index ? '<span class="pipeline-chain-arrow" aria-hidden="true">→</span>' : '') +
-        '<span class="pipeline-chain-chip" title="' + escapeHtml(pipelineAgentInfo(agentName).desc) + '">' + escapeHtml(agentName) + '</span>';
-    }).join('');
   }
 
   var PIPELINE_AGENT_ICONS = {
@@ -2355,7 +2334,7 @@ const PageController = (function() {
           '<span class="pipeline-diagram-label">' + escapeHtml(agentName) + '</span>' +
         '</span>';
     }).join('');
-    return '<div class="pipeline-diagram" data-pipeline-diagram hidden><div class="pipeline-diagram-inner">' + nodes +
+    return '<div class="pipeline-diagram" data-pipeline-diagram><div class="pipeline-diagram-inner">' + nodes +
       (pipelineKind(pipeline) === 'loops' ? '<span class="pipeline-diagram-arrow pipeline-diagram-loop" title="Возврат в начало витка" aria-hidden="true"><i data-lucide="rotate-ccw"></i></span>' : '') +
       '</div></div>';
   }
@@ -2382,7 +2361,10 @@ const PageController = (function() {
 
     function cardHtml(pipeline) {
       var result = findPipelineResult(results, pipeline.id);
-      var expanded = !!pipelinesUiState.expanded[pipeline.id];
+      // Последовательность агентов показана в карточке один раз: раньше её
+      // рисовали дважды — текстовыми чипами и скрытой диаграммой за кнопкой
+      // «info». Кнопка убрана как дубль, ветка с иконками и точками статусов
+      // видна всегда. «Запустить» вторичная, жёлтый акцент — у «Результата».
       return '<article class="agent-pipeline-card" data-pipeline-id="' + escapeHtml(pipeline.id) + '">' +
         '<div class="pipeline-card-head">' +
           '<span class="pipeline-glyph-chip" aria-hidden="true"><i data-lucide="workflow"></i></span>' +
@@ -2393,13 +2375,11 @@ const PageController = (function() {
             '<button type="button" class="pipeline-icon-btn pipeline-delete" data-pipeline-delete aria-label="Удалить пайплайн" title="Удалить"><i data-lucide="trash-2"></i></button>' +
           '</span>' +
         '</div>' +
-        '<div class="pipeline-chain" aria-label="Цепочка агентов">' + pipelineChain(pipeline) + '</div>' +
-        '<div class="pipeline-card-buttons">' +
-          '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-run-btn" data-pipeline-run>Запустить</button>' +
-          '<button type="button" class="pipeline-result-link" data-pipeline-open-detail>Результат</button>' +
-          '<button type="button" class="pipeline-icon-btn" data-pipeline-toggle-diagram aria-expanded="' + expanded + '" aria-label="Подробнее: диаграмма цепочки" title="Подробнее"><i data-lucide="info"></i></button>' +
-        '</div>' +
         pipelineDiagram(pipeline) +
+        '<div class="pipeline-card-buttons">' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact pipeline-run-btn" data-pipeline-run>Запустить</button>' +
+          '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-result-btn" data-pipeline-open-detail><i data-lucide="file-text"></i>Результат</button>' +
+        '</div>' +
       '</article>';
     }
 
@@ -2417,10 +2397,17 @@ const PageController = (function() {
         '</span>' +
       '</div>';
     }
+    // Шапка группы повторяет паттерн агентов: лейбл, разделитель-линейка
+    // и pill-счётчик. Разметка меняется, логика категорий (готовые /
+    // ожидание / циклы, схлопывание в «Найденные» при поиске) — нет.
     function groupSection(key, label, items, renderItem) {
       if (!items.length) return '';
       return '<section class="pipeline-group" data-pipeline-group="' + key + '">' +
-        '<header class="pipeline-group-head"><h2>' + label + '</h2><span class="pipeline-group-badge">' + items.length + '</span></header>' +
+        '<header class="pipeline-group-head">' +
+          '<span class="pipeline-group-label">' + label + '</span>' +
+          '<span class="pipeline-group-rule" aria-hidden="true"></span>' +
+          '<span class="pipeline-group-count">' + items.length + '</span>' +
+        '</header>' +
         '<div class="' + (pipelinesUiState.view === 'list' ? 'pipeline-list-rows' : 'agent-pipelines-grid') + '">' + items.map(renderItem).join('') + '</div>' +
       '</section>';
     }
@@ -2451,9 +2438,8 @@ const PageController = (function() {
 
     pipelines.querySelector('.agent-pipelines-status').outerHTML = '<div data-pipeline-list></div>';
     pipelines.querySelector('[data-pipeline-search]').value = pipelinesUiState.query;
-    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
-      chip.classList.toggle('active', chip.dataset.pipelineFilter === pipelinesUiState.filter);
-    });
+    var pipelineFilter = pipelines.querySelector('[data-pipeline-filter]');
+    if (pipelineFilter) pipelineFilter.value = pipelinesUiState.filter;
 
     renderList();
 
@@ -2462,12 +2448,12 @@ const PageController = (function() {
       pipelinesUiState.query = this.value;
       renderList();
     });
-    pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(chip) {
-      chip.addEventListener('click', function() {
-        pipelinesUiState.filter = chip.dataset.pipelineFilter;
-        pipelines.querySelectorAll('[data-pipeline-filter]').forEach(function(other) { other.classList.toggle('active', other === chip); });
-        renderList();
-      });
+    // Селект хранит выбранное значение сам, поэтому синхронизировать
+    // active-классы по чипам больше не нужно — рамка отражает фильтр.
+    if (pipelineFilter) pipelineFilter.addEventListener('change', function() {
+      pipelinesUiState.filter = this.value;
+      pipelineFilter.classList.toggle('is-filtered', pipelinesUiState.filter !== 'all');
+      renderList();
     });
     pipelines.querySelectorAll('[data-pipeline-view]').forEach(function(button) {
       button.addEventListener('click', function() {
@@ -2478,7 +2464,7 @@ const PageController = (function() {
     });
     // Делегирование: список перерисовывается фильтрами, поэтому слушатель один на хосте.
     pipelines.querySelector('[data-pipeline-list]').addEventListener('click', function(event) {
-      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail], [data-pipeline-toggle-diagram]');
+      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail]');
       if (!target || target.disabled) return;
       var card = target.closest('[data-pipeline-id]');
       if (!card) return;
@@ -2487,13 +2473,6 @@ const PageController = (function() {
       if (target.hasAttribute('data-pipeline-delete')) { deletePipeline(container, pipelines, list, id); return; }
       if (target.hasAttribute('data-pipeline-run')) { runPipeline(card, findPipeline(list, id)); return; }
       if (target.hasAttribute('data-pipeline-open-detail')) { LabRouter.navigate('pipelines', [id]); return; }
-      if (target.hasAttribute('data-pipeline-toggle-diagram')) {
-        var diagram = card.querySelector('[data-pipeline-diagram]');
-        if (!diagram) return;
-        pipelinesUiState.expanded[id] = diagram.hidden;
-        diagram.hidden = !diagram.hidden;
-        target.setAttribute('aria-expanded', diagram.hidden ? 'false' : 'true');
-      }
     });
   }
 

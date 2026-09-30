@@ -151,16 +151,6 @@
   .agent-example-chip, .agent-history-row, .agent-pipeline-chip { transition: none; }
   .agent-detail-page { animation: none; }
 }
-.agent-pipelines-view {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: var(--space-6);
-  background: var(--bg-card);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
-}
-.agent-pipelines-view[hidden] { display: none; }
 .agent-pipelines-head {
   display: flex;
   align-items: flex-start;
@@ -171,16 +161,20 @@
 .agent-pipelines-head p:last-child { color: var(--text-secondary); }
 /* Сервер-статус — чип с точкой (§4.3); offline гасит кнопки запуска с тултипом причины. */
 .pipeline-server-status { display: inline-flex; align-items: center; gap: 7px; margin-top: 10px; padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); white-space: nowrap; }
-/* Пайплайны: тулбар по DESIGN-SYSTEM §4.7 (2 этажа, без третьего). */
-.pipeline-control-panel { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-5); padding: var(--space-3) var(--space-4); background: var(--bg-card, #fff); border: 1px solid var(--border-light); border-radius: var(--radius-md); box-shadow: var(--shadow-soft); }
-.pipeline-toolbar-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
-.pipeline-control-panel .pipeline-server-status { margin-top: 0; }
+/* Пайплайны: тулбар как у агентов и конвейеров — один ряд, порядок через
+   order, а .pipeline-toolbar-row выплёскивает контролы в панель через
+   display: contents (§4.7). Панель сохраняет свою hairline-обводку: рамка
+   вокруг всего блока (бывший .agent-pipelines-view) удалена. */
+.pipeline-control-panel { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); box-shadow: none; overflow: hidden; }
+.pipeline-toolbar-row { display: contents; }
+.pipeline-control-panel .pipeline-server-status { margin-top: 0; order: 2; }
 .pipeline-server-status[data-status="online"] { color: var(--accent-green); }
 .pipeline-server-status[data-status="online"] .pipeline-server-dot { background: var(--accent-green); }
 .pipeline-server-status[data-status="offline"] .pipeline-server-dot { background: var(--accent-red); }
 .pipeline-server-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--text-muted); box-shadow: none; }
-.pl-search { flex: 1 1 200px; min-width: 0; }
-.pipeline-filter-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.pl-search { flex: 1 1 220px; min-width: 0; order: 1; }
+.pipeline-filter { order: 2; }
+.pipeline-toolbar-actions { display: flex; align-items: center; flex: 0 0 auto; flex-wrap: nowrap; gap: 10px; order: 3; }
 .pipeline-chip { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); background: transparent; color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); cursor: pointer; transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast); }
 .pipeline-chip:hover { color: var(--text-primary); border-color: var(--text-muted); }
 .pipeline-chip.active { color: var(--accent-gold); border-color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / .1); }
@@ -188,7 +182,7 @@
 .pipeline-count { margin-left: auto; color: var(--text-muted); font: 500 var(--ui-12) var(--font-ui); white-space: nowrap; }
 .pipeline-count strong { color: var(--text-secondary); font-weight: 600; }
 .pipeline-page-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; flex: 0 0 auto; }
-.agent-pipelines-view, #pipelines { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-x: hidden; }
+#pipelines { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-x: hidden; }
 .agent-pipelines-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -197,11 +191,15 @@
 @media (min-width: 860px) {
   .agent-pipelines-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-/* Группы: uppercase-лейбл + волосяная линия + бейдж-счётчик (§4.1). */
+/* Группы пайплайнов — тот же паттерн, что у агентов (§4.1): uppercase-лейбл,
+   волосяная линия-разделитель и pill-счётчик. Линия снизу под шапкой убрана
+   (border-bottom): разделитель теперь внутри, между лейблом и счётчиком,
+   поэтому шапка не рисует рамку через всю ширину группы. */
 .pipeline-group { display: grid; gap: var(--space-3); margin-bottom: var(--space-5); }
-.pipeline-group-head { display: flex; align-items: center; gap: 10px; padding-bottom: var(--space-2); border-bottom: 1px solid var(--border-light); }
-.pipeline-group-head h2 { margin: 0; color: var(--text-muted); font: 500 var(--ui-11)/1.3 var(--font-ui); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
-.pipeline-group-badge { display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid var(--border-light); border-radius: 50%; color: var(--text-muted); font: 600 var(--ui-10)/1 var(--font-ui); }
+.pipeline-group-head { display: flex; align-items: center; gap: 10px; margin: 0 0 var(--space-3); }
+.pipeline-group-label { color: var(--text-muted); font: 700 var(--ui-11)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
+.pipeline-group-rule { flex: 1 1 20px; min-width: 16px; height: 1px; background: var(--border-light); }
+.pipeline-group-count { padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-muted); font: 500 var(--ui-12)/1.6 var(--font-ui); white-space: nowrap; }
 /* Карточка-паспорт пайплайна (§4.2): рамка 1px, без теней, ~120px. */
 .agent-pipeline-card {
   display: grid;
@@ -236,15 +234,11 @@
 .pipeline-icon-btn:disabled:hover { color: var(--text-muted); border-color: var(--border-light); }
 .pipeline-delete:hover { color: var(--accent-red); border-color: var(--accent-red); }
 .pipeline-icon-btn:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
-/* Цепь ролей одной строкой: hairline-чипы + стрелки; переполнение — скролл внутри карточки. */
-.pipeline-chain { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; max-width: 100%; overflow-x: auto; scrollbar-width: thin; padding-bottom: 2px; }
-.pipeline-chain-chip { flex: 0 0 auto; padding: 2px 10px; border: 1px solid var(--border-light); border-radius: var(--radius-pill); color: var(--text-secondary); font: 500 var(--ui-12)/1.5 var(--font-ui); white-space: nowrap; }
-.pipeline-chain-arrow { flex: 0 0 auto; color: var(--accent-gold); font-size: 13px; line-height: 1; }
 .pipeline-card-buttons { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-width: 0; }
 .pipeline-card-buttons .pipeline-run-btn { flex: 0 0 auto; width: auto; min-height: 32px; }
-.pipeline-result-link { padding: 2px 4px; border: 0; background: transparent; color: var(--accent-gold); font: 600 var(--ui-13)/1.5 var(--font-ui); cursor: pointer; }
-.pipeline-result-link:hover { text-decoration: underline; }
-.pipeline-result-link:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+/* «Результат» — жёлтая кнопка с иконкой, единственный акцент карточки. */
+.pipeline-result-btn { display: inline-flex; align-items: center; gap: 6px; }
+.pipeline-result-btn svg.lucide { width: 14px; height: 14px; }
 /* Диаграмма «Подробнее»: inline-аккордеон, цепь крупно, 150ms. */
 .pipeline-diagram { animation: pipelineDiagramIn 150ms ease-out both; }
 .pipeline-diagram[hidden] { display: none; }
@@ -344,14 +338,15 @@
 @media (max-width: 560px) { .pipeline-agent-add { flex-direction: column; } }
 /* Mobile (§5.3): одна колонка, края = края шапки, действия в 2 ровные строки. */
 @media (max-width: 560px) {
-  .agent-pipelines-view { padding: var(--space-3); }
   .pl-search { flex: 1 1 100%; }
   .pipeline-count { margin-left: 0; }
+  /* Действия уходят на свою строку и растягиваются — как у агентов,
+     где тулбар на телефоне тоже складывается в три ряда. */
+  .pipeline-toolbar-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; }
   .pipeline-page-actions { justify-content: flex-start; }
   .pipeline-card-buttons { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
   .pipeline-card-buttons .pipeline-run-btn { width: 100%; }
-  .pipeline-card-buttons .pipeline-result-link { justify-self: start; }
-  .pipeline-card-buttons [data-pipeline-toggle-diagram] { justify-self: end; grid-row: 2; grid-column: 2; }
+  .pipeline-card-buttons .pipeline-result-btn { justify-self: start; }
   .pipeline-list-row { flex-wrap: wrap; row-gap: 4px; }
   .pipeline-list-chain { flex: 1 1 100%; order: 3; }
   .pipeline-list-row .pipeline-card-actions { margin-left: auto; }
@@ -441,6 +436,12 @@
 /* Связи: чипы пайплайнов + мини-цепочка «передаёт → агент → принимает». */
 .agent-links-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .agent-chain { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: var(--space-3); padding-top: var(--space-3); border-top: 1px solid var(--border-light); }
+/* Узел цепи: глиф роли + имя, как в узле пайплайна (§4.3). */
+.agent-chain-node { display: inline-flex; align-items: center; gap: 6px; }
+.agent-chain-node-icon { display: inline-grid; place-items: center; color: var(--text-muted); }
+.agent-chain-node-icon svg.lucide { width: 14px; height: 14px; }
+.agent-chain-self { display: inline-flex; align-items: center; gap: 6px; }
+.agent-chain-self .agent-chain-node-icon { color: var(--accent-gold); }
 .agent-chain-label { color: var(--text-muted); font: 700 var(--ui-10)/1 var(--font-ui); letter-spacing: .08em; text-transform: uppercase; }
 .agent-chain-self { padding: 2px 10px; border: 1px solid rgb(var(--accent-gold-rgb) / .45); border-radius: var(--radius-pill); color: var(--accent-gold); font: 600 var(--ui-12)/1.6 var(--font-ui); }
 .agent-chain-arrow { color: var(--text-muted); font-family: var(--font-mono); }
