@@ -357,7 +357,7 @@ const AlephyStates = (function() {
   function renderGrid() {
     var list = visibleStates();
 
-    return '<div class="states-page">' +
+    return '<div class="states-page states-grid-page">' +
       '<div class="states-head">' +
         '<h1><img src="assets/icons/32/ui/web.png" class="lab-icon" alt=""> Карта состояний</h1>' +
         '<p class="subtitle">Семь пространств палео-механики — от запертости (Тоху) до завершённости (Эден). Каждое состояние — это не метафора, а физика: степень сжатости или открытости твоего пространства.</p>' +

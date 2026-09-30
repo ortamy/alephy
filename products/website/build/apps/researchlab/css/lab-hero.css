@@ -284,10 +284,10 @@
   display: none;
 }
 
-/* В карте языков сохраняем поясняющий контекст и фильтры. */
-.lab-hero-module--language-map .language-map-head > .language-map-kicker,
-.lab-hero-module--language-map .language-map-head > h1,
-.lab-hero-module--language-map .language-map-head > .subtitle {
+/* В карте языков скрываем шапку целиком. Раньше правило прятало только
+   детей (kicker/h1/subtitle), и пустой <header> оставался в потоке со
+   своим margin-bottom — тулбар уезжал вниз на лишние 20px. */
+.lab-hero-module--language-map .language-map-head {
   display: none;
 }
 

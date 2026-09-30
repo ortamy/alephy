@@ -11,6 +11,14 @@
   margin: 0 auto;
 }
 
+/* Шапку сетки рисует LabHero (margin-bottom 24px), а локальная
+   .states-head при активном hero скрыта. Верхний паддинг страницы
+   складывался с этим и раздвигал тулбар на 24px лишнего. Убираем его,
+   как в «Картографии» (.cartography-page: padding-top 0). */
+.states-page.states-grid-page {
+  padding-top: 0;
+}
+
 .states-head {
   margin-bottom: var(--space-6);
 }
