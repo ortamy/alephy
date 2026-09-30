@@ -2326,12 +2326,16 @@ const PageController = (function() {
   }
 
   function pipelineDiagram(pipeline) {
+    // Стрелка-разделитель лежит ВНУТРИ узла, а не между узлами: при переносе
+    // на новую строку отдельная стрелка повисала бы одна в конце строки.
     var nodes = (pipeline.agents || []).map(function(agentName, index) {
-      return (index ? '<span class="pipeline-diagram-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>' : '') +
-        '<span class="pipeline-diagram-node" data-agent-name="' + escapeHtml(agentName) + '" data-status="pending">' +
-          '<span class="pipeline-diagram-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agentName) + '"></i></span>' +
-          '<span class="pipeline-diagram-dot" aria-hidden="true"></span>' +
-          '<span class="pipeline-diagram-label">' + escapeHtml(agentName) + '</span>' +
+      return '<span class="pipeline-diagram-node" data-agent-name="' + escapeHtml(agentName) + '" data-status="pending">' +
+          (index ? '<span class="pipeline-diagram-arrow" aria-hidden="true"><i data-lucide="arrow-right"></i></span>' : '') +
+          '<span class="pipeline-diagram-body">' +
+            '<span class="pipeline-diagram-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agentName) + '"></i></span>' +
+            '<span class="pipeline-diagram-dot" aria-hidden="true"></span>' +
+            '<span class="pipeline-diagram-label">' + escapeHtml(agentName) + '</span>' +
+          '</span>' +
         '</span>';
     }).join('');
     return '<div class="pipeline-diagram" data-pipeline-diagram><div class="pipeline-diagram-inner">' + nodes +
@@ -2825,49 +2829,111 @@ const PageController = (function() {
         break;
 
       case 'scripture-reader':
+        // Bento-каркас §5.2e: два экрана в одной разметке — библиотека и чтение.
+        // Экраны переключает ScriptureReader скрытием секций, а не перерисовкой модуля:
+        // так состояние поиска и позиция чтения не теряются при возврате в каталог.
         container.innerHTML = '<div class="research-page-head scripture-reader-head">' +
-          '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">Книгочтение</h1>' +
-          '<p class="subtitle">Книги Танаха, засвидетельствованные в кумранских свитках. Чтение на палео-иврите с последовательным просмотром стихов.</p>' +
+          '<h1><i data-lucide="book-open" aria-hidden="true"></i>Книгочтение</h1>' +
+          '<p class="subtitle">Книги Танаха, засвидетельствованные в кумранских свитках. Чтение на палео-иврите с разбором слова и проверкой гипотез.</p>' +
           '</div>' +
-          '<div id="scripture-verse-nav" class="scripture-verse-nav" style="display:none;" aria-label="Выбор главы и стиха"></div>' +
-          '<div class="scripture-reader-layout"><main class="scripture-main">' +
-          '<div class="scripture-search" id="scripture-search">' +
-          '<label class="scripture-category-label" for="scripture-category">Категория</label>' +
-          '<select class="scripture-category-select" id="scripture-category" aria-label="Категория книг">' +
-          '<option value="">Все книги</option>' +
-          '</select>' +
-          '<input type="search" class="scripture-search-input" id="scripture-search-input" placeholder="Поиск по книгам…" aria-label="Поиск по книгам">' +
+          // Тулбар каталога живёт под шапкой, а не внутри ячейки: та же
+          // горизонтальная плашка, что у реестра словарей и у панелей агентов
+          // (.agent-controls-panel + .agent-toolbar-row). Смена экрана прячет
+          // его вместе с #sr-library — см. ScriptureReader.showBookGrid.
+          '<section class="agent-controls-panel sr-controls-panel" id="sr-toolbar" aria-label="Управление каталогом книг">' +
+          '<div class="agent-toolbar-row">' +
+          '<input type="search" class="lab-input agents-search" id="sr-search" placeholder="Поиск по книгам…" aria-label="Поиск по книгам">' +
+          '<span class="sr-sort-wrap"><label class="sr-category-label" for="sr-category">Категория</label>' +
+          '<select class="lab-input sr-sort-select" id="sr-category" aria-label="Категория книг"><option value="">Все книги</option></select></span>' +
+          '<div class="agent-toolbar-actions">' +
+          '<span class="pipeline-count" id="sr-books-count" aria-live="polite"></span>' +
+          '</div></div></section>' +
+          '<section class="sr-bento" id="sr-library" aria-label="Библиотека книг">' +
+          '<div class="sr-cell sr-cell--search">' +
+          '<div class="sr-cell-head"><span class="sr-num">01</span>' +
+          '<h2 class="sr-cell-title">Каталог книг</h2></div>' +
+          '<div id="sr-books"></div>' +
           '</div>' +
-          '<div id="scripture-book-grid" class="scripture-book-grid"></div>' +
-          '<article class="scripture-verse" id="scripture-verse-article" style="display:none;" aria-labelledby="scripture-verse-title">' +
-          '<div class="scripture-verse-meta" id="scripture-verse-title">Берешит 1:1</div>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm scripture-copy-button scripture-copy-verse" id="scripture-copy-verse" aria-label="Копировать стих" title="Копировать стих">' +
-          '<svg class="scripture-copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="8" y="8" width="11" height="11" rx="1.5"></rect><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"></path></svg>' +
-          '</button>' +
+          '<div class="sr-rail">' +
+          '<div class="sr-cell sr-cell--resume sr-cell--ink">' +
+          '<div class="sr-cell-head"><span class="sr-num">02</span>' +
+          '<h2 class="sr-cell-title">Продолжить чтение</h2></div>' +
+          '<div class="sr-resume-head">' +
+          '<p class="sr-resume-title" id="sr-resume-title"></p>' +
+          '<p class="sr-resume-ref" id="sr-resume-ref"></p></div>' +
+          '<p class="sr-resume-when" id="sr-resume-when"></p>' +
+          '<div class="sr-progress" id="sr-progress" hidden>' +
+          '<span class="sr-progress-track"><span class="sr-progress-fill" id="sr-progress-fill"></span></span>' +
+          '<span class="sr-progress-value" id="sr-progress-value"></span></div>' +
+          '<div class="sr-ai-actions">' +
+          '<button type="button" class="lab-btn lab-btn-primary" id="sr-resume-open">Открыть стих</button>' +
+          '</div>' +
+          '<p class="sr-note" id="sr-resume-note">Чтение запоминается в этом браузере.</p>' +
+          '</div>' +
+          '<div class="sr-cell sr-cell--legend">' +
+          '<div class="sr-cell-head"><span class="sr-num">03</span>' +
+          '<h2 class="sr-cell-title">Состав библиотеки</h2></div>' +
+          '<ul class="sr-legend" id="sr-legend"></ul>' +
+          '<p class="sr-note">Книга без файла данных остаётся в каталоге со статусом «в работе»: стих для неё ещё не загружен.</p>' +
+          '</div>' +
+          '</div>' +
+          '</section>' +
+          '<section class="sr-bento" id="sr-reading" hidden aria-label="Чтение стиха">' +
+          '<div class="sr-cell sr-cell--text">' +
+          '<div class="sr-cell-head"><span class="sr-num">01</span>' +
+          '<h2 class="sr-cell-title">Текст</h2>' +
+          '<span class="sr-cell-hint" id="sr-verse-hint"></span></div>' +
+          '<article class="scripture-verse" id="scripture-verse-article" aria-labelledby="scripture-verse-title">' +
+          '<div class="sr-verse-head">' +
+          '<div class="sr-verse-ref" id="scripture-verse-title">Берешит 1:1</div>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm scripture-copy-button scripture-copy-verse" id="scripture-copy-verse" aria-label="Копировать стих" title="Копировать стих"><i data-lucide="copy" aria-hidden="true"></i></button>' +
+          '</div>' +
           '<div id="scripture-paleo" class="scripture-paleo" dir="rtl" lang="hbo" aria-label="Палео-иврит"></div>' +
           '<div id="scripture-hebrew" class="scripture-hebrew" dir="rtl" lang="he"></div>' +
           '<div id="scripture-translit" class="scripture-translit"></div>' +
           '</article>' +
-          '<nav class="scripture-navigation" id="scripture-navigation" style="display:none;" aria-label="Навигация по стихам">' +
-          '<button type="button" class="lab-btn lab-btn-secondary" id="scripture-prev">Предыдущий стих</button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary" id="scripture-next">Следующий стих</button>' +
-          '</nav>' +
-          '<section id="scripture-analysis" class="scripture-analysis scripture-physics" style="display:none;" aria-live="polite">' +
-          '<button type="button" class="scripture-physics-trigger" id="scripture-physics-trigger" aria-expanded="false" aria-controls="scripture-physics-panel">' +
-          '<span class="scripture-physics-trigger-title">Физика слова</span>' +
-          '<span class="scripture-physics-trigger-hint">Нажми на слово для разбора</span>' +
-          '<span class="scripture-physics-chevron" aria-hidden="true">⌄</span>' +
-          '</button>' +
-          '<div class="scripture-physics-panel" id="scripture-physics-panel" hidden>' +
-          '<div id="scripture-physics-content" class="scripture-physics-content">Выберите слово палео-текста.</div>' +
           '</div>' +
-          '</section>' +
-          '<section id="scripture-tools" class="scripture-tools" style="display:none;" aria-label="Инструменты исследователя">' +
-          '<button type="button" class="lab-btn lab-btn-secondary scripture-tool" id="scripture-tool-analysis" aria-label="Открыть анализ выбранного слова"><img src="assets/icons/32/ui/diff.png" alt="" aria-hidden="true"><span>Разобрать</span></button>' +
-          '<button type="button" class="lab-btn lab-btn-secondary scripture-tool" id="scripture-tool-save" aria-label="Сохранить свидетельство выбранного слова"><img src="assets/icons/32/ui/download.png" alt="" aria-hidden="true"><span>Сохранить</span></button>' +
-          '</section>' +
-          '</main>' +
-          '</div>';
+          '<div class="sr-rail">' +
+          '<div class="sr-cell sr-cell--path sr-cell--ink">' +
+          '<div class="sr-cell-head"><span class="sr-num">02</span>' +
+          '<h2 class="sr-cell-title">Путь по тексту</h2></div>' +
+          '<nav class="sr-steppers" id="scripture-verse-nav" aria-label="Выбор главы и стиха"></nav>' +
+          '<div class="sr-stepper-actions">' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="scripture-prev" aria-label="Предыдущий стих" title="Предыдущий стих"><i data-lucide="chevron-left" aria-hidden="true"></i></button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="scripture-next" aria-label="Следующий стих" title="Следующий стих"><i data-lucide="chevron-right" aria-hidden="true"></i></button>' +
+          '<form class="sr-jump" id="scripture-jump-form">' +
+          '<label class="sr-category-label" for="scripture-jump">Переход</label>' +
+          '<input type="text" class="lab-input sr-jump-input" id="scripture-jump" placeholder="1:14" aria-label="Глава и стих, например 1:14" inputmode="numeric" autocomplete="off">' +
+          '<button type="submit" class="lab-btn lab-btn-secondary">К стиху</button>' +
+          '</form>' +
+          '</div>' +
+          '<p class="sr-note" id="scripture-path-note"></p>' +
+          '</div>' +
+          '<div class="sr-cell sr-cell--word">' +
+          '<div class="sr-cell-head"><span class="sr-num">03</span>' +
+          '<h2 class="sr-cell-title">Разбор слова</h2>' +
+          '<div class="sr-segment" role="group" aria-label="Режим разбора">' +
+          '<button type="button" class="sr-segment-btn" id="sr-mode-word" aria-pressed="true">Слово</button>' +
+          '<button type="button" class="sr-segment-btn" id="sr-mode-letters" aria-pressed="false">Буквы</button>' +
+          '</div></div>' +
+          '<div id="scripture-physics-content" aria-live="polite"></div>' +
+          '</div>' +
+          '<div class="sr-cell sr-cell--wide">' +
+          '<div class="sr-cell-head"><span class="sr-num">04</span>' +
+          '<h2 class="sr-cell-title">Разбор свидетельств</h2>' +
+          '<span class="sr-cell-hint" id="sr-ai-confidence"></span></div>' +
+          '<p class="sr-ai-status" id="sr-ai-status" data-tone="idle" role="status">Локальный разбор доступен без сервера.</p>' +
+          '<div class="sr-ai-actions">' +
+          '<button type="button" class="lab-btn lab-btn-primary" id="sr-ai-run">Спросить ИИ</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="sr-ai-retry" hidden>Повторить</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="sr-ai-copy" hidden>Скопировать разбор</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary" id="sr-tool-save">Сохранить свидетельство</button>' +
+          '</div>' +
+          '<div class="sr-ai-out" id="sr-ai-out"></div>' +
+          '<ul class="sr-legend" id="sr-evidence"></ul>' +
+          '</div>' +
+          '</div>' +
+          '</section>';
         container.dataset.loaded = '1';
         if (window.ScriptureReader) window.ScriptureReader.init(parsed);
         break;

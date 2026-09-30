@@ -1,6 +1,12 @@
-// Scripture Reader: Qumran-attested Tanakh books, grid of cards + verse browsing.
+// Scripture Reader: Qumran-attested Tanakh books, bento reading screen.
+// Bento-каркас §5.2e (css/scripture-reader-bento.css, префикс sr-).
+// ИИ-разбор вынесен в js/scripture-ai.js: этот модуль отвечает за текст,
+// навигацию и локальный разбор и ничего не знает про сеть.
 const ScriptureReader = (function() {
   'use strict';
+
+  var LAST_KEY = 'alephy_scripture_last_v1';
+  var EVIDENCE_KEY = 'alephy_scripture_evidence_v1';
 
   var state = {
     initialized: false,
@@ -16,7 +22,9 @@ const ScriptureReader = (function() {
     loading: null,
     pendingBookId: null,
     pendingVerse: null,
-    readingMode: 'assembly',
+    // 'word' — разбор слова, 'letters' — разбор выделенных букв.
+    mode: 'word',
+    arrowKeysBound: false,
     boundRoot: null,
     glyphEscapeBound: false
   };
@@ -170,10 +178,7 @@ const ScriptureReader = (function() {
     return '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm scripture-copy-button scripture-copy-selection"' +
       (disabled ? ' disabled' : '') +
       ' aria-label="Копировать выбранное" title="Копировать выбранное">' +
-      '<svg class="scripture-copy-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
-      '<rect x="8" y="8" width="11" height="11" rx="1.5"></rect>' +
-      '<path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"></path>' +
-      '</svg>' +
+      '<i data-lucide="copy" aria-hidden="true"></i>' +
       '</button>';
   }
 
@@ -338,9 +343,7 @@ const ScriptureReader = (function() {
       '</section>' +
       '<section class="scripture-function-card"><div class="scripture-layer-label">Функция стиха</div>' +
       '<p class="scripture-function-line">' + escapeHtml(verseFunction) + '</p></section>' +
-      '<section class="scripture-constructor"><div class="scripture-layer-label">Палео-конструктор</div><div class="scripture-constructor-words">' + wordBlocks + '</div></section>' +
-      '<details class="scripture-assembly-details"><summary>Механика</summary>' +
-      '<div class="scripture-assembly-words">' + words.map(function(word, index) { return '<p>' + escapeHtml(word.paleo || '') + ' · ' + escapeHtml(chains[index].join(' → ')) + '</p>'; }).join('') + '</div></details>';
+      '<section class="scripture-constructor"><div class="scripture-layer-label">Палео-конструктор</div><div class="scripture-constructor-words">' + wordBlocks + '</div></section>';
     updateConstructorOverflow(layers.assembly);
     animateConstructor(layers.assembly);
   }
@@ -390,14 +393,23 @@ const ScriptureReader = (function() {
     yahad: 'Кумран / йахад'
   };
   var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad'];
+  // Глиф икон-чипа строки: чип по канону модуля «Агенты», но иконка несёт природу
+  // корпуса — свиток Торы, книга Невиим, перо Ктувим, самаритянский список, свитки Кумрана.
+  var BOOK_CATEGORY_ICONS = {
+    torah: 'scroll',
+    neviim: 'book-open',
+    ketuvim: 'feather',
+    samaritan: 'book-marked',
+    yahad: 'scroll-text'
+  };
 
   function bookSearchQuery() {
-    var input = get('scripture-search-input');
+    var input = get('sr-search');
     return input ? String(input.value || '').trim().toLowerCase() : '';
   }
 
   function bookCategoryFilter() {
-    var select = get('scripture-category');
+    var select = get('sr-category');
     return select ? String(select.value || '').trim() : '';
   }
 
@@ -413,7 +425,7 @@ const ScriptureReader = (function() {
   }
 
   function fillCategorySelect() {
-    var select = get('scripture-category');
+    var select = get('sr-category');
     if (!select) return;
     var present = {};
     state.books.forEach(function(book) {
@@ -433,70 +445,190 @@ const ScriptureReader = (function() {
     if (current && present[current]) select.value = current;
   }
 
-  function setBookSearchVisible(visible) {
-    var search = get('scripture-search');
-    if (search) search.style.display = visible ? '' : 'none';
-  }
-
+  // Каталог: строки с палео-названием и статусом, сгруппированные по категориям.
+  // Сетка равных карточек была анти-паттерном B2, а мета-строка в ней пряталась.
   function renderBookGrid() {
-    var grid = get('scripture-book-grid');
-    if (!grid) return;
+    var host = get('sr-books');
+    var count = get('sr-books-count');
+    if (!host) return;
     fillCategorySelect();
+
     var books = state.books.filter(function(book) {
       return bookMatchesCategory(book, bookCategoryFilter()) && bookMatchesQuery(book, bookSearchQuery());
     });
+    if (count) {
+      count.textContent = state.books.length ? books.length + ' из ' + state.books.length : '';
+    }
     if (!books.length) {
-      grid.innerHTML = '<p class="scripture-search-empty">Книги не найдены.</p>';
+      host.innerHTML = '<div class="sr-empty"><span class="sr-empty-glyph" aria-hidden="true">𐤀</span>' +
+        '<p class="sr-empty-text">Поле ждёт первую книгу: измените запрос или снимите фильтр категории.</p></div>';
       return;
     }
-    grid.innerHTML = books.map(function(book) {
-      var statusClass = book.dataFile ? 'book-status-ready' : 'book-status-pending';
-      var statusLabel = book.dataFile ? 'Есть данные' : 'В работе';
-      var badge = '<div class="book-status ' + statusClass + '">' + statusLabel + '</div>';
-      return '<a href="#" class="tool-card scripture-book-card" data-book-id="' + escapeHtml(book.id) + '">' +
-        '<span class="tool-icon"><img src="assets/icons/32/ui/book.png" width="32" height="32" alt=""></span>' +
-        '<div class="tool-name">' + escapeHtml(book.ru) + '</div>' +
-        '<div class="tool-desc">' + escapeHtml(book.paleo || '') + '</div>' +
-        badge +
-        '</a>';
+
+    var groups = [];
+    BOOK_CATEGORY_ORDER.forEach(function(category) {
+      var items = books.filter(function(book) { return String(book.category || '') === category; });
+      if (items.length) groups.push({ label: BOOK_CATEGORY_LABELS[category] || category, items: items });
+    });
+    books.forEach(function(book) {
+      if (BOOK_CATEGORY_ORDER.indexOf(String(book.category || '')) !== -1) return;
+      groups.push({ label: BOOK_CATEGORY_LABELS[book.category] || book.category || 'Прочее', items: [book] });
+    });
+
+    host.innerHTML = groups.map(function(group) {
+      var rows = group.items.map(function(book) {
+        var ready = Boolean(book.dataFile);
+        var icon = BOOK_CATEGORY_ICONS[book.category] || 'book';
+        return '<button type="button" class="sr-book-row' + (ready ? '' : ' sr-book-row--pending') + '"' +
+          ' data-book-id="' + escapeHtml(book.id) + '"' +
+          ' aria-label="' + (ready ? 'Открыть книгу: ' : 'Книга в работе: ') + escapeHtml(book.ru) + '">' +
+          '<span class="sr-book-icon" aria-hidden="true"><i data-lucide="' + icon + '"></i></span>' +
+          '<span class="sr-book-name">' + escapeHtml(book.ru) + '</span>' +
+          '<span class="sr-book-paleo" lang="hbo">' + escapeHtml(book.paleo || '') + '</span>' +
+          '<span class="sr-status ' + (ready ? 'sr-status--ready' : 'sr-status--pending') + '">' +
+          '<span class="sr-status-dot"></span>' + (ready ? 'Есть данные' : 'В работе') + '</span></button>';
+      }).join('');
+      // Шапка группы — лейбл + hairline + счётчик, как .agent-group-head.
+      return '<div class="sr-group">' +
+        '<div class="sr-group-head"><span class="sr-group-label">' + escapeHtml(group.label) + '</span>' +
+        '<span class="sr-group-rule"></span>' +
+        '<span class="sr-group-count">' + group.items.length + '</span></div>' +
+        '<div class="sr-books">' + rows + '</div></div>';
     }).join('');
+
+    renderLibraryLegend();
   }
 
+  // Легенда §6 рядом с каталогом: сколько книг готово и сколько ещё в работе.
+  function renderLibraryLegend() {
+    var legend = get('sr-legend');
+    if (!legend) return;
+    var ready = state.books.filter(function(book) { return book.dataFile; }).length;
+    legend.innerHTML = '<li class="sr-legend-item"><span class="sr-status sr-status--ready"><span class="sr-status-dot"></span>Есть данные</span>' +
+      '<span class="sr-legend-text">Книга загружается целиком: доступны все её стихи.</span><b>' + ready + '</b></li>' +
+      '<li class="sr-legend-item"><span class="sr-status sr-status--pending"><span class="sr-status-dot"></span>В работе</span>' +
+      '<span class="sr-legend-text">Файл данных ещё не подготовлен — стих недоступен.</span><b>' + (state.books.length - ready) + '</b></li>';
+  }
+
+  // «Продолжить чтение»: последняя открытая книга и стих этого браузера.
+  function readLast() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(LAST_KEY) || 'null');
+      return saved && saved.book ? saved : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function rememberLast(bookId, verse) {
+    if (!bookId) return;
+    try {
+      localStorage.setItem(LAST_KEY, JSON.stringify({
+        book: bookId,
+        verse: verse == null ? null : String(verse),
+        savedAt: new Date().toISOString()
+      }));
+    } catch (error) {
+      // Приватный режим: продолжение чтения просто не сохранится.
+    }
+  }
+
+  // «Читали вчера, 21:40» — длинный абзац даты читается хуже, чем короткая
+  // подпись, а карточка должна отвечать на вопрос «когда я это оставил».
+  function formatReadWhen(iso) {
+    var date = iso ? new Date(iso) : null;
+    if (!date || isNaN(date.getTime())) return '';
+    var days = Math.floor((Date.now() - date.getTime()) / 86400000);
+    var time = date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    if (days <= 0) return 'Читали сегодня в ' + time;
+    if (days === 1) return 'Читали вчера в ' + time;
+    if (days < 7) return 'Читали ' + days + ' дн. назад';
+    return 'Читали ' + date.toLocaleDateString('ru-RU');
+  }
+
+  function renderResume() {
+    var title = get('sr-resume-title');
+    var ref = get('sr-resume-ref');
+    var when = get('sr-resume-when');
+    var note = get('sr-resume-note');
+    var button = get('sr-resume-open');
+    if (!title || !button) return;
+
+    var last = readLast();
+    var book = last ? state.books.filter(function(item) { return item.id === last.book; })[0] : null;
+    if (!book) {
+      // Пустое состояние §4.6: говорим, что делать дальше, а не «ничего нет».
+      title.textContent = 'Чтение ещё не начато';
+      if (ref) ref.textContent = '';
+      if (when) when.textContent = '';
+      if (note) note.textContent = 'Откройте любую книгу из каталога — и она запомнится здесь.';
+      button.hidden = false;
+      button.textContent = 'Начать с Берешит';
+      button.setAttribute('data-book-id', (state.books[0] || {}).id || '');
+      return;
+    }
+    title.textContent = book.ru;
+    button.hidden = false;
+    button.textContent = last.verse ? 'Продолжить со стиха ' + last.verse : 'Открыть стих';
+    button.setAttribute('data-book-id', book.id);
+    if (ref) ref.textContent = last.verse ? 'Стих ' + last.verse : 'Глава 1, стих 1';
+    if (when) when.textContent = formatReadWhen(last.savedAt);
+  }
+
+  // Прогресс считается по уже загруженной книге: в библиотеке стихов в памяти нет.
+  function renderProgress() {
+    var wrap = get('sr-progress');
+    var fill = get('sr-progress-fill');
+    var value = get('sr-progress-value');
+    if (!wrap || !fill || !value || !state.verses.length) return;
+    var total = state.verses.length;
+    var current = state.currentVerse + 1;
+    fill.style.width = Math.round((current / total) * 100) + '%';
+    value.textContent = current + ' / ' + total;
+    wrap.hidden = false;
+
+    var hint = get('sr-verse-hint');
+    if (hint) hint.textContent = current + ' из ' + total;
+  }
+
+  // Смена экрана = скрытие секций, а не перерисовка модуля: так запрос поиска
+  // и позиция чтения переживают возврат в каталог. Тулбар каталога — часть
+  // экрана библиотеки, поэтому прячется вместе с ней.
   function showBookGrid() {
-    var grid = get('scripture-book-grid');
-    var article = get('scripture-verse-article');
-    var verseNav = get('scripture-verse-nav');
-    var nav = get('scripture-navigation');
-    var topNav = get('scripture-navigation-top');
-    var analysis = get('scripture-analysis');
-    var tools = get('scripture-tools');
-    if (grid) grid.style.display = 'grid';
-    setBookSearchVisible(true);
-    if (article) article.style.display = 'none';
-    if (verseNav) verseNav.style.display = 'none';
-    if (nav) nav.style.display = 'none';
-    if (topNav) topNav.style.display = 'none';
-    if (analysis) analysis.style.display = 'none';
-    if (tools) tools.style.display = 'none';
+    var library = get('sr-library');
+    var reading = get('sr-reading');
+    var toolbar = get('sr-toolbar');
+    if (library) library.hidden = false;
+    if (reading) reading.hidden = true;
+    if (toolbar) toolbar.hidden = false;
     state.currentBook = null;
+    renderResume();
+    if (window.ScriptureAI) window.ScriptureAI.reset();
   }
 
   function showVerseView() {
-    var grid = get('scripture-book-grid');
-    var article = get('scripture-verse-article');
-    var verseNav = get('scripture-verse-nav');
-    var nav = get('scripture-navigation');
-    var topNav = get('scripture-navigation-top');
-    var analysis = get('scripture-analysis');
-    var tools = get('scripture-tools');
-    if (grid) grid.style.display = 'none';
-    setBookSearchVisible(false);
-    if (article) article.style.display = '';
-    if (verseNav) verseNav.style.display = '';
-    if (nav) nav.style.display = '';
-    if (topNav) topNav.style.display = '';
-    if (analysis) analysis.style.display = '';
-    if (tools) tools.style.display = '';
+    var library = get('sr-library');
+    var reading = get('sr-reading');
+    var toolbar = get('sr-toolbar');
+    if (library) library.hidden = true;
+    if (reading) reading.hidden = false;
+    if (toolbar) toolbar.hidden = true;
+  }
+
+  // Положение чтения живёт в хеше: ссылку на стих можно передать, а «назад»
+  // возвращает в каталог или к предыдущему стиху. history.replaceState, а не
+  // LabRouter.navigate — иначе hashchange перерисовывал бы весь контейнер.
+  function syncUrl() {
+    var book = state.currentBook;
+    if (!book || !window.history || !window.history.replaceState) return;
+    var hash = '#scripture-reader?book=' + encodeURIComponent(book.id);
+    var verse = state.verses[state.currentVerse];
+    if (verse) hash += '&verse=' + encodeURIComponent(verse.verse);
+    try {
+      window.history.replaceState(null, '', hash);
+    } catch (error) {
+      // Некоторые контексты (file://) запрещают replaceState — чтение не ломается.
+    }
   }
 
   function openBook(bookId, verseNumber) {
@@ -510,8 +642,9 @@ const ScriptureReader = (function() {
 
     state.currentBook = book;
     showVerseView();
-    loadVerses(book, verseNumber);
+    return loadVerses(book, verseNumber);
   }
+
   function loadVerses(book, verseNumber) {
     setLoading('Загрузка ' + book.ru + '…');
     if (!book.dataFile) {
@@ -585,12 +718,10 @@ const ScriptureReader = (function() {
     var translit = get('scripture-translit');
     var previous = get('scripture-prev');
     var next = get('scripture-next');
-    var analysis = get('scripture-analysis');
-    var physicsTrigger = get('scripture-physics-trigger');
-    var physicsPanel = get('scripture-physics-panel');
 
     state.selectedIndexes = [];
     state.selectedWordIndex = null;
+    setMode('word');
 
     if (title) title.textContent = state.currentBook.ru + ' ' + (verse.chapter || 1) + ':' + verse.verse;
 
@@ -607,12 +738,12 @@ const ScriptureReader = (function() {
     if (previous) previous.disabled = state.currentVerse === 0;
     if (next) next.disabled = state.currentVerse === state.verses.length - 1;
     renderChapterVerseNav();
-    if (analysis) {
-      var content = get('scripture-physics-content');
-      if (content) content.innerHTML = '<p class="text-muted">Нажми на слово для разбора.</p>';
-      if (physicsTrigger) physicsTrigger.setAttribute('aria-expanded', 'false');
-      if (physicsPanel) { physicsPanel.hidden = true; physicsPanel.classList.remove('is-open'); }
-    }
+    renderProgress();
+    rememberLast(state.currentBook.id, verse.verse);
+    syncUrl();
+    // Смена стиха сбрасывает и разбор, и ответ ИИ: они относятся к прежнему стиху.
+    renderAnalysis();
+    if (window.ScriptureAI) window.ScriptureAI.reset();
   }
 
   function verseChapters() {
@@ -634,9 +765,11 @@ const ScriptureReader = (function() {
     });
   }
 
-  // Навигация глава → стих в белом контейнере.
+  // Навигация глава → стих: две горизонтальные ленты вместо 81 кнопки в потоке
+  // (перенос растягивал Берешит на четыре экрана до самого текста).
   function renderChapterVerseNav() {
     var navigation = get('scripture-verse-nav');
+    var note = get('scripture-path-note');
     if (!navigation) return;
     var currentVerse = state.verses[state.currentVerse];
     var currentChapter = currentVerse ? currentVerse.chapter : 1;
@@ -644,28 +777,34 @@ const ScriptureReader = (function() {
 
     var chapters = verseChapters();
     var hasMultipleSourceBooks = chapters.some(function(item) { return item.sourceBook !== currentSourceBook; });
-    var chapterButtons = chapters.map(function(item) {
+    var chapterChips = chapters.map(function(item) {
       var active = item.chapter === currentChapter && item.sourceBook === currentSourceBook;
       var label = (hasMultipleSourceBooks ? item.sourceBook + ' ' : '') + item.chapter;
-      return '<button type="button" class="chapter-btn' + (active ? ' active' : '') + '" data-chapter="' + item.chapter + '" data-source-book="' + escapeHtml(item.sourceBook) + '"' +
+      return '<button type="button" class="sr-chip" data-chapter="' + item.chapter + '" data-source-book="' + escapeHtml(item.sourceBook) + '"' +
         (active ? ' aria-current="true"' : '') + ' aria-label="Открыть главу ' + escapeHtml(label) + '">' +
         escapeHtml(label) + '</button>';
     }).join('');
 
     var verses = chapterVerses(currentSourceBook, currentChapter);
-    var verseButtons = verses.map(function(item) {
+    var verseChips = verses.map(function(item) {
       var active = item.index === state.currentVerse;
-      return '<button type="button" class="verse-num' + (active ? ' active' : '') + '" data-verse-index="' + item.index + '"' +
+      return '<button type="button" class="sr-chip" data-verse-index="' + item.index + '"' +
         (active ? ' aria-current="true"' : '') + ' aria-label="Открыть стих ' + escapeHtml(item.verse) + '">' +
         escapeHtml(item.verse) + '</button>';
     }).join('');
 
-    navigation.innerHTML = '<div class="scripture-chapter-nav">' +
-      '<div class="scripture-nav-label">Главы</div>' +
-      '<div class="scripture-chapter-buttons">' + (chapterButtons || '<span class="text-muted">Главы не найдены.</span>') + '</div>' +
-      '<div class="scripture-nav-label">Стихи</div>' +
-      '<div class="scripture-verse-buttons">' + (verseButtons || '<span class="text-muted">В главе нет стихов.</span>') + '</div>' +
-      '</div>';
+    navigation.innerHTML = '<div class="sr-stepper-row">' +
+      '<span class="sr-stepper-label" id="sr-label-chapters">Главы</span>' +
+      '<div class="sr-strip" role="group" aria-labelledby="sr-label-chapters">' +
+      (chapterChips || '<span class="sr-note">Главы не найдены.</span>') + '</div></div>' +
+      '<div class="sr-stepper-row">' +
+      '<span class="sr-stepper-label" id="sr-label-verses">Стихи</span>' +
+      '<div class="sr-strip" role="group" aria-labelledby="sr-label-verses">' +
+      (verseChips || '<span class="sr-note">В главе нет стихов.</span>') + '</div></div>';
+
+    if (note) {
+      note.textContent = 'Стрелки клавиатуры ← и → листают стихи. Ссылку на стих можно передать: адрес содержит книгу и номер стиха.';
+    }
   }
 
   function selectedLetters() {
@@ -737,13 +876,48 @@ const ScriptureReader = (function() {
       '</section>';
   }
 
+  // Единая точка входа ячейки «Разбор слова»: режим переключает, что именно
+  // разбирается — целое слово или выделенные буквы. Две отдельные функции рендера
+  // жили в одной панели и пользователь не понимал, какая к чему относится.
   function renderAnalysis() {
+    var content = get('scripture-physics-content');
+    if (!content) return;
+    if (!state.currentBook) {
+      content.innerHTML = emptyMarkup('Откройте книгу, чтобы разбирать слова.');
+      return;
+    }
+    if (state.mode === 'word') {
+      if (state.selectedWordIndex == null) {
+        content.innerHTML = emptyMarkup('Нажмите на слово палео-текста, чтобы увидеть его разбор.');
+        return;
+      }
+      renderWordAnalysis(state.selectedWordIndex);
+      return;
+    }
+    renderLettersAnalysis();
+  }
+
+  function emptyMarkup(text) {
+    return '<div class="sr-empty"><span class="sr-empty-glyph" aria-hidden="true">𐤀</span>' +
+      '<p class="sr-empty-text">' + escapeHtml(text) + '</p></div>';
+  }
+
+  function setMode(mode) {
+    state.mode = mode === 'letters' ? 'letters' : 'word';
+    var wordBtn = get('sr-mode-word');
+    var lettersBtn = get('sr-mode-letters');
+    if (wordBtn) wordBtn.setAttribute('aria-pressed', state.mode === 'word' ? 'true' : 'false');
+    if (lettersBtn) lettersBtn.setAttribute('aria-pressed', state.mode === 'letters' ? 'true' : 'false');
+    renderAnalysis();
+  }
+
+  function renderLettersAnalysis() {
     var content = get('scripture-physics-content');
     var letters = selectedLetters();
     if (!content) return;
 
     if (letters.length < 2) {
-      content.innerHTML = '<p class="text-muted">Выберите слово или последовательность букв палео-потока.</p>' +
+      content.innerHTML = emptyMarkup('Выделите две или более соседних букв палео-потока: Shift и клик по буквам.') +
         copyButtonMarkup(true);
       return;
     }
@@ -790,42 +964,71 @@ const ScriptureReader = (function() {
       rootHTML + stateMarkup() + lossLayersMarkup(true) + '</div>';
   }
 
-  function openPhysics() {
-    var trigger = get('scripture-physics-trigger');
-    var panel = get('scripture-physics-panel');
-    if (!trigger || !panel) return;
-    panel.hidden = false;
-    panel.classList.add('is-open');
-    trigger.setAttribute('aria-expanded', 'true');
-    panel.style.maxHeight = panel.scrollHeight + 'px';
-  }
-
-  function closePhysics() {
-    var trigger = get('scripture-physics-trigger');
-    var panel = get('scripture-physics-panel');
-    if (!trigger || !panel) return;
-    trigger.setAttribute('aria-expanded', 'false');
-    panel.classList.remove('is-open');
-    panel.style.maxHeight = '0px';
-    window.setTimeout(function() {
-      if (trigger.getAttribute('aria-expanded') === 'false') panel.hidden = true;
-    }, 280);
-  }
-
+  // Свидетельство собирается из того, что реально выбрано: слово или буквы.
+  // Поля переиспользует ИИ-модуль, поэтому сборка-действие и стих уходят вместе.
   function currentEvidence() {
     var verse = state.verses[state.currentVerse];
+    if (!verse || !state.currentBook) return null;
+
     var letters = selectedLetters();
-    if (!verse || !letters.length) return null;
-    return {
-      book: state.currentBook && state.currentBook.ru,
+    var base = {
+      book: state.currentBook.id,
+      bookRu: state.currentBook.ru,
+      chapter: verse.chapter || 1,
       verse: verse.verse,
-      paleo: letters.map(function(letter) { return letter.paleo; }).join(''),
-      hebrew: letters.map(function(letter) { return letter.hebrew; }).join(''),
-      letters: letters.map(function(letter) {
-        return { paleo: letter.paleo, hebrew: letter.hebrew, image: letter.data.image, meaning: letter.data.meaning };
-      }),
+      mode: state.mode,
+      verseFunction: verse.paleo_function || verse.verse_function || verse.function || '',
       savedAt: new Date().toISOString()
     };
+    if (state.mode === 'word' && state.selectedWordIndex != null) {
+      var word = currentWordData(state.selectedWordIndex);
+      return Object.assign(base, {
+        paleo: word.paleo || '',
+        hebrew: cleanHebrewWord(word.hebrew || ''),
+        translit: word.translit || '',
+        assembly: word.assembly || '',
+        letters: Array.from(cleanHebrewWord(word.hebrew || '')).map(function(letter) {
+          var data = PALEO.byHebrew[letter] || {};
+          return { hebrew: letter, paleo: PALEO.toPaleo(letter), image: data.image, meaning: paleoFunction(letter) };
+        })
+      });
+    }
+    if (!letters.length) return null;
+    return Object.assign(base, {
+      paleo: letters.map(function(letter) { return letter.paleo; }).join(''),
+      hebrew: letters.map(function(letter) { return letter.hebrew; }).join(''),
+      assembly: letters.map(function(letter) { return letter.data.meaning || letter.data.image || ''; }).join(' → '),
+      letters: letters.map(function(letter) {
+        return { paleo: letter.paleo, hebrew: letter.hebrew, image: letter.data.image, meaning: letter.data.meaning };
+      })
+    });
+  }
+
+  function readEvidence() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(EVIDENCE_KEY) || '[]');
+      return Array.isArray(saved) ? saved : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function renderEvidenceList() {
+    var host = get('sr-evidence');
+    if (!host) return;
+    var saved = readEvidence().slice(0, 5);
+    if (!saved.length) {
+      host.innerHTML = '';
+      return;
+    }
+    host.innerHTML = '<li class="sr-legend-item"><span class="sr-note">Сохранённые свидетельства</span></li>' +
+      saved.map(function(item) {
+        var ref = escapeHtml((item.bookRu || item.book || '') + ' ' + (item.chapter || 1) + ':' + (item.verse || ''));
+        return '<li class="sr-legend-item"><span class="sr-book-name">' + ref + '</span>' +
+          '<span class="sr-book-paleo" lang="hbo">' + escapeHtml(item.paleo || '') + '</span>' +
+          (item.ai && item.ai.confidence ? '<span class="sr-confidence sr-confidence--' + escapeHtml(item.ai.confidence) + '">ИИ: ' + escapeHtml(item.ai.confidence) + '</span>' : '') +
+          '</li>';
+      }).join('');
   }
 
   function saveEvidence() {
@@ -834,42 +1037,24 @@ const ScriptureReader = (function() {
       if (typeof LabToast !== 'undefined') LabToast.show('Сначала выберите слово или буквы.');
       return;
     }
+    // Ответ ИИ — часть свидетельства, если он уже получен для этого фрагмента.
+    if (window.ScriptureAI) {
+      var ai = window.ScriptureAI.lastFor(evidence);
+      if (ai) evidence.ai = ai;
+    }
     try {
-      var key = 'alephy_scripture_evidence_v1';
-      var saved = JSON.parse(localStorage.getItem(key) || '[]');
-      if (!Array.isArray(saved)) saved = [];
+      var saved = readEvidence();
       saved.unshift(evidence);
-      localStorage.setItem(key, JSON.stringify(saved.slice(0, 50)));
-      copyText(JSON.stringify(evidence, null, 2), 'Свидетельство сохранено и скопировано.');
+      localStorage.setItem(EVIDENCE_KEY, JSON.stringify(saved.slice(0, 50)));
+      renderEvidenceList();
+      if (typeof LabToast !== 'undefined') LabToast.show('Свидетельство сохранено в этом браузере.');
     } catch (error) {
       if (typeof LabToast !== 'undefined') LabToast.show('Не удалось сохранить свидетельство.');
     }
   }
 
-  function requestAIAnalysis() {
-    var evidence = currentEvidence();
-    if (!evidence) return Promise.resolve();
-    return fetch('http://localhost:8000/api/run', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        agent: 'researcher',
-        task: 'Разбери выбранный палео-фрагмент без замены локальной физики: ' + JSON.stringify(evidence)
-      })
-    }).then(function(response) {
-      if (!response.ok) throw new Error('AI HTTP ' + response.status);
-      return response.json();
-    }).then(function(result) {
-      var content = get('scripture-physics-content');
-      var text = result && (result.result || result.output || result.text);
-      if (content && text) {
-        content.insertAdjacentHTML('beforeend', '<div class="scripture-ai-note"><strong>Заметка исследователя</strong><p>' + escapeHtml(text) + '</p></div>');
-        openPhysics();
-      }
-    }).catch(function() {
-      // Локальный разбор остаётся доступен без сервера.
-    });
-  }
+  // Сетевой разбор уехал в js/scripture-ai.js: модуль чтения не знает про сеть,
+  // а ячейка «Разбор свидетельств» не зависит от логики стиха.
 
   function selectWord(wordIndex) {
     var paleo = get('scripture-paleo');
@@ -880,8 +1065,8 @@ const ScriptureReader = (function() {
       return Number(letter.getAttribute('data-index'));
     });
     updateLetterState();
-    renderWordAnalysis(wordIndex);
-    openPhysics();
+    setMode('word');
+    if (window.ScriptureAI) window.ScriptureAI.invalidate();
   }
 
   function handleLetterClick(event) {
@@ -910,8 +1095,10 @@ const ScriptureReader = (function() {
     var sortedSelection = state.selectedIndexes.slice().sort(function(a, b) { return a - b; });
     if (!isContiguous(sortedSelection)) state.selectedIndexes = [];
     updateLetterState();
-    renderAnalysis();
-    if (state.selectedIndexes.length) openPhysics();
+    // Выделение букв всегда переводит ячейку в режим «Буквы»: иначе разбор
+    // продолжал бы показывать слово, хотя выбраны отдельные знаки.
+    setMode('letters');
+    if (window.ScriptureAI) window.ScriptureAI.invalidate();
   }
 
   function handlePaleoKeydown(event) {
@@ -959,9 +1146,8 @@ const ScriptureReader = (function() {
     var next = get('scripture-next');
     var paleo = get('scripture-paleo');
     var reader = get('scripture-reader');
-    var grid = get('scripture-book-grid');
-    var searchInput = get('scripture-search-input');
-    var categorySelect = get('scripture-category');
+    var searchInput = get('sr-search');
+    var categorySelect = get('sr-category');
 
     if (previous) previous.addEventListener('click', function() { moveVerse(-1); });
     if (searchInput) {
@@ -1020,23 +1206,26 @@ const ScriptureReader = (function() {
     });
     var copyVerse = get('scripture-copy-verse');
     if (copyVerse) copyVerse.addEventListener('click', copyCurrentVerse);
-    var analysis = get('scripture-analysis');
-    if (analysis) analysis.addEventListener('click', function(event) {
+    var physicsContent = get('scripture-physics-content');
+    if (physicsContent) physicsContent.addEventListener('click', function(event) {
       if (event.target.closest('.scripture-copy-selection')) copySelection();
     });
-    var physicsTrigger = get('scripture-physics-trigger');
-    if (physicsTrigger) physicsTrigger.addEventListener('click', function() {
-      if (physicsTrigger.getAttribute('aria-expanded') === 'true') closePhysics();
-      else openPhysics();
-    });
-    var analysisTool = get('scripture-tool-analysis');
-    var saveTool = get('scripture-tool-save');
-    if (analysisTool) analysisTool.addEventListener('click', function() {
-      if (state.selectedIndexes.length) { renderAnalysis(); openPhysics(); }
-      else if (typeof LabToast !== 'undefined') LabToast.show('Сначала выберите слово палео-текста.');
-      requestAIAnalysis();
-    });
+
+    var wordMode = get('sr-mode-word');
+    var lettersMode = get('sr-mode-letters');
+    if (wordMode) wordMode.addEventListener('click', function() { setMode('word'); });
+    if (lettersMode) lettersMode.addEventListener('click', function() { setMode('letters'); });
+
+    var saveTool = get('sr-tool-save');
     if (saveTool) saveTool.addEventListener('click', saveEvidence);
+
+    var aiRun = get('sr-ai-run');
+    var aiRetry = get('sr-ai-retry');
+    var aiCopy = get('sr-ai-copy');
+    if (aiRun && window.ScriptureAI) aiRun.addEventListener('click', function() { window.ScriptureAI.ask(); });
+    if (aiRetry && window.ScriptureAI) aiRetry.addEventListener('click', function() { window.ScriptureAI.ask(true); });
+    if (aiCopy && window.ScriptureAI) aiCopy.addEventListener('click', function() { window.ScriptureAI.copy(); });
+
     if (reader) {
       reader.addEventListener('mouseover', handleWordHover);
       reader.addEventListener('mouseout', function(event) {
@@ -1047,29 +1236,84 @@ const ScriptureReader = (function() {
       reader.addEventListener('focusin', handleWordHover);
       reader.addEventListener('focusout', clearHoveredWord);
     }
-    if (grid) grid.addEventListener('click', function(event) {
-      var card = event.target.closest('.scripture-book-card');
-      if (!card) return;
-      event.preventDefault();
-      openBook(card.getAttribute('data-book-id'));
+
+    var books = get('sr-books');
+    if (books) books.addEventListener('click', function(event) {
+      var row = event.target.closest('.sr-book-row');
+      if (!row) return;
+      openBook(row.getAttribute('data-book-id'));
     });
+
+    // Пустое состояние не пишет в localStorage, поэтому берём книгу из
+    // data-book-id, а сохранённый стих — только если он реально есть.
+    var resumeButton = get('sr-resume-open');
+    if (resumeButton) resumeButton.addEventListener('click', function() {
+      var last = readLast();
+      var bookId = (last && last.book) || resumeButton.getAttribute('data-book-id');
+      if (bookId) openBook(bookId, last && last.verse);
+    });
+
     var verseNavigation = get('scripture-verse-nav');
     if (verseNavigation) verseNavigation.addEventListener('click', function(event) {
-      var chapterBtn = event.target.closest('.chapter-btn');
-      if (chapterBtn) {
-        var chapter = Number(chapterBtn.getAttribute('data-chapter'));
-        var first = chapterVerses(chapterBtn.getAttribute('data-source-book') || '', chapter)[0];
+      var chapterChip = event.target.closest('.sr-chip[data-chapter]');
+      if (chapterChip) {
+        var chapter = Number(chapterChip.getAttribute('data-chapter'));
+        var first = chapterVerses(chapterChip.getAttribute('data-source-book') || '', chapter)[0];
         if (first) {
           state.currentVerse = first.index;
           renderVerse();
         }
         return;
       }
-      var button = event.target.closest('.verse-num');
-      if (!button) return;
-      state.currentVerse = Number(button.getAttribute('data-verse-index'));
+      var chip = event.target.closest('.sr-chip[data-verse-index]');
+      if (!chip) return;
+      state.currentVerse = Number(chip.getAttribute('data-verse-index'));
       renderVerse();
     });
+
+    var jumpForm = get('scripture-jump-form');
+    if (jumpForm) jumpForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      jumpToRef();
+    });
+
+    // Листание стрелками: работает только когда фокус не в поле ввода,
+    // иначе переход по «глава:стих» перехватывал бы набор цифр.
+    if (!state.arrowKeysBound) {
+      state.arrowKeysBound = true;
+      document.addEventListener('keydown', function(event) {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        var tag = (event.target && event.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        var reading = get('sr-reading');
+        if (!reading || reading.hidden || !state.verses.length) return;
+        event.preventDefault();
+        moveVerse(event.key === 'ArrowRight' ? 1 : -1);
+      });
+    }
+  }
+
+  // Переход «глава:стих»: главы переключаются первыми при совпадении номера.
+  function jumpToRef() {
+    var input = get('scripture-jump');
+    if (!input) return;
+    var value = String(input.value || '').trim();
+    var match = value.match(/^(\d+)\s*[:.\-]\s*(\d+)$/);
+    if (!match) {
+      if (typeof LabToast !== 'undefined') LabToast.show('Укажите стих в виде «глава:стих», например 1:14.');
+      return;
+    }
+    var chapter = Number(match[1]);
+    var verse = match[2];
+    var found = state.verses.findIndex(function(item) {
+      return Number(item.chapter || 1) === chapter && String(item.verse) === verse;
+    });
+    if (found < 0) {
+      if (typeof LabToast !== 'undefined') LabToast.show('Стих ' + chapter + ':' + verse + ' в этой книге не найден.');
+      return;
+    }
+    state.currentVerse = found;
+    renderVerse();
   }
 
   function load() {
@@ -1092,9 +1336,10 @@ const ScriptureReader = (function() {
         state.books = Array.isArray(results[0].books) ? results[0].books : [];
         state.roots = Array.isArray(results[1]) ? results[1] : [];
         state.states = Array.isArray(results[2].states) ? results[2].states : [];
-        renderBookGrid();
-        showBookGrid();
         state.loaded = true;
+        renderBookGrid();
+        renderEvidenceList();
+        showBookGrid();
         if (state.pendingBookId) {
           var requestedBookId = state.pendingBookId;
           var requestedVerse = state.pendingVerse;
@@ -1104,10 +1349,11 @@ const ScriptureReader = (function() {
         }
       })
       .catch(function(error) {
-        var module = get('scripture-reader');
-        if (module) {
-          module.innerHTML = '<div class="lab-alert lab-alert-error scripture-reader-error">Ошибка загрузки списка книг: ' +
-            escapeHtml(error.message) + '</div>';
+        // Каталог не поднялся: сообщаем в самой ячейке поиска, экраны не трогаем.
+        var host = get('sr-books');
+        if (host) {
+          host.innerHTML = '<div class="sr-empty"><span class="sr-empty-glyph" aria-hidden="true">𐤀</span>' +
+            '<p class="sr-empty-text">Каталог недоступен: ' + escapeHtml(error.message) + '</p></div>';
         }
         throw error;
       });
@@ -1132,6 +1378,7 @@ const ScriptureReader = (function() {
       state.initialized = true;
       if (state.loaded) {
         renderBookGrid();
+        renderEvidenceList();
         showBookGrid();
         if (requestedBookId) openBook(requestedBookId, requestedVerse);
       }
@@ -1143,6 +1390,8 @@ const ScriptureReader = (function() {
     init: init,
     openBook: openBook,
     renderVerse: renderVerse,
+    // ИИ-модуль спрашивает разбор у модуля чтения, а не знает про DOM.
+    currentEvidence: currentEvidence,
     getBooks: function() { return state.books; },
     getVerses: function() { return state.verses; },
     getCurrentBook: function() { return state.currentBook; }

@@ -269,17 +269,6 @@
   cursor: not-allowed;
 }
 
-.scripture-copy-icon {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
 .scripture-paleo {
   overflow-wrap: normal;
   word-break: normal;
@@ -376,12 +365,6 @@
   margin: 6px 0 14px;
   color: var(--text-primary);
   line-height: 1.65;
-}
-
-.scripture-assembly-words {
-  display: grid;
-  gap: var(--space-2);
-  margin: var(--space-3) 0 18px;
 }
 
 .scripture-meaning-card,
@@ -616,59 +599,6 @@
 .scripture-glyph-chip[aria-expanded="true"] {
   border-color: var(--accent-gold);
   outline: none;
-}
-
-.scripture-assembly-details {
-  padding: var(--space-3) 14px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-xs);
-  background: var(--bg-tertiary);
-}
-
-.scripture-assembly-details summary {
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-weight: 700;
-}
-
-.scripture-assembly-details[open] summary { color: var(--accent-gold); }
-
-.scripture-assembly-details .scripture-assembly-words { margin-bottom: 0; }
-
-.scripture-assembly-details .scripture-assembly-words p {
-  margin: 0;
-  padding: var(--space-2) 0;
-  border-bottom: 1px solid var(--border-light);
-  color: var(--text-secondary);
-}
-
-.scripture-assembly-details .scripture-assembly-words p:last-child { border-bottom: 0; }
-
-.scripture-assembly-word {
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-3) 14px;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
-}
-
-.scripture-assembly-word-paleo {
-  margin-bottom: 7px;
-  color: var(--accent-gold);
-  font-family: 'Noto Sans Phoenician', sans-serif;
-  font-size: 21px;
-  letter-spacing: 0.04em;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-
-.scripture-assembly-word p {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.55;
 }
 
 .scripture-function-line {

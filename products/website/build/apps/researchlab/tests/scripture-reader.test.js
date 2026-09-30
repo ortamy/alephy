@@ -159,30 +159,75 @@ assert.ok(readerCss.includes('.scripture-navigation .lab-btn') && readerCss.incl
 assert.ok(readerCss.includes('.scripture-physics-chevron') && readerCss.includes('grid-column: 2;'), 'Chevron физики слова закреплён справа');
 assert.ok(!readerCss.includes('.scripture-glyph-tooltip'), 'Старый CSS-tooltip удалён');
 
+const bentoCss = fs.readFileSync(path.join(__dirname, '..', 'css', 'scripture-reader-bento.css'), 'utf8');
 const pageControllerSource = fs.readFileSync(path.join(__dirname, '..', 'js', 'page-controller.js'), 'utf8');
-assert.ok(pageControllerSource.includes('id="scripture-search-input"'), 'Поиск по книгам стоит в шапке модуля');
-assert.ok(pageControllerSource.includes('id="scripture-search"'), 'Контейнер поиска книг есть в разметке');
-assert.ok(pageControllerSource.includes('id="scripture-category"'), 'Селектор категории книг есть в разметке');
-assert.ok(readerSource.includes('book.ru, book.paleo, book.id'), 'Фильтр ищет по ru, paleo и id');
-assert.ok(readerSource.includes("categorySelect.addEventListener('change', renderBookGrid)"), 'Сетка книг перерисовывается по категории');
-assert.ok(readerSource.includes('bookMatchesCategory'), 'Фильтр учитывает выбранную категорию');
-assert.ok(readerSource.includes('Книги не найдены.'), 'Пустой поиск показывает «Книги не найдены.»');
+assert.ok(pageControllerSource.includes('id="sr-search"'), 'Поиск по книгам есть в разметке модуля');
+// Тулбар каталога вынесен под шапку и снимает оболочку агентов, как реестр
+// словарей: панель одна на весь ряд, а не блок внутри ячейки бенто.
 assert.ok(
-  readerSource.includes('assets/icons/32/ui/book.png') && readerSource.includes('width="32" height="32"'),
-  'Карточка книги использует иконку 32×32'
+  pageControllerSource.indexOf('id="sr-toolbar"') < pageControllerSource.indexOf('id="sr-library"'),
+  'Тулбар каталога стоит выше bento-сетки библиотеки'
 );
+assert.ok(
+  pageControllerSource.includes('class="agent-controls-panel sr-controls-panel" id="sr-toolbar"') &&
+    pageControllerSource.includes('class="agent-toolbar-row"'),
+  'Тулбар каталога повторяет оболочку .agent-controls-panel реестра словарей'
+);
+assert.ok(
+  readerSource.includes("if (toolbar) toolbar.hidden = false;") &&
+    readerSource.includes("if (toolbar) toolbar.hidden = true;"),
+  'Тулбар каталога переключается вместе с экраном библиотеки'
+);
+assert.ok(
+  bentoCss.includes('.sr-controls-panel .agents-search') &&
+    bentoCss.includes('.sr-controls-panel .agent-toolbar-actions'),
+  'Раскладка тулбара задаётся своими классами поверх оболочки агентов'
+);
+assert.ok(pageControllerSource.includes('class="sr-bento" id="sr-library"'), 'Библиотека — первая bento-сетка модуля');
+assert.ok(pageControllerSource.includes('id="sr-category"'), 'Селектор категории книг есть в разметке');
+assert.ok(pageControllerSource.includes('id="sr-resume-open"'), '«Продолжить чтение» открывает последний стих');
+// Правая колонка — единый липкий рельс: при span 2 у каталога вторая правая
+// ячейка уезжала под список книг и оставляла дыру в сетке.
+assert.ok(
+  pageControllerSource.includes('class="sr-rail"') &&
+    bentoCss.includes('.sr-rail') &&
+    bentoCss.includes('position: sticky;') &&
+    !bentoCss.includes('.sr-cell--search { grid-column: span 7; grid-row: span 2; }'),
+  'Правые ячейки собраны в липкий рельс, а каталог не растянут на две строки'
+);
+// Карточка продолжения отвечает на «что / где / когда» и не прячет CTA,
+// когда чтения ещё нет (§4.6 — пустое состояние с действием).
+assert.ok(
+  pageControllerSource.includes('id="sr-resume-when"') &&
+    readerSource.includes('function formatReadWhen(iso)') &&
+    readerSource.includes("button.textContent = 'Начать с Берешит'") &&
+    bentoCss.includes('.sr-cell--resume .sr-ai-actions .lab-btn { width: 100%; }'),
+  '«Продолжить чтение» показывает дату, широкую кнопку и CTA в пустом состоянии'
+);
+assert.ok(
+  readerSource.includes("resumeButton.getAttribute('data-book-id')"),
+  'Кнопка продолжения работает и без записи в localStorage'
+);
+assert.ok(pageControllerSource.includes('id="sr-reading"'), 'Чтение — вторая bento-сетка модуля');
+assert.ok(readerSource.includes('class="sr-strip"'), 'Навигация идёт горизонтальной лентой, а не переносом кнопок');
+assert.ok(readerSource.includes('book.ru, book.paleo, book.id'), 'Фильтр ищет по ru, paleo и id');
+assert.ok(readerSource.includes("categorySelect.addEventListener('change', renderBookGrid)"), 'Каталог перерисовывается по категории');
+assert.ok(readerSource.includes('bookMatchesCategory'), 'Фильтр учитывает выбранную категорию');
+assert.ok(readerSource.includes('измените запрос или снимите фильтр категории'), 'Пустой поиск показывает состояние по §4.6');
+assert.ok(readerSource.includes('sr-book-row'), 'Каталог — строки с метаданными, а не сетка равных карточек');
 assert.ok(
   readerSource.includes("searchInput.addEventListener('input', renderBookGrid)") &&
     readerSource.includes("searchInput.addEventListener('search', renderBookGrid)"),
-  'Сетка книг перерисовывается по input и search'
+  'Каталог перерисовывается по input и search'
 );
-assert.ok(readerSource.includes('setBookSearchVisible(false)'), 'Поиск скрывается на виде стиха');
+assert.ok(readerSource.includes('history.replaceState'), 'Положение чтения живёт в хеше и передаётся ссылкой');
+assert.ok(readerSource.includes('alephy_scripture_last_v1'), 'Последний стих запоминается для продолжения чтения');
+assert.ok(readerSource.includes('setMode('), 'Разбор переключается между словом и буквами одним режимом');
 assert.ok(
-  readerCss.includes('.scripture-book-card .tool-icon img') &&
-    readerCss.includes('width: 32px;') &&
-    readerCss.includes('height: 32px;'),
-  'CSS карточки фиксирует иконку 32×32'
+  readerSource.includes('ScriptureAI.invalidate') && readerSource.includes('currentEvidence: currentEvidence'),
+  'Смена стиха инвалидирует ответ ИИ, а разбор берётся у модуля чтения'
 );
-assert.ok(readerCss.includes('@media (max-width: 380px)'), 'На узкой ширине сетка книг остаётся двухколоночной');
+assert.ok(!readerSource.includes('http://localhost:8000/api/run'), 'Хардкод адреса ИИ-сервера удалён');
+assert.ok(!readerSource.includes('readingMode'), 'Мёртвое состояние readingMode удалено');
 
 console.log('OK: PaleoLetters and Scripture Reader core scenarios passed');

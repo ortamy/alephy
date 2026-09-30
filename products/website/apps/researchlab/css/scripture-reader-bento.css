@@ -1,0 +1,777 @@
+/* =============================================
+   scripture-reader-bento.css — bento-каркас «Книгочтения»
+   #scripture-reader (дизайн-система §5.2f).
+
+   Ячейка повторяет .vi-cell (css/vision.css) и .wab-cell
+   (css/word-analyzer-bento.css): 12 колонок, gap --space-3, hairline --line,
+   radius -8, тени = 0 (§0.2), только токены (§1.1), mobile = одна колонка
+   (§5.3), reduced-motion (§7).
+
+   Анатомия тулбара, групп и строк взята у модуля «Агенты»
+   (css/components/dashboard.css): панель .agent-controls-panel, шапка группы
+   .agent-group-head (лейбл + hairline + счётчик), строка .agent-list-row
+   (икон-чип 32 + имя + мета + статус-пилюля). Классы при этом свои (sr-),
+   как .gc-card у генераторов: анатомия общая, префикс модуля свой.
+   Тулбар каталога стоит под шапкой и снимает оболочку .agent-controls-panel
+   напрямую — так же, как реестр «Словарей» (.dict-controls-panel в
+   css/components/dict-term-doc.css); свои остаются только раскладка
+   (.sr-controls-panel) и селект (.sr-sort-wrap/.sr-sort-select).
+
+   Сетка читается по паре «7 + 5»: каталог занимает 7 колонок, правая
+   колонка — 5. Обе правые ячейки лежат в одном .sr-rail: если растянуть их
+   на две строки бенто, ряд в каталоге (span 2) делит высоту пополам и
+   «Состав библиотеки» уезжает под список книг, оставляя дыру.
+   ============================================= */
+
+/* ===== Сетка ===== */
+.sr-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* Скрытый экран не оставляет дыру в раскладке страницы (§5.2f). */
+.sr-bento[hidden] { display: none; }
+
+.sr-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+}
+
+/* Пропорции: каталог — 7 колонок, правый рельс — 5 и прижат к краю. */
+.sr-cell--search { grid-column: span 7; }
+.sr-rail {
+  grid-column: span 5;
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+  position: sticky;
+  top: var(--space-3);
+}
+/* Ячейки рельса занимают его единственную колонку целиком. */
+.sr-rail > .sr-cell { grid-column: 1 / -1; }
+
+/* Текст — 7 колонок и липкий; справа рельс из трёх ячеек (02–04).
+   Раньше текст был растянут на две строки, и под ним оставалась пустая
+   полоса, пока 02–04 стояли отдельными ячейками. */
+.sr-cell--text { grid-column: span 7; position: sticky; top: var(--space-3); }
+.sr-cell--word,
+.sr-cell--wide { grid-column: 1 / -1; }
+
+/* Ink-ячейка: подложка --bg-dark (в темах light/dark/brown тёмная, в white/beige
+   светлая) + золотая рамка. В каждом экране она ровно одна — иначе золото
+   перестаёт быть акцентом; в светлых темах акцент несёт именно рамка (§5.2). */
+.sr-cell--ink {
+  background: var(--bg-dark);
+  border-color: var(--border-gold);
+  color: var(--text-on-dark);
+}
+
+/* ===== Шапка ячейки: номер + капитель + подпись справа (§4.1) ===== */
+.sr-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.sr-cell--ink .sr-cell-head { border-bottom-color: var(--line-strong); }
+
+.sr-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+
+.sr-cell--ink .sr-num { color: var(--accent-gold); }
+
+/* Заголовок ячейки. Специфичность с .module обязательна: иначе капитель
+   проигрывает `.module h2:not(:last-child)` из layout.css (0,2,1) и заголовок
+   печатается крупным серифом. Тот же приём — .module .vi-cell .vi-cell-title. */
+.module .sr-cell .sr-cell-title {
+  margin: 0;
+  padding: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  border-bottom: 0;
+}
+
+.module .sr-cell--ink .sr-cell-title { color: var(--text-on-dark); }
+
+.sr-cell-hint {
+  margin-left: auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  white-space: nowrap;
+}
+
+.sr-cell--ink .sr-cell-hint { color: var(--header-ink-muted); }
+
+.sr-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+
+.sr-cell--ink .sr-note { color: var(--header-ink-muted); }
+
+/* ===== Тулбар каталога под шапкой =====
+   Оболочка не своя: панель берёт .agent-controls-panel из dashboard.css, как
+   реестр словарей, а .sr-controls-panel только задаёт раскладку внутри неё.
+   Ссылка на этот канон обязательна в шапке файла, иначе правка панели
+   агентов снова разъедется с этим модулем. */
+.sr-controls-panel { gap: var(--space-2); }
+.sr-controls-panel .agents-search { flex: 1 1 240px; order: 1; }
+.sr-controls-panel .sr-sort-wrap { order: 2; }
+.sr-controls-panel .agent-toolbar-actions {
+  order: 3;
+  gap: var(--space-3);
+  margin-left: auto;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--line);
+}
+/* Счётчик прижат к группе действий, а не к правому краю панели: margin-left
+   из .pipeline-count рассчитан на тулбар без обёртки. */
+.sr-controls-panel .pipeline-count { margin-left: 0; }
+
+.sr-sort-wrap { position: relative; flex: 0 0 auto; display: inline-flex; }
+
+/* Селект категории повторяет .dict-sort-select: 36px, свой шеврон, токены. */
+.sr-sort-select {
+  height: 36px;
+  min-height: 36px;
+  box-sizing: border-box;
+  padding: 0 calc(var(--space-4) + 14px) 0 var(--space-3);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  background: var(--surface-2);
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13, 13px);
+  cursor: pointer;
+}
+.sr-sort-select:hover { border-color: var(--accent-gold); }
+.sr-sort-select:focus {
+  outline: none;
+  border-color: var(--accent-gold);
+  box-shadow: var(--ring-focus, 0 0 0 2px rgb(var(--accent-gold-rgb, 184, 134, 11) / 0.25));
+}
+/* Шеврон через currentColor — наследует тему автоматически. */
+.sr-sort-wrap::after {
+  content: '';
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+  color: var(--text-muted);
+}
+
+/* Подпись поля уходит в доступность: §4.4 запрещает лейблы над полями тулбаров. */
+.sr-category-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+/* ===== Каталог: группы по категориям (канон .agent-group) ===== */
+.sr-group { margin-bottom: var(--space-3); }
+.sr-group:last-child { margin-bottom: 0; }
+
+/* Лейбл + hairline + счётчик группы — одна формула с шапкой групп агентов. */
+.sr-group-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+}
+
+.sr-group-label {
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.sr-group-rule {
+  flex: 1 1 20px;
+  min-width: 16px;
+  height: 1px;
+  background: var(--line);
+}
+
+.sr-group-count {
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  line-height: 1.8;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+/* ===== Строка книги (канон .agent-list-row) ===== */
+.sr-books {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2px;
+  min-height: 0;
+}
+
+.sr-book-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  margin: 0;
+  padding: 4px 10px;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  cursor: pointer;
+  appearance: none;
+  transition: border-color var(--motion-fast);
+}
+
+.sr-book-row:hover { border-color: var(--accent-gold); }
+.sr-book-row:focus-visible { border-color: var(--accent-gold); outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+
+/* Книга без файла данных остаётся в каталоге, но читается как нерабочая строка. */
+.sr-book-row--pending { opacity: 0.72; }
+.sr-book-row--pending:hover { opacity: 1; }
+
+/* Икон-чип ровно как .agent-icon-chip: hairline-рамка, терциарный фон.
+   Селектор с svg.lucide обязателен: базовые 18px из lucide.css крупнее чипа. */
+.sr-book-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 32px;
+  box-sizing: border-box;
+  width: 32px;
+  height: 32px;
+  color: var(--text-muted);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.sr-book-icon svg.lucide { width: 16px; height: 16px; }
+
+.sr-book-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: var(--font-ui);
+  font-size: var(--text-14);
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Палео-название — мета-строка строки, а не скрытый текст (B4). */
+.sr-book-paleo {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: 'Noto Sans Phoenician', serif;
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Статус §6: пилюля с точкой, тон как у .agent-status. */
+.sr-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  padding: 2px 10px;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-12);
+  font-weight: 500;
+  line-height: 1.6;
+  white-space: nowrap;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+}
+
+.sr-status-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-gray);
+}
+
+/* Готово к чтению: золото живёт в точке и рамке, текст берёт --gold-text
+   (акцентная заливка текста не добирает AA на светлой подложке, §1.1). */
+.sr-status--ready {
+  color: var(--gold-text);
+  border-color: rgb(var(--accent-gold-rgb) / 0.45);
+}
+
+.sr-status--ready .sr-status-dot { background: var(--accent-gold); }
+
+/* Файл данных ещё не подготовлен: пунктир и нейтральная точка. */
+.sr-status--pending {
+  color: var(--text-muted);
+  border-style: dashed;
+}
+
+.sr-status--pending .sr-status-dot { background: var(--status-gray); }
+
+/* ===== Пустая зона: dashed-рамка, глиф по центру (§4.6) ===== */
+.sr-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 140px;
+  padding: var(--space-5);
+  color: var(--text-secondary);
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-8);
+}
+
+.sr-empty-glyph {
+  color: var(--accent-gold);
+  font-family: 'Noto Sans Phoenician', sans-serif;
+  font-size: var(--space-7);
+  line-height: 1;
+  opacity: 0.35;
+}
+
+.sr-empty-text {
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+/* ===== Легенда и списки статусов §6 ===== */
+.sr-legend {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sr-legend-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sr-legend-text {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+
+.sr-legend-item b {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  font-weight: 600;
+}
+
+
+/* ===== «Продолжить чтение» (ink-ячейка) =====
+   Карточка отвечает на три вопроса подряд: что читаем, где остановились и
+   когда. Поэтому строка «книга + стих» идёт одной строкой (сжимается до
+   многоточия), под ней — полоса прогресса и дата, а CTA растянут на всю
+   ширину ячейки: это главное действие экрана, и мишень должна быть большой. */
+.sr-resume-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sr-resume-title {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--text-on-dark);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sr-resume-ref {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--gold-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+/* Дата последнего чтения — приглушённый моно, §4.12: подпись, а не заголовок. */
+.sr-resume-when {
+  margin: 0;
+  color: var(--header-ink-muted);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+
+/* Главное действие во всю ширину ячейки: правый край блока не должен быть
+   «пустым» — кнопка прижата к нему иначе, чем весь текст слева. */
+.sr-cell--resume .sr-ai-actions { display: block; }
+.sr-cell--resume .sr-ai-actions .lab-btn { width: 100%; }
+
+/* Полоса прогресса по §4.12: подпись, трек, значение. */
+.sr-progress {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sr-progress[hidden] { display: none; }
+
+.sr-progress-track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--line-strong);
+}
+
+.sr-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-gold);
+  transition: width var(--motion-base);
+}
+
+.sr-progress-value {
+  color: var(--text-on-dark);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+}
+
+/* ===== Ячейка текста ===== */
+/* Ссылка на стих и копирование делят одну строку; дальше идёт только текст. */
+.sr-verse-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.sr-verse-ref {
+  min-width: 0;
+  margin: 0;
+  color: var(--gold-text);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* Карточка стиха внутри ячейки: та же hairline-рамка, тень = 0 (§0.2).
+   Старый .scripture-verse давал мягкую тень — в bento-каноне её быть не должно. */
+.sr-cell--text .scripture-verse {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Кнопка копирования живёт в строке шапки: старый внешний отступ ломал высоту. */
+.sr-verse-head .scripture-copy-button { margin: 0; }
+
+/* ===== Ячейка «Путь по тексту»: степпер вместо 81 кнопки в потоке ===== */
+.sr-steppers { display: grid; gap: var(--space-3); }
+
+.sr-stepper-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.sr-stepper-label {
+  flex: 0 0 auto;
+  width: 52px;
+  color: var(--header-ink-muted);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Длинные списки глав и стихов идут горизонтальной лентой, а не переносом
+   на четыре экрана: перенос делал навигацию нечитаемой в Берешит (50 глав). */
+.sr-strip {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-bottom: var(--space-1);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.sr-chip {
+  flex: 0 0 auto;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 4px var(--space-2);
+  color: var(--text-on-dark);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+
+.sr-chip:hover,
+.sr-chip:focus-visible {
+  color: var(--gold-text);
+  border-color: var(--accent-gold);
+  outline: none;
+}
+
+.sr-chip[aria-current="true"] {
+  color: var(--text-on-accent);
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.sr-stepper-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sr-stepper-actions .sr-jump { margin-left: auto; }
+
+.sr-jump {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Поле перехода живёт в ink-ячейке: селектор с .module перебивает .lab-input
+   из redesign.css (та загружается позже и задаёт светлую рамку и фон). */
+.module .sr-cell--ink .sr-jump-input {
+  box-sizing: border-box;
+  width: 96px;
+  min-height: 32px;
+  padding: 4px var(--space-2);
+  color: var(--text-on-dark);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  outline: none;
+}
+
+.module .sr-cell--ink .sr-jump-input::placeholder { color: var(--header-ink-muted); }
+
+.module .sr-cell--ink .sr-jump-input:focus { border-color: var(--accent-gold); box-shadow: none; }
+
+
+/* ===== Ячейка слова: разбор всегда на виду, режим переключает предмет ===== */
+.sr-segment { display: flex; gap: var(--space-1); margin-left: auto; }
+
+.sr-segment-btn {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 4px var(--space-3);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast);
+}
+
+.sr-segment-btn:hover { color: var(--text-primary); border-color: var(--accent-gold); }
+
+.sr-segment-btn[aria-pressed="true"] {
+  color: var(--text-on-accent);
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+/* ===== Ячейка «Разбор свидетельств»: локальный факт + ИИ ===== */
+.sr-slot {
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.sr-slot-label {
+  margin: 0 0 var(--space-1);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+.sr-slot p { margin: 0; font-size: var(--text-sm); line-height: var(--leading-ui); }
+
+/* Гипотеза — единственный слот, который печатается с оговоркой (§11). */
+.sr-slot--hypothesis { border-style: dashed; }
+
+.sr-caveat {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+
+.sr-warnings {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+.sr-confidence {
+  padding: 1px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  white-space: nowrap;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+.sr-confidence--low { color: var(--text-secondary); }
+.sr-confidence--mid { color: var(--gold-text); }
+.sr-confidence--high { color: var(--accent-gold); }
+
+/* Статус запроса §6: тот же тон, что у остальных модулей лаборатории. */
+.sr-ai-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+}
+
+.sr-ai-status[data-tone="busy"] { color: var(--gold-text); }
+.sr-ai-status[data-tone="error"] { color: var(--red-text); }
+
+.sr-ai-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.sr-ai-out { display: grid; gap: var(--space-3); }
+
+/* Пустые зоны скрываются — сетка не оставляет дыр. */
+.sr-ai-out:empty,
+.sr-evidence:empty,
+#scripture-physics-content:empty { display: none; }
+
+/* ===== Мобильный закон (§5.3): одна колонка, липкость текста выключена ===== */
+@media (max-width: 900px) {
+  .sr-cell--search,
+  .sr-cell--text,
+  .sr-cell--path,
+  .sr-cell--word,
+  .sr-cell--resume,
+  .sr-cell--legend,
+  .sr-cell--wide { grid-column: 1 / -1; grid-row: auto; }
+
+  /* Рельс на узкой ширине просто раскладывается в столбик: липкость и
+     прижим к правому краю там только мешают скроллу. */
+  .sr-rail { grid-column: 1 / -1; position: static; }
+  .sr-cell--text { position: static; }
+  .sr-cell { padding: var(--space-3); }
+  .sr-cell-hint { display: none; }
+}
+
+@media (max-width: 640px) {
+  .sr-controls-panel { padding: var(--space-2); }
+  .sr-controls-panel .agents-search { flex: 1 1 100%; }
+  .sr-controls-panel .sr-sort-wrap { flex: 1 1 auto; }
+  .sr-sort-select { width: 100%; }
+  .sr-controls-panel .agent-toolbar-actions {
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .sr-stepper-row { flex-direction: column; align-items: stretch; gap: var(--space-1); }
+  .sr-stepper-label { width: auto; }
+  .sr-stepper-actions .sr-jump { margin-left: 0; }
+  .sr-book-row { flex-wrap: wrap; }
+  .sr-book-paleo { flex: 1 1 100%; order: 5; }
+}
+
+/* reduced-motion (§7): полоса прогресса и чипы меняются без перехода. */
+@media (prefers-reduced-motion: reduce) {
+  .sr-progress-fill,
+  .sr-chip,
+  .sr-book-row,
+  .sr-segment-btn { transition: none; }
+}
