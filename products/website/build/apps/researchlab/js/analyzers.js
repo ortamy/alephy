@@ -9,14 +9,16 @@
 (function(window, document) {
   'use strict';
 
+  // Lucide-глифы по смыслу анализатора: витрина разделена §4.2, тематические
+  // PNG из assets/icons/32 остаются героям и контенту (ICON-MAP.md).
   var ICONS = {
-    layer: 'assets/icons/32/ui/map.png',
-    ai: 'assets/icons/32/crafts/hammer-and-chisel.png',
-    dialect: 'assets/icons/32/scribe/scroll.png',
-    tensor: 'assets/icons/32/ui/scales.png',
-    word: 'assets/icons/32/ui/scroll.png',
-    state: 'assets/icons/32/paleo/track.png',
-    vision: 'assets/icons/32/archaeology/lamp.png'
+    layer: 'layers',
+    ai: 'brain',
+    dialect: 'type',
+    tensor: 'git-compare-arrows',
+    word: 'scroll-text',
+    state: 'radar',
+    vision: 'scan-eye'
   };
   var LAYERS = [
     { id: 'hellenization', name: 'Эллинизация', markers: ['абстракц', 'идея', 'философ', 'категор', 'теор'], diagnosis: 'Предметное действие переводится в отвлечённую идею или категорию.' },
@@ -81,7 +83,17 @@
     }
   };
 
-  function card(icon, title, description, route) { return '<a class="gc-card" href="#' + route + '"><span class="gc-card-icon"><img src="' + icon + '" width="20" height="20" alt=""></span><span class="gc-card-body"><span class="gc-card-title">' + esc(title) + '</span><span class="gc-card-desc">' + esc(description) + '</span></span><span class="gc-card-arrow" aria-hidden="true">→</span></a>'; }
+  // Карточка-паспорт по канону «Конвейеров»: иконка-чип 32px + имя,
+  // описание на две строки. Карточка — ссылка, поэтому не <button>.
+  function card(icon, title, description, route) {
+    return '<a class="gc-card" href="#' + route + '">' +
+      '<span class="gc-card-head">' +
+        '<span class="gc-card-icon" aria-hidden="true"><i data-lucide="' + icon + '"></i></span>' +
+        '<span class="gc-card-title">' + esc(title) + '</span>' +
+      '</span>' +
+      '<span class="gc-card-desc">' + esc(description) + '</span>' +
+    '</a>';
+  }
   function emptyState(text) {
     return '<div class="analyzer-empty"><span class="analyzer-empty-glyph" aria-hidden="true">𐤀</span><strong>Нет прохода</strong><p>' + esc(text) + '</p></div>';
   }

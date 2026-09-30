@@ -144,6 +144,34 @@ const Religionisms = (function() {
     renderGrid();
   }
 
+  // Lucide-глиф по смыслу сферы. Иконка из данных (сере/scroll/…) — тематический
+  // PNG, витрине разделов он не нужен (§4.2, ICON-MAP.md: UI-иконки — Lucide).
+  var SPHERE_ICONS = {
+    career: 'hammer',
+    medicine: 'microscope',
+    science: 'test-tube',
+    military: 'swords',
+    'social-media': 'share-2',
+    technology: 'cpu',
+    education: 'graduation-cap',
+    art: 'scroll-text',
+    finance: 'scale',
+    sport: 'trophy',
+    psychology: 'brain',
+    ecology: 'leaf',
+    state: 'landmark',
+    family: 'users',
+    travel: 'compass',
+    politics: 'flag',
+    fashion: 'shirt',
+    housing: 'home',
+    food: 'utensils'
+  };
+
+  function sphereIcon(sphere) {
+    return SPHERE_ICONS[sphere.id] || 'circle-dot';
+  }
+
   function renderGrid() {
     var grid = document.getElementById('rel-grid');
     var detail = document.getElementById('rel-detail');
@@ -163,17 +191,19 @@ const Religionisms = (function() {
     }
 
     grid.innerHTML = list.map(function(s, idx) {
-      var iconPath = 'assets/icons/32/' + (s.icon || 'ui/question.png');
       var description = getShortDescription(s);
       var roleText = getRoleText(s);
 
-      return '<div class="lab-card rel-card" data-id="' + escapeHtml(s.id) + '" role="button" tabindex="0" aria-label="Сфера: ' + escapeHtml(s.name) + '" style="animation-delay:' + (idx * 40) + 'ms">' +
-        '<div class="rel-card-icon"><img src="' + iconPath + '" alt="" onerror="this.style.display=\'none\'"></div>' +
-        '<h2 class="rel-card-title">' + escapeHtml(s.name) + '</h2>' +
-        '<div class="rel-card-role">' + escapeHtml(roleText) + '</div>' +
-        // Описание видно только в списке: в сетке девять компонентов важнее
-        // пересказа, а строка без него превращается в пустой заголовок.
+      // Карточка-паспорт: иконка-чип + имя, описание на две строки, роль
+      // чипом в подвале. Класс lab-card снят — он давал свои padding и
+      // margin-bottom и ломал общий канон витрины.
+      return '<div class="rel-card" data-id="' + escapeHtml(s.id) + '" role="button" tabindex="0" aria-label="Сфера: ' + escapeHtml(s.name) + '" style="animation-delay:' + (idx * 40) + 'ms">' +
+        '<div class="rel-card-head">' +
+          '<span class="rel-card-icon" aria-hidden="true"><i data-lucide="' + sphereIcon(s) + '"></i></span>' +
+          '<h2 class="rel-card-title">' + escapeHtml(s.name) + '</h2>' +
+        '</div>' +
         '<div class="rel-card-desc">' + escapeHtml(description) + '</div>' +
+        (roleText ? '<div class="rel-card-role">' + escapeHtml(roleText) + '</div>' : '') +
       '</div>';
     }).join('');
 

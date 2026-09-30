@@ -76,6 +76,7 @@
   /* ===== TYPE SCALE ===== */
   --text-xs: 12px;
   --text-sm: 13px;
+  --text-14: 14px;       /* промежуток sm(13) и md(15): описание карточки, имя строки */
   --text-md: 15px;
   --text-base: 16px;
   --text-lg: 18px;

@@ -821,10 +821,9 @@ body {
 
 /* --- Карточки и витрины --- */
 .lab-card { padding: var(--space-4); margin-bottom: var(--space-4); }
-.gc-grid { gap: 8px; }
-.gc-card { padding: 10px 12px; }
-.gc-card-icon { width: 28px; height: 28px; border-radius: var(--radius-sm); }
-.gc-card-icon img { width: 16px; height: 16px; }
+/* .gc-card и .gc-grid переехали на карточку-паспорт «Конвейеров» и правятся
+   в generators-checkers.css; здесь только переопределяли старый Linear-вид
+   (gap 8px, padding 10/12, иконка 28px) и ломали единый канон. */
 
 /* --- Заголовки разделов: кегль по размеру, а не по пафосу --- */
 .module h2:not(:last-child) {

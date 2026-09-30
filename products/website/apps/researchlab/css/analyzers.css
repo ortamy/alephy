@@ -6,7 +6,7 @@
 
 /* ===== КАРКАС ===== */
 .analyzers-shell { max-width: var(--shell-page); margin: 0 auto; min-width: 0; }
-.analyzers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
+.analyzers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
 .analyzer-sr {
   position: absolute;
   width: 1px;
@@ -412,6 +412,10 @@
   .state-analyzer-workspace { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 640px) {
+  /* Витрина на телефоне — одна колонка, карточка без min-height. */
+  .analyzers-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 560px) {
   .analyzer-settings,
   .analyzer-dialect-grid { grid-template-columns: 1fr; }
