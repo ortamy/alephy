@@ -95,7 +95,9 @@
 
 .lab-toolbar-reset[hidden] { display: none; }
 
-.lab-toolbar-reset .lab-icon { width: 16px; height: 16px; }
+/* margin-right: 0 — у .lab-icon (utilities.css) это отступ до подписи, а в
+   icon-only кнопке он уводит иконку влево от центра. */
+.lab-toolbar-reset .lab-icon { width: 16px; height: 16px; margin-right: 0; }
 
 /* Правая группа: счётчик, тумблер, действия. Отбита hairline,
    поэтому блок читается как самостоятельная единица даже при

@@ -889,7 +889,7 @@ html[data-theme="dark"] .exposure-caveat-card {
 
 .res-reset-btn[hidden] { display: none; }
 
-.res-reset-btn .lab-icon { width: 16px; height: 16px; }
+.res-reset-btn .lab-icon { width: 16px; height: 16px; margin-right: 0; }
 
 .res-new-btn {
   display: inline-flex;
@@ -900,7 +900,9 @@ html[data-theme="dark"] .exposure-caveat-card {
   padding: 8px 14px;
 }
 
-.res-new-btn .lab-icon { width: 16px; height: 16px; }
+/* gap: 6px уже отбивает иконку от подписи — margin-right из .lab-icon
+   добавлял бы к нему ещё 10px. */
+.res-new-btn .lab-icon { width: 16px; height: 16px; margin-right: 0; }
 
 .research-meta {
   font-size: .82rem;
