@@ -36,6 +36,25 @@ def status():
     except OllamaError as error:
         return {"available": False, "models": [], "defaultModel": DEFAULT_MODEL, "error": str(error)}
 
+def generate(prompt, model=None, temperature=0.2, timeout=120):
+    """Одиночная генерация по готовому промпту. Бросает OllamaError при сбое.
+
+    Общая точка для summarize() и структурированного разбора Книгочтения:
+    отличается только промпт, поэтому логика запроса не дублируется.
+    """
+    payload = _request(
+        "/api/generate",
+        {"model": model or DEFAULT_MODEL, "prompt": prompt, "stream": False,
+         "options": {"temperature": max(0, min(1, float(temperature))) }},
+        timeout=timeout,
+    )
+    response = str(payload.get("response") or "").strip()
+    if not response:
+        raise OllamaError("Ollama вернула пустой ответ")
+    return {"model": model or DEFAULT_MODEL, "text": response}
+
+
+
 
 def summarize(query, result, model=None, temperature=0.2):
     """Собирает краткую сводку только на основе результата агентов."""
@@ -48,12 +67,4 @@ def summarize(query, result, model=None, temperature=0.2):
         "Запрос: " + query + "\nРезультат агентов:\n" +
         json.dumps(result, ensure_ascii=False, indent=2)
     )
-    payload = _request(
-        "/api/generate",
-        {"model": selected_model, "prompt": prompt, "stream": False, "options": {"temperature": max(0, min(1, float(temperature))) }},
-        timeout=120,
-    )
-    response = str(payload.get("response") or "").strip()
-    if not response:
-        raise OllamaError("Ollama вернула пустую сводку")
-    return {"model": selected_model, "text": response}
+    return generate(prompt, selected_model, temperature)

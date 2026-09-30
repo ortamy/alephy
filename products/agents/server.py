@@ -28,7 +28,8 @@ from pipelines.core import run_steps
 from agents.common import packet
 from agents import ai_engineer, code_reviewer, collector, comparator, critic, editor, exposer, \
     flow_architect, frontend, liaison, paleo_translator, researcher, semitologist, verifier, writer
-from ollama_adapter import OllamaError, status as ollama_status, summarize as ollama_summarize
+from ollama_adapter import OllamaError, status as ollama_status, summarize as ollama_summarize, \
+    generate as ollama_generate
 
 app = Flask(__name__)
 PIPELINES_PATH = Path(__file__).resolve().parents[2] / "products" / "website" / "apps" / "researchlab" / "data" / "pipelines.json"
@@ -138,6 +139,45 @@ def api_info():
         "cwd": str(Path.cwd()),
         "uptime": round(time.time() - SERVER_START, 1),
     })
+
+
+@app.post("/api/scripture/analyze")
+def analyze_scripture():
+    """Структурированный разбор палео-фрагмента для #scripture-reader.
+
+    Контракт и разделение «факт / интерпретация / гипотеза» — ADR-006.
+    Без модели ответ всё равно содержит локальные факты: клиент показывает
+    офлайн-состояние, а не пустую ячейку.
+    """
+    payload = request.get_json(silent=True) or {}
+    if not isinstance(payload, dict):
+        return jsonify({"error": "payload must be an object"}), 400
+    paleo = str(payload.get("paleo") or "").strip()
+    if not paleo:
+        return jsonify({"error": "paleo is required"}), 400
+
+    from pipelines.scripture_analysis import analyze
+
+    # Промпт строим до обращения к модели: он нужен и для отладки, и для офлайн-ответа.
+    base = analyze(payload)
+    result = dict(base)
+    model_name = str(payload.get("model") or "").strip() or None
+
+    if payload.get("skipModel"):
+        result["modelError"] = ""
+        return jsonify(result)
+
+    try:
+        generated = ollama_generate(base["prompt"], model_name, payload.get("temperature", 0.2))
+    except OllamaError as error:
+        # Сбой модели не отменяет локальный разбор — §9 (офлайн-фолбэк).
+        result["modelAvailable"] = False
+        result["modelError"] = str(error)
+        return jsonify(result)
+
+    parsed = analyze(payload, model_text=generated["text"], model=generated["model"])
+    parsed["modelError"] = ""
+    return jsonify(parsed)
 
 
 @app.post("/api/workbench/pdf-text")
