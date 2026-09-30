@@ -101,7 +101,9 @@ test('timeline hub cards open a full feed and return to catalog', async ({ page 
   await expect(page.locator('.tl-detail-event:visible')).not.toHaveCount(0);
   await page.locator('.tl-detail-back').click();
   await expect(page).toHaveURL(/#timeline$/);
-  await expect(page.locator('.tl-toolbar')).toBeVisible();
+  // Панель каталога несёт общий класс .lab-toolbar: 80f956ed свёл все
+  // панели лаборатории к одному компоненту и переименовал .tl-toolbar.
+  await expect(page.locator('.lab-toolbar')).toBeVisible();
 });
 
 test.describe('registered routes', () => {

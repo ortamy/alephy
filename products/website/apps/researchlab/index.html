@@ -266,6 +266,11 @@
 <!-- Общие утилиты (escapeHtml) и реестр маршрутов — первыми из js/:
      остальные модули вызывают escapeHtml при рендере, а роутер читает реестр. -->
 <script defer src="js/utils.js"></script>
+<!-- Гейт ролей идёт до всех потребителей (dashboard, club, admin-settings,
+     page-controller читают window.AccessGate). Стоял после них и давал
+     «AccessGate is not defined» при первом рендере. Зависимостей нет:
+     самодостаточный IIFE поверх sessionStorage. -->
+<script defer src="js/access-gate.js"></script>
 <script defer src="js/module-registry.js"></script>
 <!-- Vendored Lucide: UI-иконки (навигация, кнопки). См. js/lucide-init.js. -->
 <script defer src="js/vendor/lucide.min.js"></script>
@@ -324,7 +329,6 @@
 <script defer src="js/reveal.js"></script>
 <script defer src="js/shortcuts.js"></script>
 <script defer src="js/router.js"></script>
-<script defer src="js/access-gate.js"></script>
 <script defer src="js/nav-enhance.js"></script>
 <script defer src="js/lab-hero.js?v=20260903-hero"></script>
 <script defer src="js/root-graph.js"></script>
