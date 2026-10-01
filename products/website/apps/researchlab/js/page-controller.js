@@ -119,6 +119,12 @@ const PageController = (function() {
       if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
       if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
       if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init(container);
+      // Витрины инструментов: тулбар поверх готовой сетки карточек.
+      // Хук зовётся на каждом входе в модуль, но повторный вызов
+      // ничего не добавляет — состояние живёт в showcase-toolbar.js.
+      if (moduleId === 'generators' || moduleId === 'checkers') {
+        if (window.ShowcaseToolbar) window.ShowcaseToolbar.init(container, moduleId);
+      }
     } catch (error) {
       console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
       showModuleError(container, moduleId, moduleErrorMessage(error));

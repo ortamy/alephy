@@ -7,6 +7,8 @@
 /* ===== КАРКАС ===== */
 .analyzers-shell { max-width: var(--shell-page); margin: 0 auto; min-width: 0; }
 .analyzers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
+/* Режим списка §4.8 задан в generators-checkers.css: карточки этой
+   витрины — те же .gc-card, там же живут правила раскладки строки. */
 .analyzer-sr {
   position: absolute;
   width: 1px;

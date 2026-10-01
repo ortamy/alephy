@@ -3,12 +3,11 @@
   color: var(--text-primary);
 }
 
+/* Паспорт языка — продолжение шапки, а не отдельная карточка: поэтому
+   без фона и обводки, контент занимает всю ширину полосы. */
 .language-map-detail {
-  background: var(--bg-card);
   color: var(--text-primary);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-8);
-  padding: clamp(20px, 4vw, 36px);
+  max-width: none;
 }
 
 .language-map-head { max-width: 800px; margin-bottom: 20px; }
@@ -20,10 +19,8 @@
   line-height: 1.4;
   margin-bottom: var(--space-2);
 }
-.language-map-head h1,
-.language-map-detail h1 { color: var(--text-primary); line-height: 1.15; margin-bottom: 10px; }
-.language-map-shell .subtitle,
-.language-map-detail-type { color: var(--text-secondary); }
+.language-map-head h1 { color: var(--text-primary); line-height: 1.15; margin-bottom: 10px; }
+.language-map-shell .subtitle { color: var(--text-secondary); }
 
 /* ===== ТУЛБАР (§4.7): одна панель, search flex-1, селекты 36px, счётчик справа ===== */
 .language-map-toolbar {
@@ -271,8 +268,6 @@
 .language-map-reset { min-height: 36px; }
 
 /* ===== Детальный экран: метрики — полный ряд плиток ===== */
-.language-map-detail { max-width: none; }
-.language-map-detail h1 { font-size: clamp(30px, 5vw, 46px); }
 .language-map-metrics { display: grid; gap: 8px; margin: 0; }
 .language-map-metric { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-light); padding-top: 7px; }
 .language-map-metric dt { color: var(--text-secondary); font-size: 14px; }
@@ -294,7 +289,6 @@
   border-radius: var(--radius-sm);
   padding: 14px 16px;
 }
-.language-map-detail-notes { max-width: 680px; font-size: 18px; line-height: 1.6; margin-bottom: 22px; }
 /* Мобильный стек 390: тулбар в колонку, карточки в 1 ряд, список в 2 строки */
 @media (max-width: 640px) {
   .language-map-shell {
@@ -345,7 +339,45 @@
   }
 }
 
-/* ===== Деталь языка: паспорт (hairline-строки) и связи (чипы-двери) ===== */
+/* ===== Деталь языка: тулбар, паспорт (hairline-строки) и связи (чипы-двери) ===== */
+/* Тулбар паспорта: возврат в каталог, позиция в выборке и соседи по
+   алфавиту. Правая группа липнет к краю на широкой полосе. */
+.language-map-detail-toolbar { margin-bottom: var(--space-4); }
+.language-map-detail-position {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+.language-map-detail-position b { color: var(--text-primary); }
+.language-map-neighbors {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+  min-width: 0;
+}
+.language-map-neighbor {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 200px;
+  padding: 5px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-pill);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-decoration: none;
+  transition: border-color var(--motion-base, 180ms), color var(--motion-base, 180ms);
+}
+.language-map-neighbor svg { width: 14px; height: 14px; flex-shrink: 0; }
+.language-map-neighbor-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.language-map-neighbor:hover,
+.language-map-neighbor:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+.language-map-neighbor.is-disabled { opacity: 0.45; }
+
 .language-map-detail-panels {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   margin-top: 26px;
@@ -433,7 +465,19 @@
   border-radius: var(--radius-8);
 }
 .language-map-not-found-text { margin: 0; color: var(--text-muted); }
-.language-map-detail-back { margin: 22px 0 0; }
+/* Мобильный стек: тулбар паспорта остаётся строкой кнопок, соседи —
+   две равные кнопки на всю ширину (сетка 2 колонки из §тoolbar — только
+   для фильтров каталога). */
+@media (max-width: 640px) {
+  .language-map-detail-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .language-map-detail-position { order: 2; }
+  .language-map-neighbors { margin-left: 0; width: 100%; order: 3; }
+  .language-map-neighbor { flex: 1 1 0; justify-content: center; max-width: none; }
+}
 
 @media (max-width: 900px) {
   .language-map-detail-panels { grid-template-columns: minmax(0, 1fr); }

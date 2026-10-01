@@ -155,9 +155,14 @@
 .lab-toolbar-group .tl-filter-chip { flex: 0 0 auto; white-space: nowrap; }
 
 /* Планшет: панель остаётся в две строки, но разделитель и
-   прижатие вправо теряют смысл — группа становится полной. */
+   прижатие вправо теряют смысл — группа становится полной.
+   Перенос обязателен: без него actions (счётчик + сортировка + вид +
+   «Дело») не влезают в строку и уезжают за правый край панели. */
 @media (max-width: 900px) {
   .lab-toolbar-actions {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: var(--space-2);
     margin-left: 0;
     padding-left: 0;
     border-left: 0;
@@ -177,6 +182,15 @@
     width: 100%;
     justify-content: space-between;
     padding-top: var(--space-2);
+    border-top: 1px solid var(--border-light);
+  }
+  /* Крупное действие — на всю ширину последней строкой: пальцу
+     попадать проще, а панель перестаёт выглядеть «обрезанной». */
+  .lab-toolbar-btn {
+    flex: 1 1 100%;
+    order: 10;
+    justify-content: center;
+    margin-inline: 0;
   }
 }
 

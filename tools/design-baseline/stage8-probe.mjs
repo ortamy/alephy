@@ -4,7 +4,9 @@ import { pathToFileURL } from 'node:url';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const APP = resolve('c:/Users/DELL/Desktop/alephy-main/products/website/apps/researchlab');
+// Путь берём от расположения репозитория: хардкод ломал прогон
+// после переноса/клонирования.
+const APP = resolve(process.cwd(), 'products/website/apps/researchlab');
 const CSS_ROOT = join(APP, 'css');
 const APP_URL = pathToFileURL(join(APP, 'index.html')).href + '#dashboard';
 const THEMES = {

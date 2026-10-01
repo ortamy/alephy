@@ -369,7 +369,7 @@ const Workbench = (function() {
         '</div>' +
         '<span class="wb-badge is-' + esc(meta.status) + '">' +
           '<span class="wb-badge-dot" aria-hidden="true"></span>' + esc(statusLabel(meta.status)) + '</span>' +
-        '<div class="wb-miniprogress" role="img" aria-label="Готово на ' + percent + '%"><i style="width:' + percent + '%"></i></div>' +
+        '<div class="wb-miniprogress' + (meta.status === 'done' || meta.status === 'cancelled' ? ' is-hidden' : '') + '" role="img" aria-label="Готово на ' + percent + '%"><i style="width:' + percent + '%"></i></div>' +
         '<div class="wb-project-actions">' + actions + '</div>' +
       '</article>';
   }
@@ -492,12 +492,14 @@ const Workbench = (function() {
       container.innerHTML = runMonitorHtml(pipeline, meta, resumeRunId);
       syncMonitor(resumeRunId);
       bindRunActions(container, pipeline, resumeRunId);
+      bindPageToolbar(container, pipeline);
       return;
     }
 
     runtime.form = { fileText: '', fileChars: 0, fileName: '' };
     container.innerHTML = runFormHtml(pipeline, resumeRunId, meta);
     bindRunForm(container, pipeline, resumeRunId, meta);
+    bindPageToolbar(container, pipeline);
   }
 
   // Генерация полей ВХОДА из inputs конфига.
@@ -554,6 +556,59 @@ const Workbench = (function() {
     return '';
   }
 
+  // ===== ЭТАПНОСТЬ И ТУЛБАРЫ ВНУТРЕННИХ СТРАНИЦ =====
+  // Горизонтальная лента этапов — единый способ показать, где мы находимся.
+  // Пишется один раз и обновляется точечно из syncMonitor: у элемента этапа
+  // есть data-wb-stage, поэтому живой прогресс не перерисовывает разметку.
+  // statuses === null — запуск ещё не начинался: подсвечен первый этап.
+  function stageRailHtml(pipeline, statuses) {
+    var items = pipeline.steps.map(function(step, index) {
+      var status = (statuses && statuses[index]) || 'pending';
+      var isCurrent = status === 'active' || (!statuses && index === 0);
+      return '<li class="wb-stagebar-item is-' + status + (isCurrent ? ' is-current' : '') + '" data-wb-stage="' + index + '"' +
+        (isCurrent ? ' aria-current="step"' : '') + '>' +
+        '<span class="wb-stagebar-mark" aria-hidden="true">' + (status === 'done' ? '✓' : String(index + 1)) + '</span>' +
+        '<span class="wb-stagebar-label">' + esc(step) + '</span></li>';
+    }).join('');
+    return '<nav class="wb-stagebar" id="wb-stagebar" aria-label="Этапы конвейера">' +
+      '<ol class="wb-stagebar-list">' + items + '</ol></nav>';
+  }
+
+  // Тулбар внутренней страницы конвейера: назад в каталог, переключение
+  // конвейера, хлебные ссылки на мастерскую и проект. Один каркас для
+  // экранов запуска, монитора и проекта — отличается только набор ссылок.
+  function conveyorToolbarHtml(pipeline, links) {
+    var options = (window.WorkbenchPipelines ? WorkbenchPipelines.list() : [])
+      .map(function(item) {
+        return '<option value="' + esc(item.id) + '"' + (item.id === pipeline.id ? ' selected' : '') + '>' + esc(item.title) + '</option>';
+      }).join('');
+    return '<div class="wb-page-toolbar" role="group" aria-label="Навигация по конвейерам">' +
+      '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#conveyors"><i data-lucide="workflow" aria-hidden="true"></i>Каталог</a>' +
+      '<label class="wb-page-toolbar-field" for="wb-pipeline-switch">Конвейер' +
+        '<select class="lab-input" id="wb-pipeline-switch" data-wb-pipeline-switch>' + options + '</select>' +
+      '</label>' +
+      '<span class="wb-page-toolbar-links">' + (links || '') + '</span>' +
+    '</div>';
+  }
+
+  function bindPageToolbar(container, pipeline) {
+    var select = container.querySelector('[data-wb-pipeline-switch]');
+    if (!select) return;
+    select.addEventListener('change', function() {
+      if (select.value === pipeline.id) return;
+      if (window.LabRouter) LabRouter.navigate('workbench', ['run', select.value]);
+    });
+  }
+
+  // Links-часть тулбара экрана запуска: мастерская и проект запуска.
+  function runToolbarLinksHtml(resumeRunId) {
+    var links = '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench">Мои проекты</a>';
+    if (resumeRunId) {
+      links += '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench/project/' + esc(resumeRunId) + '">Проект</a>';
+    }
+    return links;
+  }
+
   // Генерация тумблеров из options конфига.
   function optionFieldHtml(option) {
     var id = 'wb-option-' + option.key;
@@ -579,6 +634,8 @@ const Workbench = (function() {
     return '' +
       '<div class="wb-run">' +
         (heading ? '<div class="lab-alert lab-alert-info">' + heading + '</div>' : '') +
+        conveyorToolbarHtml(pipeline, runToolbarLinksHtml(resumeRunId)) +
+        stageRailHtml(pipeline, null) +
         '<form id="wb-run-form" class="wb-form" novalidate>' +
           '<h3 class="wb-group-title">Вход</h3>' +
           inputs +
@@ -853,7 +910,10 @@ const Workbench = (function() {
 
   // ===== МОНИТОР ПРОГРЕССА =====
   function runMonitorHtml(pipeline, meta, runId) {
-    return '<div class="wb-run"><section id="wb-monitor" class="wb-monitor" aria-label="Прогресс запуска">' +
+    return '<div class="wb-run">' +
+      conveyorToolbarHtml(pipeline, runToolbarLinksHtml(runId)) +
+      stageRailHtml(pipeline, (runtime.states[runId] && runtime.states[runId].statuses) || null) +
+      '<section id="wb-monitor" class="wb-monitor" aria-label="Прогресс запуска">' +
       runMonitorBodyHtml(pipeline, meta, runId, false) + '</section></div>';
   }
 
@@ -936,6 +996,23 @@ const Workbench = (function() {
     if (percentNode) percentNode.textContent = state.percent + '%';
     var logNode = container.querySelector('[data-wb-log]');
     if (logNode) logNode.textContent = state.log.join('\n');
+    syncStageRail(pipeline, state.statuses);
+  }
+
+  // Лента этапов лежит вне #wb-monitor, поэтому обновляется отдельно.
+  function syncStageRail(pipeline, statuses) {
+    var rail = document.getElementById('wb-stagebar');
+    if (!rail || !pipeline) return;
+    pipeline.steps.forEach(function(step, index) {
+      var node = rail.querySelector('.wb-stagebar-item[data-wb-stage="' + index + '"]');
+      if (!node) return;
+      var status = (statuses && statuses[index]) || 'pending';
+      node.className = 'wb-stagebar-item is-' + status + (status === 'active' ? ' is-current' : '');
+      if (status === 'active') node.setAttribute('aria-current', 'step');
+      else node.removeAttribute('aria-current');
+      var mark = node.querySelector('.wb-stagebar-mark');
+      if (mark) mark.textContent = status === 'done' ? '✓' : String(index + 1);
+    });
   }
 
   function bindRunActions(container, pipeline, runId) {
@@ -1013,8 +1090,13 @@ const Workbench = (function() {
       '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-wb-action="export-json" data-runid="' + esc(runId) + '">JSON</button>' +
       '</div>' : '';
 
+    var projectLinks = '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench">Мои проекты</a>' +
+      '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench/run/' + esc(meta.pipelineId) + '?run=' + esc(runId) + '">К запуску</a>';
+
     container.innerHTML =
       '<div class="wb-project">' +
+        (pipeline ? conveyorToolbarHtml(pipeline, projectLinks) : '') +
+        (pipeline ? stageRailHtml(pipeline, meta.status === 'done' ? pipeline.steps.map(function() { return 'done'; }) : null) : '') +
         '<div class="wb-project-toolbar">' +
           '<a class="lab-btn lab-btn-secondary lab-btn-sm" href="#workbench">К конвейерам</a>' +
           exportBtn +
@@ -1023,6 +1105,7 @@ const Workbench = (function() {
         body +
       '</div>';
 
+    bindPageToolbar(container, pipeline);
     container.onclick = function(event) {
       var target = event.target.closest('[data-wb-action]');
       if (!target) return;

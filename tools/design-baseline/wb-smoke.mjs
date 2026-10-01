@@ -2,8 +2,11 @@
    Запуск: node tools/design-baseline/wb-smoke.cjs */
 import { chromium } from 'playwright-core';
 import { pathToFileURL } from 'node:url';
+import path from 'node:path';
 
-const APP = 'c:/Users/DELL/Desktop/alephy-main/products/website/apps/researchlab/index.html';
+// Путь к приложению берём от расположения репозитория, а не от машины:
+// хардкод ломал прогон после переноса/клонирования.
+const APP = path.resolve(process.cwd(), 'products/website/apps/researchlab/index.html');
 const URL = pathToFileURL(APP).href;
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true, args: ['--allow-file-access-from-files'] });
@@ -16,18 +19,51 @@ async function open(hash) {
   await page.waitForTimeout(600);
 }
 
-// 1. Хаб
+// 1. Хаб (bento 12/7/5: список проектов + рельс «продолжить/сводка»)
 await open('workbench');
-await page.waitForSelector('.wb-pipeline-card', { timeout: 8000 });
-const cards = await page.locator('.wb-pipeline-card').count();
-if (cards !== 3) throw new Error('Карточек конвейеров: ' + cards + ', ожидалось 3');
+await page.waitForSelector('.wb-cell--projects', { timeout: 8000 });
+const cells = await page.locator('#workbench .wb-cell').count();
+if (cells < 3) throw new Error('Ячеек бенто: ' + cells + ', ожидалось минимум 3');
 const heroTitle = await page.locator('#workbench .lab-hero__title').first().textContent();
 if (!/Мастерская/.test(heroTitle)) throw new Error('Шапка хаба: ' + heroTitle);
 const crumb = await page.locator('#workbench .lab-hero__kicker').first().textContent();
 if (!/АЛЕФИ/.test(crumb)) throw new Error('Крошки хаба: ' + crumb);
 const empty = await page.locator('#workbench').textContent();
-if (!/Пока пусто/.test(empty)) throw new Error('Список проектов не пустой при первом входе');
-console.log('OK  #workbench: 3 карточки, шапка «Мастерская», крошки, пустой список проектов');
+if (!/Проектов пока нет/.test(empty)) throw new Error('Пустое состояние списка не показано');
+// Чипы фильтра и счётчик в тулбаре: стили .wb-chip живут в workbench-bento.css,
+// незакрытый комментарий там раньше гасил весь блок — проверяем вычисленные стили.
+const chip = page.locator('#workbench .wb-chip').first();
+if (await chip.count() !== 1) throw new Error('Чипы фильтра не отрисованы');
+const chipRadius = await chip.evaluate(function (el) { return getComputedStyle(el).borderRadius; });
+if (!/999|pill|50%/.test(chipRadius)) throw new Error('Чип фильтра без скругления: ' + chipRadius);
+// Точка статуса должна быть одна: .wb-badge-dot гасит псевдо-точку redesign.css.
+// Проект засеиваем в localStorage, иначе в пустом хабе бейджа нет.
+await page.evaluate(function () {
+  localStorage.setItem('alephy.workbench.projects', JSON.stringify([{
+    runId: 'smoke-done', name: 'BookofEpoch.pdf', pipelineId: 'book-translation',
+    status: 'done', createdAt: Date.now(), updatedAt: Date.now(), input: { name: 'BookofEpoch.pdf' }
+  }]));
+});
+await open('workbench');
+// Тот же hash не перерисовывает модуль (в роутере кеш маршрута), поэтому
+// перезагружаем страницу, а не повторно гоним на #workbench.
+await page.reload({ waitUntil: 'load' });
+await page.waitForTimeout(600);
+await page.waitForSelector('#workbench .wb-badge-dot', { timeout: 8000 });
+const dot = await page.locator('#workbench .wb-badge-dot').count();
+const dotPseudo = await page.evaluate(function () {
+  var badge = document.querySelector('#workbench .wb-badge');
+  var style = getComputedStyle(badge, '::before');
+  return style.display + '|' + style.content;
+});
+if (dot !== 1 || dotPseudo.split('|')[0] !== 'none') {
+  throw new Error('Две точки в статусе: dot=' + dot + ' ::before=' + dotPseudo);
+}
+// Готовый проект: полоса прогресса скрыта, статус и 100% не дублируются.
+const barHidden = await page.locator('#workbench .wb-miniprogress').first().isHidden();
+if (!barHidden) throw new Error('Полоса прогресса у готового проекта не скрыта');
+console.log('OK  #workbench: бенто-ячейки, шапка «Мастерская», крошки, пустое состояние, чипы-фильтры, одна точка статуса');
+await page.evaluate(function () { localStorage.removeItem('alephy.workbench.projects'); });
 
 // 2. Экран запуска book-translation
 await open('workbench/run/book-translation');

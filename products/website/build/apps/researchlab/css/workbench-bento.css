@@ -129,7 +129,6 @@
    .pipeline-count рассчитан на тулбар без обёртки. */
 .wb-controls-panel .pipeline-count { margin-left: 0; }
 
-/* Чипы статуса повторяют .pipeline-chip из dashboard.css: та же
 /* ===== Список проектов: строки как .agent-list-row ===== */
 .wb-projects { display: grid; grid-template-columns: 1fr; gap: 2px; min-height: 0; }
 
@@ -212,6 +211,11 @@
   border-radius: var(--radius-pill);
 }
 
+/* Точку статуса рисует .wb-badge-dot (она красится статусом), поэтому
+   псевдо-точка из redesign.css в строке проекта гасится: иначе «Готово»
+   читается как две точки подряд. */
+.wb-project-row .wb-badge::before { display: none; }
+
 .wb-badge-dot {
   flex: 0 0 auto;
   width: 8px;
@@ -237,6 +241,9 @@
   background: var(--border-light);
 }
 .wb-miniprogress i { display: block; height: 100%; background: var(--accent-gold); transition: width var(--motion-base); }
+/* Готовый проект: статус уже говорит «готово», полоса в 100% рядом с ним —
+   дубль. Показываем прогресс только у незавершённых статусов. */
+.wb-miniprogress.is-hidden { display: none; }
 
 .wb-project-actions { display: flex; flex: 0 0 auto; align-items: center; gap: var(--space-2); }
 
@@ -407,19 +414,29 @@
 }
 .wb-cell--ink .wb-note { color: var(--header-ink-muted); }
 
+/* Чипы статуса повторяют .pipeline-chip из dashboard.css: та же
    анатомия, но свои data-атрибуты и свой активный класс. */
+/* Чипы фильтра: высота поиска, чтобы панель читалась одной линией,
+   счётчик — моно и приглушён, чтобы не спорить с подписью. */
 .wb-chip {
-  padding: 3px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  box-sizing: border-box;
+  padding: 0 14px;
   border: 1px solid var(--border-light);
   border-radius: var(--radius-pill);
   color: var(--text-secondary);
-  font: 500 var(--ui-12)/1.6 var(--font-ui);
+  font: 500 var(--ui-12)/1 var(--font-ui);
   white-space: nowrap;
   cursor: pointer;
   background: transparent;
-  transition: color var(--motion-fast), border-color var(--motion-fast);
+  transition: color var(--motion-fast), border-color var(--motion-fast), background var(--motion-fast);
 }
-.wb-chip:hover { border-color: var(--accent-gold); }
+/* Подсветка золотом — только у активного: у всех чипов сразу она
+   превращала бы фильтр в набор активных кнопок. */
+.wb-chip:hover { color: var(--text-primary); border-color: var(--text-muted); }
 .wb-chip.is-active {
   color: var(--accent-gold);
   border-color: var(--accent-gold);

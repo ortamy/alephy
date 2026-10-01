@@ -1125,6 +1125,26 @@ html[data-theme="dark"] .res-dot-disputed { background: #e08a8a; }
 
   .res-card { min-height: 0; padding: 12px 14px; }
 
+  /* Карточка на всю ширину полосы: без min-width:0 грид отдаёт
+     колонке ширину контента, и текст анонса уезжает под обрез. */
+  #researches .exposure-grid > * { min-width: 0; }
+  .res-card-summary {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* Плашка категории на всю строку под шапкой карточки, дата — вправо. */
+  .res-card-top { flex-wrap: wrap; }
+  .res-card-cat { max-width: 100%; flex: 0 1 auto; }
+  .res-card-terms { gap: 4px; }
+  .res-card-term { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Сортировка тянется на всю ширину строки действий. */
+  #researches .res-select--sort { flex: 1 1 140px; min-width: 0; }
+
   .res-row {
     grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-rows: auto auto;

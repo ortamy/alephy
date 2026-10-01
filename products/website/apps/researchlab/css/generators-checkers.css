@@ -9,6 +9,48 @@
 
 .gc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--space-3); }
 
+/* Тулбар витрины §4.7: оболочка агентов + .agent-toolbar-row
+   (display: contents), поэтому раскладку задаёт родитель. Слева
+   поиск, справа счётчик «N из M» и переключатель вида. */
+.gc-controls-panel { gap: var(--space-2); }
+.gc-controls-panel .pipeline-count { margin-left: 0; }
+.gc-controls-panel .res-view-toggle { flex: 0 0 auto; }
+.gc-controls-panel .res-view-btn + .res-view-btn { border-left: 1px solid var(--border-light); }
+
+/* Режим списка §4.8 — та же анатомия, что у .agent-list-row: строка
+   56px, икон-чип 32, имя с фиксированной долей, описание забирает
+   остаток. Карточка не пересобирается, а перестраивается раскладкой.
+   Селекторы через .is-list на самой карточке, а не на сетке: витрина
+   анализаторов лежит в .analyzers-grid, и привязка к .gc-grid
+   оставила бы её карточки в режиме сетки. */
+.gc-grid.is-list,
+.analyzers-grid.is-list { grid-template-columns: 1fr; gap: 2px; }
+.is-list .gc-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 6px 10px;
+}
+.is-list .gc-card-head { flex: 0 0 auto; }
+.is-list .gc-card-title {
+  flex: 0 1 220px;
+  min-width: 0;
+  overflow: hidden;
+  font: 600 var(--text-14)/1.3 var(--font-ui);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.is-list .gc-card-desc {
+  -webkit-line-clamp: 1;
+  flex: 1 1 auto;
+  font-size: var(--ui-12);
+}
+
+/* Поиск скрывает несовпавшие карточки классом, а не hidden: карточка —
+   ссылка, и hidden на <a> роняет фокус с клавиатуры. */
+.gc-card.is-filtered-out { display: none; }
+
 .gc-card {
   display: flex;
   flex-direction: column;
@@ -79,6 +121,17 @@
 @media (max-width: 640px) {
   .gc-grid { grid-template-columns: 1fr; }
   .gc-card { min-height: 0; }
+  /* Тулбар витрины складывается так же, как у конвейеров: поиск и
+     действия каждый на своей строке, панель не уезжает вбок. */
+  .gc-controls-panel .agents-search { flex: 1 1 100%; }
+  .gc-controls-panel .agent-toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  /* Строка списка на телефоне в две линии: описание уходит под имя,
+     иначе 56px строка режет описание по вертикали. */
+  .is-list .gc-card { flex-wrap: wrap; }
+  .is-list .gc-card-desc { flex: 1 1 100%; order: 5; }
 }
 @media (prefers-reduced-motion: reduce) { .gc-card { transition: none; } }
 

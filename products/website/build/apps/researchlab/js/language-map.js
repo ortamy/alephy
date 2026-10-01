@@ -458,13 +458,62 @@
       '</dd></div>';
   }
 
+  /* Название, ветвь и код уходят в шапку: в контейнере они дублировались
+     тремя строками и читались как второй документ. Мета-чипы шапки держат
+     код и ветвь — короткие подписи, которые ищут глазом. */
   function detailHeroConfig(language, id) {
+    if (!language) {
+      return {
+        kicker: 'АЛЕФИ · КАРТА ЯЗЫКОВ',
+        title: 'Язык не найден',
+        subtitle: 'В карте языков нет записи с кодом «' + String(id || '') + '»',
+        icon: 'paleo/track.png'
+      };
+    }
+    var code = languageCode(language.id);
+    var meta = [code];
+    if (language.type) meta.push(language.type);
+    if (language.family) meta.push(language.family);
+    if (language.region) meta.push(language.region);
     return {
-      kicker: 'АЛЕФИ · КАРТА ЯЗЫКОВ · ' + String(id || '').toUpperCase(),
-      title: language ? language.name : 'Язык не найден',
-      subtitle: (language && (language.type || language.notes)) || '',
+      kicker: 'АЛЕФИ · КАРТА ЯЗЫКОВ · ' + code,
+      title: language.name,
+      subtitle: language.notes || language.type || '',
+      meta: meta,
       icon: 'paleo/track.png'
     };
+  }
+
+  /* Тулбар паспорта: возврат в каталог с сохранением фильтров плюс
+     соседи по алфавиту — на карте языков это главное действие. */
+  function detailToolbarHtml(language) {
+    // Соседи считаются по текущей выборке: сортировка и фильтры из hash.
+    var list = getFilteredLanguages();
+    var index = list.map(function(item) { return item.id; }).indexOf(language.id);
+    var prev = index > 0 ? list[index - 1] : null;
+    var next = index > -1 && index < list.length - 1 ? list[index + 1] : null;
+    function neighbor(item, icon, hint) {
+      if (!item) {
+        return '<span class="language-map-neighbor is-disabled" aria-hidden="true">' +
+          '<i data-lucide="' + icon + '"></i>' +
+          '<span class="language-map-neighbor-text">' + hint + '</span></span>';
+      }
+      return '<a class="language-map-neighbor" href="' + escapeHtml(hashFor('/' + item.id)) + '" rel="nofollow"' +
+        ' aria-label="' + (hint === 'Предыдущий' ? 'Предыдущий язык: ' : 'Следующий язык: ') + escapeHtml(item.name) + '">' +
+        '<i data-lucide="' + icon + '" aria-hidden="true"></i>' +
+        '<span class="language-map-neighbor-text">' + escapeHtml(item.name) + '</span></a>';
+    }
+    return '<div class="language-map-toolbar language-map-detail-toolbar">' +
+      '<a class="lab-btn lab-btn-secondary" href="' + escapeHtml(hashFor('')) + '">' +
+      '<i data-lucide="arrow-left" aria-hidden="true"></i>К списку языков</a>' +
+      '<span class="language-map-detail-position" role="status">' +
+      (index > -1 ? '<b>' + (index + 1) + '</b> из ' + list.length + ' в карте' : 'вне текущей выборки') +
+      '</span>' +
+      '<span class="language-map-neighbors">' +
+      neighbor(prev, 'chevron-left', 'Предыдущий') +
+      neighbor(next, 'chevron-right', 'Следующий') +
+      '</span>' +
+    '</div>';
   }
 
   function renderDetail(container, language, id) {
@@ -475,13 +524,9 @@
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('language-map', 'detail', heroOverride);
     }
-    var code = String(id || language.id).toUpperCase();
-    container.innerHTML = '<section class="language-map-detail" aria-labelledby="language-map-detail-title">' +
-      '<p class="language-map-kicker">ПАСПОРТ ЯЗЫКА · ' + escapeHtml(code) + '</p>' +
-      '<h1 id="language-map-detail-title">' + escapeHtml(language.name) + '</h1>' +
-      '<p class="language-map-detail-type">' + escapeHtml(language.type || '') + '</p>' +
-      '<p class="language-map-detail-notes">' + escapeHtml(language.notes || '') + '</p>' +
-      '<div class="lab-panel-row language-map-detail-panels">' +
+    container.innerHTML = '<section class="language-map-detail" aria-labelledby="language-map-passport-title">' +
+      detailToolbarHtml(language) +
+      '<div class="language-map-detail-panels lab-panel-row">' +
       '<section class="lab-panel" aria-labelledby="language-map-passport-title">' +
       '<div class="lab-chapter"><span class="lab-chapter-num">01</span>' +
       '<h2 class="lab-chapter-title" id="language-map-passport-title">Паспорт</h2></div>' +
@@ -503,8 +548,6 @@
       '</div>' +
       '</section>' +
       '</div>' +
-      '<p class="language-map-detail-back"><a class="lab-btn lab-btn-secondary" href="' +
-      escapeHtml(hashFor('')) + '">К списку языков</a></p>' +
       '</section>';
     fillRelations(container, language);
   }
@@ -516,12 +559,12 @@
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('language-map', 'detail', heroOverride);
     }
-    container.innerHTML = '<section class="language-map-detail" aria-labelledby="language-map-detail-title">' +
-      '<p class="language-map-kicker">ПАСПОРТ ЯЗЫКА · ' + escapeHtml(String(id).toUpperCase()) + '</p>' +
-      '<h1 id="language-map-detail-title">Язык не найден</h1>' +
+    container.innerHTML = '<section class="language-map-detail" aria-label="Язык не найден">' +
+      '<div class="language-map-toolbar language-map-detail-toolbar">' +
+      '<a class="lab-btn lab-btn-secondary" href="' + escapeHtml(hashFor('')) + '">' +
+      '<i data-lucide="arrow-left" aria-hidden="true"></i>К списку языков</a></div>' +
       '<div class="language-map-not-found is-dashed">' +
       '<p class="language-map-not-found-text">В карте языков нет записи с кодом «' + escapeHtml(id) + '».</p>' +
-      '<a class="lab-btn lab-btn-secondary" href="' + escapeHtml(hashFor('')) + '">К списку языков</a>' +
       '</div>' +
       '</section>';
   }
