@@ -143,6 +143,7 @@ const moduleAnchors = {
   'paleo-keyboard': '#pk-keys .pk-key',
   vision: '.vi-bento',
   analyzers: '.analyzers-shell',
+  religionisms: '.rel-bento',
   'design-system': '.ds-bento'
 };
 

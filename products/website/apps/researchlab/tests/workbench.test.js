@@ -168,14 +168,15 @@ function testHubBento() {
   assert.ok(source.includes('class="wb-bento"'), 'Хаб собран на bento-сетке');
   assert.ok(
     source.includes('wb-cell--projects') && source.includes('class="wb-rail"') &&
-      source.includes('wb-cell--wide'),
-    'Ячейки хаба: список, липкая колонка и широкий блок'
+      source.includes('wb-cell--sources'),
+    'Ячейки хаба: список, липкая колонка и источники наработок'
   );
-  // 7 + 5 в каждой строке и широкий блок 1/-1 — пропорции §5.2a.
+  // 7 + 5 в каждой строке, 04 живёт в рельсе — пропорции §5.2a.
   assert.ok(css.includes('grid-template-columns: repeat(12, minmax(0, 1fr));'), 'Сетка — 12 колонок');
   assert.ok(/\.wb-cell--projects \{ grid-column: span 7; \}/.test(css), 'Список занимает 7 колонок');
   assert.ok(/\.wb-rail \{[\s\S]*?grid-column: span 5;/.test(css), 'Правая колонка занимает 5 колонок');
-  assert.ok(/\.wb-cell--wide \{ grid-column: 1 \/ -1; \}/.test(css), 'Широкая ячейка тянется на строку');
+  // 01 тянется на всю высоту рельса, а не висит полосой над дырой.
+  assert.ok(/\.wb-bento \{[\s\S]*?align-items: stretch;/.test(css), 'Бенто тянет ячейки по высоте');
 
   // Ink-ячейка ровно одна, и акцент несёт золотая рамка (--bg-dark в
   // светлых темах почти белый).

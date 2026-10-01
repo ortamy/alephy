@@ -5,23 +5,40 @@
    «Агенты» (css/components/dashboard.css).
 
    Отличие от «Книгочтения» (.sr-cell): здесь список проектов —
-   главный блок (7 колонок), а правая колонка (5) несёт продолжение
-   работы и сводку. Ячейки лежат в одной .wb-rail: если растянуть их
-   на две строки бенто, «Сводка» уедет под список и оставит дыру.
+   главный блок (7 колонок) во всю высоту, а правая колонка (5) несёт
+   продолжение работы, сводку и источники наработок. Ячейки лежат в одной
+   .wb-rail: если растянуть их на две строки бенто, «Сводка» уедет под
+   список и оставит дыру.
 
    Классы свои (wb-), как .gc-card у генераторов: оболочка тулбара —
    общая с агентами, раскладку задают только свои классы.
    ============================================= */
 
 /* ===== Сетка ===== */
+/* align-items: stretch — 01 «Мои проекты» должен быть одной высоты с
+   правой колонкой, иначе под списком остаётся дыра. */
 .wb-bento {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--space-3);
-  align-items: start;
+  align-items: stretch;
 }
 
 .wb-bento[hidden] { display: none; }
+
+/* Правая колонка (02 + 03 + 04) — одна .wb-rail: 04 «Откуда брать
+   наработки» переехал из широкой ячейки под бенто в рельс, иначе под
+   списком проектов оставалась пустая полоса во всю ширину. */
+.wb-cell--projects { grid-column: span 7; }
+.wb-rail {
+  grid-column: span 5;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: var(--space-2);
+  min-width: 0;
+}
+.wb-rail > .wb-cell { grid-column: 1 / -1; }
+.wb-cell--sources { min-height: 0; }
 
 .wb-cell {
   display: flex;
@@ -35,19 +52,14 @@
   box-shadow: none;
 }
 
-/* Список проектов — 7 колонок, правая колонка — 5 и прижата к краю. */
-.wb-cell--projects { grid-column: span 7; }
-.wb-rail {
-  grid-column: span 5;
-  display: grid;
-  gap: var(--space-2);
-  align-content: start;
-  min-width: 0;
-  position: sticky;
-  top: var(--space-3);
+/* Список проектов тянется на всю высоту бенто (align-items: stretch),
+   а его тело — оставшуюся после шапки: пустое состояние растянется по
+   колонке, а не зависнет полосой под шапкой. */
+.wb-cell--projects > #wb-projects-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
 }
-.wb-rail > .wb-cell { grid-column: 1 / -1; }
-.wb-cell--wide { grid-column: 1 / -1; }
 
 /* Ink-ячейка: подложка --bg-dark + золотая рамка (акцент несёт рамка,
    в светлых темах --bg-dark почти белый). В хабе она ровно одна. */
@@ -245,7 +257,15 @@
 }
 
 .wb-empty-glyph { color: var(--accent-gold); opacity: 0.35; }
+
 /* ===== Продолжить работу (ink-ячейка) ===== */
+/* Ячейка 02 намеренно компактная: в рельсе три блока, и высокая ink-карточка
+   съедала бы место у «Сводки». Плотные отступы + пустые строки, которые при
+   отсутствии проекта ничего не несут, просто схлопываются. */
+.wb-cell--resume { gap: var(--space-2); padding: var(--space-3); }
+.wb-cell--resume :is(.wb-resume-meta, .wb-resume-when):empty { display: none; }
+.wb-cell--resume .wb-resume-title:empty { display: none; }
+
 .wb-resume-head {
   display: flex;
   align-items: baseline;
@@ -337,9 +357,8 @@
 
 /* ===== Мобильный закон (§5.3): одна колонка, липкость выключена ===== */
 @media (max-width: 900px) {
-  .wb-cell--projects,
-  .wb-cell--wide { grid-column: 1 / -1; }
-  .wb-rail { grid-column: 1 / -1; position: static; }
+  .wb-cell--projects { grid-column: 1 / -1; }
+  .wb-rail { grid-column: 1 / -1; grid-template-rows: none; }
   .wb-cell { padding: var(--space-3); }
 }
 

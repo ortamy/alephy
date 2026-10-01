@@ -68,6 +68,9 @@ window.ModuleRegistry = (function () {
     { id: 'timescale-generator', kind: 'panel' },
     { id: 'context-generator', kind: 'panel' },
     { id: 'clue-generator', kind: 'panel' },
+    // Генераторы из §5.2j: паспорт артефакта-знака и сравнение версий.
+    { id: 'artifact-generator', kind: 'panel' },
+    { id: 'change-generator', kind: 'panel' },
 
     // --- анализаторы ---
     { id: 'analyzers', kind: 'panel' },

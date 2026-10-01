@@ -1,24 +1,163 @@
-﻿/* ===== RELIGIONISMS MODULE ===== */
-/* Карточка-паспорт по канону «Конвейеров» (.agent-role-card, components/
-   dashboard.css), как у витрин генераторов и чекеров: иконка-чип 32px с
-   Lucide-глифом, имя, описание на две строки, роль чипом внизу. Вид
-   «список» остаётся строкой: имя, роль справа, пересказ под ними. */
+﻿/* =============================================
+   religionisms.css — bento-каркас «Религионизмов» (#religionisms,
+   дизайн-система §5.2h).
 
+   Восьмой эталон bento и второй, где модуль держит два экрана в одной
+   разметке (после §5.2f). Префикс `rel-`, сетка 12 колонок, ячейка hairline
+   с radius -8 и без теней (§0.2), шапка ячейки по §4.1, мобильный закон
+   §5.3. Обе правые ячейки лежат в одном .rel-rail — тот же приём, что в
+   §5.2f/§5.2g: если растянуть их на две строки бенто, «Девять компонентов»
+   уедет под каталог и оставит дыру.
+   ============================================= */
+
+/* ===== Сетка ===== */
+.rel-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* gap 8px, а не 12px: ячейки должны читаться плотным листом, а не
+     разнесёнными карточками. Ритм держит hairline, а не воздух (§0.2). */
+  gap: var(--space-2);
+  align-items: start;
+}
+
+/* Скрытый экран не оставляет дыры в раскладке страницы (§5.2f). */
+.rel-bento[hidden] { display: none; }
+
+.rel-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+}
+
+/* Манифестная мера прозы (`.lab-content .module p` — margin-bottom 20px и
+   max-width 750px) не для инструмента: в ячейке она даёт вторые 20px под
+   каждым абзацем и пустой низ блока. Сброс той же специфичности, что в
+   manifest.css §5.2e, — ритм задаёт gap ячейки. */
+.lab-content .module .rel-cell p,
+.lab-content .module .rel-cell li,
+.lab-content .module .rel-cell dl,
+.lab-content .module .rel-cell dt,
+.lab-content .module .rel-cell dd,
+.lab-content .module .rel-cell ul { margin: 0; max-width: none; }
+
+/* Пропорции «7 + 5»: каталог и паспорт сферы — 7 колонок и липкие,
+   правый рельс — 5 и прижат к краю. */
+.rel-cell--catalog,
+.rel-cell--passport { grid-column: span 7; position: sticky; top: var(--space-3); }
+.rel-rail {
+  grid-column: span 5;
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+  position: sticky;
+  top: var(--space-3);
+}
+.rel-rail > .rel-cell { grid-column: 1 / -1; }
+.rel-cell--wide { grid-column: 1 / -1; }
+
+/* Ink-ячейка: подложка --bg-dark + золотая рамка. На каждом экране она
+   ровно одна — иначе золото перестаёт быть акцентом (§5.2a). */
+.rel-cell--ink {
+  background: var(--bg-dark);
+  border-color: var(--border-gold);
+  color: var(--text-on-dark);
+}
+
+/* ===== Шапка ячейки: номер + капитель + подпись справа (§4.1) ===== */
+/* Подкладка 6px вместо 8px: шапка — полоса, а не секция, поэтому между
+   ней и содержимым должен быть зазор меньше межблочного. */
+.rel-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 calc(var(--space-3) * -1);
+  padding: 0 var(--space-3) 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.rel-cell--ink .rel-cell-head { border-bottom-color: var(--line-strong); }
+
+.rel-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+.rel-cell--ink .rel-num { color: var(--accent-gold); }
+
+/* Селектор с .module обязателен: базовое `.module h2:not(:last-child)`
+   из layout.css (0,2,1) иначе перебьёт одиночный класс и напечатает
+   капитель крупным серифом. Тот же приём, что в §5.2e/§5.2f/§5.2g. */
+.module .rel-cell .rel-cell-title {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.module .rel-cell--ink .rel-cell-title { color: var(--header-ink-muted); }
+
+.rel-cell-hint {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  white-space: nowrap;
+}
+.rel-cell--ink .rel-cell-hint { color: var(--header-ink-muted); }
+
+/* Пояснение в подвале ячейки: цвет текста различает факт, интерпретацию
+   и гипотезу (§6), поэтому на ink подложке он берёт header-ink-muted. */
+.rel-note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+}
+.rel-note + .rel-note { margin-top: var(--space-2); }
+.rel-cell--ink .rel-note { color: var(--header-ink-muted); }
+
+/* ===== Тулбар: оболочка .lab-toolbar (§4.7), раскладка своя ===== */
+/* Кнопка возврата живёт в действиях панели и появляется только на экране
+   сферы: под заголовком она занимала отдельную полосу и была вторым
+   способом сделать то же, что делает каталог (то же решение, что в §5.2e). */
+.rel-back[hidden] { display: none; }
+.rel-back { white-space: nowrap; }
+
+/* ===== Каталог сфер: карточки и вид «список» (§4.8) ===== */
+/* Сетка внутри ячейки 01: карточки-паспорта с иконкой-чипом 28px (как
+   .wb-project-icon в §5.2g), описанием на две строки и ролью чипом.
+   Порог 200px: ячейка 01 — это 7 колонок bento, то есть около 640px
+   контента, и при 220px в ряд влезали лишь две карточки — два ряда
+   почти пустого воздуха на 19 сферах. */
 .rel-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+  align-content: start;
 }
 
 .rel-card {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  min-height: 140px;
+  gap: 5px;
+  min-height: 0;
   margin: 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) 10px;
   cursor: pointer;
   text-align: left;
   background: var(--bg-secondary);
@@ -38,7 +177,7 @@
   outline-offset: 2px;
 }
 
-.rel-card-head { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.rel-card-head { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
 
 /* Иконка-чип ровно как .agent-icon-chip: hairline-рамка, терциарный фон.
    Специфичность svg.lucide выше базовых 18px из lucide.css. */
@@ -46,24 +185,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 32px;
-  width: 32px;
-  height: 32px;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
   box-sizing: border-box;
   color: var(--text-muted);
   background: var(--bg-tertiary);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
 }
-.rel-card-icon svg.lucide { width: 16px; height: 16px; }
+.rel-card-icon svg.lucide { width: 14px; height: 14px; }
 
-.rel-card-title {
+/* Селектор с .module обязателен: карточка лежит в ячейке бенто, а базовое
+   `.module h2:not(:last-child)` (0,2,1) перебило бы одиночный класс. */
+.module .rel-cell .rel-card-title {
   min-width: 0;
   margin: 0;
   padding: 0;
   border: 0;
   color: var(--text-primary);
-  font: 600 16px/1.3 var(--font-heading);
+  font: 600 var(--text-14)/1.3 var(--font-heading);
 }
 
 .rel-card .rel-card-desc {
@@ -101,13 +242,13 @@
 }
 .rel-grid.is-list .rel-card {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   align-items: center;
-  column-gap: var(--space-3);
-  row-gap: 1px;
+  column-gap: var(--space-2);
+  row-gap: 0;
   min-height: 0;
-  padding: 8px 14px;
+  padding: 5px 10px;
 }
 .rel-grid.is-list .rel-card .rel-card-head { display: contents; }
 .rel-grid.is-list .rel-card .rel-card-title {
@@ -134,9 +275,8 @@
 
 @media (max-width: 640px) {
   .rel-grid { grid-template-columns: 1fr; }
-  .rel-card { min-height: 0; }
   /* Строка списка переносит описание под строкой целиком. */
-  .rel-grid.is-list .rel-card { grid-template-columns: 32px minmax(0, 1fr); }
+  .rel-grid.is-list .rel-card { grid-template-columns: 28px minmax(0, 1fr); }
   .rel-grid.is-list .rel-card .rel-card-role {
     grid-column: 2;
     grid-row: 2;
@@ -147,88 +287,216 @@
 }
 @media (prefers-reduced-motion: reduce) { .rel-card { transition: none; } }
 
-/* ===== DETAIL VIEW ===== */
-.rel-detail-header {
+/* ===== Экран сферы: паспорт 01 ===== */
+/* Имя — единственный крупный сериф на экране: дальше капитель ячеек,
+   поэтому заголовок сферы не спорит с шапкой модуля. Паспорт — строка, а
+   не витрина: gap и размер иконки уменьшены вдвое от прежней раскладки. */
+.rel-passport {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: var(--space-6);
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border-light);
+  gap: var(--space-3);
+  min-width: 0;
 }
-.rel-detail-icon { width: 48px; height: 48px; }
-.rel-detail-header h2 {
+.rel-passport-icon {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
+.rel-passport-main { min-width: 0; }
+
+.module .rel-passport .rel-passport-name {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+  color: var(--text-primary);
   font-family: var(--font-heading);
-  font-size: 30px;
+  font-size: var(--text-2xl);
   font-weight: 600;
-  font-style: normal;
-  color: var(--text-primary);
+  line-height: 1.15;
+}
+.rel-passport-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-14);
+  line-height: 1.5;
 }
 
-.rel-comp-detail-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-.rel-comp-block {
-  background: var(--bg-card);
+/* Роль сферы (корень или подзаголовок) — чип §4.3 под паспортом. */
+.rel-passport-role {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: 2px 10px;
+  overflow: hidden;
+  color: var(--text-muted);
+  font: 500 var(--ui-11)/1.5 var(--font-mono);
+  white-space: nowrap;
+  text-overflow: ellipsis;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: var(--space-4);
-  box-shadow: var(--shadow-soft);
-}
-.rel-comp-title {
-  font-family: var(--font-heading);
-  font-size: var(--text-md);
-  font-weight: 700;
-  color: var(--accent-gold);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-.rel-comp-text {
-  font-size: var(--text-md);
-  color: var(--text-primary);
-  line-height: 1.6;
+  border-radius: var(--radius-pill);
 }
 
-.rel-root-block {
-  background: var(--bg-dark);
-  border: 1px solid var(--border-gold);
-  border-radius: var(--radius-sm);
-  padding: var(--space-5);
+/* ===== Ключевой корень (ink-ячейка рельса) ===== */
+/* Раньше глиф, транслит, значение и заметка шли вразнобой с зазором 8px,
+   а каждый абзац сверху получал ещё 20px манифестной меры — блок вытягивался
+   вдвое больше содержимого. Здесь строка идёт за строкой с шагом 6px. */
+.rel-root {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
-.rel-root-title {
-  font-family: var(--font-heading);
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--text-light);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
+/* Палео-образ — крупный глиф с направлением rtl, как в §5.2d. */
 .rel-root-heb {
   font-family: var(--font-hebrew);
   font-size: 30px;
-  color: var(--accent-gold);
   line-height: 1;
-  margin-bottom: 6px;
+  color: var(--accent-gold);
+  overflow-wrap: anywhere;
 }
 .rel-root-translit {
+  margin: 0;
+  color: var(--text-on-dark);
   font-family: var(--font-mono);
-  font-size: 14px;
-  color: var(--text-light);
-  margin-bottom: var(--space-2);
+  font-size: var(--text-14);
+}
+.rel-root-meaning {
+  margin: 0;
+  color: var(--header-ink-muted);
+  font-size: var(--text-14);
+  line-height: 1.5;
 }
 .rel-root-note {
-  font-size: 14px;
-  color: var(--text-light);
-  opacity: 0.85;
-  line-height: 1.6;
+  padding-top: 6px;
+  color: var(--header-ink-muted);
+  font-size: var(--text-xs);
+  line-height: var(--leading-ui);
+  border-top: 1px solid var(--line-strong);
 }
 
+/* ===== Обещание и конец пути (ячейка рельса) ===== */
+/* dl, а не дивы: строка читается как «метка — значение», а значения
+   (обещание и конец) длиннее меток. Разделитель — hairline строки, а не
+   рамка блока, поэтому шаг между строками 6px. */
+.rel-fate { display: grid; gap: 6px; }
+.rel-fate-row {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.rel-fate-row:last-child { padding-bottom: 0; border-bottom: 0; }
+.rel-fate-term {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.rel-fate-desc {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-14);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Девять компонентов (ячейка 04 на всю ширину) ===== */
+/* Блоки внутри ячейки — не ячейки бенто, а hairline-строки в три
+   колонки: девять компонентов читаются списком, а не раскладкой. Между
+   блоками 8px, внутри — 6px: значения длинные, и лишний воздух съедал
+   по вертикали по экрану. */
+.rel-comp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.rel-comp {
+  display: grid;
+  align-content: start;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px var(--space-2);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+.rel-comp-title {
+  margin: 0;
+  color: var(--accent-gold);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.rel-comp-text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-14);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Легенда девяти компонентов (ячейка 03 каталога) ===== */
+/* Строки без плашек (§4.12): глиф золотом + имя, hairline между строками. */
+.rel-legend {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-3);
+}
+.rel-legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+.rel-legend-glyph {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  color: var(--accent-gold);
+}
+.rel-legend-glyph svg.lucide { width: 15px; height: 15px; }
+.rel-legend-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== Мобильный закон (§5.3) ===== */
+/* До 900px рельс перестаёт быть липким и встаёт под основной блок
+   (то же условие, что в §5.2f/§5.2g). */
+@media (max-width: 900px) {
+  .rel-cell--catalog,
+  .rel-cell--passport,
+  .rel-rail { position: static; }
+  .rel-cell--catalog,
+  .rel-cell--passport,
+  .rel-rail,
+  .rel-cell--wide { grid-column: 1 / -1; }
+  .rel-comp-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 @media (max-width: 640px) {
   .rel-grid { grid-template-columns: 1fr; }
-  .rel-comp-grid { grid-template-columns: repeat(2, 1fr); }
+  /* Строка списка переносит описание под строкой целиком. */
+  .rel-grid.is-list .rel-card { grid-template-columns: 28px minmax(0, 1fr); }
+  .rel-grid.is-list .rel-card .rel-card-role {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    margin-top: 2px;
+  }
+  .rel-grid.is-list .rel-card .rel-card-desc { grid-column: 2 / 3; grid-row: 3; }
+  .rel-comp-grid { grid-template-columns: 1fr; }
+  .rel-legend { grid-template-columns: 1fr; }
+  .rel-passport { flex-wrap: wrap; }
 }

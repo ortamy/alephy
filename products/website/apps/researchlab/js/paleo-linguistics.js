@@ -318,6 +318,9 @@ function bindLangCards(container) {
       if (version !== routeVersion || !isCurrentRoute(langId)) return;
       currentLang = lang;
       currentTab = 'alphabet';
+      // Запрос внутреннего поиска относится к конкретному языку: на другой
+      // язык он не должен переезжать.
+      langPageUi.query = '';
       container.innerHTML = renderLangPage(lang);
       // Шапка модуля подменяется на язык
       if (window.LabHero && window.LabHero.setView) {
@@ -338,16 +341,112 @@ function bindLangCards(container) {
   function backToCatalog() {
     if (typeof LabRouter !== 'undefined') LabRouter.navigate('paleo-linguistics');
   }
-/* Бенто-каркас внутренней страницы: 12 колонок.
+
+  // Поиск по внутренней странице языка живёт в состоянии модуля, а не в
+  // разметке: раздел переключается без перезагрузки, и запрос должен
+  // пережить смену вкладки.
+  var langPageUi = { query: '' };
+
+  /* Атрибут поиска для элемента раздела. Текст пишем нижним регистром в
+     data, чтобы фильтр не зависел от регистра. */
+  function searchAttr() {
+    var parts = Array.prototype.slice.call(arguments).filter(Boolean);
+    return ' data-pl-search="' + escapeHtml(parts.join(' ').toLowerCase()) + '"';
+  }
+
+  function tabSearchPlaceholder() {
+    if (currentTab === 'roots') return 'Поиск по корням: форма, иврит, значение…';
+    if (currentTab === 'texts') return 'Поиск по текстам: слово, перевод…';
+    if (currentTab === 'grammar') return 'Поиск по грамматике…';
+    return 'Поиск по знакам: имя, звук, иврит…';
+  }
+
+  /* Применяет запрос к элементам активного раздела. Прячем карточки, а не
+     перерисовываем раздел: перерисовка роняла бы фокус и открытую модалку. */
+  function applyLangQuery(container) {
+    var body = container.querySelector('.pl-work-body');
+    if (!body) return;
+    var query = String(langPageUi.query || '').trim().toLowerCase();
+    var items = body.querySelectorAll('[data-pl-search]');
+    var shown = 0;
+
+    items.forEach(function(item) {
+      var hit = !query || (item.getAttribute('data-pl-search') || '').indexOf(query) !== -1;
+      item.classList.toggle('is-filtered-out', !hit);
+      if (hit) shown++;
+    });
+
+    var empty = body.querySelector('.pl-no-match');
+    if (empty) empty.remove();
+    if (query && items.length && !shown) {
+      var note = document.createElement('p');
+      note.className = 'pl-no-match lab-alert lab-alert-info';
+      note.textContent = 'В разделе «' + tabTitle(currentLang) + '» по запросу «' +
+        langPageUi.query.trim() + '» ничего не найдено.';
+      body.appendChild(note);
+    }
+
+    var counter = container.querySelector('#pl-lang-count');
+    if (counter) counter.innerHTML = '<strong>' + shown + '</strong> из ' + items.length;
+    var reset = container.querySelector('#pl-lang-page-reset');
+    if (reset) reset.hidden = !query;
+    var input = container.querySelector('#pl-lang-page-search');
+    if (input && input.value !== langPageUi.query) input.value = langPageUi.query;
+  }
+
+  function bindLangPageSearch(container) {
+    var input = container.querySelector('#pl-lang-page-search');
+    var reset = container.querySelector('#pl-lang-page-reset');
+    if (input) {
+      input.addEventListener('input', function() {
+        langPageUi.query = input.value;
+        applyLangQuery(container);
+      });
+    }
+    if (reset) {
+      reset.addEventListener('click', function() {
+        langPageUi.query = '';
+        applyLangQuery(container);
+        if (input) input.focus();
+      });
+    }
+  }
+
+  /* Тулбар внутренней страницы повторяет оболочку агентов
+     (.agent-controls-panel + .agent-toolbar-row): поиск по активному
+     разделу слева, сброс фильтра рядом, счётчик и возврат в каталог
+     справа. Кнопка «К каталогу языков» переехала сюда из рельса: в бенто
+     она стояла отдельной строкой и съедала высоту узкой колонки. */
+  function renderLangPageToolbar() {
+    return '<section class="agent-controls-panel pl-controls-panel" aria-label="Управление разделом языка">' +
+        '<div class="agent-toolbar-row">' +
+          '<input type="search" class="lab-input agents-search" id="pl-lang-page-search" autocomplete="off" ' +
+            'placeholder="' + escapeHtml(tabSearchPlaceholder()) + '" aria-label="Поиск по разделу языка" value="' +
+            escapeHtml(langPageUi.query) + '">' +
+          '<div class="pl-lang-toolbar-filters agent-filter-chips" role="group" aria-label="Фильтры раздела">' +
+            '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn" id="pl-lang-page-reset" ' +
+              'title="Сбросить поиск" aria-label="Сбросить поиск"' + (langPageUi.query ? '' : ' hidden') + '>' +
+              '<i data-lucide="rotate-ccw" class="lab-icon" aria-hidden="true"></i>Сбросить</button>' +
+          '</div>' +
+          '<div class="agent-toolbar-actions">' +
+            '<span class="pipeline-count" id="pl-lang-count" aria-live="polite"></span>' +
+            '<button class="lab-btn lab-btn-secondary lab-btn-sm pl-back-btn" type="button">' +
+              '<i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К каталогу языков</button>' +
+          '</div>' +
+        '</div>' +
+      '</section>';
+  }
+
+  /* Бенто-каркас внутренней страницы: 12 колонок.
      Рельс (4) несёт идентификацию языка и вертикальную навигацию по разделам,
      рабочая область (8) — активную вкладку. Раньше шапка, вкладки и панель
      лежали одной вертикальной стопкой внутри общей карточки, и длинная полоса
      букв уезжала под шапку, оставляя справа пустое поле. */
   function renderLangPage(lang) {
     return '<div class="pl-lang-page">' +
+      renderLangPageToolbar() +
       '<div class="pl-bento">' +
         '<div class="pl-rail">' +
-          '<button class="lab-btn lab-btn-secondary lab-btn-sm pl-back-btn" type="button">← К каталогу языков</button>' +
           renderIdentityCell(lang) +
           renderSectionNav(lang) +
         '</div>' +
@@ -457,7 +556,8 @@ function stageKey(langId) {
     var key = stageKey(currentLang.id);
     var cards = letters.map(function(letter) {
       var stage = letter.stages[key];
-      return '<button type="button" class="pl-sign-card" data-letter-id="' + escapeHtml(letter.id) + '">' +
+      return '<button type="button" class="pl-sign-card" data-letter-id="' + escapeHtml(letter.id) + '"' +
+        searchAttr(letter.name, letter.sound, letter.hebrew, letter.meaning) + '>' +
         '<span class="pl-sign-glyph ' + stageFontClass(key) + '">' + glyphMarkup(stage, letter) + '</span>' +
         '<span class="pl-sign-reading">' + escapeHtml(letter.name) + '</span>' +
         '<span class="pl-sign-type">' + escapeHtml(letter.sound) + '</span>' +
@@ -483,7 +583,8 @@ function stageKey(langId) {
     if (!signs.length) return '<div class="lab-alert lab-alert-info">Алфавит не загружен.</div>';
     var fontClass = 'pl-s-' + escapeHtml(currentLang.id);
     var cards = signs.map(function(s) {
-      return '<button type="button" class="pl-sign-card" data-sign-id="' + escapeHtml(s.id) + '">' +
+      return '<button type="button" class="pl-sign-card" data-sign-id="' + escapeHtml(s.id) + '"' +
+        searchAttr(s.reading, s.type, s.meaning, s.symbol) + '>' +
         '<span class="pl-sign-glyph ' + fontClass + '">' + escapeHtml(s.symbol) + '</span>' +
         '<span class="pl-sign-reading">' + escapeHtml(s.reading) + '</span>' +
         '<span class="pl-sign-type">' + escapeHtml(s.type) + '</span>' +
@@ -558,7 +659,8 @@ function stageKey(langId) {
     var roots = lang.common_roots || [];
     if (!roots.length) return '<div class="lab-alert lab-alert-info">Список корней для этого языка не заполнен.</div>';
     var rows = roots.map(function(r) {
-      return '<tr class="pl-root-row" data-hebrew="' + escapeHtml(r.hebrew) + '" tabindex="0" role="button" aria-label="Открыть корень ' + escapeHtml(r.hebrew) + ' в словарях">' +
+      return '<tr class="pl-root-row" data-hebrew="' + escapeHtml(r.hebrew) + '" tabindex="0" role="button" aria-label="Открыть корень ' + escapeHtml(r.hebrew) + ' в словарях"' +
+        searchAttr(r.language, r.hebrew, r.meaning) + '>' +
         '<td>' + escapeHtml(r.language) + '</td>' +
         '<td dir="rtl" lang="he">' + escapeHtml(r.hebrew) + '</td>' +
         '<td>' + escapeHtml(r.meaning) + '</td>' +
@@ -572,7 +674,7 @@ function stageKey(langId) {
     var texts = lang.texts || [];
     if (!texts.length) return '<div class="lab-alert lab-alert-info">Тексты для этого языка не загружены.</div>';
     return texts.map(function(t) {
-      return '<article class="pl-text-card">' +
+      return '<article class="pl-text-card"' + searchAttr(t.original, t.transliteration, t.translation) + '>' +
         '<div class="pl-text-original" lang="he" dir="rtl">' + linkifyWords(t.original) + '</div>' +
         '<div class="pl-text-translit">' + escapeHtml(t.transliteration) + '</div>' +
         '<div class="pl-text-translation">' + escapeHtml(t.translation) + '</div>' +
@@ -601,13 +703,16 @@ function stageKey(langId) {
     ].filter(function(pair) { return pair[1]; });
     if (!items.length) return '<div class="lab-alert lab-alert-info">Грамматика не описана.</div>';
     return '<dl class="pl-grammar">' + items.map(function(pair) {
-      return '<div class="pl-grammar-item"><dt>' + escapeHtml(pair[0]) + '</dt><dd>' + escapeHtml(pair[1]) + '</dd></div>';
+      return '<div class="pl-grammar-item"' + searchAttr(pair[0], pair[1]) + '><dt>' + escapeHtml(pair[0]) + '</dt><dd>' + escapeHtml(pair[1]) + '</dd></div>';
     }).join('') + '</dl>';
   }
 // ===== СОБЫТИЯ ВНУТРЕННЕЙ СТРАНИЦЫ =====
   function bindLangPageEvents(container, lang) {
     var back = container.querySelector('.pl-back-btn');
     if (back) back.addEventListener('click', backToCatalog);
+
+    bindLangPageSearch(container);
+    applyLangQuery(container);
 
     container.querySelectorAll('.pl-nav-item').forEach(function(btn) {
       btn.addEventListener('click', function() { switchTab(container, lang, this.dataset.tab); });
@@ -622,6 +727,9 @@ function stageKey(langId) {
     });
 
     bindRootAndTextEvents(container);
+    // Иконки тулбара (стрелка возврата, сброс) приходят как data-lucide:
+    // после innerHTML их нужно материализовать, иначе они пустые.
+    refreshIcons();
   }
 
   function openRoot(hebrew) {
@@ -678,6 +786,11 @@ function stageKey(langId) {
     var body = work.querySelector('.pl-work-body');
     if (body) body.innerHTML = renderActiveTab(lang);
     bindRootAndTextEvents(container);
+    // Раздел меняет предмет поиска — подсказка обязана меняться вместе с ним,
+    // а сам запрос применяется к новому содержимому.
+    var input = container.querySelector('#pl-lang-page-search');
+    if (input) input.placeholder = tabSearchPlaceholder();
+    applyLangQuery(container);
   }
 
   // ===== СРАВНЕНИЕ (localStorage) =====

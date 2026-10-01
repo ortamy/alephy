@@ -1,20 +1,24 @@
 /**
- * religionisms.js — Модуль «Религионизмы»
- * Краткий обзор сфер и полный inline-разбор по клику.
+ * religionisms.js — Модуль «Религионизмы» (bento §5.2h).
+ * Два экрана в одной разметке: каталог сфер и паспорт сферы. Тулбар общий,
+ * «Назад к сферам» живёт в его действиях, поэтому отдельной полосы под
+ * заголовком больше нет.
  */
 const Religionisms = (function() {
   'use strict';
 
+  // Девять компонентов религионизма (docs/05-DICTIONARIES/RELIGIONISMS.md).
+  // Иконка lucide нужна легенде в рельсе, подпись — короткая метка.
   const COMPONENTS = [
-    ['altar', 'Алтарь'],
-    ['victim', 'Жертва'],
-    ['priest', 'Жрец'],
-    ['promise', 'Обетование'],
-    ['ritual', 'Ритуал'],
-    ['sanctuary', 'Святыня'],
-    ['teaching', 'Учение'],
-    ['pattern', 'Образец'],
-    ['end', 'Конец пути']
+    ['altar', 'Алтарь', 'place'],
+    ['victim', 'Жертва', 'heart-pulse'],
+    ['priest', 'Жрец', 'user-round-cog'],
+    ['promise', 'Обетование', 'gift'],
+    ['ritual', 'Ритуал', 'repeat'],
+    ['sanctuary', 'Святыня', 'building-2'],
+    ['teaching', 'Учение', 'book-open'],
+    ['pattern', 'Образец', 'users-round'],
+    ['end', 'Конец пути', 'hourglass']
   ];
 
   let spheres = [];
@@ -38,6 +42,9 @@ const Religionisms = (function() {
     // Панель живёт в разметке page-controller и пересоздаётся на каждом
     // заходе в модуль, поэтому слушатель вешаем на сам элемент, а не на модуль.
     bindToolbar();
+    // Вход в модуль всегда открывает каталог: открытая сфера — это
+    // состояние экрана, а не состояние раздела (§5.2f, та же логика).
+    activeSphereId = '';
     if (spheres.length) {
       render();
       return;
@@ -54,19 +61,22 @@ const Religionisms = (function() {
       .catch(function(err) {
         loading = false;
         console.error(err);
-        var grid = document.getElementById('rel-grid');
-        if (grid) grid.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки данных о религионизмах.</div>';
+        var screen = document.getElementById('rel-screen');
+        if (screen) screen.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки данных о религионизмах.</div>';
       });
   }
 
   function filter(value) {
     query = (value || '').trim().toLowerCase();
+    // Поиск относится к каталогу: на экране сферы искать нечего.
+    if (activeSphereId) close();
     render();
   }
 
   function bindToolbar() {
     var search = document.getElementById('rel-search');
     var reset = document.getElementById('rel-reset');
+    var back = document.getElementById('rel-back');
     if (search && search.dataset.relBound !== '1') {
       search.dataset.relBound = '1';
       // Панель пересоздаётся при каждом входе в модуль, поэтому старый
@@ -81,6 +91,10 @@ const Religionisms = (function() {
         filter('');
       });
     }
+    if (back && back.dataset.relBound !== '1') {
+      back.dataset.relBound = '1';
+      back.addEventListener('click', close);
+    }
     document.querySelectorAll('[data-rel-view]').forEach(function(button) {
       if (button.dataset.relBound === '1') return;
       button.dataset.relBound = '1';
@@ -92,13 +106,31 @@ const Religionisms = (function() {
     });
   }
 
-  /* Счётчик и кнопка сброса живут в панели page-controller, а список —
-     здесь, поэтому панель обновляем точечно, без перерисовки каталога. */
+  /* Панель и счётчик живут в разметке page-controller, а экран — здесь,
+     поэтому обновляем их точечно, без перерисовки всего списка. На экране
+     сферы поиск и переключатель вида не нужны — панель показывает только
+     счётчик и возврат к каталогу. */
   function syncToolbar(shown) {
-    var count = document.getElementById('rel-count');
-    if (count) count.innerHTML = '<strong>' + shown + '</strong> из ' + spheres.length;
+    var onSphere = Boolean(activeSphereId);
+    var search = document.getElementById('rel-search');
     var reset = document.getElementById('rel-reset');
-    if (reset) reset.hidden = !query;
+    var back = document.getElementById('rel-back');
+    var segment = document.querySelector('.lab-toolbar .lab-toolbar-segment');
+
+    if (search) search.hidden = onSphere;
+    if (reset) reset.hidden = onSphere || !query;
+    if (segment) segment.hidden = onSphere;
+    if (back) back.hidden = !onSphere;
+
+    var count = document.getElementById('rel-count');
+    if (count) {
+      if (onSphere) {
+        var index = spheres.map(function(s) { return s.id; }).indexOf(activeSphereId) + 1;
+        count.innerHTML = 'сфера <strong>' + index + '</strong> из ' + spheres.length;
+      } else {
+        count.innerHTML = '<strong>' + shown + '</strong> из ' + spheres.length;
+      }
+    }
     document.querySelectorAll('[data-rel-view]').forEach(function(button) {
       var active = button.getAttribute('data-rel-view') === view;
       button.classList.toggle('active', active);
@@ -136,12 +168,11 @@ const Religionisms = (function() {
     return d.innerHTML;
   }
 
-  function render() {
-    if (activeSphereId) {
-      renderDetail();
-      return;
-    }
-    renderGrid();
+  function cellHead(num, title, hint) {
+    return '<div class="rel-cell-head"><span class="rel-num">' + num + '</span>' +
+      '<h2 class="rel-cell-title">' + escapeHtml(title) + '</h2>' +
+      (hint ? '<span class="rel-cell-hint">' + escapeHtml(hint) + '</span>' : '') +
+      '</div>';
   }
 
   // Lucide-глиф по смыслу сферы. Иконка из данных (сере/scroll/…) — тематический
@@ -172,17 +203,52 @@ const Religionisms = (function() {
     return SPHERE_ICONS[sphere.id] || 'circle-dot';
   }
 
-  function renderGrid() {
-    var grid = document.getElementById('rel-grid');
-    var detail = document.getElementById('rel-detail');
+  function render() {
+    var screen = document.getElementById('rel-screen');
+    if (!screen) return;
+    screen.innerHTML = activeSphereId ? sphereMarkup() : catalogMarkup();
+    if (!activeSphereId) bindCatalogCards(screen);
+    syncToolbar(activeSphereId ? 1 : getFiltered().length);
+    refreshIcons();
+  }
+
+  /* ===== Экран каталога ===== */
+  // 01 «Сферы» — 7 колонок и липкая; рельс 02–03 несёт инструкцию по
+  // чтению и легенду девяти компонентов.
+  function catalogMarkup() {
+    return '<div class="rel-bento">' +
+      '<section class="rel-cell rel-cell--catalog">' +
+        cellHead('01', 'Сферы', 'клик открывает разбор') +
+        '<div id="rel-grid" class="rel-grid' + (view === 'list' ? ' is-list' : '') + '"></div>' +
+      '</section>' +
+      '<div class="rel-rail">' +
+        '<section class="rel-cell rel-cell--ink">' +
+          cellHead('02', 'Как читать') +
+          '<p class="rel-note">Карта фиксирует устойчивые формулы и слои, через которые смысл отрывается от конструкции.</p>' +
+          '<p class="rel-note">Девять компонентов — каркас проверки: уберите один, и сфера перестаёт держаться как система.</p>' +
+          '<p class="rel-note">Это инструмент разбора, а не приговор: за каждой сферой стоят реальные практики и реальные люди.</p>' +
+        '</section>' +
+        '<section class="rel-cell">' +
+          cellHead('03', 'Девять компонентов', COMPONENTS.length + ' на сферу') +
+          '<ul class="rel-legend">' + legendMarkup() + '</ul>' +
+        '</section>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // Легенда девяти компонентов: глиф + имя строкой, без плашек (§4.12).
+  function legendMarkup() {
+    return COMPONENTS.map(function(c) {
+      return '<li class="rel-legend-row">' +
+        '<i data-lucide="' + c[2] + '" class="rel-legend-glyph" aria-hidden="true"></i>' +
+        '<span class="rel-legend-name">' + escapeHtml(c[1]) + '</span></li>';
+    }).join('');
+  }
+
+  function bindCatalogCards(screen) {
+    var grid = screen.querySelector('#rel-grid');
     if (!grid) return;
-    if (detail) detail.style.display = 'none';
-    grid.style.display = '';
-    grid.classList.toggle('is-list', view === 'list');
-
     var list = getFiltered();
-    syncToolbar(list.length);
-
     // Пустое состояние живёт внутри сетки: отдельный блок после неё
     // приходилось бы отдельно прятать при каждом перерендере.
     if (list.length === 0) {
@@ -190,14 +256,14 @@ const Religionisms = (function() {
       return;
     }
 
-    grid.innerHTML = list.map(function(s, idx) {
+    grid.innerHTML = list.map(function(s) {
       var description = getShortDescription(s);
       var roleText = getRoleText(s);
 
       // Карточка-паспорт: иконка-чип + имя, описание на две строки, роль
       // чипом в подвале. Класс lab-card снят — он давал свои padding и
       // margin-bottom и ломал общий канон витрины.
-      return '<div class="rel-card" data-id="' + escapeHtml(s.id) + '" role="button" tabindex="0" aria-label="Сфера: ' + escapeHtml(s.name) + '" style="animation-delay:' + (idx * 40) + 'ms">' +
+      return '<div class="rel-card" data-id="' + escapeHtml(s.id) + '" role="button" tabindex="0" aria-label="Сфера: ' + escapeHtml(s.name) + '">' +
         '<div class="rel-card-head">' +
           '<span class="rel-card-icon" aria-hidden="true"><i data-lucide="' + sphereIcon(s) + '"></i></span>' +
           '<h2 class="rel-card-title">' + escapeHtml(s.name) + '</h2>' +
@@ -220,10 +286,6 @@ const Religionisms = (function() {
         }
       });
     });
-
-    // Панель лежит в разметке page-controller, её иконки lucide нужно
-    // materialize после каждого входа в модуль.
-    refreshIcons();
   }
 
   function getShortDescription(sphere) {
@@ -255,42 +317,72 @@ const Religionisms = (function() {
     render();
   }
 
-  function renderDetail() {
-    var grid = document.getElementById('rel-grid');
-    var detail = document.getElementById('rel-detail');
-    if (!detail) return;
-    if (grid) grid.style.display = 'none';
-    detail.style.display = '';
+  /* ===== Экран сферы ===== */
+  // 01 паспорт (7 колонок), рельс 02 «Ключевой корень» (ink) и 03
+  // «Обещание и конец пути», ниже 04 «Девять компонентов» на всю ширину.
+  function sphereMarkup() {
+    var sphere = currentSphere();
+    if (!sphere) return '<div class="lab-alert lab-alert-error">Сфера не найдена.</div>';
 
-    var sphere = spheres.filter(function(item) { return item.id === activeSphereId; })[0];
-    if (!sphere) {
-      detail.innerHTML = '<div class="lab-alert lab-alert-error">Сфера не найдена.</div>';
-      return;
-    }
-
-    var iconPath = 'assets/icons/32/' + (sphere.icon || 'ui/question.png');
-    var componentsHtml = COMPONENTS.map(function(c) {
-      return '<div class="rel-comp-block">' +
-        '<div class="rel-comp-title">' + c[1] + '</div>' +
-        '<div class="rel-comp-text">' + escapeHtml(sphere[c[0]] || '—') + '</div>' +
-        '</div>';
-    }).join('');
+    var roleText = getRoleText(sphere);
     var rootHtml = sphere.keyRoot
-      ? '<div class="rel-root-block">' +
-        '<div class="rel-root-title">Ключевой корень</div>' +
-        '<div class="rel-root-heb" dir="rtl">' + escapeHtml(sphere.keyRoot.root) + '</div>' +
-        '<div class="rel-root-translit">' + escapeHtml(sphere.keyRoot.translit) + ' — ' + escapeHtml(sphere.keyRoot.meaning) + '</div>' +
-        '<div class="rel-root-note">' + escapeHtml(sphere.keyRoot.note || '') + '</div>' +
+      ? '<div class="rel-root">' +
+          '<div class="rel-root-heb" dir="rtl">' + escapeHtml(sphere.keyRoot.root) + '</div>' +
+          '<p class="rel-root-translit">' + escapeHtml(sphere.keyRoot.translit) + '</p>' +
+          '<p class="rel-root-meaning">' + escapeHtml(sphere.keyRoot.meaning) + '</p>' +
+          '<p class="rel-root-note">' + escapeHtml(sphere.keyRoot.note || '') + '</p>' +
         '</div>'
-      : '';
+      : '<p class="rel-note">Ключевой корень для этой сферы не зафиксирован.</p>';
 
-    detail.innerHTML = '<button class="lab-btn lab-btn-secondary lab-btn-sm mb-16" onclick="Religionisms.close()">Назад к сферам</button>' +
-      '<div class="rel-detail-header">' +
-      '<img src="' + iconPath + '" class="rel-detail-icon" alt="">' +
-      '<h2>' + escapeHtml(sphere.name) + '</h2>' +
+    return '<div class="rel-bento">' +
+      '<section class="rel-cell rel-cell--passport">' +
+        cellHead('01', 'Сфера', sphere.id) +
+        '<div class="rel-passport">' +
+          '<img src="assets/icons/32/' + escapeHtml(sphere.icon || 'ui/question.png') + '" class="rel-passport-icon" alt="" aria-hidden="true">' +
+          '<div class="rel-passport-main">' +
+            '<h2 class="rel-passport-name">' + escapeHtml(sphere.name) + '</h2>' +
+            '<p class="rel-passport-desc">' + escapeHtml(sphere.description || '') + '</p>' +
+          '</div>' +
+        '</div>' +
+        (roleText ? '<div class="rel-passport-role">' + escapeHtml(roleText) + '</div>' : '') +
+      '</section>' +
+      '<div class="rel-rail">' +
+        '<section class="rel-cell rel-cell--ink">' +
+          cellHead('02', 'Ключевой корень', sphere.keyRoot ? sphere.keyRoot.translit : '—') +
+          rootHtml +
+        '</section>' +
+        '<section class="rel-cell">' +
+          cellHead('03', 'Обещание и конец пути') +
+          '<dl class="rel-fate">' +
+            fateRow('Обещание', sphere.promise) +
+            fateRow('Конец пути', sphere.end) +
+            fateRow('Образец', sphere.pattern) +
+          '</dl>' +
+        '</section>' +
       '</div>' +
-      '<div class="rel-comp-detail-grid">' + componentsHtml + '</div>' +
-      rootHtml;
+      '<section class="rel-cell rel-cell--wide">' +
+        cellHead('04', 'Девять компонентов', 'каркас разбора') +
+        '<div class="rel-comp-grid">' + componentsMarkup(sphere) + '</div>' +
+      '</section>' +
+    '</div>';
+  }
+
+  function fateRow(term, value) {
+    return '<div class="rel-fate-row"><dt class="rel-fate-term">' + escapeHtml(term) + '</dt>' +
+      '<dd class="rel-fate-desc">' + escapeHtml(value || '—') + '</dd></div>';
+  }
+
+  function componentsMarkup(sphere) {
+    return COMPONENTS.map(function(c) {
+      return '<div class="rel-comp">' +
+        '<div class="rel-comp-title">' + escapeHtml(c[1]) + '</div>' +
+        '<p class="rel-comp-text">' + escapeHtml(sphere[c[0]] || '—') + '</p>' +
+      '</div>';
+    }).join('');
+  }
+
+  function currentSphere() {
+    return spheres.filter(function(item) { return item.id === activeSphereId; })[0];
   }
 
   return {

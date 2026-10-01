@@ -170,7 +170,22 @@
   .pl-lang-grid .pl-lang-card { padding: var(--space-3); }
 }
 
+/* Кнопка возврата живёт в тулбаре (--pl-controls-panel ниже), а не в
+   рельсе: в бенто она стояла отдельной строкой и съедала высоту колонки. */
 .pl-back-btn { align-self: flex-start; }
+
+/* Тулбар внутренней страницы повторяет оболочку агентов
+   (.agent-controls-panel + .agent-toolbar-row, §4.7): свой класс несёт
+   только раскладку. */
+.pl-controls-panel { margin-bottom: var(--space-3); }
+.pl-controls-panel .agents-search { flex: 1 1 260px; }
+.pl-lang-toolbar-filters { flex: 0 0 auto; }
+.pl-controls-panel .agent-toolbar-actions { gap: 10px; }
+
+/* Скрытые фильтром элементы раздела: grid и таблица требуют display:none,
+   одного класса из JS недостаточно для строк <tr>. */
+.pl-work-body .is-filtered-out { display: none !important; }
+.pl-no-match { margin: var(--space-3) 0 0; }
 
 /* =============================================
    ВНУТРЕННЯЯ СТРАНИЦА ЯЗЫКА: бенто-каркас

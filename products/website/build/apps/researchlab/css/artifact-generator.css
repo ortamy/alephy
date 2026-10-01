@@ -1,0 +1,281 @@
+/* ============================================================
+   artifact-generator.css — «Генератор артефактов» (#artifact-generator).
+   Бенто по §5.2a: 12 колонок, hairline-рамки, тени = 0, mobile = одна
+   колонка (§5.3). Тулбар — оболочка агентов (§4.7), каркас панелей и
+   пустых состояний — css/components/panels.css.
+   ============================================================ */
+
+.ag-shell { max-width: var(--shell-page); margin: 0 auto; padding: var(--space-3) 0 var(--space-8); }
+
+.ag-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: stretch;
+  margin-top: var(--space-3);
+}
+
+.ag-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+}
+
+/* Пропорции: 01 «Знак» и 03 «Механика» — по 7 колонок, 02 «Паспорт» и
+   04 «Сохранённые» — по 5. Каждая строка заполнена целиком, дыры нет. */
+.ag-cell--letters { grid-column: span 7; }
+.ag-cell--passport { grid-column: span 5; }
+.ag-cell--mechanics { grid-column: span 7; }
+.ag-cell--saved { grid-column: span 5; }
+
+/* Ink-ячейка: акцент несёт золотая рамка, потому что --bg-dark в светлых
+   темах почти белый (§5.2f). В модуле она ровно одна. */
+.ag-cell--ink { background: var(--bg-dark); border-color: var(--border-gold); color: var(--text-on-dark); }
+
+/* ===== Тулбар: оболочка агентов, свой класс несёт только раскладку ===== */
+.ag-controls-panel { gap: var(--space-2); }
+.ag-controls-panel .agents-search { flex: 1 1 220px; order: 1; }
+.ag-controls-panel .ag-chips { order: 2; }
+.ag-controls-panel .agent-toolbar-actions { order: 3; margin-left: auto; padding-left: var(--space-3); border-left: 1px solid var(--line); }
+
+.ag-chips { display: flex; align-items: center; flex-wrap: nowrap; gap: 6px; min-width: 0; overflow-x: auto; }
+
+/* Чип — тот же язык, что .pipeline-chip у агентов: hairline + золото в
+   активном состоянии, фокус видимый (§4.1). */
+.ag-chip {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-secondary);
+  font: 500 var(--ui-12)/1.6 var(--font-ui);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+.ag-chip:hover { border-color: var(--accent-gold); }
+.ag-chip.is-active { color: var(--accent-gold); border-color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / .1); }
+.ag-chip:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+
+/* ===== Шапка ячейки: номер + капитель + подпись справа (§4.1) ===== */
+.ag-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.ag-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+.ag-cell--ink .ag-num { color: var(--accent-gold); }
+
+/* Специфичность с .module обязательна: базовое `.module h2:not(:last-child)`
+   из layout.css иначе раздувает капитель до серифа (§5.2f). */
+.module .ag-cell .ag-cell-title {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.ag-cell--ink .ag-cell-title { color: var(--header-ink-muted); }
+
+.ag-cell-hint { margin-left: auto; color: var(--text-muted); font-family: var(--font-ui); font-size: var(--ui-11); }
+.ag-cell--ink .ag-cell-hint { color: var(--header-ink-muted); }
+
+/* ===== Плитки знаков ===== */
+.ag-letters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: var(--space-2);
+  flex: 1 1 auto;
+  align-content: start;
+}
+
+.ag-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 76px;
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color var(--motion-fast), background-color var(--motion-fast);
+}
+.ag-tile:hover { border-color: var(--accent-gold); }
+.ag-tile:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.ag-tile.is-active { border-color: var(--accent-gold); background: rgb(var(--accent-gold-rgb) / .08); }
+
+.ag-tile-glyph { display: grid; place-items: center; min-height: 30px; font-size: var(--text-2xl); line-height: 1; }
+.ag-tile-glyph img { width: 26px; height: 26px; }
+.ag-tile-name { font-family: var(--font-ui); font-size: var(--ui-12); }
+
+/* ===== Паспорт (ink) ===== */
+.ag-passport-name { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.ag-passport-glyph {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  min-width: 56px;
+  height: 56px;
+  font-size: 40px;
+  line-height: 1;
+}
+.ag-passport-title { display: block; font-family: var(--font-serif); font-size: var(--text-2xl); line-height: 1.2; }
+.ag-passport-sound { display: block; color: var(--header-ink-muted); font-size: var(--text-sm); }
+
+.ag-facts { display: grid; gap: var(--space-2); margin: 0; }
+.ag-fact { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: var(--space-2); align-items: baseline; }
+.ag-fact dt { color: var(--header-ink-muted); font-size: var(--ui-12); letter-spacing: var(--tracking-caps); text-transform: uppercase; }
+.ag-fact dd { margin: 0; color: var(--text-primary); font-size: var(--text-sm); overflow-wrap: anywhere; }
+
+.ag-passport-note {
+  margin: 0;
+  color: var(--header-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.ag-confidence { display: flex; gap: 6px; margin-top: auto; }
+
+/* ===== Механика и заметка ===== */
+.ag-mechanics-title { margin: 0; color: var(--text-primary); font-family: var(--font-serif); font-size: var(--text-lg); line-height: 1.3; }
+.ag-mechanics-body {
+  max-height: 260px;
+  overflow-y: auto;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.ag-field-label {
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.ag-note { width: 100%; min-height: 72px; resize: vertical; font-family: var(--font-ui); line-height: 1.6; }
+.ag-note:focus { outline: 2px solid var(--accent-gold); outline-offset: 1px; }
+
+/* ===== Сохранённые: hairline-строки как у агентов (§4.8) ===== */
+.ag-saved { display: grid; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
+.ag-saved-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.ag-saved-row:last-child { border-bottom: 0; }
+
+.ag-saved-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--motion-fast);
+}
+.ag-saved-open:hover,
+.ag-saved-open:focus-visible { color: var(--accent-gold); }
+
+/* Статус-пилюля по §6: точка + подпись, шекер — приглушённый тон. */
+.ag-saved-badge {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  color: var(--text-secondary);
+  font: 500 var(--ui-11)/1.5 var(--font-mono);
+  white-space: nowrap;
+}
+.ag-saved-badge.is-emet { border-color: var(--border-gold); color: var(--accent-gold); }
+.ag-saved-badge.is-sheker { border-style: dashed; color: var(--text-muted); }
+
+.ag-saved-time { flex: 0 0 auto; color: var(--text-muted); font: var(--ui-11) var(--font-mono); white-space: nowrap; }
+
+.ag-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--motion-fast), border-color var(--motion-fast);
+}
+.ag-icon-btn:hover { color: var(--accent-gold); border-color: var(--accent-gold); }
+.ag-icon-btn:focus-visible { outline: 2px solid var(--accent-gold); outline-offset: 2px; }
+.ag-icon-btn svg.lucide { width: 14px; height: 14px; }
+
+.ag-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: auto; padding-top: var(--space-3); border-top: 1px solid var(--line); }
+
+/* ===== Мобильный закон (§5.3): одна колонка ===== */
+@media (max-width: 900px) {
+  .ag-cell--letters,
+  .ag-cell--passport,
+  .ag-cell--mechanics,
+  .ag-cell--saved { grid-column: 1 / -1; }
+  .ag-cell { padding: var(--space-3); }
+  .ag-fact { grid-template-columns: 72px minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .ag-controls-panel .agents-search { flex: 1 1 100%; }
+  .ag-controls-panel .ag-chips { width: 100%; order: 2; }
+  .ag-controls-panel .agent-toolbar-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-left: 0;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .ag-letters { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); }
+  .ag-saved-row { flex-wrap: wrap; }
+}
+
+/* reduced-motion (§7): смена рамок и цвета — без перехода. */
+@media (prefers-reduced-motion: reduce) {
+  .ag-chip,
+  .ag-tile,
+  .ag-saved-open,
+  .ag-icon-btn { transition: none; }
+}

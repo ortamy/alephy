@@ -3011,6 +3011,10 @@ const PageController = (function() {
       // pages/religionism-checker.html и строится по общему канону панелей.
 
       case 'religionisms':
+        // Два экрана в одной разметке (bento §5.2h): тулбар общий, а
+        // переключают его .rel-bento --catalog и .rel-bento --sphere.
+        // Кнопка возврата живёт в действиях панели (§4.7): под заголовком
+        // она занимала отдельную полосу и дублировала сам каталог.
         container.innerHTML = '<h1><img src="assets/icons/32/ui/question.png" width="32" height="32" alt="Религионизмы" style="vertical-align: middle; margin-right: 6px;"> Религионизмы</h1>' +
           '<p class="subtitle">Каждая сфера, учреждённая человеком вне откровения Яхве — структурированный шекер со своим алтарём, жрецами и жертвами. 9 компонентов на каждую сферу.</p>' +
           '<div class="lab-toolbar" role="search" aria-label="Управление каталогом сфер">' +
@@ -3020,14 +3024,14 @@ const PageController = (function() {
             '</div>' +
             '<div class="lab-toolbar-actions">' +
               '<span class="lab-toolbar-count" id="rel-count" aria-live="polite"></span>' +
+              '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn rel-back" id="rel-back" hidden title="Вернуться к списку сфер"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>Назад к сферам</button>' +
               '<div class="lab-toolbar-segment" role="group" aria-label="Вид каталога">' +
                 '<button type="button" class="res-view-btn active" data-rel-view="cards" aria-label="Карточки" title="Карточки" aria-pressed="true"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
                 '<button type="button" class="res-view-btn" data-rel-view="list" aria-label="Список" title="Список" aria-pressed="false"><i data-lucide="list" aria-hidden="true"></i></button>' +
               '</div>' +
             '</div>' +
           '</div>' +
-          '<div id="rel-grid" class="rel-grid"></div>' +
-          '<div id="rel-detail" class="rel-detail" style="display:none;"></div>';
+          '<div id="rel-screen"></div>';
         container.dataset.loaded = '1';
         if (window.Religionisms) Religionisms.init();
         break;
@@ -3459,6 +3463,22 @@ const PageController = (function() {
           window.ClueGenerator.init(container);
         } else {
           showError(container, 'Модуль генератора улик не загрузился.');
+        }
+        break;
+
+      case 'artifact-generator':
+        if (window.ArtifactGenerator) {
+          window.ArtifactGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор артефактов» не загрузился.');
+        }
+        break;
+
+      case 'change-generator':
+        if (window.ChangeGenerator) {
+          window.ChangeGenerator.init(container);
+        } else {
+          showError(container, 'Модуль «Генератор изменений» не загрузился.');
         }
         break;
 

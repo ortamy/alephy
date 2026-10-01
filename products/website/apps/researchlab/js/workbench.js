@@ -182,17 +182,17 @@ const Workbench = (function() {
             '<div class="wb-summary" id="wb-summary"></div>' +
             '<p class="wb-note">Результаты конвейеров живут в памяти до перезагрузки; в браузере остаются метаданные.</p>' +
           '</div>' +
+          '<div class="wb-cell wb-cell--sources">' +
+            '<div class="wb-cell-head"><span class="wb-num">04</span>' +
+              '<h2 class="wb-cell-title">Откуда брать наработки</h2></div>' +
+            '<ul class="wb-sources">' +
+              wbSourceHtml('book-open', 'Книгочетение', 'Стих, слово, палео-форма', '#scripture-reader') +
+              wbSourceHtml('footprints', 'Палео-клуб', 'Записи исследований', '#club') +
+              wbSourceHtml('book-text', 'Словари', 'Термины и соответствия', '#dictionaries') +
+              wbSourceHtml('hammer', 'Конвейеры', 'Генераторы и сборки', '#conveyors') +
+            '</ul>' +
+          '</div>' +
         '</div>' +
-        '<div class="wb-cell wb-cell--wide">' +
-          '<div class="wb-cell-head"><span class="wb-num">04</span>' +
-            '<h2 class="wb-cell-title">Откуда брать наработки</h2></div>' +
-          '<ul class="wb-sources">' +
-            wbSourceHtml('book-open', 'Книгочетение', 'Стих, слово, палео-форма', '#scripture-reader') +
-            wbSourceHtml('footprints', 'Палео-клуб', 'Записи исследований', '#club') +
-            wbSourceHtml('book-text', 'Словари', 'Термины и соответствия', '#dictionaries') +
-            wbSourceHtml('hammer', 'Конвейеры', 'Генераторы и сборки', '#conveyors') +
-          '</ul>' +
-        '</div>'
       '</section>';
 
     fillPipelineSelect();
