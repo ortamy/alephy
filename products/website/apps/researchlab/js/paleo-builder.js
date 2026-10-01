@@ -177,10 +177,7 @@
   function loadRoots() {
     if (Array.isArray(window._roots)) return Promise.resolve(window._roots);
     if (!rootsPromise) {
-      rootsPromise = fetch('data/roots/roots.json').then(function(response) {
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        return response.json();
-      });
+      rootsPromise = AlephyUtils.fetchJson('data/roots/roots.json');
     }
     return rootsPromise;
   }

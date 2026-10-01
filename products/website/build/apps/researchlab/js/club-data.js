@@ -50,7 +50,7 @@ const ClubData = (function () {
   function addThread(thread) { try { var key = STORAGE_KEY + '_threads'; var saved = localThreads(); saved.unshift(thread); localStorage.setItem(key, JSON.stringify(saved)); } catch (e) {} return Promise.resolve(thread); }
   function getProfile(index) { return MOCK.profiles[index % MOCK.profiles.length]; }
   function getSessions() { return Promise.resolve(MOCK.sessions.slice()); }
-  function getWordOfDay() { return fetch('data/roots/roots.json').then(function (r) { return r.json(); }).then(function (roots) { var root = roots[0]; return { hebrew: root.root, paleo: root.paleo, translit: root.translit, gloss: root.meaning, image: root.image }; }).catch(function () { return { hebrew: 'אב', paleo: ['𐤀', '𐤁'], translit: 'AV', gloss: 'отец, источник', image: 'сила дома' }; }); }
+  function getWordOfDay() { return AlephyUtils.fetchJson('data/roots/roots.json').then(function (roots) { var root = roots[0]; return { hebrew: root.root, paleo: root.paleo, translit: root.translit, gloss: root.meaning, image: root.image }; }).catch(function () { return { hebrew: 'אב', paleo: ['𐤀', '𐤁'], translit: 'AV', gloss: 'отец, источник', image: 'сила дома' }; }); }
   return { getCards: getCards, getCard: getCard, getComments: getComments, getSessions: getSessions, addComment: addComment, addThread: addThread, getProfile: getProfile, getWordOfDay: getWordOfDay, MOCK: MOCK };
 }());
 window.ClubData = ClubData;

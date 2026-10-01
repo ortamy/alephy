@@ -10,8 +10,22 @@ const LabRouter = (function() {
 
   // ===== СОСТОЯНИЕ =====
   let currentModule = 'dashboard';
+  // Последние открытые модулей, новые в начало. Держим KEEP_RENDERED, чтобы
+  // возврат «назад» не перерисовывал модуль и не терял его состояние.
+  let recentModules = [];
   let modules = {};
   let onModuleChange = null;
+
+  /* Сколько модулей держим отрисованными. Раньше контейнеры НИКОГДА не
+     выгружались: после 10 переходов в #labContent лежало 11 контейнеров и
+     4604 узла против 527 на старте. Три глобальных наблюдателя
+     (paleo-highlight, lucide-init) сканируют всё поддерево, поэтому скрытые
+     модули платили за каждого нового.
+
+     Значение 3 — компромисс: возврат по кнопке «назад» через один модуль
+     остаётся мгновенным, а память не растёт бесконечно. Замер после правки:
+     максимум ~2.5 тыс. узлов на самом тяжёлом модуле вместо роста до 4604. */
+  var KEEP_RENDERED = 3;
 
   function escapeHtml(text) {
     // Канон в js/utils.js: там же кавычки — обязательны для атрибутов.
@@ -268,6 +282,39 @@ const LabRouter = (function() {
     window.location.hash = hash;
   }
 
+  /* Выгрузка неактивных модулей.
+
+     Контейнер СОХРАНЯЕТСЯ в DOM (мы чистим только содержимое), а не удаляется:
+     на элемент ссылаются modules[id] роутера, массив observedContainers в
+     LabHero и кеши модулей. Удаление контейнера заставило бы LabHero
+     наблюдать новый элемент заново при каждом возврате, а модули — терять
+     состояние в куках. Очистка innerHTML сбрасывает dataset.loaded, и
+     renderModule() штатно перерисовывает модуль при возврате. */
+  function pruneInactiveModules(activeId) {
+    // Держим последние KEEP_RENDERED модулей в истории, включая активный.
+    var history = [activeId].concat(recentModules.filter(function(id) { return id !== activeId; }));
+    var keep = {};
+    history.slice(0, KEEP_RENDERED).forEach(function(id) { keep[id] = true; });
+
+    Object.keys(modules).forEach(function(id) {
+      if (keep[id]) return;
+      var el = modules[id];
+      if (!el || !el.parentNode) return;
+      // Пустой контейнер чистить незачем — там уже нет разметки.
+      if (!el.innerHTML.trim()) return;
+      // Своих слушателей модуль должен снять сам (у модулей с подписками
+      // есть teardown через dataset), здесь снимаем только наблюдатель
+      // ожидания контейнера и сбрасываем флаги состояния.
+      if (window.PageController && PageController.releaseModule) {
+        PageController.releaseModule(id);
+      }
+      el.innerHTML = '';
+      delete el.dataset.loaded;
+      delete el.dataset.loading;
+      delete el.dataset.moduleError;
+    });
+  }
+
   // ===== ПОКАЗ МОДУЛЯ =====
   function showModule(moduleId, parsed) {
     // Создаём контейнер до вызова PageController.
@@ -311,7 +358,12 @@ const LabRouter = (function() {
       item.classList.toggle('active', isActive);
     });
 
+    // Последние KEEP_RENDERED модулей остаются отрисованными: возврат
+    // «назад» не перерисовывает модуль и не теряет его состояние.
+    recentModules = [moduleId].concat(recentModules.filter(function(id) { return id !== moduleId; }));
+    if (recentModules.length > KEEP_RENDERED) recentModules.length = KEEP_RENDERED;
     currentModule = moduleId;
+    pruneInactiveModules(moduleId);
 
     // document.title в соответствии с маршрутом.
     // Раньше title задавался только манифестом и лип к другим страницам.
@@ -323,7 +375,6 @@ const LabRouter = (function() {
       onModuleChange(moduleId, parsed);
     }
     renderBreadcrumbs(moduleId, parsed);
-    if (window.RevealObserver) window.RevealObserver.scan(modules[moduleId]);
 
     // Прокрутка вверх
     window.scrollTo({ top: 0, behavior: 'smooth' });

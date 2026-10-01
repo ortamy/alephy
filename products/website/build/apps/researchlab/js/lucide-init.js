@@ -129,17 +129,35 @@
   function init() {
     if (!lucideReady()) return;
 
+    /* enhanceButtons() вставляет <i data-lucide> в кнопки, а эта вставка
+       попадает в собственный MutationObserver ниже: узел несёт маркер
+       data-lucide → hasMarker → handleChange → enhanceButtons + createIcons
+       снова. Повторяющийся прогон и съедал главный поток микро-задачами.
+
+       busy снимает реакцию на собственные мутации, а пропуск <i data-lucide>
+       в наблюдателе не даёт заново реагировать на уже обработанные узлы. */
+    var busy = false;
+
     // Статичная разметка уже распарсена (скрипт в конце body).
+    busy = true;
     runCreateIcons();
     enhanceButtons(global.document);
+    busy = false;
 
     var handleChange = debounce(function () {
-      enhanceButtons(global.document);
-      runCreateIcons();
+      if (busy) return;
+      busy = true;
+      try {
+        enhanceButtons(global.document);
+        runCreateIcons();
+      } finally {
+        busy = false;
+      }
     }, 80);
 
     if (global.MutationObserver && global.document && global.document.body) {
       var observer = new MutationObserver(function (mutations) {
+        if (busy) return;
         for (var i = 0; i < mutations.length; i++) {
           var nodes = mutations[i].addedNodes || [];
           for (var j = 0; j < nodes.length; j++) {
@@ -148,6 +166,9 @@
             // Сгенерированные createIcons() svg — результат нашей же работы,
             // а не новая разметка: не должны запускать повторный рендер.
             if (n.tagName && n.tagName.toLowerCase() === 'svg') continue;
+            // <i data-lucide>, который вставил enhanceButtons выше: второй
+            // проход по нему ничего не добавит.
+            if (n.hasAttribute && n.hasAttribute(ATTR)) continue;
             // Узел мог быть заменён ещё до срабатывания колбэка.
             if (!global.document.contains(n)) continue;
             var hasMarker =

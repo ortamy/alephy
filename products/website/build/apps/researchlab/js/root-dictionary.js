@@ -112,11 +112,7 @@ const RootDict = (function() {
     if (loading) return;
     loading = true;
     bind();
-    fetch('data/roots/roots.json')
-      .then(function(response) {
-        if (!response.ok) throw new Error('roots.json: HTTP ' + response.status);
-        return response.json();
-      })
+    AlephyUtils.fetchJson('data/roots/roots.json')
       .then(function(data) {
         loading = false;
         roots = Array.isArray(data) ? data : [];

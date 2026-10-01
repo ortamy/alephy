@@ -8,6 +8,13 @@ const Dashboard = (function() {
 
   var loaded = false;
   var reloading = false;
+  /* Защита от параллельной загрузки. Флаг loaded выставлялся только ПОСЛЕ
+     resolve(), поэтому шесть вызовов init() за одну загрузку (роутер, рендер
+     модуля, повторный вход) запускали шесть параллельных loadData() — это
+     ~3.3 МБ данных (roots 177 КБ + dictionaries 457 КБ + exposures 2.7 МБ
+     + heraldry + qumran-books) НА КАЖДЫЙ вызов. Теперь повторный вызов во
+     время загрузки просто ждёт тот же промис. */
+  var loading = null;
   // Dashboard needs a lightweight overview. Full scripture corpus is over 117 MB;
   // load books only in their dedicated route.
   var MAX_PROGRESS_BOOKS = 0;
@@ -20,10 +27,16 @@ const Dashboard = (function() {
     return d.innerHTML;
   }
 
+  /* Оборачивает общий кеш AlephyUtils: обычная загрузка идёт через кеш и
+     переиспользует данные, уже скачанные другими модулями (roots.json тянут
+     восемь потребителей). Принудительное обновление намеренно идёт мимо
+     кеша: для него служебный query-параметр делает URL уникальным, поэтому
+     старые данные не «залипают» после ручного обновления. */
   function fetchJson(path) {
     var forceReload = arguments.length > 1 && arguments[1];
-    var requestPath = forceReload ? path + '?_reload=' + Date.now() : path;
-    return fetch(requestPath, forceReload ? { cache: 'no-store' } : undefined).then(function(r) {
+    if (!forceReload) return AlephyUtils.fetchJson(path);
+    var requestPath = path + '?_reload=' + Date.now();
+    return fetch(requestPath, { cache: 'no-store' }).then(function(r) {
       if (!r.ok) throw new Error('HTTP ' + r.status + ' для ' + path);
       return r.json();
     });
@@ -183,12 +196,16 @@ const Dashboard = (function() {
       reload();
       return;
     }
+    // Загрузка уже идёт — не запускаем вторую копию тех же ~3.3 МБ.
+    if (loading) { loading.then(function() { init(); }); return; }
 
-    loadData(false).then(function(data) {
+    loading = loadData(false).then(function(data) {
       loaded = true;
       render(container, data);
     }).catch(function(err) {
       container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки статистики: ' + esc(err.message) + '</div>';
+    }).then(function() {
+      loading = null;
     });
   }
 
@@ -229,7 +246,6 @@ const Dashboard = (function() {
 
     bindDictClicks(container);
     bindBookClicks(container);
-    if (window.RevealObserver) window.RevealObserver.scan(container);
   }
 
   /* ─── Bento-ячейки (§5.2d канона) ───
@@ -532,13 +548,19 @@ const Dashboard = (function() {
     (progress || []).forEach(function(item) {
       if (item.book && item.book.id) progressById[item.book.id] = item;
     });
+    // MAX_PROGRESS_BOOKS = 0: корпус книг — 112 МБ, он не читается на старте.
+    // Но подпись «Не начата» вводила в заблуждение: книги прочитаны, статус
+    // просто не загружался. Показываем честное состояние и подсказку.
+    var progressLoaded = MAX_PROGRESS_BOOKS > 0;
     var cards = (books || []).map(function(book) {
       var item = progressById[book.id] || { status: 'loading', verses: [], percent: 0 };
       var verses = item.verses || [];
-      var status = item.status === 'completed' ? (verses.length + '/' + verses.length + ' стихов') :
+      var status = !progressLoaded ? 'Корпус не загружен' :
+        item.status === 'completed' ? (verses.length + '/' + verses.length + ' стихов') :
         item.status === 'in-progress' ? 'В процессе' :
         item.status === 'not-started' ? 'Не начата' : 'Данные загружаются…';
-      var modifier = item.status === 'completed' ? 'completed' :
+      var modifier = !progressLoaded ? 'not-started' :
+        item.status === 'completed' ? 'completed' :
         item.status === 'in-progress' ? 'in-progress' :
         item.status === 'not-started' ? 'not-started' : 'loading';
       var label = 'Открыть книгу «' + (book.ru || book.id) + '»';
@@ -550,8 +572,11 @@ const Dashboard = (function() {
       '</button>';
     }).join('');
     var total = (books || []).length;
+    var hint = progressLoaded ? '' :
+      '<p class="dw-books-hint">Полный корпус книг — 112 МБ, поэтому прогресс не читается автоматически. ' +
+      'Нажмите на книгу, чтобы открыть её в «Книгочтении».</p>';
     return renderCell('books', '03', 'Древо Книг', count(total, 'книга', 'книги', 'книг'),
-      '<div class="book-grid">' + (cards || '<div class="lab-alert lab-alert-info">Данные загружаются…</div>') + '</div>');
+      hint + '<div class="book-grid">' + (cards || '<div class="lab-alert lab-alert-info">Данные загружаются…</div>') + '</div>');
   }
 
   function bindDictClicks(container) {

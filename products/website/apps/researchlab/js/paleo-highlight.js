@@ -38,7 +38,40 @@
     var content = document.getElementById('labContent') || document.body;
     mark(content);
     if (!window.MutationObserver) return;
-    new MutationObserver(function() { mark(content); }).observe(content, { childList: true, subtree: true });
+
+    /* Раньше здесь стояло new MutationObserver(function() { mark(content); })
+       с observe(content, {childList, subtree}). mark() сам вызывает
+       replaceChild() ВНУТРИ content, то есть наблюдатель видел собственную
+       мутацию и звал mark() снова — бесконечный цикл микро-задач. Он держал
+       главный поток ~30 с при входе: страница не отвечала на hover, а
+       отзывчивость падала в 58 раз (замер: 13 тиков setTimeout(0) за 6 с
+       против 763 с исправлением).
+
+       Теперь обрабатываем только реально добавленные узлы: собственные
+       replaceChild мы помечаем через marking и игнорируем. */
+    var marking = false;
+    var observer = new MutationObserver(function(mutations) {
+      if (marking) return;
+      var fresh = [];
+      for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        for (var j = 0; j < added.length; j++) {
+          var node = added[j];
+          if (node.nodeType !== 1) continue;
+          // Уже обёрнуто нами или лежит внутри своей обёртки — второй раз не нужно.
+          if (node.nodeType === 1 && (node.classList && node.classList.contains('paleo-highlight'))) continue;
+          fresh.push(node);
+        }
+      }
+      if (!fresh.length) return;
+      marking = true;
+      try {
+        for (var k = 0; k < fresh.length; k++) mark(fresh[k]);
+      } finally {
+        marking = false;
+      }
+    });
+    observer.observe(content, { childList: true, subtree: true });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

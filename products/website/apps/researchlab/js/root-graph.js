@@ -22,21 +22,33 @@
       return String(link.from || '').toUpperCase() === wanted || String(link.to || '').toUpperCase() === wanted;
     });
   }
+  /* Кэш палео-знаков по корню: shared() зовёт paleo() для каждой пары, то есть
+     один и тот же корень пересчитывался до 328 раз за проход. */
   function shared(list) {
     var result = [];
+    var glyphs = list.map(function(entry) { return paleo(entry).split(''); });
     for (var i = 0; i < list.length; i++) {
       for (var j = i + 1; j < list.length; j++) {
-        var a = list[i], b = list[j], aGlyphs = paleo(a).split(''), bGlyphs = paleo(b).split('');
+        var aGlyphs = glyphs[i], bGlyphs = glyphs[j];
         var overlap = aGlyphs.filter(function(g) { return bGlyphs.indexOf(g) !== -1; });
-        if (overlap.length) result.push({ from:rootId(a), to:rootId(b), type:'shared-letter', source:'computed', confidence:'probable', label:'Общая палео-буква', note:'Совпадают знаки: ' + overlap.join(' · ') });
+        if (overlap.length) result.push({ from:rootId(list[i]), to:rootId(list[j]), type:'shared-letter', source:'computed', confidence:'probable', label:'Общая палео-буква', note:'Совпадают знаки: ' + overlap.join(' · ') });
       }
     }
     return result;
   }
   function buildComputedLinks(roots) {
     var links = shared((roots || []).filter(function(entry) { return rootId(entry) && paleo(entry); }));
-    return links.filter(function(link, index) {
-      return links.findIndex(function(other) { return other.from === link.from && other.to === link.to; }) === index;
+    /* Дедуп по паре (from, to) через Set. Раньше здесь стоял
+       links.filter(... links.findIndex(...)): O(m^2) поверх m = O(n^2) пар.
+       При 329 корнях это ~54 тыс. связей и ~2.9 млрд сравнений — на старте
+       страницы график корней съедал ~5.7 с главного потока, и интерфейс
+       не отвечал на hover. Смысл (оставить первую связь пары) тот же. */
+    var seen = Object.create(null);
+    return links.filter(function(link) {
+      var key = link.from + '|' + link.to;
+      if (seen[key]) return false;
+      seen[key] = true;
+      return true;
     });
   }
   function mergeLinks(roots, manualLinks) {

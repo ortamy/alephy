@@ -65,13 +65,11 @@
 .lab-noise-dark { background-image: var(--texture-noise), var(--grad-dark); }
 
 /* РўРµС…РЅРёРєР° 11: reveal + stagger С‡РµСЂРµР· --i (С‚СЂРёРіРіРµСЂ .is-visible вЂ” IntersectionObserver РІ СЌС‚Р°РїРµ C) */
-.reveal {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity var(--motion-reveal), transform var(--motion-reveal);
-  transition-delay: calc(var(--i, 0) * 90ms);
-}
-.reveal.is-visible { opacity: 1; transform: translateY(0); }
+/* Блок .reveal + stagger (--i) удалён вместе с js/reveal.js: класс не
+   создавался ни одним модулем — ни в разметке, ни в данных. Появление
+   разделов теперь даёт .module.active (fadeIn). Правило opacity:0 убрано
+   вместе с ним: без наблюдателя, который ставил .is-visible, такой класс
+   навсегда оставил бы текст невидимым. */
 
 /* РўРµС…РЅРёРєР° 18: glow (С‚С‘РјРЅР°СЏ С‚РµРјР°; РІ СЃРІРµС‚Р»С‹С… вЂ” none) */
 .glow-glyph { text-shadow: var(--glow-glyph); }
@@ -120,7 +118,6 @@
 
 /* РўРµС…РЅРёРєР° 20: reduced-motion вЂ” С‚РѕС‡РµС‡РЅРѕ РґР»СЏ РЅРѕРІС‹С… СЌС„С„РµРєС‚РѕРІ */
 @media (prefers-reduced-motion: reduce) {
-  .reveal { opacity: 1; transform: none; transition: none; }
   .lab-shimmer::after { content: none; animation: none; }
   .lab-btn-cta:hover, .lab-btn-cta:active { transform: none; }
 }

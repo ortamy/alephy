@@ -119,7 +119,6 @@ const PageController = (function() {
       if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
       if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
       if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init(container);
-      if (window.RevealObserver) window.RevealObserver.scan(container);
     } catch (error) {
       console.warn('[PageController] Модуль «' + moduleId + '» упал при инициализации: ' + moduleErrorMessage(error));
       showModuleError(container, moduleId, moduleErrorMessage(error));
@@ -3709,6 +3708,21 @@ const PageController = (function() {
     init: init,
     render: render,
     renderWhenReady: renderWhenReady,
+    /* Выгрузка неактивного модуля (вызывает роутер при переключении).
+       Снимаем наблюдатель ожидания контейнера: он висел бы на пустом
+       контейнере и проснулся бы на первой же мутации внутри #labContent. */
+    releaseModule: function(moduleId) {
+      var observer = pendingRenderObservers[moduleId];
+      if (observer) {
+        observer.disconnect();
+        delete pendingRenderObservers[moduleId];
+      }
+      var watchdog = moduleWatchdogs[moduleId];
+      if (watchdog) {
+        clearTimeout(watchdog);
+        delete moduleWatchdogs[moduleId];
+      }
+    },
     jsonCache: jsonCache  ,
     pageState: pageState,
     // Getter возвращает актуальный массив после открытия #ai-agents.

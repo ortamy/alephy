@@ -737,10 +737,7 @@
   function loadRoots() {
     if (Array.isArray(rootsCache)) return Promise.resolve(rootsCache);
     if (!rootsRequest) {
-      rootsRequest = fetch('data/roots/roots.json').then(function(resp) {
-        if (!resp.ok) throw new Error('roots.json HTTP ' + resp.status);
-        return resp.json();
-      }).then(function(data) { rootsCache = Array.isArray(data) ? data : []; return rootsCache; }).catch(function() { rootsCache = []; return rootsCache; });
+      rootsRequest = AlephyUtils.fetchJson('data/roots/roots.json').then(function(data) { rootsCache = Array.isArray(data) ? data : []; return rootsCache; }).catch(function() { rootsCache = []; return rootsCache; });
     }
     return rootsRequest;
   }

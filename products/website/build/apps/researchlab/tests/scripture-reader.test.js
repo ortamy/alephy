@@ -130,7 +130,7 @@ assert.ok(readerSource.includes('ScriptureAdapters.normalizeScripturePayload'), 
 assert.ok(readerSource.includes("yahad: 'Кумран / йахад'"), 'В селекторе есть категория Кумран / йахад');
 
 assert.ok(readerSource.includes('scripture-meaning-card'), 'Смысловая сборка выводится отдельной карточкой');
-assert.ok(readerSource.includes('scripture-assembly-details'), 'Технический след сворачивается в details');
+assert.ok(!readerSource.includes('scripture-assembly-details'), 'Технический след сборки не прячется в выпадающий список «Механика»');
 assert.ok(readerSource.includes('scripture-constructor-chips'), 'Палео-конструктор выводит глиф-чипы');
 assert.ok(readerSource.includes('scripture-glyph-popover'), 'Глифы используют управляемый popover');
 assert.ok(readerSource.includes('data-name='), 'Чипы передают имя буквы в popover');
@@ -209,6 +209,16 @@ assert.ok(
   'Кнопка продолжения работает и без записи в localStorage'
 );
 assert.ok(pageControllerSource.includes('id="sr-reading"'), 'Чтение — вторая bento-сетка модуля');
+// Экран чтения: 01 Текст занимает 7 колонок, 02–04 собраны в правый рельс —
+// блок «Разбор слова» стоит вплотную к «Путь по тексту», а не проваливается
+// в пустую полосу под растянутым текстом. Список «Механика» удалён из сборки.
+assert.ok(
+  bentoCss.includes('.sr-cell--text { grid-column: span 7; position: sticky;') &&
+    !bentoCss.includes('grid-row: span 2') &&
+    pageControllerSource.includes('<div class="sr-rail">') &&
+    !readerSource.includes('scripture-assembly-details'),
+  'Чтение: 01 на 7 колонок, 02–04 в рельсе, без выпадающего списка «Механика»'
+);
 assert.ok(readerSource.includes('class="sr-strip"'), 'Навигация идёт горизонтальной лентой, а не переносом кнопок');
 assert.ok(readerSource.includes('book.ru, book.paleo, book.id'), 'Фильтр ищет по ru, paleo и id');
 assert.ok(readerSource.includes("categorySelect.addEventListener('change', renderBookGrid)"), 'Каталог перерисовывается по категории');

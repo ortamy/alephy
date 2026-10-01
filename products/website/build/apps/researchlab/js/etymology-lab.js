@@ -121,8 +121,7 @@ const EtyLab = (function() {
   }
 
   function init() {
-    fetch('data/roots/roots.json')
-      .then(function(r) { return r.json(); })
+    AlephyUtils.fetchJson('data/roots/roots.json')
       .then(function(data) { rootsData = data; })
       .catch(function() {});
     showChips();

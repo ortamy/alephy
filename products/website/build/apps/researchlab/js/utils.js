@@ -27,5 +27,44 @@ window.AlephyUtils = (function () {
     });
   }
 
-  return { escapeHtml: escapeHtml };
+  /**
+   * Общий кеш JSON по URL.
+   *
+   * Один и тот же файл тянули восемь модулей, каждый своим fetch():
+   * roots.json (177 КБ) — dashboard, club-data, etymology-lab, investigation,
+   * learn, paleo-builder, root-dictionary, scripture-reader. В сумме это
+   * повторные парсинг и трафик при каждом входе в лабораторию.
+   *
+   * Параллельные вызовы одного URL получают один и тот же промис, поэтому
+   * «десять модулей открылись сразу» не превращается в десять запросов.
+   */
+  var jsonCache = new Map();
+
+  function fetchJson(url, options) {
+    if (!jsonCache.has(url)) {
+      var request = fetch(url, options)
+        .then(function (response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status + ' для ' + url);
+          return response.json();
+        })
+        // Провал не кешируем: следующий вызов должен суметь повторить.
+        .catch(function (error) {
+          jsonCache.delete(url);
+          throw error;
+        });
+      jsonCache.set(url, request);
+    }
+    return jsonCache.get(url);
+  }
+
+  function clearJsonCache(url) {
+    if (url) jsonCache.delete(url);
+    else jsonCache.clear();
+  }
+
+  return {
+    escapeHtml: escapeHtml,
+    fetchJson: fetchJson,
+    clearJsonCache: clearJsonCache
+  };
 })();
