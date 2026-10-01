@@ -16,6 +16,10 @@
   var state = { view:'home', lesson:null, game:null, timer:null, course:null, trainer:null, review:null, battle:null };
   /* Тулбар хаба: запрос, фильтр раздела и вид каталога (карточки/список). */
   var hubState = { query:'', filter:'all', view: read(HUB_VIEW_KEY, 'cards') === 'list' ? 'list' : 'cards' };
+  /* Каталог букв: запрос и фильтр по статусу. Состояние живёт в памяти
+     модуля — это временный срез каталога, а не вид, ради сохранения
+     которого в localStorage стоит отдавать место. */
+  var lettersState = { query:'', filter:'all' };
 
   function esc(value) { var div = document.createElement('div'); div.textContent = String(value == null ? '' : value); return div.innerHTML; }
   function now() { return new Date().toISOString(); }
@@ -63,6 +67,7 @@
     var item, course;
     if (route === 'learn') return 'Обучение';
     if (route === 'learn/lessons') return 'Изучение иврита';
+    if (route === 'learn/review') return 'Повторение';
     if (route === 'learn/game') return 'Угадай образ';
     if (route === 'learn/courses') return 'Курсы';
     if (route === 'learn/paleo-trainer') return 'Палео-тренажёр';
@@ -83,6 +88,7 @@
     var item, course;
 
     stopTimer();
+    stopBattleTimer();
     if (target === 'lessons') {
       state.view = segments[1] ? 'lesson' : 'lessons';
       if (state.view === 'lesson') {
@@ -93,7 +99,8 @@
       state.course = null;
     } else if (target === 'review') {
       state.view = 'review';
-      state.review = { card: queueReview() };
+      startReview();
+      bindReviewKeys();
       state.lesson = null;
       state.course = null;
     } else if (target === 'game') {
@@ -322,7 +329,7 @@
     var battleStored = !!(root.PaleoBattle && root.PaleoBattle.STORAGE_KEY && read(root.PaleoBattle.STORAGE_KEY, null));
     return [
       hubItem('games', { glyph:'𐤔', title:'Угадай образ', desc:'Раунд на скорость: знак — к предметному образу, серия растёт.', meta: 'рекорд ' + record() + ' очков', status: record() > 0 ? 'progress' : 'new', bar: null, onClick:'LearnLab.openGame()' }),
-      hubItem('games', { glyph:'⚔', title:'Палео-битва', desc:'Пошаговый матч: собери цепочку образов и защити своё чтение.', meta: battleStored ? 'матч в работе' : '5 раундов', status: battleStored ? 'progress' : 'new', bar: null, onClick:'LearnLab.openBattle()' })
+      hubItem('games', { glyph:'⚔', title:'Палео-битва', desc:'Матч на проверку чтения: тема, режим, состав исследователей и разбор каждого хода.', meta: battleStored ? 'матч в работе' : '4 режима · 6 тем', status: battleStored ? 'progress' : 'new', bar: null, onClick:'LearnLab.openBattle()' })
     ];
   }
 
@@ -440,7 +447,11 @@
       ? '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="LearnLab.startFirst()">Начать первый урок</button>'
       : '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm" onclick="LearnLab.continueLast()">Продолжить с последнего места</button>';
 
-    return '<header class="learn-hub-bar">' +
+    // Порядок блоков: тулбар (§4.7) идёт сразу под шапкой модуля, полоса
+    // прогресса — под ним. Тулбар управляет каталогом, а прогресс и CTA
+    // относятся уже к содержимому, поэтому хром читается сверху вниз.
+    return hubToolbarMarkup(items, shown) +
+      '<header class="learn-hub-bar">' +
         '<span class="learn-hub-label">Обучение</span>' +
         '<span class="learn-hub-rule" aria-hidden="true"></span>' +
         '<span class="learn-hub-chips">' + hubChip('буквы ' + completed + '/22') + hubChip('к повторению ' + srs.due) + hubChip('рекорд ' + record()) + hubChip('активность ' + last) + '</span>' +
@@ -448,7 +459,6 @@
         '<button type="button" class="learn-hub-reset" title="Сбросить прогресс" aria-label="Сбросить прогресс" onclick="LearnLab.reset()"><i data-lucide="rotate-ccw" aria-hidden="true"></i></button>' +
         cta +
       '</header>' +
-      hubToolbarMarkup(items, shown) +
       (fresh ? emptyStateMarkup() : '') +
       '<p class="learn-hub-legend" aria-label="Легенда статусов"><span>Статус:</span><span class="learn-hub-dot"></span>новый<span class="learn-hub-dot is-progress"></span>в работе<span class="learn-hub-dot is-done"></span>освоен</p>' +
       '<div class="learn-hub-body' + (hubState.view === 'list' ? ' is-list' : '') + '" id="learn-hub-body">' + hubBodyMarkup(shown) + '</div>';
@@ -690,10 +700,158 @@
     }
   }
 
-  function renderLessons() {
+  /* ===== Каталог букв: bento-экран «Изучение иврита» =====
+     Канон §5.2a (12 колонок, hairline, тени = 0, mobile = одна
+     колонка) по образцу `.at-bento`. Тулбар — общий компонент
+     components/toolbar.css; в него переехала кнопка «К обучению»,
+     ранее стоявшая отдельной кнопкой над сеткой. */
+
+  function letterStatus(p, item) {
+    return p.letters[item.hebrew] && p.letters[item.hebrew].status || 'new';
+  }
+
+  /* Следующая буква для фокус-ячейки: первая неосвоенная, иначе —
+     последняя освоенная (весь алфавит пройден — показываем итог). */
+  function focusLetter(p) {
+    var open = letters.filter(function(item) { return letterStatus(p, item) !== 'complete'; });
+    return open[0] || letters[letters.length - 1] || null;
+  }
+
+  /* Исходный номер буквы хранится в записи: он нужен для stagger-анимации
+     появления, иначе фильтр и поиск сдвигали бы задержки соседних плиток. */
+  function letterEntries() {
+    return letters.map(function(item, index) { return { item:item, index:index }; });
+  }
+
+  function letterVisible(p, item) {
+    if (lettersState.filter !== 'all' && letterStatus(p, item) !== lettersState.filter) return false;
+    var haystack = [item.name, item.paleo, item.hebrew, item.image, item.meaning].join(' ').toLowerCase();
+    var query = hubNormalize(lettersState.query);
+    return !query || hubNormalize(haystack).indexOf(query) !== -1;
+  }
+
+  function letterTile(p, item, index) {
+    var status = letterStatus(p, item);
+    var cls = status === 'complete' ? 'is-complete' : status === 'progress' ? 'is-progress' : '';
+    var label = status === 'complete' ? 'завершено' : status === 'progress' ? 'в процессе' : 'не начато';
+    /* Все плитки одного калибра: буквы — это ряд, а не набор плиток разного
+       веса, поэтому ни ширины, ни высоты у ячеек не различается. */
+    var a11y = esc(item.name + ' — ' + item.image + ', ' + item.meaning + ', ' + label);
+    return '<button type="button" class="ll-tile ' + cls + '" style="animation-delay:' + index * 25 + 'ms" aria-label="' + a11y + '" onclick="LearnLab.openLesson(\'' + item.hebrew + '\')">' +
+      '<span class="ll-tile-status" aria-hidden="true"></span>' +
+      '<span class="ll-tile-glyph" lang="hbo" aria-hidden="true">' + esc(item.paleo) + '</span>' +
+      '<span class="ll-tile-body" aria-hidden="true"><span class="ll-tile-name">' + esc(item.name) + '</span>' +
+      '<span class="ll-tile-image">' + esc(item.image) + '</span>' +
+      '<span class="ll-tile-meaning">' + esc(item.meaning) + '</span></span>' +
+    '</button>';
+  }
+
+  function letterCellHead(num, title, hint) {
+    return '<header class="ll-cell-head"><span class="ll-num">' + num + '</span>' +
+      '<h2 class="ll-cell-title">' + esc(title) + '</h2>' +
+      '<span class="ll-cell-hint">' + esc(hint) + '</span></header>';
+  }
+
+  function lettersProgressCell() {
+    var done = completedLetters(), total = letters.length || 22;
+    var percent = Math.round(done / total * 100);
+    return '<section class="ll-cell ll-cell--progress">' +
+      letterCellHead('01', 'Прогресс', done + ' из ' + total) +
+      '<p class="ll-metric"><strong>' + percent + '%</strong><span>алфавита освоено</span></p>' +
+      '<span class="ll-bar" role="progressbar" aria-valuenow="' + percent + '" aria-valuemin="0" aria-valuemax="100" aria-label="Освоено букв"><span style="width:' + percent + '%"></span></span>' +
+      '<ul class="ll-legend">' +
+        '<li><span class="ll-dot is-new"></span>не начат</li>' +
+        '<li><span class="ll-dot is-progress"></span>в процессе</li>' +
+        '<li><span class="ll-dot is-done"></span>завершён</li>' +
+      '</ul>' +
+    '</section>';
+  }
+
+  function lettersFocusCell(p) {
+    var item = focusLetter(p);
+    if (!item) return '';
+    var open = letterStatus(p, item) !== 'complete';
+    return '<section class="ll-cell ll-cell--focus">' +
+      letterCellHead('02', open ? 'Следующая буква' : 'Алфавит пройден', open ? 'продолжить с неё' : 'можно повторить') +
+      '<div class="ll-focus">' +
+        '<span class="ll-focus-glyph" lang="hbo">' + esc(item.paleo) + '</span>' +
+        '<div class="ll-focus-text"><span class="ll-focus-name">' + esc(item.name) + '</span>' +
+        '<span class="ll-focus-image">' + esc(item.image) + '</span>' +
+        '<span class="ll-focus-meaning">' + esc(item.meaning) + '</span></div>' +
+      '</div>' +
+      '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm ll-focus-btn" onclick="LearnLab.openLesson(\'' + item.hebrew + '\')">' + (open ? 'Начать урок' : 'Пройти ещё раз') + '</button>' +
+    '</section>';
+  }
+
+  function lettersAlphabetCell(p, shown) {
+    var tiles = shown.map(function(entry) { return letterTile(p, entry.item, entry.index); }).join('');
+    var body = shown.length ? tiles : '<p class="ll-empty">По запросу ничего не найдено.</p>';
+    return '<section class="ll-cell ll-cell--alphabet">' +
+      letterCellHead('03', 'Алфавит', shown.length + ' из ' + letters.length) +
+      '<div class="ll-tiles">' + body + '</div>' +
+    '</section>';
+  }
+
+  /* Тулбар каталога: «К обучению» (возврат в хаб), поиск, фильтр по
+     статусу и счётчик. Разметка — общий компонент toolbar.css. */
+  function lettersToolbar(shown) {
+    var chip = function(value, label) {
+      var active = lettersState.filter === value;
+      return '<button type="button" class="pipeline-chip' + (active ? ' active' : '') + '" data-letter-filter="' + value + '" aria-pressed="' + (active ? 'true' : 'false') + '">' + label + '</button>';
+    };
+    return '<section class="lab-toolbar" role="search" aria-label="Каталог букв иврита">' +
+        '<input type="search" class="lab-input lab-toolbar-search" id="letter-search" autocomplete="off" placeholder="Поиск по буквам, образам и значениям…" aria-label="Поиск по буквам" value="' + esc(lettersState.query).replace(/"/g, '&quot;') + '">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Фильтр по статусу">' +
+          chip('all', 'Все') + chip('new', 'Не начатые') + chip('progress', 'В процессе') + chip('complete', 'Завершённые') +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" data-letter-count aria-live="polite"><strong>' + shown.length + '</strong> из ' + letters.length + '</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.home()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К обучению</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  function lettersBody(p, shown) {
+    return '<div class="ll-bento" id="learn-letters-body">' +
+      lettersProgressCell() + lettersFocusCell(p) + lettersAlphabetCell(p, shown) +
+    '</div>';
+  }
+
+  function lettersShown() {
     var p = progress();
-    var cards = letters.map(function(item, index) { var status = p.letters[item.hebrew] && p.letters[item.hebrew].status || 'new'; return '<button type="button" class="learn-letter-card ' + (status === 'complete' ? 'is-complete' : status === 'progress' ? 'is-progress' : '') + '" style="animation-delay:' + index * 25 + 'ms" onclick="LearnLab.openLesson(\'' + item.hebrew + '\')"><span class="learn-letter-status" aria-label="' + (status === 'complete' ? 'завершено' : status === 'progress' ? 'в процессе' : 'не начато') + '"></span><span class="learn-letter-paleo" lang="hbo">' + item.paleo + '</span><span class="learn-letter-name">' + esc(item.name) + '</span><span class="learn-letter-image">' + esc(item.image) + '</span><span class="learn-letter-meaning">' + esc(item.meaning) + '</span></button>'; }).join('');
-    return '<button type="button" class="lab-btn lab-btn-secondary learn-back" onclick="LearnLab.home()">К обучению</button><div class="learn-legend"><span>не начат</span><span class="progress">в процессе</span><span class="complete">завершён</span></div><div class="learn-letter-grid">' + cards + '</div>';
+    return letterEntries().filter(function(entry) { return letterVisible(p, entry.item); });
+  }
+
+  /* Перерисовывается только bento: поле поиска сохраняет фокус и каретку. */
+  function refreshLetters(container) {
+    var body = container.querySelector('#learn-letters-body');
+    if (!body) return;
+    var p = progress(), shown = lettersShown();
+    body.innerHTML = lettersProgressCell() + lettersFocusCell(p) + lettersAlphabetCell(p, shown);
+    var count = container.querySelector('[data-letter-count]');
+    if (count) count.innerHTML = '<strong>' + shown.length + '</strong> из ' + letters.length;
+    if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
+  }
+
+  function bindLettersToolbar(container) {
+    var search = container.querySelector('#letter-search');
+    if (search) search.addEventListener('input', function() { lettersState.query = this.value; refreshLetters(container); });
+    container.querySelectorAll('[data-letter-filter]').forEach(function(chipEl) {
+      chipEl.addEventListener('click', function() {
+        lettersState.filter = chipEl.getAttribute('data-letter-filter');
+        container.querySelectorAll('[data-letter-filter]').forEach(function(other) {
+          var active = other === chipEl;
+          other.classList.toggle('active', active);
+          other.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        refreshLetters(container);
+      });
+    });
+  }
+
+  function renderLessons() {
+    var shown = lettersShown();
+    return lettersToolbar(shown) + lettersBody(progress(), shown);
   }
 
   function renderLesson() {
@@ -708,17 +866,186 @@
     return { card:card, item:item, prompt:parts[0] === 'letter-image' ? 'Какой образ несёт этот знак?' : parts[0] === 'letter-glyph' ? 'Какой палео-глиф соответствует образу?' : 'Как называется эта буква?' };
   }
 
+  /* Тип вопроса на лицевой стороне SRS-карточки: подпись в шапке экрана. */
+  var REVIEW_TYPES = { 'letter-name': 'Название буквы', 'letter-image': 'Образ знака', 'letter-glyph': 'Палео-глиф' };
+
+  /* Превью интервалов оценки — та же формула, что в srsSchedule:
+     пользователь видит, насколько уйдёт карточка, ДО клика. */
+  function reviewIntervals(card) {
+    var ease = card.ease || 2.5;
+    var days = function(n) { return window.LabPlural ? LabPlural(n, 'день', 'дня', 'дней') : n + ' дн.'; };
+    return {
+      again: '10 мин',
+      hard: days(1),
+      good: days(Math.max(1, Math.round(card.intervalDays ? card.intervalDays * ease : 1))),
+      easy: days(Math.max(3, Math.round(card.intervalDays ? card.intervalDays * ease * 1.5 : 4)))
+    };
+  }
+
+  /* Тулбар §4.7: статистика колоды слева, счётчик сессии и возврат справа.
+     Каркас — общий компонент components/toolbar.css, чипы — learn-hub-chip. */
+  /* state.review: { card, done, total, revealed } — сессия повторения.
+       total фиксируется на входе (сколько карточек было к повторению),
+       revealed живёт здесь, а не в DOM: ячейка 03 «Буква» рендерится
+       по нему, поэтому раскрытие = перерисовка экрана. */
+  function startReview() {
+    var card = queueReview();
+    state.review = { card: card, done: 0, total: Math.max(srsStats().due, 1), revealed: false };
+  }
+
+  function reviewToolbar() {
+    var srs = srsStats();
+    var done = (state.review && state.review.done) || 0;
+    function chip(text, hot) {
+      return '<span class="learn-hub-chip' + (hot ? ' is-hot' : '') + '">' + text + '</span>';
+    }
+    return '<section class="lab-toolbar" aria-label="Панель повторения">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Статистика колоды">' +
+          chip('К повторению <strong>' + srs.due + '</strong>', srs.due > 0) +
+          chip('Выучено <strong>' + srs.learned + '</strong>') +
+          chip('Всего карточек <strong>' + srs.total + '</strong>') +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" aria-live="polite">Повторено <strong>' + done + '</strong> за сессию</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.home()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К обучению</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  /* Шапка ячейки bento §4.1/§5.2a: номер + капитель + подпись справа.
+     Общая для экранов повторения (`lr-`) и палео-тренажёра (`pt-`). */
+  function cellHead(num, title, hint) {
+    return '<header class="lr-cell-head"><span class="lr-num">' + num + '</span>' +
+      '<h2 class="lr-cell-title">' + esc(title) + '</h2>' +
+      '<span class="lr-cell-hint">' + esc(hint) + '</span></header>';
+  }
+
+  function reviewGradeBtn(grade, label, eta, cls) {
+    return '<button type="button" class="lab-btn learn-review-grade ' + cls + '" onclick="LearnLab.gradeReview(\'' + grade + '\')"><span>' + label + '</span><small>' + eta + '</small></button>';
+  }
+
+  /* Ячейка 02: ход сессии и цена каждой оценки — четыре интервала
+     одной строкой, чтобы правило интервалов читалось до первого клика. */
+  function reviewSessionCell() {
+    var review = state.review || {}, done = review.done || 0;
+    var total = Math.max(review.total || 0, done, 1);
+    var percent = Math.min(100, Math.round(done / total * 100));
+    var card = review.card;
+    var iv = card ? reviewIntervals(card) : null;
+    var legend = iv ? [['is-again', 'Снова', iv.again], ['is-hard', 'Трудно', iv.hard], ['is-good', 'Хорошо', iv.good], ['is-easy', 'Легко', iv.easy]] : [];
+    return '<section class="lr-cell lr-cell--session">' +
+      cellHead('02', 'Сессия', done + ' из ' + total) +
+      '<p class="lr-metric"><strong>' + done + '</strong><span>карточек повторено</span></p>' +
+      '<span class="lr-bar" role="progressbar" aria-label="Ход сессии" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><span style="width:' + percent + '%"></span></span>' +
+      '<ul class="lr-legend">' + legend.map(function(entry) {
+        return '<li><span class="lr-dot ' + entry[0] + '"></span>' + entry[1] + ' <em>' + entry[2] + '</em></li>';
+      }).join('') + '</ul>' +
+    '</section>';
+  }
+
+  /* Ячейка 03: кто перед вами. До раскрытия — намёк вместо пустоты,
+     иначе после «Показать ответ» сетка прыгает на целую ячейку. */
+  function reviewLetterCell(view, revealed) {
+    var item = view.item;
+    return '<section class="lr-cell lr-cell--letter">' +
+      cellHead('03', 'Буква', item.hebrew) +
+      (revealed
+        ? '<div class="lr-identity"><span class="lr-identity-glyph" lang="hbo" aria-hidden="true">' + esc(item.paleo) + '</span>' +
+          '<div class="lr-identity-text"><span class="lr-identity-name">' + esc(item.name) + '</span>' +
+          '<span class="lr-identity-image">' + esc(item.image) + '</span>' +
+          '<span class="lr-identity-meaning">' + esc(item.meaning) + '</span></div></div>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lr-identity-btn" onclick="LearnLab.openLesson(\'' + esc(item.hebrew) + '\')">Открыть урок</button>'
+        : '<p class="lr-placeholder">Образ, значение и урок откроются после ответа. Пока работает память, а не подглядывание.</p>') +
+    '</section>';
+  }
+
   function renderReview() {
     var card = state.review && state.review.card, view = card && reviewItem(card);
-    if (!view) return '<button type="button" class="lab-btn lab-btn-secondary learn-back" onclick="LearnLab.home()">К обучению</button><div class="learn-empty"><h2>Очередь пуста</h2><p>Новых карточек и повторений пока нет.</p></div>';
+    if (!view) return reviewToolbar() + '<div class="learn-empty"><span class="learn-empty-glyph" lang="hbo" aria-hidden="true">𐤀</span><h2>Очередь пуста</h2><p>Новых карточек и повторений пока нет. Пройдите урок — карточки соберутся сами.</p><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.openLessons()">К каталогу букв</button></div>';
+    var review = state.review, revealed = !!review.revealed;
     var front = card.type === 'letter-glyph' ? view.item.image : view.item.paleo;
-    return '<button type="button" class="lab-btn lab-btn-secondary learn-back" onclick="LearnLab.home()">К обучению</button><section class="learn-review"><span class="learn-review-kicker">Интервальное повторение</span><div class="learn-review-symbol" lang="hbo">' + esc(front) + '</div><h2>' + esc(view.prompt) + '</h2><button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.showReviewAnswer()">Показать ответ</button><div id="learn-review-answer" class="learn-review-answer" hidden>' + esc(card.type === 'letter-image' ? view.item.image : card.type === 'letter-glyph' ? view.item.paleo : view.item.name) + '</div><div class="learn-review-grades" hidden id="learn-review-grades"><button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.gradeReview(\'again\')">Снова</button><button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.gradeReview(\'hard\')">Трудно</button><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.gradeReview(\'good\')">Хорошо</button><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.gradeReview(\'easy\')">Легко</button></div></section>';
+    var answer = card.type === 'letter-image' ? view.item.image : card.type === 'letter-glyph' ? view.item.paleo : view.item.name;
+    var iv = reviewIntervals(card);
+    return reviewToolbar() +
+      '<div class="lr-bento">' +
+        '<section class="lr-cell lr-cell--card">' +
+          cellHead('01', 'Карточка', REVIEW_TYPES[card.type] || 'Карточка') +
+          '<div class="lr-stage"><div class="lr-symbol" lang="hbo">' + esc(front) + '</div><h2 class="lr-prompt">' + esc(view.prompt) + '</h2></div>' +
+          (revealed
+            ? '<div class="lr-answer"><span class="lr-answer-label">Ответ</span><strong class="lr-answer-value">' + esc(answer) + '</strong></div>' +
+              '<div class="lr-grades">' +
+                reviewGradeBtn('again', 'Снова', iv.again, 'is-again') +
+                reviewGradeBtn('hard', 'Трудно', iv.hard, 'is-hard') +
+                reviewGradeBtn('good', 'Хорошо', iv.good, 'is-good') +
+                reviewGradeBtn('easy', 'Легко', iv.easy, 'is-easy') +
+              '</div>'
+            : '<div class="lr-action"><button type="button" class="lab-btn lab-btn-primary lr-reveal" onclick="LearnLab.showReviewAnswer()"><i data-lucide="eye" class="lab-icon" aria-hidden="true"></i>Показать ответ</button>' +
+              '<p class="lr-hint"><kbd>Пробел</kbd> — показать ответ · <kbd>1</kbd>–<kbd>4</kbd> — оценить</p></div>') +
+        '</section>' +
+        reviewSessionCell() +
+        reviewLetterCell(view, revealed) +
+      '</div>';
+  }
+
+  /* Тулбар §4.7 игры: статистика раунда чипами слева, рекорд и возврат
+     справа — тот же хром, что в каталоге букв и повторении. */
+  function gameToolbar(game) {
+    function chip(text, hot) {
+      return '<span class="learn-hub-chip' + (hot ? ' is-hot' : '') + '">' + text + '</span>';
+    }
+    return '<section class="lab-toolbar" aria-label="Панель игры">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Статистика раунда">' +
+          chip('Раунд <strong>' + game.round + '</strong>/10', game.round >= 8) +
+          chip('Счёт <strong>' + game.score + '</strong>') +
+          chip('Серия <strong>' + game.streak + '</strong>', game.streak >= 2) +
+        '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count">Рекорд <strong>' + record() + '</strong></span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.home()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К обучению</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  /* Ячейка 03 «Варианты»: ответ живёт рядом с вопросом (01), а результат
+     последнего клика — в ячейке 02, поэтому сетка не перепрыгивает. */
+  function gameChoicesCell(choices) {
+    return '<section class="gm-cell gm-cell--choices">' +
+      cellHead('03', 'Варианты', 'один верный') +
+      '<div class="learn-options gm-choices">' + choices.map(function(option) {
+        return '<button type="button" class="learn-option" data-answer="' + esc(option.hebrew) + '" onclick="LearnLab.gameAnswer(\'' + option.hebrew + '\')">' + esc(option.image) + '</button>';
+      }).join('') + '</div>' +
+    '</section>';
   }
 
   function renderGame() {
     var game = state.game;
-    if (game.done) return '<div class="learn-game"><div class="learn-result"><h1>Раунд завершён</h1><div class="learn-result-score">' + game.score + '</div><p>Очков набрано. Рекорд: <strong>' + record() + '</strong>.</p><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.openGame()">Играть снова</button></div></div>';
-    var choices = game.choices; return '<div class="learn-game"><div class="learn-game-bar"><div class="learn-game-metric">Раунд <strong>' + game.round + '/10</strong></div><div class="learn-game-metric">Счёт <strong>' + game.score + '</strong></div><div class="learn-game-metric learn-timer ' + (game.time <= 8 ? 'is-low' : '') + '">Время <strong>' + game.time + 'с</strong></div></div><div class="learn-game-symbol"><small>Какой образ несёт этот знак?</small><span class="symbol" lang="hbo">' + game.item.paleo + '</span></div><div class="learn-options learn-game-options">' + choices.map(function(option) { return '<button type="button" class="learn-option" data-answer="' + esc(option.hebrew) + '" onclick="LearnLab.gameAnswer(\'' + option.hebrew + '\')">' + esc(option.image) + '</button>'; }).join('') + '</div><div id="learn-game-feedback" class="learn-game-feedback" role="status" aria-live="polite"></div></div>';
+    if (game.done) {
+      return gameToolbar(game) +
+        '<div class="gm-bento"><section class="gm-cell gm-cell--result">' +
+          cellHead('01', 'Итог', '10 раундов') +
+          '<p class="gm-metric"><strong>' + game.score + '</strong><span>очков набрано</span></p>' +
+          '<p class="gm-record">Рекорд: <strong>' + record() + '</strong></p>' +
+          '<div class="gm-actions"><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.openGame()">Играть снова</button></div>' +
+        '</section></div>';
+    }
+    var low = game.time <= 8;
+    return gameToolbar(game) +
+      '<div class="gm-bento">' +
+        '<section class="gm-cell gm-cell--prompt">' +
+          cellHead('01', 'Знак', 'раунд ' + game.round + ' из 10') +
+          '<div class="gm-stage">' +
+            '<div class="gm-symbol" lang="hbo">' + esc(game.item.paleo) + '</div>' +
+            '<p class="gm-prompt">Какой образ несёт этот знак?</p>' +
+          '</div>' +
+        '</section>' +
+        '<section class="gm-cell gm-cell--state">' +
+          cellHead('02', 'Ход раунда', low ? 'время идёт' : 'идёт') +
+          '<p class="gm-metric"><strong class="' + (low ? 'is-low' : '') + '">' + game.time + 'с</strong><span>до конца раунда</span></p>' +
+          '<span class="gm-bar" role="progressbar" aria-label="Раунд" aria-valuemin="1" aria-valuemax="10" aria-valuenow="' + game.round + '"><span style="width:' + (game.round * 10) + '%"></span></span>' +
+          '<div class="gm-feedback' + (game.feedback ? (game.feedback.ok ? ' correct' : ' wrong') : '') + '" role="status" aria-live="polite">' + (game.feedback ? esc(game.feedback.ok ? 'Верно! +' + game.feedback.earned + ' очков' : 'Неверно. Правильный образ: ' + game.feedback.correct) : '') + '</div>' +
+        '</section>' +
+        gameChoicesCell(game.choices) +
+      '</div>';
   }
 
   /* ===== ПАЛЕО-ТРЕНАЖЁР ===== */
@@ -781,7 +1108,7 @@
 
   function trainerChainMarkup(entries) {
     return entries.map(function(g) {
-      return '<div class="learn-trainer-chain-item"><span class="learn-trainer-chain-glyph" lang="hbo">' + g.paleo + '</span><span class="learn-trainer-chain-name">' + esc(g.name) + '</span><span class="learn-trainer-chain-desc">' + esc(g.image) + ' · ' + esc(g.meaning) + '</span></div>';
+      return '<div class="pt-chain-item"><span class="pt-chain-glyph" lang="hbo">' + esc(g.paleo) + '</span><span class="pt-chain-name">' + esc(g.name) + '</span><span class="pt-chain-desc">' + esc(g.image) + ' · ' + esc(g.meaning) + '</span></div>';
     }).join('');
   }
 
@@ -842,13 +1169,25 @@
     return source.split(/(\s+)/).map(function(word) {
       var clean = word.toLocaleLowerCase('ru-RU').replace(/[^а-яёa-z]/gi, '');
       return clean && keywords.indexOf(clean) !== -1 ? '<mark>' + esc(word) + '</mark>' : esc(word);
-    }).join('') + ' <span class="learn-trainer-compare-arrow">↔</span> ' + esc((t.rootEntry && (t.rootEntry.image || t.rootEntry.meaning)) || 'сборка');
+    }).join('') + ' <span class="pt-compare-arrow">↔</span> ' + esc((t.rootEntry && (t.rootEntry.image || t.rootEntry.meaning)) || 'сборка');
   }
 
-  function battleCards() {
+/* ===== ПАЛЕО-БИТВА: bento `pb-` ===== */
+  /* Настройки партии живут в состоянии модуля, а не в localStorage: это
+     срез открытого экрана (тема, режим, выбранные ники), а не прогресс. */
+  function battleSetup() {
+    if (!state.battleSetup) state.battleSetup = { mode: 'duel', theme: '', rounds: 0, query: '', slot: 1, names: ['', ''] };
+    return state.battleSetup;
+  }
+  function battleCards(setup) {
+    var allowed = setup && setup.theme ? THEME_LETTERS[setup.theme] : null;
     return loadRoots().then(function(roots) {
-      var built = root.PaleoBattle && root.PaleoBattle.makeCards ? root.PaleoBattle.makeCards(roots, letters) : [];
-      return built.length ? built : (root.PaleoBattle ? root.PaleoBattle.fallbackCards() : []);
+      var built = root.PaleoBattle.makeCards(roots, letters);
+      if (!built.length) return root.PaleoBattle.fallbackCards();
+      /* Тема сужает колоду, но не обнуляет её: иначе редкая тема оставила
+         бы игрока без партии. */
+      var themed = allowed ? root.PaleoBattle.filterByLetters(built, allowed) : built;
+      return themed.length ? themed : built;
     });
   }
   function initBattle() {
@@ -860,24 +1199,221 @@
     initBattle();
     return state.battle;
   }
+  function battleMode() {
+    var setup = battleSetup();
+    return root.PaleoBattle.modeById(setup.mode);
+  }
+  /* Тулбар: режим и тема — штатные селекты панели, счёт и комната — чипы,
+     возврат в хаб — общая кнопка (как в тренажёре и повторении). */
+  function battleToolbar(match) {
+    var setup = battleSetup(), mode = battleMode();
+    var modeOptions = root.PaleoBattle.MODES.map(function(item) {
+      return '<option value="' + item.id + '"' + (setup.mode === item.id ? ' selected' : '') + '>' + esc(item.label) + '</option>';
+    }).join('');
+    var themeOptions = '<option value="">Любая тема</option>' + THEMES.map(function(theme) {
+      return '<option value="' + esc(theme) + '"' + (setup.theme === theme ? ' selected' : '') + '>' + esc(theme) + '</option>';
+    }).join('');
+    var scores = match ? match.players.map(function(player) { return esc(player.name) + ' ' + player.score; }).join(' · ') : '';
+    return '<section class="lab-toolbar" aria-label="Панель палео-битвы">' +
+        '<label class="lab-toolbar-field" for="battle-mode">Режим<select class="lab-select lab-toolbar-select" id="battle-mode" onchange="LearnLab.battleMode(this.value)">' + modeOptions + '</select></label>' +
+        '<label class="lab-toolbar-field" for="battle-theme">Тема<select class="lab-select lab-toolbar-select" id="battle-theme" onchange="LearnLab.battleTheme(this.value)">' + themeOptions + '</select></label>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" aria-live="polite">' + (match ? 'Комната ' + esc(match.roomCode) + ' · ' + scores : esc(mode.desc)) + '</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn" onclick="LearnLab.newBattle()">' + (match ? 'Новый матч' : 'Собрать матч') + '</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.home()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К обучению</button>' +
+        '</div>' +
+      '</section>';
+  }
+/* Ячейка 01: карточка хода. Ответы пишутся прямо в `match.draft`, чтобы
+     перерисовка (таймер, смена хода) не съедала введённое — тот же приём,
+     что с фидбэком в игре «Угадай образ». */
   function battleInput(id, label, value, placeholder) {
-    return '<label class="learn-battle-field" for="' + id + '">' + label + '<input id="' + id + '" class="learn-answer-input" autocomplete="off" value="' + esc(value || '') + '" placeholder="' + placeholder + '"></label>';
+    return '<label class="pb-field" for="' + id + '"><span>' + label + '</span>' +
+      '<input id="' + id + '" class="lab-input pb-input" autocomplete="off" value="' + esc(value || '') + '" placeholder="' + esc(placeholder || '') + '" oninput="LearnLab.battleDraft(this.id, this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();LearnLab.battleSubmit();}"></label>';
+  }
+  function battleSelect(id, label, options, value) {
+    return '<label class="pb-field" for="' + id + '"><span>' + label + '</span><select id="' + id + '" class="lab-select pb-input" onchange="LearnLab.battleDraft(this.id, this.value)">' +
+      options.map(function(option) { return '<option' + (option === value ? ' selected' : '') + '>' + esc(option) + '</option>'; }).join('') + '</select></label>';
+  }
+  function battleCardCell(match) {
+    var card = match.cards[match.round], draft = match.draft || {}, settings = match.settings || {};
+    var chain = card.chain.map(function(part) { return esc(part.paleo); }).join(' ');
+    return '<section class="pb-cell pb-cell--card">' +
+      cellHead('01', 'Карточка хода', 'ход ' + (match.currentPlayer + 1) + ' из 2') +
+      '<div class="pb-stage"><span class="pb-glyphs" lang="hbo" aria-label="Палео-цепочка">' + chain + '</span><p class="pb-direction">Читается справа налево</p></div>' +
+      '<p class="pb-task">Соберите слово, назовите действие механики и отделите факт от интерпретации.</p>' +
+      '<div class="pb-form">' +
+        battleInput('battle-sequence', 'Буквенная цепочка', draft.sequence, 'например: אב') +
+        battleInput('battle-image', 'Образ', draft.image, 'что видите в цепочке') +
+        battleInput('battle-function', 'Функция / действие', draft.function, 'что делает механика') +
+        battleInput('battle-explanation', 'Краткое объяснение', draft.explanation, 'не менее одной фразы') +
+        battleSelect('battle-confidence', 'Уверенность', ['высокая', 'средняя', 'низкая'], draft.confidence || 'высокая') +
+        battleSelect('battle-status', 'Статус', root.PaleoBattle.STATUS, draft.status || card.status) +
+      '</div>' +
+      '<div class="pb-actions">' +
+        (settings.hints === false ? '' : '<label class="pb-hint"><input type="checkbox" id="battle-hint"' + (draft.hinted ? ' checked' : '') + ' onchange="LearnLab.battleDraft(\'hinted\', this.checked)">Взять подсказку (−50%)</label>') +
+        '<button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.battleSubmit()">Проверить ответ</button>' +
+      '</div>' +
+    '</section>';
+  }
+  /* Ячейка 02: видимая панель игроков — аватар, счёт, серия, форма по
+     последним раундам, достижения и поиск соперника из списка. */
+  function battlePlayersCell(match) {
+    var players = match.players.map(function(player, index) {
+      var stats = root.PaleoBattle.playerStats(match, index);
+      var share = root.PaleoBattle.playerShare(match, index);
+      var form = stats.form.length ? stats.form.map(function(accuracy) {
+        return '<span class="pb-form-bar' + (accuracy === 100 ? ' is-exact' : accuracy > 0 ? ' is-partial' : '') + '" style="height:' + Math.max(8, accuracy / 2) + '%" title="' + accuracy + '%"></span>';
+      }).join('') : '<span class="pb-form-empty">нет попыток</span>';
+      var badges = stats.achievements.length ? stats.achievements.map(function(item) { return '<span class="pb-badge">' + esc(item) + '</span>'; }).join('') : '<span class="pb-badge is-empty">достижения пока пусты</span>';
+      return '<article class="pb-player' + (match.status === 'question' && match.currentPlayer === index ? ' is-active' : '') + '">' +
+        '<div class="pb-player-top"><span class="pb-avatar" lang="hbo" aria-hidden="true">' + esc(player.avatar) + '</span>' +
+          '<div class="pb-player-id"><input class="pb-player-name" value="' + esc(player.name) + '" maxlength="24" aria-label="Ник исследователя" oninput="LearnLab.battleRename(' + index + ', this.value)">' +
+          '<span class="pb-player-meta">' + (match.status === 'question' && match.currentPlayer === index ? 'ходит сейчас' : 'ждёт хода') + ' · уровень ' + esc(player.level) + '</span></div>' +
+          '<span class="pb-score">' + player.score + '</span></div>' +
+        '<div class="pb-share" role="img" aria-label="Доля от максимума"><span style="width:' + Math.round(share * 100) + '%"></span></div>' +
+        '<div class="pb-player-stats"><span>точность <strong>' + stats.accuracy + '%</strong></span><span>серия <strong>' + (player.streak || 0) + '</strong></span><span>раундов <strong>' + stats.rounds + '</strong></span></div>' +
+        '<div class="pb-form-bars" aria-label="Форма по последним раундам">' + form + '</div>' +
+        '<div class="pb-badges">' + badges + '</div>' +
+      '</article>';
+    }).join('');
+    var found = root.PaleoBattle.searchRoster(battleSetup().query).slice(0, 6);
+    var results = found.length ? found.map(function(entry, index) {
+      return '<button type="button" class="pb-roster-item" onclick="LearnLab.battleInvite(' + index + ')"><span class="pb-avatar" lang="hbo" aria-hidden="true">' + esc(root.PaleoBattle.avatarFor(entry.name)) + '</span><span>' + esc(entry.name) + '<small>уровень ' + esc(entry.level) + '</small></span></button>';
+    }).join('') : '<p class="pb-placeholder">Ник не найден — сохраните его кнопкой ниже, и он попадёт в список.</p>';
+    return '<section class="pb-cell pb-cell--players">' +
+      cellHead('02', 'Исследователи', 'счёт ' + match.players[0].score + ' : ' + match.players[1].score) +
+      players +
+      '<div class="pb-roster"><label class="pb-roster-field" for="battle-roster">Поиск исследователя<input id="battle-roster" class="lab-input pb-input" autocomplete="off" value="' + esc(battleSetup().query) + '" placeholder="ник или уровень" oninput="LearnLab.battleQuery(this.value)"></label>' +
+        '<div class="pb-roster-list" data-roster>' + results + '</div>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm pb-roster-add" onclick="LearnLab.battleSaveName()">Сохранить мой ник</button>' +
+      '</div>' +
+    '</section>';
+  }
+/* Ячейка 03: ход матча — точки раундов, таймер и «Хук Давар» (шкала
+     1–5, где «точная сборка» двигает игрока вверх). */
+  function battleTurnCell(match) {
+    var settings = match.settings || {}, mode = root.PaleoBattle.modeById(settings.mode);
+    var total = match.cards.length * 2, turns = match.history.length;
+    var dots = Array.from({ length: total }, function(_, index) {
+      var entry = match.history[index], player = entry ? match.players[entry.player] : null;
+      var cls = entry ? (entry.result.accuracy === 100 ? 'is-exact' : entry.result.points ? 'is-partial' : 'is-miss') : index === turns ? 'is-current' : '';
+      return '<span class="pb-turn-dot ' + cls + '" title="Ход ' + (index + 1) + (player ? ': ' + esc(player.name) + ', ' + entry.result.points + ' очков' : '') + '"></span>';
+    }).join('');
+    var remaining = root.PaleoBattle.remainingSeconds(match);
+    var share = settings.seconds ? Math.max(0, Math.min(1, (remaining == null ? 0 : remaining) / settings.seconds)) : 0;
+    var steps = ['эмет', 'эмет-шекер', 'свива', 'хошех', 'свива-хошех'];
+    var hook = match.players.map(function(player, index) {
+      var stats = root.PaleoBattle.playerStats(match, index);
+      var level = Math.max(1, Math.min(5, stats.exact + 1));
+      return '<div class="pb-hook"><span class="pb-hook-name">' + esc(player.name) + '</span><span class="pb-hook-scale">' +
+        Array.from({ length: 5 }, function(_, i) { return '<span class="pb-hook-step' + (i < level ? ' is-on' : '') + '"></span>'; }).join('') +
+        '</span><span class="pb-hook-level">' + level + '/5 · ' + esc(steps[level - 1]) + '</span></div>';
+    }).join('');
+    return '<section class="pb-cell pb-cell--turn">' +
+      cellHead('03', 'Ход матча', settings.rounds + ' карточек · ' + esc(mode.label)) +
+      '<div class="pb-turns" aria-label="Прогресс матча">' + dots + '</div>' +
+      '<div class="pb-timer"><div class="pb-timer-bar"><span style="width:' + Math.round(share * 100) + '%"></span></div>' +
+        '<span class="pb-timer-value" data-battle-timer>' + (remaining == null ? 'таймер выключен' : remaining + ' с') + '</span></div>' +
+      '<div class="pb-hook-wrap">' + hook + '</div>' +
+      '<p class="pb-legend">' + esc(mode.desc) + '</p>' +
+    '</section>';
+  }
+/* Ячейка 04: разбор хода — чек-лист критериев с ценами, реконструкция
+     и статус. Здесь видно, за что именно начислены баллы. */
+  function battleReviewCell(match) {
+    var review = match.history[match.history.length - 1], card = match.cards[review.round - 1] || match.cards[match.round];
+    var labels = { image: 'Образ', function: 'Функция', sequence: 'Цепочка', explanation: 'Объяснение', status: 'Статус' };
+    var checks = Object.keys(root.PaleoBattle.WEIGHTS).map(function(key) {
+      var ok = review.result.checks[key];
+      return '<li class="pb-check' + (ok ? ' is-ok' : '') + '"><span>' + esc(labels[key]) + '</span><b>' + root.PaleoBattle.WEIGHTS[key] + '</b><em>' + (ok ? 'совпало' : 'мимо') + '</em></li>';
+    }).join('');
+    var bonus = review.result.bonus ? '<li class="pb-check is-ok"><span>Бонус за время</span><b>+' + review.result.bonus + '</b><em>скорость</em></li>' : '';
+    return '<section class="pb-cell pb-cell--review">' +
+      cellHead('04', 'Разбор хода', esc(match.players[review.player].name) + ' · +' + review.result.points + ' из ' + review.result.maxPoints) +
+      '<p class="pb-review-line" aria-live="polite">Точность ' + review.result.accuracy + '%' + (review.hinted ? ' · взята подсказка' : '') + (review.result.bonus ? ' · бонус за скорость' : '') + '</p>' +
+      '<span class="pb-word" lang="hbo">' + esc(card.word) + '</span>' +
+      '<ul class="pb-checks">' + checks + bonus + '</ul>' +
+      '<div class="pb-review-body"><p><b>Образ:</b> ' + esc(card.image) + '</p><p><b>Функция:</b> ' + esc(card.function) + '</p><p><b>Реконструкция:</b> ' + esc(card.reconstruction) + '</p><p><b>Статус:</b> ' + esc(card.status) + ' · <b>Источник:</b> ' + esc(card.source) + '</p></div>' +
+      '<div class="pb-actions"><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.battleNext()">Следующий ход</button></div>' +
+    '</section>';
+  }
+  /* Ячейка 05: итог матча — счёт, разбор по игрокам и достижения. */
+  function battleResultCell(match) {
+    var win = root.PaleoBattle.winner(match);
+    var label = win === 'draw' ? 'Ничья' : 'Победитель: ' + match.players[win].name;
+    var rows = match.players.map(function(player, index) {
+      var stats = root.PaleoBattle.playerStats(match, index);
+      var badges = stats.achievements.length ? stats.achievements.map(function(item) { return '<span class="pb-badge">' + esc(item) + '</span>'; }).join('') : '<span class="pb-badge is-empty">без достижений</span>';
+      return '<article class="pb-result-row' + (win === index ? ' is-winner' : '') + '">' +
+        '<span class="pb-avatar" lang="hbo" aria-hidden="true">' + esc(player.avatar) + '</span>' +
+        '<div><strong>' + esc(player.name) + '</strong><small>точность ' + stats.accuracy + '% · раундов ' + stats.rounds + ' · точных сборок ' + stats.exact + '</small><div class="pb-badges">' + badges + '</div></div>' +
+        '<span class="pb-score">' + player.score + '</span></article>';
+    }).join('');
+    return '<section class="pb-cell pb-cell--result">' +
+      cellHead('05', 'Итог матча', 'комната ' + esc(match.roomCode)) +
+      '<p class="pb-winner">' + esc(label) + '</p>' +
+      '<div class="pb-result-rows">' + rows + '</div>' +
+      '<div class="pb-actions">' +
+        '<button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.newBattle()">Новый матч</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.home()">К обучению</button>' +
+      '</div>' +
+    '</section>';
   }
   function renderBattle() {
-    var match = battleReady();
+    var match = battleReady(), setup = battleSetup();
     if (!match) {
-      battleCards().then(function(cards) { state.battle = root.PaleoBattle.createMatch(cards); root.PaleoBattle.save(state.battle); render(); });
-      return '<div class="learn-battle-shell"><p class="learn-trainer-loading">Собираем колоду…</p></div>';
+      battleCards(setup).then(function(cards) {
+        state.battle = root.PaleoBattle.createMatch(cards, { names: setup.names, mode: setup.mode, theme: setup.theme });
+        root.PaleoBattle.save(state.battle);
+        startBattleTimer();
+        render();
+      });
+      return battleToolbar(null) + '<div class="learn-empty"><span class="learn-empty-glyph" lang="hbo" aria-hidden="true">⚔</span><p class="learn-trainer-loading">Собираем колоду…</p></div>';
     }
-    if (match.status === 'finished') return renderBattleResult(match);
-    var card = match.cards[match.round], review = match.status === 'review' ? match.history[match.history.length - 1] : null;
-    if (review) return '<div class="learn-battle-shell"><div class="learn-battle-head"><strong>Проверка раунда ' + review.round + '</strong><span>' + esc(match.players[review.player].name) + ': +' + review.result.points + '</span></div><div class="learn-battle-review"><span class="learn-battle-word" lang="hbo">' + esc(card.word) + '</span><p><b>Образ:</b> ' + esc(card.image) + '</p><p><b>Функция:</b> ' + esc(card.function) + '</p><p><b>Реконструкция:</b> ' + esc(card.reconstruction) + '</p><p><b>Статус:</b> ' + esc(card.status) + ' · <b>Источник:</b> ' + esc(card.source) + '</p></div><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.battleNext()">Следующий ход</button></div>';
-    return '<div class="learn-battle-shell"><div class="learn-battle-head"><span>РАУНД ' + (match.round + 1) + '/' + match.cards.length + ' · ход ' + (match.currentPlayer + 1) + '</span><strong>' + esc(match.players[0].name) + ' ' + match.players[0].score + ' : ' + match.players[1].score + ' ' + esc(match.players[1].name) + '</strong></div><p class="learn-battle-note">Локальная комната: ответы остаются в этом браузере. Игроки по очереди проходят одну карточку.</p><div class="learn-battle-prompt"><span class="learn-battle-word" lang="hbo">' + card.chain.map(function(part) { return esc(part.paleo); }).join(' ') + '</span><p>Соберите слово, назовите действие механики и отделите факт от интерпретации.</p></div><div class="learn-battle-form">' + battleInput('battle-sequence', 'Буквенная цепочка', '', 'например: אב') + battleInput('battle-image', 'Образ', '', 'что видите в цепочке') + battleInput('battle-function', 'Функция / действие', '', 'что делает механика') + battleInput('battle-explanation', 'Краткое объяснение', '', 'не менее одной фразы') + '<label class="learn-battle-field">Уверенность<select id="battle-confidence"><option>высокая</option><option>средняя</option><option>низкая</option></select></label><label class="learn-battle-field">Статус<select id="battle-status">' + root.PaleoBattle.STATUS.map(function(status) { return '<option>' + status + '</option>'; }).join('') + '</select></label></div><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.battleSubmit()">Проверить ответ</button></div>';
+    var cells = battleToolbar(match);
+    if (match.status === 'question') startBattleTimer();
+    cells += '<div class="pb-bento">';
+    if (match.status === 'finished') {
+      cells += battlePlayersCell(match) + battleResultCell(match);
+    } else if (match.status === 'review') {
+      cells += battleReviewCell(match) + battlePlayersCell(match) + battleTurnCell(match);
+    } else {
+      cells += battleCardCell(match) + battlePlayersCell(match) + battleTurnCell(match);
+    }
+    return cells + '</div>';
   }
-  function renderBattleResult(match) {
-    var winner = root.PaleoBattle.winner(match), label = winner === 'draw' ? 'Ничья' : 'Победитель: ' + match.players[winner].name;
-    return '<div class="learn-battle-shell"><div class="learn-battle-result"><h2>Матч завершён</h2><p class="learn-battle-winner">' + esc(label) + '</p><div class="learn-battle-scores"><strong>' + esc(match.players[0].name) + ': ' + match.players[0].score + '</strong><strong>' + esc(match.players[1].name) + ': ' + match.players[1].score + '</strong></div><p>Достижения: ' + esc(root.PaleoBattle.achievements(match).join(' · ') || 'первые шаги') + '</p><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.newBattle()">Новый матч</button></div></div>';
+  /* Таймер хода: обновляет только подпись и полосу, без полной перерисовки —
+     иначе фокус в поле ответа терялся бы раз в секунду. Истёкшее время
+     закрывает ход тем же ответом, который уже введён. */
+  var battleTimer = null;
+  function stopBattleTimer() { if (battleTimer) { clearInterval(battleTimer); battleTimer = null; } }
+  function paintBattleTimer() {
+    var match = state.battle; if (!match) return;
+    var left = root.PaleoBattle.remainingSeconds(match);
+    var node = document.querySelector('[data-battle-timer]');
+    if (node) node.textContent = left == null ? 'таймер выключен' : left + ' с';
+    var bar = document.querySelector('.pb-timer-bar > span');
+    if (bar && left != null && match.settings && match.settings.seconds) bar.style.width = Math.max(0, Math.min(100, Math.round(left / match.settings.seconds * 100))) + '%';
+    if (left === 0) { stopBattleTimer(); api.battleSubmit(); }
   }
+  function startBattleTimer() {
+    stopBattleTimer();
+    var match = state.battle;
+    if (!match || match.status !== 'question' || !match.settings || !match.settings.seconds) return;
+    if (!match.deadline) match.deadline = Date.now() + match.settings.seconds * 1000;
+    battleTimer = setInterval(paintBattleTimer, 1000);
+  }
+  /* Поиск исследователя перерисовывает список — возвращаем фокус в поле,
+     иначе запрос нельзя набирать дальше. */
+  function focusBattleRoster() {
+    var field = document.getElementById('battle-roster');
+    if (!field) return;
+    field.focus();
+    var end = field.value.length;
+    if (field.setSelectionRange) field.setSelectionRange(end, end);
+  }
+
 
   function weaverReading(entries) {
     var meanings = (entries || []).map(function(g) { return g.meaning; }).filter(Boolean);
@@ -899,23 +1435,81 @@
     return reading;
   }
 
+  /* Тулбар §4.7 тренажёра: тема сборки — штатный селект панели, справа
+     счётчик слов и возврат в хаб (как в каталоге букв и повторении). */
+  function trainerToolbar(t) {
+    var themeOptions = THEMES.map(function(theme) {
+      return '<option value="' + esc(theme) + '"' + (t.theme === theme ? ' selected' : '') + '>' + esc(theme) + '</option>';
+    }).join('');
+    return '<section class="lab-toolbar" aria-label="Панель палео-тренажёра">' +
+        '<label class="lab-toolbar-field" for="trainer-theme">Тема' +
+          '<select class="lab-select lab-toolbar-select" id="trainer-theme" onchange="LearnLab.trainerTheme(this.value)">' + themeOptions + '</select>' +
+        '</label>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" data-trainer-count>Слово <strong>' + t.wordIndex + '</strong> из ' + (t.totalWords || 300) + '</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.home()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К обучению</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  /* Ячейка 02: смысл тренажёра — слово собирается из уже пройденных букв,
+     поэтому освоение алфавита стоит рядом с полем ответа. */
+  function trainerProgressCell(p) {
+    var done = completedLetters(), total = letters.length;
+    var dots = LETTER_KEYS.map(function(key) {
+      return '<span class="pt-dot' + (p.letters[key] && p.letters[key].status === 'complete' ? ' is-complete' : '') + '" title="' + esc(key) + '"></span>';
+    }).join('');
+    return '<section class="pt-cell pt-cell--progress">' +
+      cellHead('02', 'Алфавит', done + ' из ' + total) +
+      '<p class="pt-metric"><strong>' + Math.round(done / total * 100) + '%</strong><span>букв освоено</span></p>' +
+      '<div class="pt-dots" aria-label="Прогресс по буквам">' + dots + '</div>' +
+      '<p class="pt-legend"><span class="pt-dot is-complete"></span>пройдено уроком</p>' +
+    '</section>';
+  }
+
+  /* Ячейка 03: разбор. До раскрытия — пунктирный намёк, чтобы вторая
+     строка сетки не прыгала после «Показать разбор». */
+  function trainerRevealCell(t) {
+    if (!t.revealed) {
+      return '<section class="pt-cell pt-cell--reveal">' +
+        cellHead('03', 'Разбор', 'закрыт') +
+        '<p class="pt-placeholder">Напишите смысл слова и откройте разбор: цепочка знаков, чтение сборки и сверка вашего ответа с ней.</p>' +
+      '</section>';
+    }
+    var root = t.rootEntry || {};
+    return '<section class="pt-cell pt-cell--reveal">' +
+      cellHead('03', 'Разбор', 'уверенность: высокая · эмет') +
+      '<div class="pt-gloss"><strong>' + esc(root.root || 'Корень') + '</strong><span>' + esc(root.translit || '') + '</span><span>' + esc(root.meaning || root.image || '') + '</span></div>' +
+      '<p class="pt-reading">' + esc(weaverReading(t.entries)) + '</p>' +
+      '<div class="pt-chain">' + trainerChainMarkup(t.entries) + '</div>' +
+      '<p class="pt-comparison"><strong>Ваш ответ ↔ сборка</strong><span>' + comparisonMarkup(t) + '</span></p>' +
+    '</section>';
+  }
+
   function renderTrainer() {
     var t = trainerReady();
+    var toolbar = trainerToolbar(t);
     if (!t.entries.length) {
       buildTrainerWord(t.theme).then(render);
-      return '<div class="learn-trainer-shell"><div class="learn-trainer"><p class="learn-trainer-loading">Собираем слово…</p></div></div>';
+      return toolbar + '<div class="learn-empty"><span class="learn-empty-glyph" lang="hbo" aria-hidden="true">𐆠</span><p class="learn-trainer-loading">Собираем слово…</p></div>';
     }
-    var p = progress();
-    var letterBar = LETTER_KEYS.map(function(key) {
-      var done = p.letters[key] && p.letters[key].status === 'complete';
-      return '<span class="learn-trainer-letter-dot' + (done ? ' is-complete' : '') + '" title="' + esc(key) + '"></span>';
-    }).join('');
-    var themeOptions = THEMES.map(function(theme) { return '<option value="' + esc(theme) + '"' + (t.theme === theme ? ' selected' : '') + '>' + esc(theme) + '</option>'; }).join('');
-    var chain = trainerChainMarkup(t.entries);
-    var reading = weaverReading(t.entries);
-    var badge = 'высокая · эмет';
-    var reveal = t.revealed ? '<div class="learn-trainer-reveal"><div class="learn-trainer-word-gloss"><strong>' + esc(t.rootEntry.root || 'Корень') + '</strong><span> · ' + esc(t.rootEntry.translit || '') + '</span><span> · ' + esc(t.rootEntry.meaning || t.rootEntry.image || '') + '</span></div><p class="learn-trainer-author-meaning">' + esc(reading) + '</p><div class="learn-trainer-chain">' + chain + '</div><p class="learn-trainer-comparison"><strong>Твой ответ ↔ Сборка</strong><span>' + comparisonMarkup(t) + '</span></p><span class="learn-trainer-confidence">уверенность сборки: ' + badge + '</span></div>' : '';
-    return '<div class="learn-trainer-shell"><div class="learn-trainer"><div class="learn-trainer-head"><span class="learn-trainer-counter">СЛОВО ' + t.wordIndex + '/' + (t.totalWords || 300) + '</span><span class="learn-trainer-progress" aria-label="Прогресс по буквам">' + letterBar + '</span></div><div class="learn-trainer-word"><label class="learn-trainer-theme-select">Тема <select class="learn-trainer-theme" aria-label="Тема генерации" onchange="LearnLab.trainerTheme(this.value)">' + themeOptions + '</select></label><div class="learn-trainer-glyphs" lang="hbo" aria-label="Палео-слово">' + t.entries.map(function(g) { return '<span class="learn-trainer-big">' + g.paleo + '</span>'; }).join('') + '</div><p class="learn-trainer-direction">‹‹‹ читается справа налево</p></div><label class="learn-trainer-prompt" for="trainer-answer">Что значит это слово?</label><div class="learn-trainer-answer"><input id="trainer-answer" class="learn-answer-input" autocomplete="off" placeholder="Ваш смысл слова" value="' + esc(t.answer || '') + '" oninput="LearnLab.trainerAnswer(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();LearnLab.revealTrainer();}"></div><div class="learn-trainer-actions"><button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.revealTrainer()">Показать разбор</button><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.generateWord()">Сгенерировать слово</button><button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.nextTrainer()">Дальше</button></div>' + reveal + '</div></div>';
+    var glyphs = t.entries.map(function(g) { return '<span class="pt-glyph">' + esc(g.paleo) + '</span>'; }).join('');
+    return toolbar +
+      '<div class="pt-bento">' +
+        '<section class="pt-cell pt-cell--word">' +
+          cellHead('01', 'Слово', t.entries.length + ' знаков') +
+          '<div class="pt-stage"><div class="pt-glyphs" lang="hbo" aria-label="Палео-слово">' + glyphs + '</div><p class="pt-direction">Читается справа налево</p></div>' +
+          '<label class="pt-prompt" for="trainer-answer">Что значит это слово?</label>' +
+          '<div class="pt-answer"><input id="trainer-answer" class="lab-input pt-input" autocomplete="off" placeholder="Ваш смысл слова" value="' + esc(t.answer || '') + '" oninput="LearnLab.trainerAnswer(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();LearnLab.revealTrainer();}"></div>' +
+          '<div class="pt-actions">' +
+            '<button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.generateWord()">Другое слово</button>' +
+            '<button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.nextTrainer()">Дальше</button>' +
+            '<button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.revealTrainer()">Показать разбор</button>' +
+          '</div>' +
+        '</section>' +
+        trainerProgressCell(progress()) +
+        trainerRevealCell(t) +
+      '</div>';
   }
   /* Шапка модуля следует за внутренним экраном (реестр LabHero.views). */
     function applyHero() {
@@ -929,18 +1523,44 @@
     } else if (state.view === 'game' && state.game) {
       root.LabHero.setView('learn', 'game');
     } else if (state.view === 'review') {
-      root.LabHero.setView('learn', 'review', { title: 'Повторение', subtitle: 'Вернуть буквы в поле зрения через интервалы' });
+      root.LabHero.setView('learn', 'review');
     } else if (state.view === 'trainer') {
       root.LabHero.setView('learn', 'paleo-trainer');
     } else if (state.view === 'battle') {
-      root.LabHero.setView('learn', 'paleo-trainer', { title: 'Палео-битва', subtitle: 'Два исследователя · пять карточек · local-first' });
+      var battle = state.battle, battleMode = battle && battle.settings ? root.PaleoBattle.modeById(battle.settings.mode) : null;
+      root.LabHero.setView('learn', 'paleo-trainer', { title: 'Палео-битва', subtitle: battle ? (battleMode.label + ' · ' + battle.cards.length * 2 + ' ходов · комната ' + battle.roomCode) : 'Два исследователя · темы и режимы · local-first', meta: battle ? [battle.theme || 'любая тема'] : [] });
     } else if (state.view === 'lessons' || state.view === 'courses') {
       root.LabHero.setView('learn', state.view);
     } else {
       root.LabHero.setView('learn', null);
     }
   }
-  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); if (state.view === 'course') courseEnhance(); if (state.view === 'home') bindHubToolbar(container); }
+  /* Клавиатура карточки: Пробел — раскрыть ответ, 1–4 — оценка.
+     Слушатель один на весь модуль и проверяет view: на других экранах
+     пробел остаётся прокруткой, а цифры — вводом. */
+  var reviewKeysBound = false;
+  var REVIEW_KEY_GRADES = { '1': 'again', '2': 'hard', '3': 'good', '4': 'easy' };
+  function bindReviewKeys() {
+    if (reviewKeysBound) return;
+    reviewKeysBound = true;
+    document.addEventListener('keydown', function(event) {
+      if (state.view !== 'review' || !state.review || !state.review.card) return;
+      var target = event.target || {}, tag = target.tagName || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (document.querySelector('.modal-overlay.show')) return;
+      if (event.key === ' ' || event.code === 'Space') {
+        if (event.repeat) return;
+        if (!state.review.revealed) { event.preventDefault(); api.showReviewAnswer(); }
+        return;
+      }
+      if (!state.review.revealed) return;
+      var grade = REVIEW_KEY_GRADES[event.key];
+      if (grade) { event.preventDefault(); api.gradeReview(grade); }
+    });
+  }
+
+  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); if (state.view === 'course') courseEnhance(); if (state.view === 'home') bindHubToolbar(container); if (state.view === 'lessons') bindLettersToolbar(container); }
   function markStarted(item) { var p = progress(); if (!p.letters[item.hebrew] || p.letters[item.hebrew].status !== 'complete') p.letters[item.hebrew] = {status:'progress',score:0}; touch(p); }
   function feedback(text, ok) { var el = document.getElementById('learn-feedback'); if (el) { el.textContent = text; el.className = 'learn-feedback ' + (ok ? 'is-correct' : 'is-wrong'); } }
   function advance(ok) { if (!ok) return; state.lesson.score++; if (state.lesson.step < 4) { state.lesson.step++; render(); } else { var p = progress(), item = state.lesson.item; p.letters[item.hebrew] = {status:'complete',score:state.lesson.score,attempts:(p.letters[item.hebrew] && p.letters[item.hebrew].attempts || 0) + 1,lastActivity:now()}; srsLetterCards(item).forEach(function(def) { srsSchedule(def.id, def.type, def.label, state.lesson.score >= 4 ? 'good' : 'hard'); }); touch(p); state.view = 'lesson'; state.lesson.done = true; render(); } }
@@ -950,8 +1570,20 @@
     home: function() { navigate([]); },
     openLessons: function() { navigate(['lessons']); },
     openReview: function() { navigate(['review']); },
-    showReviewAnswer: function() { var answer = document.getElementById('learn-review-answer'), grades = document.getElementById('learn-review-grades'); if (answer) answer.hidden = false; if (grades) grades.hidden = false; },
-    gradeReview: function(grade) { if (!state.review || !state.review.card) return; srsSchedule(state.review.card.id, state.review.card.type, state.review.card.label, grade); state.review = { card:queueReview() }; render(); },
+    showReviewAnswer: function() {
+      if (!state.review || !state.review.card || state.review.revealed) return;
+      state.review.revealed = true;
+      render();
+    },
+    gradeReview: function(grade) {
+      if (!state.review || !state.review.card) return;
+      var card = state.review.card;
+      srsSchedule(card.id, card.type, card.label, grade);
+      state.review.done = (state.review.done || 0) + 1;
+      state.review.card = queueReview();
+      state.review.revealed = false;
+      render();
+    },
     openLesson: function(key) { var item = byKey(key); if (!item) return; markStarted(item); navigate(['lessons', encodeURIComponent(key)]); },
     submitText: function() { var input = document.getElementById('learn-answer'), step = state.lesson.step, expected = step === 1 ? state.lesson.item.name : state.lesson.item.meaning; if (!input) return; var ok = inputMatch(input.value, expected); if (ok) advance(true); else feedback('Пока не совпало. Попробуйте ещё раз.', false); },
     answer: function(key) { var ok = key === state.lesson.item.hebrew; if (ok) advance(true); else feedback('Это другой образ. Попробуйте ещё раз.', false); },
@@ -959,9 +1591,19 @@
     openCourses: function() { navigate(['courses']); },
     openTrainer: function() { navigate(['paleo-trainer']); },
     openBattle: function() { navigate(['paleo-trainer', 'battle']); },
-    newBattle: function() { battleCards().then(function(cards) { state.battle = root.PaleoBattle.createMatch(cards); root.PaleoBattle.save(state.battle); render(); }); },
-    battleSubmit: function() { var match = battleReady(), answer = { sequence: (document.getElementById('battle-sequence') || {}).value, image: (document.getElementById('battle-image') || {}).value, function: (document.getElementById('battle-function') || {}).value, explanation: (document.getElementById('battle-explanation') || {}).value, confidence: (document.getElementById('battle-confidence') || {}).value, status: (document.getElementById('battle-status') || {}).value }; root.PaleoBattle.submitRound(match, answer); root.PaleoBattle.save(match); render(); },
-    battleNext: function() { var match = battleReady(); root.PaleoBattle.nextRound(match); root.PaleoBattle.save(match); render(); },
+    /* Состав и режим меняются до старта; ник пишется прямо в панели. */
+    newBattle: function() { var setup = battleSetup(); battleCards(setup).then(function(cards) { stopBattleTimer(); state.battle = root.PaleoBattle.createMatch(cards, { names: setup.names, mode: setup.mode, theme: setup.theme }); root.PaleoBattle.save(state.battle); startBattleTimer(); render(); }); },
+    battleMode: function(mode) { battleSetup().mode = root.PaleoBattle.modeById(mode).id; render(); },
+    battleTheme: function(theme) { battleSetup().theme = THEMES.indexOf(theme) === -1 ? '' : theme; render(); },
+    battleQuery: function(value) { battleSetup().query = String(value || '').slice(0, 40); render(); focusBattleRoster(); },
+    battleRename: function(index, value) { var match = state.battle; if (!match || !match.players[index]) return; var player = match.players[index]; player.name = String(value || '').slice(0, 24); player.avatar = root.PaleoBattle.avatarFor(player.name); },
+    battleInvite: function(index) { var setup = battleSetup(), found = root.PaleoBattle.searchRoster(setup.query)[index]; if (!found) return; var slot = setup.slot; setup.names[slot] = found.name; if (state.battle && state.battle.players[slot] && state.battle.status === 'question') { state.battle.players[slot].name = found.name; state.battle.players[slot].avatar = root.PaleoBattle.avatarFor(found.name); root.PaleoBattle.save(state.battle); } setup.slot = slot === 0 ? 1 : 0; setup.query = ''; render(); },
+    battleSaveName: function() { var match = state.battle; if (!match || !String(match.players[0].name || '').trim()) return; battleSetup().names = [match.players[0].name, match.players[1].name]; root.PaleoBattle.saveRoster([{ name: match.players[0].name }, { name: match.players[1].name }]); render(); },
+    /* Черновик ответа живёт в матче: таймер перерисовывает экран и не должен
+       стирать введённое (тот же приём, что с фидбэком в игре). */
+    battleDraft: function(id, value) { var match = battleReady(); if (!match) return; if (id === 'hinted') match.draft.hinted = !!value; else match.draft[id.replace(/^battle-/, '')] = value; },
+    battleSubmit: function() { var match = battleReady(); if (!match || match.status !== 'question') return; stopBattleTimer(); root.PaleoBattle.submitRound(match, Object.assign({ hinted: !!match.draft.hinted }, match.draft)); root.PaleoBattle.save(match); render(); },
+    battleNext: function() { var match = battleReady(); if (!match || match.status !== 'review') return; root.PaleoBattle.nextRound(match); root.PaleoBattle.save(match); if (match.status === 'question') startBattleTimer(); render(); },
     trainerTheme: function(theme) { var t = trainerReady(); if (THEMES.indexOf(theme) === -1) return; buildTrainerWord(theme).then(render); },
     trainerAnswer: function(value) { trainerReady().answer = String(value || ''); },
     revealTrainer: function() { var t = trainerReady(); if (!t.entries.length) return; t.revealed = true; markLettersLearned(t.entries); render(); },
@@ -972,14 +1614,16 @@
     toggleLesson: function(courseId, lessonId) { var p = courseProgress(); if (p.lessons[lessonId]) delete p.lessons[lessonId]; else p.lessons[lessonId] = { course: courseId, done: true, at: now() }; write(COURSE_KEY, p); render(); },
     toggleModule: function(index) { if (!state.course) return; state.courseOpenModule = state.courseOpenModule === index ? -1 : index; writeCourseOpen(state.course.id, state.courseOpenModule); render(); },
     jumpToModule: function(index) { if (!state.course) return; state.courseOpenModule = index; writeCourseOpen(state.course.id, index); render(); var section = document.getElementById('course-module-' + index); if (section) { var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; section.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }); } },
-    gameAnswer: function(key) { var game=state.game; if (!game || game.locked) return; game.locked=true; var ok=key===game.item.hebrew, earned=0; if(ok){game.streak++; earned=10*(game.streak >= 3 ? 3 : game.streak === 2 ? 2 : 1); game.score+=earned;} else {game.streak=0; game.score=Math.max(0,game.score-5);} render(); var feedbackEl=document.getElementById('learn-game-feedback'); if(feedbackEl){feedbackEl.textContent=ok ? 'Верно! +' + earned + ' очков' : 'Неверно. Правильный образ: ' + game.item.image; feedbackEl.className='learn-game-feedback ' + (ok?'correct':'wrong');} setTimeout(function(){ if(!state.game || state.game !== game) return; if(game.round >= 10) finishGame(); else {game.round++; nextRound();} },700); },
+    /* Фидбэк живёт в состоянии, а не в DOM: таймер перерисовывает экран
+       каждую секунду и стирал бы текст ответа до следующего раунда. */
+    gameAnswer: function(key) { var game=state.game; if (!game || game.locked) return; game.locked=true; var ok=key===game.item.hebrew, earned=0; if(ok){game.streak++; earned=10*(game.streak >= 3 ? 3 : game.streak === 2 ? 2 : 1); game.score+=earned;} else {game.streak=0; game.score=Math.max(0,game.score-5);} game.feedback={ ok:ok, earned:earned, correct:game.item.image }; render(); setTimeout(function(){ if(!state.game || state.game !== game) return; if(game.round >= 10) finishGame(); else {game.round++; nextRound();} },700); },
     openCourse: function(id) { navigate(['courses', encodeURIComponent(id)]); },
     reset: function() { if (!window.LabModal) return; window.LabModal.show('Сбросить прогресс?', '<p class="learn-hub-reset-text">Будут удалены уроки букв, очередь повторения и рекорд игры, сохранённые в этом браузере. Прогресс курсов останется.</p>', '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabModal.close()">Отмена</button><button type="button" class="lab-btn lab-btn-primary lab-btn-sm learn-danger" onclick="LearnLab.resetConfirm()">Сбросить</button>'); },
     resetConfirm: function() { localStorage.removeItem(PROGRESS_KEY); localStorage.removeItem(RECORD_KEY); localStorage.removeItem(SRS_KEY); state.trainer = null; state.review = null; if (window.LabModal) window.LabModal.close(); navigate([]); render(); },
     startFirst: function() { navigate(['lessons', encodeURIComponent(LETTER_KEYS[0])]); },
     continueLast: function() { var dest = lastDestination(); navigate(dest ? dest.segments : ['review']); }
   };
-  function nextRound() { var item=letters[Math.floor(Math.random()*letters.length)]; state.game.item=item; state.game.choices=distractors(item); state.game.locked=false; render(); }
+  function nextRound() { var item=letters[Math.floor(Math.random()*letters.length)]; state.game.item=item; state.game.choices=distractors(item); state.game.locked=false; delete state.game.feedback; render(); }
   function finishGame() { stopTimer(); state.game.done=true; var best=Math.max(record(),state.game.score); localStorage.setItem(RECORD_KEY,String(best)); render(); }
   function stopTimer() { if(state.timer){clearInterval(state.timer);state.timer=null;} }
   function startTimer() { stopTimer(); state.timer=setInterval(function(){ if(!state.game || state.game.done) return stopTimer(); state.game.time--; if(state.game.time<=0){state.game.time=0; finishGame();} else render(); },1000); }

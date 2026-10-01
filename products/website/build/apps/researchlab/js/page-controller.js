@@ -3573,6 +3573,7 @@ const PageController = (function() {
     if (moduleId === 'learn') {
       var seg = parsed && parsed.segments;
       if (seg && seg[1] === 'lessons') viewId = seg[2] ? 'lesson' : 'lessons';
+      else if (seg && seg[1] === 'review') viewId = 'review';
       else if (seg && seg[1] === 'game') viewId = 'game';
       else if (seg && seg[1] === 'paleo-trainer') viewId = 'paleo-trainer';
       else if (seg && seg[1] === 'courses') {
