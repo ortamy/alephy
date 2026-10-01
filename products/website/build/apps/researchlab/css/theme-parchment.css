@@ -129,10 +129,6 @@ html[data-theme="parchment"] .scale-option:hover {
   background: var(--bg-tertiary);
 }
 
-html[data-theme="parchment"] .agent-map-node {
-  background: var(--bg-secondary);
-}
-
 html[data-theme="parchment"] .sidebar-item.active,
 html[data-theme="parchment"] .exposure-toc-item.active {
   background: #eadfc8;

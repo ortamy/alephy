@@ -440,9 +440,12 @@ const PageController = (function() {
         refreshAgentsList(container);
       });
     });
-    container.querySelector('[data-agent-map-open]').addEventListener('click', function() {
-      if (window.AgentMap) window.AgentMap.open();
-    });
+    var treeOpen = container.querySelector('[data-agent-tree-open]');
+    if (treeOpen) {
+      treeOpen.addEventListener('click', function() {
+        if (window.AgentTree) window.AgentTree.open();
+      });
+    }
   }
 
 
@@ -1783,13 +1786,15 @@ const PageController = (function() {
 
 
   // Деталь агента — паспорт (герой: имя, роль, статус, модель, описание), запуск, результат, связи.
-  // Тулбара списка здесь нет: поиск, фильтры, счётчик, вид и «Карта агентов» — хром списка.
+  // Тулбара списка здесь нет: поиск, фильтры, счётчик, вид и «Древо агентов» — хром списка.
   function renderAgentDetail(container, agentId) {
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
+    var tree = container.querySelector('#agent-tree-view');
     var agent = (agentMapData || []).filter(function(item) { return item.id === agentId; })[0];
     if (!detail || !agent) return;
     if (list) list.hidden = true;
+    if (tree) tree.hidden = true;
     setAgentListChrome(container, false);
     detail.hidden = false;
     var status = getAgentStatus(agent);
@@ -2187,7 +2192,7 @@ const PageController = (function() {
 
 
 
-  // Тулбар (поиск, фильтры, счётчик, вид, карта) принадлежит только списку агентов.
+  // Тулбар (поиск, фильтры, счётчик, вид, древо) принадлежит только списку агентов.
   function setAgentListChrome(container, visible) {
     var controls = container.querySelector('.agent-controls-panel');
     if (controls) controls.hidden = !visible;
@@ -2198,7 +2203,9 @@ const PageController = (function() {
     if (window.LabHero && window.LabHero.setView) window.LabHero.setView('ai-agents', null);
     var detail = container.querySelector('#agent-detail-view');
     var list = container.querySelector('.agent-list-view');
+    var tree = container.querySelector('#agent-tree-view');
     if (detail) detail.hidden = true;
+    if (tree) tree.hidden = true;
     if (list) list.hidden = false;
     setAgentListChrome(container, true);
   }
@@ -3158,12 +3165,12 @@ const PageController = (function() {
           '<div class="res-view-toggle" role="group" aria-label="Вид списка">' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'cards' ? ' active' : '') + '" data-agents-view="cards" aria-label="Карточки" title="Карточки"><i data-lucide="layout-grid" aria-hidden="true"></i></button>' +
           '<button type="button" class="res-view-btn' + (agentsUiState.view === 'list' ? ' active' : '') + '" data-agents-view="list" aria-label="Список" title="Список"><i data-lucide="list" aria-hidden="true"></i></button></div>' +
-          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-map" data-agent-map-open><i data-lucide="map" class="lab-icon" aria-hidden="true"></i>Карта агентов</button>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-toolbar-tree" data-agent-tree-open><i data-lucide="network" class="lab-icon" aria-hidden="true"></i>Древо агентов</button>' +
           '</div>';
         container.innerHTML = '<section class="agent-controls-panel" aria-label="Управление агентами">' + agentsToolbar + '</section>' +
           '<div class="agent-list-view' + (agentsUiState.view === 'list' ? ' is-list-view' : '') + '">' + renderAgentGroups(agents, agentsUiState).html + '</div>' +
           '<div id="agent-detail-view" class="agent-detail-view" hidden></div>' +
-          '<div id="agent-map-view" class="agent-map-view" hidden></div>';
+          '<div id="agent-tree-view" class="at-tree-view" hidden></div>';
         updateAgentsCount(container, getAgentMapData().length);
         initAgentsToolbar(container);
         if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* не критично */ } }
@@ -3759,6 +3766,7 @@ const PageController = (function() {
     // Для smoke/визуальных проверок: статус и сборка карточек/строк без браузерного клика.
     agentsDebug: {
       getStatus: getAgentStatus,
+      getIcon: getAgentIcon,
       renderCard: renderAgentCard,
       renderRow: renderAgentRow,
       renderGroups: renderAgentGroups,

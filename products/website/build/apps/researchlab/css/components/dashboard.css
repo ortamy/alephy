@@ -53,15 +53,15 @@
 .tool-card .tool-badge.beta { background: var(--bg-dark); color: var(--text-muted); }
 .tool-card .tool-badge.model { background: var(--accent-gold); color: #2c1810; }
 /* ===== AI-AGENTS REGISTRY (DESIGN-SYSTEM §4: тулбар, группы, паспорта) ===== */
-/* Тулбар §4.7: одна строка — поиск слева; чипы, счётчик, тумблер и карта справа. */
+/* Тулбар §4.7: одна строка — поиск слева; чипы, счётчик, тумблер и древо справа. */
 .agent-controls-panel { display: flex; flex-direction: row; align-items: center; flex-wrap: wrap; gap: var(--space-2); width: 100%; box-sizing: border-box; margin: 0 0 var(--space-4); padding: var(--space-2) var(--space-3); background: var(--bg-card); border: 1px solid var(--border-light); border-radius: var(--radius-8); overflow: hidden; }
 .agent-controls-panel[hidden] { display: none; }
 .agent-toolbar-row { display: contents; }
 .agents-search { flex: 1 1 220px; min-width: 0; order: 1; }
 .agent-filter-chips { display: flex; align-items: center; flex: 0 1 auto; flex-wrap: nowrap; gap: 6px; min-width: 0; max-width: 100%; overflow-x: auto; order: 2; }
 .agent-toolbar-actions { display: flex; align-items: center; flex: 0 0 auto; flex-wrap: nowrap; gap: 10px; order: 3; }
-.agent-toolbar-map { flex: 0 0 auto; order: 4; }
-.agent-list-view[hidden], .agent-map-view[hidden], .agent-detail-view[hidden] { display: none; }
+.agent-toolbar-tree { flex: 0 0 auto; order: 4; }
+.agent-list-view[hidden], .at-tree-view[hidden], .agent-detail-view[hidden] { display: none; }
 
 /* Группы по роли: uppercase-лейбл + hairline + бейдж-счётчик (как hub «Обучения»). */
 .agent-group { margin-bottom: var(--space-5); }
@@ -141,7 +141,7 @@
   .agents-search { flex: 1 1 100%; }
   .agent-filter-chips { width: 100%; order: 2; overflow-x: auto; }
   .agent-toolbar-actions { width: 100%; justify-content: space-between; order: 3; }
-  .agent-toolbar-map { flex: 1 1 100%; justify-content: center; order: 4; }
+  .agent-toolbar-tree { flex: 1 1 100%; justify-content: center; order: 4; }
   .agent-group-body { grid-template-columns: 1fr; }
   .agent-list-row { flex-wrap: wrap; }
   .agent-list-row-desc { flex: 1 1 100%; order: 5; }
