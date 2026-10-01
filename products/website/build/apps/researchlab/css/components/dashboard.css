@@ -243,7 +243,12 @@
 .pipeline-diagram { animation: pipelineDiagramIn 150ms ease-out both; }
 .pipeline-diagram[hidden] { display: none; }
 .pipeline-diagram-inner { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; padding: var(--space-3) 0 2px; border-top: 1px solid var(--border-light); overflow-x: auto; scrollbar-width: thin; }
-.pipeline-diagram-node { display: grid; justify-items: center; gap: 4px; flex: 0 0 auto; min-width: 64px; }
+/* Узел — строка: стрелка-разделитель лежит слева от тела узла, а не
+   отдельной строкой над ним (в grid она всплывала вверх, ломая цепь). */
+.pipeline-diagram-node { display: flex; align-items: flex-start; gap: 8px; flex: 0 0 auto; }
+.pipeline-diagram-body { display: grid; justify-items: center; gap: 4px; min-width: 64px; }
+/* Стрелка выравнивается по центру иконки (36px), а не по всему узлу. */
+.pipeline-diagram-arrow { display: grid; place-items: center; flex: 0 0 auto; margin-top: 9px; color: var(--accent-gold); }
 .pipeline-diagram-icon { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--border-light); border-radius: 50%; background: var(--bg-secondary); color: var(--text-muted); }
 .pipeline-diagram-icon svg { width: 18px; height: 18px; }
 .pipeline-diagram-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--status-gray, var(--text-muted)); }
@@ -252,7 +257,6 @@
 .pipeline-diagram-node[data-status="error"] .pipeline-diagram-dot { background: var(--status-red, var(--accent-red)); }
 .pipeline-diagram-node[data-status="error"] .pipeline-diagram-icon { color: var(--accent-red); border-color: var(--accent-red); }
 .pipeline-diagram-label { color: var(--text-secondary); font: 600 var(--ui-11)/1.3 var(--font-ui); text-align: center; max-width: 110px; }
-.pipeline-diagram-arrow { display: grid; place-items: center; flex: 0 0 auto; color: var(--accent-gold); }
 .pipeline-diagram-arrow svg { width: 18px; height: 18px; }
 .pipeline-diagram-loop svg { width: 20px; height: 20px; }
 @keyframes pipelineDiagramIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
