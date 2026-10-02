@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from agents import arch_writer
+from agents import arch_critic, arch_writer
 
 AGENTS_DIR = Path(__file__).resolve().parents[1]
 if str(AGENTS_DIR) not in sys.path:
@@ -260,6 +260,79 @@ class ArchGraphTest(unittest.TestCase):
         self.assertGreaterEqual(len(parse_graph_routes(graph)), 5)
         self.assertEqual(check_graph(), [])
         self.assertEqual(check_routes(), [])
+
+
+class ArchCanaryTest(unittest.TestCase):
+    """Канарейка: система обязана замечать подложенный дрейф.
+
+    Проверка «сейчас чисто» доказывает лишь отсутствие находок, а не
+    способность их находить: уже дважды проверка молчала — из-за неверного
+    пути к документу и из-за опечатки в ключе. Поэтому дрейф создаётся
+    намеренно, во временных копиях, и агент обязан его увидеть.
+    """
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.orig_arch = arch_critic.ARCHITECTURE_DOC
+        self.orig_graph = arch_critic.GRAPH_DOC
+        self.orig_agent = arch_critic.AGENT_DOC
+        self.addCleanup(self._restore)
+
+    def _restore(self):
+        arch_critic.ARCHITECTURE_DOC = self.orig_arch
+        arch_critic.GRAPH_DOC = self.orig_graph
+        arch_critic.AGENT_DOC = self.orig_agent
+
+    def _use_documents(self, text, graph=None, agent=None):
+        path = self.tmp / "ARCHITECTURE.md"
+        path.write_text(text, encoding="utf-8")
+        arch_critic.ARCHITECTURE_DOC = path
+        graph_path = self.tmp / "GRAPH.md"
+        graph_path.write_text(graph or "", encoding="utf-8")
+        arch_critic.GRAPH_DOC = graph_path
+        agent_path = self.tmp / "AGENT-ARCHITECTURE.md"
+        agent_path.write_text(agent or "", encoding="utf-8")
+        arch_critic.AGENT_DOC = agent_path
+
+    def test_wrong_count_is_caught(self):
+        self._use_documents("В наборе 9999 корней.")
+        text = (self.tmp / "ARCHITECTURE.md").read_text(encoding="utf-8")
+        findings = arch_critic.check_claims(text, arch_critic.collect_facts()["metrics"])
+        self.assertEqual([f["metric"] for f in findings], ["roots"])
+        self.assertEqual(findings[0]["stated"], 9999)
+
+    def test_missing_path_is_caught(self):
+        self._use_documents("Сборка: `products/website/tools/нет-такого.sh`.")
+        findings = arch_critic.critique({"query": "t"})
+        self.assertTrue(any(item["metric"] == "path" for item in findings["critique_findings"]))
+
+    def test_dead_graph_node_is_caught(self):
+        self._use_documents("Паспорт.", graph="```mermaid\n    X[Слой<br/>js/выдуманный.js]\n```")
+        findings = arch_critic.critique({"query": "t"})
+        self.assertTrue(any(item["metric"] == "graph_node"
+                            for item in findings["critique_findings"]))
+
+    def test_ghost_route_is_caught(self):
+        # Маршруты в реестре латинские: кириллица в шаблоне не совпала бы
+        # и канарейка прошла бы вхолостую.
+        self._use_documents("Паспорт.", graph="- `#ghost-hub` — нет такого.")
+        findings = arch_critic.critique({"query": "t"})
+        self.assertTrue(any(item["metric"] == "route"
+                            for item in findings["critique_findings"]))
+
+    def test_missing_module_in_agent_doc_is_caught(self):
+        self._use_documents("Паспорт.", agent="Служебные роли: `fantasy_agent.py`.")
+        findings = arch_critic.critique({"query": "t"})
+        self.assertTrue(any(item["metric"] == "agent_module"
+                            for item in findings["critique_findings"]))
+
+    def test_proposal_reaches_planner(self):
+        """Находка обязана доходить до планировщика, а не умирать в критике."""
+        from agents.arch_planner import plan
+        self._use_documents("Паспорт.", graph="- `#ghost-hub` — нет такого.")
+        data = plan(arch_critic.critique({"query": "t"}))
+        self.assertTrue(data["proposal_buckets"]["adr"])
 
 
 class ArchReportTest(unittest.TestCase):
