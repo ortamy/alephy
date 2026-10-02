@@ -186,6 +186,11 @@
         "subtitle": "",
         "title": ""
       },
+      "architecture": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "dictionaries": {
         "kicker": "",
         "subtitle": "",
@@ -502,6 +507,7 @@
       "conveyors": "",
       "dashboard": "",
       "design-system": "",
+      "architecture": "",
       "dictionaries": "",
       "exposures": "Exposures",
       "ed-chat": "",

@@ -25,7 +25,10 @@ await new Promise((r) => server.listen(8127, '127.0.0.1', r));
 
 const route = process.argv[2] || 'dashboard';
 const browser = await chromium.launch({ channel: 'chrome', args: ['--no-sandbox'] });
-const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+// Ширина по умолчанию десктопная; вторым аргументом можно задать мобильную:
+// node tools/design-baseline/route-probe.mjs architecture 390
+const viewportWidth = Number(process.argv[3]) || 1280;
+const page = await browser.newPage({ viewport: { width: viewportWidth, height: 800 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => {
@@ -56,6 +59,18 @@ const state = await page.evaluate(() => {
     // Сырая разметка шапки: resolveConfig/i18n может подменить текст, а при
     // разбирательстве нужен именно DOM, а не уже склеенный textContent.
     heroHtml: active && active.querySelector('.lab-hero') ? active.querySelector('.lab-hero').innerHTML.slice(0, 400) : null,
+    // Число ячеек/строк и переполнение по ширине: модуль бьёт по сетке, когда
+    // колонка схлопывается или содержимое шире контейнера.
+    cells: active ? active.querySelectorAll('.arch-cell').length : 0,
+    rows: active ? {
+      layers: active.querySelectorAll('.arch-layer').length,
+      stack: active.querySelectorAll('.arch-stack-row').length,
+      flow: active.querySelectorAll('.arch-flow-step').length,
+      gates: active.querySelectorAll('.arch-gate').length
+    } : null,
+    bentoWidth: active && active.querySelector('.arch-bento')
+      ? { scroll: active.querySelector('.arch-bento').scrollWidth, client: active.querySelector('.arch-bento').clientWidth }
+      : null,
     innerHead: active ? active.innerHTML.slice(0, 220) : '',
     text: active ? active.textContent.slice(0, 160) : '',
     visibleSpinners: spinners.length,

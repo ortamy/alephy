@@ -156,7 +156,9 @@ const moduleAnchors = {
   'dict-grecisms': '.research-page-head',
   'exposure-principles': '.research-section',
   'method-tree': '.research-section',
-  'method-archeology': '.research-section'
+  'method-archeology': '.research-section',
+  // Витрина архитектуры: ловит «модуль не загрузился» и пустую сетку.
+  architecture: '.arch-bento'
 };
 
 const gridRoutes = process.env.SMOKE_QUICK === '1' ? routes.filter((route) => quickRoutes.has(route)) : routes;
@@ -619,5 +621,44 @@ test.describe('design system module', () => {
     expect(dark, 'образцы обязаны показывать цвет своей темы').not.toBe(light);
 
     await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); });
+  });
+});
+
+// Витрина архитектуры: объяснение устройства проекта должно оставаться
+// полным и не течь по ширине. Правду о путях проверяет registry-check, здесь
+// важна сама раскладка — на этом модуле легко проиграть в сетке.
+test.describe('architecture module', () => {
+  test('показывает слои, стек, поток и гейты без переполнения', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+    await page.goto('/#architecture', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#labContent .arch-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+    const report = await page.evaluate(() => {
+      const bento = document.querySelector('#labContent .arch-bento');
+      return {
+        cells: document.querySelectorAll('#labContent .arch-cell').length,
+        layers: document.querySelectorAll('.arch-layer').length,
+        stack: document.querySelectorAll('.arch-stack-row').length,
+        flow: document.querySelectorAll('.arch-flow-step').length,
+        gates: document.querySelectorAll('.arch-gate').length,
+        // Каждая строка слоя и стека ссылается на путь: без пути экран
+        // пересказывает себя вместо того, чтобы показать репозиторий.
+        paths: document.querySelectorAll('.arch-code').length,
+        overflow: bento.scrollWidth - bento.clientWidth,
+        moduleError: (document.querySelector('#labContent .module.active') || {}).dataset?.moduleError || null
+      };
+    });
+
+    expect(report.cells, 'ячейки bento').toBe(5);
+    expect(report.layers, 'слои системы').toBeGreaterThanOrEqual(6);
+    expect(report.stack, 'строки стека').toBeGreaterThanOrEqual(10);
+    expect(report.flow, 'шаги потока данных').toBeGreaterThanOrEqual(5);
+    expect(report.gates, 'гейты').toBeGreaterThanOrEqual(8);
+    expect(report.paths, 'пути в репозитории').toBeGreaterThanOrEqual(16);
+    expect(report.overflow, 'сетка не должна выходить за контейнер').toBeLessThanOrEqual(1);
+    expect(report.moduleError, 'модуль без ошибки').toBeNull();
+    expect(errors, `uncaught errors on #architecture`).toEqual([]);
   });
 });

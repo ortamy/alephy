@@ -1,0 +1,334 @@
+/* ============================================================
+   architecture.css — модуль «Архитектура» (#architecture), bento.
+
+   Образец: design-system.css (тот же bento, тот же префикс-модуля).
+   Канон: DESIGN-SYSTEM §5.2a — 12 колонок, hairline --line, radius -8,
+   тени = 0, только токены, mobile = одна колонка (§5.3).
+
+   Схема слоёв нарисована без SVG: вертикальный волосяной коннектор —
+   псевдоэлемент. Иначе пришлось бы тащить viewBox и marker-end ради
+   статичной структуры (ADR-007).
+
+   ВАЖНО: .arch-cell сбрасывает margin/padding всех потомков — манифест
+   .lab-content .module p задаёт отступы 20px и max-width 750px, а в бенто
+   это убьёт раскладку. Селекторы должны оставаться длиннее, чем правила
+   манифеста.
+   ============================================================ */
+
+.arch-shell {
+  max-width: var(--shell-page);
+  margin: 0 auto;
+}
+
+.arch-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-2);
+  color: var(--text-primary);
+}
+
+/* ===== Ячейка ===== */
+.arch-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+}
+
+.lab-content .module .arch-cell > *,
+.lab-content .module .arch-cell p,
+.lab-content .module .arch-cell ul,
+.lab-content .module .arch-cell ol,
+.lab-content .module .arch-cell li,
+.lab-content .module .arch-cell h2 {
+  margin: 0;
+  max-width: none;
+}
+
+.lab-content .module .arch-cell ul,
+.lab-content .module .arch-cell ol {
+  padding: 0;
+  list-style: none;
+}
+
+/* Пропорции: 01 (слои) — 7 на всю высоту, остальные парные 7/5. */
+.arch-cell--layers,
+.arch-cell--stack { grid-column: span 7; }
+.arch-cell--doctrine,
+.arch-cell--flow { grid-column: span 5; }
+.arch-cell--gates { grid-column: 1 / -1; }
+
+/* ===== Шапка ячейки: номер + заголовок + ссылка на раздел ===== */
+.arch-cell-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+
+.arch-num {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  font-variant-numeric: tabular-nums;
+}
+
+.arch-cell-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.arch-cell-ref {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+}
+  /* ===== Слои: нумерованные строки с волосяным коннектором ===== */
+.arch-layers {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-layer {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+/* Коннектор рисуется между строками, а не через весь список: у последней
+   строки хвоста нет, иначе схема упирается в рамку ячейки. */
+.arch-layer + .arch-layer::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-2) * -1);
+  left: 0.55rem;
+  width: 1px;
+  height: var(--space-2);
+  background: var(--line);
+}
+
+.arch-layer-num {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.arch-layer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.arch-layer-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.arch-layer-name {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.arch-layer-owns {
+  color: var(--text-secondary);
+  font-size: var(--ui-13);
+}
+
+.arch-layer-detail {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  line-height: 1.5;
+}
+
+/* ===== Инлайн-код и сноски ===== */
+.arch-code {
+  padding: 1px 4px;
+  color: var(--text-secondary);
+  background: var(--surface-2);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--ui-12);
+  overflow-wrap: anywhere;
+}
+
+.arch-note {
+  color: var(--text-secondary);
+  font-size: var(--ui-13);
+  line-height: 1.6;
+}
+
+.arch-link {
+  color: var(--gold-text);
+  text-decoration: none;
+  border-bottom: 1px solid rgb(var(--accent-gold-rgb) / 0.4);
+}
+
+.arch-link:hover { border-bottom-color: var(--accent-gold); }
+
+.arch-list { display: flex; flex-direction: column; gap: var(--space-1); }
+
+.arch-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--ui-12);
+  color: var(--text-muted);
+}
+  /* ===== Стек: таблица без рамок, hairline-разделители ===== */
+.arch-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-stack-row {
+  display: grid;
+  grid-template-columns: 7rem 9rem minmax(0, 1fr) auto;
+  gap: var(--space-2);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.arch-stack-row:last-child { border-bottom: 0; }
+
+.arch-stack-layer {
+  color: var(--text-primary);
+  font-size: var(--ui-13);
+  font-weight: 600;
+}
+
+.arch-stack-tech {
+  color: var(--gold-text);
+  font-size: var(--ui-13);
+}
+
+.arch-stack-role {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  line-height: 1.5;
+}
+
+.arch-stack-path {
+  justify-self: end;
+  color: var(--text-muted);
+}
+
+/* ===== Поток: шаги с коннектором, как у слоёв ===== */
+.arch-flow {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-flow-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+}
+
+.arch-flow-step + .arch-flow-step::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-1) * -1);
+  left: 0.55rem;
+  width: 1px;
+  height: var(--space-1);
+  background: var(--line);
+}
+
+.arch-flow-num {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.arch-flow-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.arch-flow-name {
+  color: var(--text-primary);
+  font-size: var(--ui-13);
+  font-weight: 600;
+}
+
+.arch-flow-detail {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  line-height: 1.5;
+}
+
+/* ===== Гейты: три колонки в строку, как реестровый список ===== */
+.arch-gates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-4);
+}
+
+.arch-gate {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px var(--space-2);
+  align-items: baseline;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.arch-gate-what {
+  color: var(--text-primary);
+  font-size: var(--ui-13);
+  font-weight: 600;
+}
+
+.arch-gate-how { justify-self: end; }
+
+.arch-gate-scope {
+  grid-column: 1 / -1;
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+}
+
+/* ===== Адаптив: одна колонка (§5.3), без горизонтального переполнения ===== */
+@media (max-width: 1100px) {
+  .arch-cell--layers,
+  .arch-cell--doctrine,
+  .arch-cell--stack,
+  .arch-cell--flow { grid-column: 1 / -1; }
+  .arch-gates { grid-template-columns: minmax(0, 1fr); }
+  .arch-stack-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'layer path' 'tech tech' 'role role';
+  }
+  .arch-stack-layer { grid-area: layer; }
+  .arch-stack-tech { grid-area: tech; }
+  .arch-stack-role { grid-area: role; }
+  .arch-stack-path { grid-area: path; }
+}
+
+@media (max-width: 560px) {
+  .arch-gate { grid-template-columns: minmax(0, 1fr); }
+  .arch-gate-how { justify-self: start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arch-link { transition: none; }
+}

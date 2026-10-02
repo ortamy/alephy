@@ -3469,6 +3469,18 @@ const PageController = (function() {
         container.dataset.loaded = '1';
         break;
 
+      case 'architecture':
+        // Модуль целиком в Architecture.render(): он объясняет устройство
+        // проекта, а данные объявлены рядом с потребителем (ADR-004), поэтому
+        // перерисовка на каждом входе ему не нужна.
+        if (window.Architecture) {
+          Architecture.render(container);
+        } else {
+          showError(container, 'Модуль «Архитектура» не загрузился.');
+        }
+        container.dataset.loaded = '1';
+        break;
+
       // ===== МОДУЛИ С FETCH HTML-СТРАНИЦЫ =====
       case 'paleo-builder':
       case 'video-lab':

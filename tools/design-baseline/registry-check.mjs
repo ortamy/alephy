@@ -214,6 +214,31 @@ if (!/documentItems\(/.test(search)) {
   problems.push('lab-search.js не индексирует документы корпуса (documentItems)');
 }
 
+// --- витрина архитектуры: её правда проверяется по диску ---
+// Модуль #architecture объясняет, как устроен проект, и перечисляет пути в
+// репозитории. Переименованный файл сделает экран красивой ложью, а такой
+// факт ловится только сравнением с диском. Пути живут рядом с потребителем
+// (ADR-004), и проверка идёт оттуда же.
+const ARCH = path.join(LAB, 'js', 'architecture.js');
+if (fs.existsSync(ARCH)) {
+  const archSource = fs.readFileSync(ARCH, 'utf8');
+  const declared = new Set();
+  // Собираем строковые литералы из блоков данных модуля: path у слоёв и стека.
+  for (const match of archSource.matchAll(/path:\s*'([^']+)'/g)) declared.add(match[1]);
+  if (!declared.size) {
+    problems.push('architecture.js не объявил ни одного пути (path) — витрина ничего не проверяет');
+  }
+  for (const declaredPath of declared) {
+    // Путь дан либо относительно лаборатории (js/router.js), либо от корня
+    // репозитория (products/agents/server.py). Проверяем оба чтения.
+    const inLab = path.join(LAB, declaredPath.replace(/^apps\/researchlab\//, ''));
+    const inRepo = path.join(ROOT, declaredPath);
+    if (!fs.existsSync(inLab) && !fs.existsSync(inRepo)) {
+      problems.push(`путь из architecture.js не найден в репозитории: ${declaredPath}`);
+    }
+  }
+}
+
 console.log(`реестр: ${panels.length} panel + ${markdown.length} markdown = ${registry.MODULES.length}`);
 console.log(`page-controller: ${cases.size} case (карта путей документов удалена)`);
 console.log(`сайдбар: ${registryNav.length} модулей в ${registry.sections().length} секциях (top + ${htmlSections.length} с заголовком, ${htmlItems.length} ссылок в разметке)`);
