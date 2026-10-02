@@ -1,4 +1,5 @@
 """Контрактные тесты движка: линейные цепочки, циклы, новые пайплайны."""
+import importlib.util
 import shutil
 import sys
 import tempfile
@@ -481,6 +482,71 @@ class OrchestratorTest(unittest.TestCase):
                             "spiral_swiva", "dialectic_loop", "midrash_recursion", "shmita_loop",
                             "arch_keeper"):
             self.assertIn(pipeline_id, PIPELINES)
+
+
+class DriftAuditScriptTest(unittest.TestCase):
+    """Канарейка CI-аудита: скрипт обязан видеть дрейф и не обязан писать.
+
+    Скрипт `tools/check-architecture-drift.py` перечисляет источники проверки
+    сам, а не вызывает `arch_critic.critique`. Это цена отказа от зависимости
+    от HTTP-сервера, и цена оплачивается здесь: если список источников
+    разойдётся с критиком, канарейка заметит это, а не пользователь в CI.
+    """
+
+    SCRIPT = AGENTS_DIR.parents[1] / "tools" / "check-architecture-drift.py"
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.orig_arch = arch_critic.ARCHITECTURE_DOC
+        self.addCleanup(self._restore)
+        arch_critic.ARCHITECTURE_DOC = self.tmp / "ARCHITECTURE.md"
+
+    def _restore(self):
+        arch_critic.ARCHITECTURE_DOC = self.orig_arch
+
+    def _load(self):
+        spec = importlib.util.spec_from_file_location("check_architecture_drift", self.SCRIPT)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_script_exists_and_is_read_only(self):
+        """В аудите не должно быть ни одной строки, которая пишет файл."""
+        source = self.SCRIPT.read_text(encoding="utf-8")
+        self.assertNotIn("arch_writer", source.replace("`arch_writer`", ""))
+        for forbidden in ("write_text", "write_results", "shutil.rmtree"):
+            self.assertNotIn(forbidden, source, "аудит не должен: " + forbidden)
+
+    def test_clean_repository_has_no_findings(self):
+        self._restore()
+        module = self._load()
+        self.assertEqual(module.gather()["findings"], [])
+
+    def test_injected_drift_is_found(self):
+        arch_critic.ARCHITECTURE_DOC.write_text("В наборе 9999 корней.", encoding="utf-8")
+        module = self._load()
+        findings = module.gather()["findings"]
+        self.assertTrue(findings, "аудит обязан найти подложенное число")
+        self.assertEqual(findings[0]["metric"], "roots")
+        self.assertEqual(findings[0]["stated"], 9999)
+
+    def test_audit_does_not_touch_the_document(self):
+        text = "В наборе 9999 корней."
+        arch_critic.ARCHITECTURE_DOC.write_text(text, encoding="utf-8")
+        module = self._load()
+        module.gather()
+        self.assertEqual(arch_critic.ARCHITECTURE_DOC.read_text(encoding="utf-8"), text)
+
+    def test_warn_mode_never_fails_the_build(self):
+        arch_critic.ARCHITECTURE_DOC.write_text("В наборе 9999 корней.", encoding="utf-8")
+        module = self._load()
+        argv = sys.argv
+        sys.argv = ["check-architecture-drift", "--warn"]
+        try:
+            self.assertEqual(module.main(), 0)
+        finally:
+            sys.argv = argv
 
 
 if __name__ == "__main__":

@@ -1,0 +1,54 @@
+name: Architecture audit
+
+# Read-only проверка дрейфа архитектуры пайплайном arch_keeper: тот же
+# сканер/критик/планировщик, что и в интерфейсе, но без сервера и без права
+# записи. Workflow ничего не правит — он только сообщает. Режим `--warn`
+# выбран сознательно: расхождение в документации не должно блокировать
+# merge, иначе агент станет обязательным шагом каждого PR (ADR-015).
+on:
+  push:
+    paths:
+      - 'docs/**'
+      - 'products/agents/**'
+      - 'products/website/apps/researchlab/**'
+      - 'tools/check-architecture-drift.py'
+      - '.github/workflows/architecture-audit.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'products/agents/**'
+      - 'products/website/apps/researchlab/**'
+      - 'tools/check-architecture-drift.py'
+      - '.github/workflows/architecture-audit.yml'
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Сканер читает git-историю за 30 дней (scan_git) и агентные файлы.
+          fetch-depth: 40
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Architecture drift audit
+        id: audit
+        run: |
+          python tools/check-architecture-drift.py --warn --markdown | tee drift.md
+          {
+            echo '### Аудит дрейфа архитектуры'
+            cat drift.md
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload drift report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-drift
+          path: drift.md
+          retention-days: 7
+          if-no-files-found: ignore
