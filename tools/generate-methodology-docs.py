@@ -46,8 +46,20 @@ TITLE_RE = re.compile(r"^#\s+(.+?)\s*$")
 SECTION_RE = re.compile(r"^##\s+(.+?)\s*$")
 META_START_RE = re.compile(r"^\*\*Метаданные файла\*\*\s*$")
 META_VALUE_RE = re.compile(r"^-\s+\*\*(.+?):\*\*\s*(.*)$")
-# Эмодзи и пробелы перед текстом заголовка: «🏛️ СЕМЬ ВРАТ» → «СЕМЬ ВРАТ».
-LEADING_GLYPH_RE = re.compile(r"^[\u2000-\u2BFF\uFE0F\u200D\s]+")
+# Эмодзи и пробелы перед текстом заголовка: «📜 СЕМЬ ВРАТ» → «СЕМЬ ВРАТ».
+# Диапазон эмодзи лежит в основном за BMP (📜 U+1F4DC, 🎯 U+1F3AF), поэтому
+# берём его явно — иначе лид-глифы остаются в заголовках карточек.
+LEADING_GLYPH_RE = re.compile(
+    r"^(?:[\u2000-\u3300\uD83C-\uDBFF\uDC00-\uDFFF\U0001F000-\U0001FAFF\uFE0F\u200D\s])+"
+)
+# Файловый слаг в начале H1: «GUIDE-DAVAR — давар: …», «EXPOSURE-QUICKSTART — …».
+SLUG_PREFIX_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*\s+[—–-]\s+", re.IGNORECASE)
+# Слова, которые сохраняют заглавную букву в середине предложения.
+PROPER_NOUNS = {
+    "алефи", "давар", "иерусалим", "иврит", "танах", "хук", "эмет", "шекер",
+}
+# Слово в заголовке — любая последовательность букв (кириллица и латиница).
+WORD_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
 
 
 def read_registry_entries() -> list[tuple[str, str]]:
@@ -69,12 +81,51 @@ def read_registry_entries() -> list[tuple[str, str]]:
     return entries
 
 
+def sentence_case(title: str) -> str:
+    """«СЕМЬ ВРАТ» → «Семь врат»; имена собственные из PROPER_NOUNS сохраняют вид."""
+    def repl(match: re.Match[str]) -> str:
+        word = match.group(0).lower()
+        return word[:1].upper() + word[1:] if word in PROPER_NOUNS else word
+
+    return WORD_RE.sub(repl, title)
+
+
 def humanize(title: str) -> str:
-    """«СЕМЬ ВРАТ» → «Семь врат»; заголовок смешанного регистра не трогаем."""
-    title = LEADING_GLYPH_RE.sub("", title).strip()
-    if title.isupper():
-        return title[:1] + title[1:].lower()
-    return title
+    """Приводит заголовок к канону: без эмодзи и слага, sentence case.
+
+    «📜 GUIDE-DAVAR — давар: языковая модель» → «Давар: языковая модель».
+    """
+    cleaned = LEADING_GLYPH_RE.sub("", title).strip()
+    cleaned = SLUG_PREFIX_RE.sub("", cleaned).strip()
+    if not cleaned:
+        return cleaned
+    result = sentence_case(cleaned)
+    return result[:1].upper() + result[1:]
+
+
+def canon_violations(docs_path: str, raw_title: str) -> list[str]:
+    """Проверка канона заголовка H1 в исходнике: эмодзи, слаг, регистр."""
+    problems: list[str] = []
+    if LEADING_GLYPH_RE.search(raw_title):
+        problems.append("эмодзи в заголовке")
+    if SLUG_PREFIX_RE.match(raw_title):
+        problems.append("файловый слаг в заголовке")
+    canonical = humanize(raw_title)
+    if canonical != raw_title:
+        problems.append(f"регистр не по канону (ожидается «{canonical}»)")
+    return [f"{docs_path}: " + ", ".join(problems)] if problems else []
+
+
+def check_canon() -> list[str]:
+    """Нарушения канона заголовков во всех исходниках раздела."""
+    problems: list[str] = []
+    for _, docs_path in read_registry_entries():
+        for line in (ROOT / docs_path).read_text(encoding="utf-8").splitlines():
+            match = TITLE_RE.match(line)
+            if match:
+                problems += canon_violations(docs_path, match.group(1))
+                break
+    return problems
 
 
 def split_metadata(lines: list[str]) -> tuple[dict[str, str], list[str]]:
@@ -232,6 +283,7 @@ def main() -> int:
     extra = stale_files(files)
 
     if args.check:
+        canon = check_canon()
         drift = [str(target.relative_to(ROOT)) for rel, text in sorted(files.items())
                  for target in targets(rel)
                  if (target.read_text(encoding="utf-8") if target.exists() else "") != text]
@@ -239,6 +291,12 @@ def main() -> int:
         if drift:
             print("РАСХОЖДЕНИЕ с docs/06-METHODOLOGY: " + ", ".join(drift))
             print("запусти: python tools/generate-methodology-docs.py")
+        if canon:
+            print("НАРУШЕНИЯ КАНОНА ЗАГОЛОВКОВ:")
+            for line in canon:
+                print("  " + line)
+            print("канон: без эмодзи и слага, первая буква заглавная, дальше строчные")
+        if drift or canon:
             return 1
         print(f"методички в data/ совпадают с docs/: {len(files) - 1} документов + index")
         return 0

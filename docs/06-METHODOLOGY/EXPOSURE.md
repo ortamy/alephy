@@ -1,4 +1,4 @@
-# 🎯 EXPOSURE-QUICKSTART — БЫСТРЫЙ СТАРТ
+# Быстрый старт
 
 **Метаданные файла**
 - **Файл:** `docs/06-METHODOLOGY/EXPOSURE.md`

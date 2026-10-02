@@ -1,5 +1,5 @@
 {
-  "title": "📜 архитектура системы",
+  "title": "Архитектура системы",
   "description": "Полная архитектура системы — компоненты, этапы вербовки, защита, жизненный цикл.",
   "source": "docs/06-METHODOLOGY/SYSTEM-ARCHITECTURE.md",
   "sections": [
