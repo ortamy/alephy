@@ -236,8 +236,8 @@ var ARCH_AGENT_ICONS = {
     return window.LabPlural ? LabPlural(n, 'роль', 'роли', 'ролей') : n + ' ролей';
   }
 
-  function agentStatusMarkup(status, withLabel) {
-    var cls = 'agent-status agent-status--' + status + (withLabel ? '' : ' agent-status--dot');
+  function agentStatusMarkup(status, withLabel, compact) {
+    var cls = 'agent-status agent-status--' + status + (withLabel ? '' : ' agent-status--dot') + (compact ? ' agent-status--compact' : '');
     var statusLabel = agentT(AGENT_STATUS_I18N[status], AGENT_STATUSES[status]);
     return '<span class="' + cls + '"><span class="agent-status-dot" aria-hidden="true"></span>' +
       (withLabel ? '<span class="agent-status-label">' + statusLabel + '</span>' : '') + '</span>';
@@ -256,9 +256,12 @@ var ARCH_AGENT_ICONS = {
     var model = status === 'stub' ? 'без модели' : a.model;
     return '<button type="button" class="agent-list-card agent-role-card" data-agent-id="' + a.id + '" onclick="LabRouter.navigate(\'ai-agents\',[\'' + a.id + '\'])" aria-label="Открыть страницу агента: ' + a.name + '">' +
       '<span class="agent-role-head"><span class="agent-icon-chip" aria-hidden="true"><i data-lucide="' + getAgentIcon(a) + '"></i></span>' +
-      '<span class="agent-role-name">' + a.name + '</span>' + agentStatusMarkup(status, true) + '</span>' +
+      '<span class="agent-role-name">' + a.name + '</span></span>' +
       '<span class="agent-role-desc">' + a.desc + '</span>' +
-      '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span></span></button>';
+      // Статус живёт в подвале рядом с моделью, а не в шапке: в шапке он
+      // отбирал ширину у длинных имён («Архитектурный планировщик») и
+      // налезал на них. Обе плашки теперь одного калибра.
+      '<span class="agent-role-foot"><span class="agent-model-chip agent-list-model">' + model + '</span>' + agentStatusMarkup(status, true, true) + '</span></button>';
   }
 
   function renderAgentRow(a) {
