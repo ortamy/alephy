@@ -58,6 +58,29 @@ AGENT_FUNCTIONS = {
     "Фронтенд-разработчик": frontend.prepare,
 }
 
+AGENTS_DIR = Path(__file__).resolve().parent
+
+# Русское имя агента (как в UI) → модуль в agents/. Тот же белый список, что и
+# AGENT_FUNCTIONS: эндпоинт исходников не должен читать произвольный путь.
+AGENT_SOURCES = {
+    "Исследователь": "agents/researcher.py",
+    "Семитолог": "agents/semitologist.py",
+    "Разоблачитель": "agents/exposer.py",
+    "Редактор": "agents/editor.py",
+    "Сборщик": "agents/collector.py",
+    "Компаратор": "agents/comparator.py",
+    "Критик": "agents/critic.py",
+    "Проверяющий": "agents/verifier.py",
+    "Переводчик палео-иврита": "agents/paleo_translator.py",
+    "Архитектор потока": "agents/flow_architect.py",
+    "Связной": "agents/liaison.py",
+    "Технический писатель": "agents/writer.py",
+    "Ревьюер кода": "agents/code_reviewer.py",
+    "AI-инженер": "agents/ai_engineer.py",
+    "Фронтенд-разработчик": "agents/frontend.py",
+    "Оркестратор": "orchestrator.py",
+}
+
 
 def read_pipelines():
     if not PIPELINES_PATH.exists():
@@ -114,6 +137,18 @@ def run_pipeline():
     query = (payload.get("query") or payload.get("task") or "").strip()
     if not query:
         return jsonify({"error": "query is required"}), 400
+    # Прямой запуск именованного агента из его паспорта. Без этого ветки
+    # запрос уходит в ROUTES, где только пайплайны, и агент вроде
+    # фронтенд-разработчика недостижим из интерфейса.
+    agent = (payload.get("agent") or "").strip()
+    if agent:
+        runner = AGENT_FUNCTIONS.get(agent)
+        if runner is None:
+            return jsonify({"error": "Неизвестный агент: " + agent}), 400
+        try:
+            return jsonify(runner({"query": query, "task": query}))
+        except ValueError as error:
+            return jsonify({"error": str(error)}), 400
     try:
         return jsonify(dispatch(query))
     except ValueError as error:
@@ -138,6 +173,37 @@ def api_info():
         "executable": sys.executable,
         "cwd": str(Path.cwd()),
         "uptime": round(time.time() - SERVER_START, 1),
+    })
+
+
+@app.get("/api/agents/source")
+def agent_source():
+    """Исходник модуля агента: паспорт в лабе показывает код прямо из файла.
+
+    Источник истины — файл на диске, поэтому правка Python подхватывается
+    без синхронизации статических данных. Имя агента приходит из белого
+    списка: путь собирается только по зарегистрированным модулям, произвольный
+    путь из запроса не читается (граница доверия, §7).
+    """
+    name = (request.args.get("agent") or "").strip()
+    module = AGENT_SOURCES.get(name)
+    if not module:
+        return jsonify({
+            "error": "unknown agent",
+            "available": sorted(AGENT_SOURCES),
+        }), 404
+
+    path = AGENTS_DIR / module
+    if not path.exists():
+        return jsonify({"error": "source file is missing"}), 404
+
+    source = path.read_text(encoding="utf-8")
+    return jsonify({
+        "agent": name,
+        "path": "products/agents/{0}".format(module),
+        "lines": source.count("\n") + 1,
+        "bytes": len(source.encode("utf-8")),
+        "source": source,
     })
 
 
