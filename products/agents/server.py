@@ -26,8 +26,8 @@ from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 from orchestrator import dispatch, run_pipeline as execute_named_pipeline
 from pipelines.core import run_steps
 from agents.common import packet
-from agents import ai_engineer, arch_convergence, arch_scanner, arch_writer, code_reviewer, \
-    collector, comparator, critic, editor, exposer, \
+from agents import ai_engineer, arch_convergence, arch_critic, arch_planner, arch_scanner, \
+    arch_writer, code_reviewer, collector, comparator, critic, editor, exposer, \
     flow_architect, frontend, liaison, paleo_translator, researcher, semitologist, verifier, writer
 from ollama_adapter import OllamaError, status as ollama_status, summarize as ollama_summarize, \
     generate as ollama_generate
@@ -58,6 +58,8 @@ AGENT_FUNCTIONS = {
     "AI-инженер": ai_engineer.prepare,
     "Фронтенд-разработчик": frontend.prepare,
     "Архитектурный сканер": arch_scanner.scan,
+    "Архитектурный критик": arch_critic.critique,
+    "Архитектурный планировщик": arch_planner.plan,
     "Архитектурный писатель": arch_writer.write,
     "Архитектурный сход": arch_convergence.converge,
 }
@@ -83,6 +85,8 @@ AGENT_SOURCES = {
     "AI-инженер": "agents/ai_engineer.py",
     "Фронтенд-разработчик": "agents/frontend.py",
     "Архитектурный сканер": "agents/arch_scanner.py",
+    "Архитектурный критик": "agents/arch_critic.py",
+    "Архитектурный планировщик": "agents/arch_planner.py",
     "Архитектурный писатель": "agents/arch_writer.py",
     "Архитектурный сход": "agents/arch_convergence.py",
     "Оркестратор": "orchestrator.py",

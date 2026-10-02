@@ -216,6 +216,65 @@ class ArchKeeperTest(unittest.TestCase):
         self.assertIn("converged", output["result"])
 
 
+class ArchCriticTest(unittest.TestCase):
+    """Критик ловит дрейф ручного текста, не подменяя мысль числом."""
+
+    def _text(self, body):
+        return "\n".join([
+            body,
+            "<!-- alephy:auto:repo-map -->",
+            "| 999 CSS-файлов |",  # число внутри автоблока проверять нельзя
+            "<!-- alephy:auto-end:repo-map -->",
+        ])
+
+    def test_matching_number_is_not_a_finding(self):
+        from agents.arch_critic import check_claims
+        self.assertEqual(check_claims(self._text("в нём 87 CSS-файлов"), {"css": 87}), [])
+
+    def test_stale_number_is_found(self):
+        from agents.arch_critic import check_claims
+        findings = check_claims(self._text("в нём 67 CSS-файлов"), {"css": 87})
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0]["stated"], 67)
+        self.assertEqual(findings[0]["actual"], 87)
+
+    def test_generated_block_numbers_are_ignored(self):
+        from agents.arch_critic import manual_text
+        body = manual_text(self._text("в нём 67 CSS-файлов"))
+        self.assertNotIn("999", body)
+        self.assertIn("67", body)
+
+    def test_relative_path_resolves_from_site_root(self):
+        from agents.arch_critic import check_paths
+        self.assertEqual(check_paths("запуск: bash tools/build.sh"), [])
+
+    def test_unknown_path_is_a_finding(self):
+        from agents.arch_critic import check_paths
+        findings = check_paths("см. tools/выдуманный-скрипт.py")
+        self.assertEqual(len(findings), 1)
+
+    def test_planner_splits_baskets(self):
+        from agents.arch_critic import critique
+        from agents.arch_planner import plan
+        from agents.common import packet
+        data = plan(critique(packet("проверь архитектуру")))
+        self.assertIn("auto", data["proposal_buckets"])
+        for proposal in data["proposals"]:
+            self.assertIn(proposal["basket"], ("auto", "adr", "manual"))
+            self.assertTrue(proposal["action"])
+
+    def test_estimate_goes_to_manual(self):
+        from agents.arch_planner import classify
+        proposal = classify({"metric": "modules", "stated": 50, "actual": 60})
+        self.assertEqual(proposal["basket"], "manual")
+
+    def test_current_document_has_no_drift(self):
+        from pipelines.arch_keeper import run
+        data = run("проверь архитектуру")["result"]["data"]
+        self.assertEqual(data.get("critique_count"), 0, data.get("critique_notes"))
+        self.assertEqual(data.get("proposal_count"), 0)
+
+
 class OrchestratorTest(unittest.TestCase):
     def test_unknown_query_raises(self):
         from orchestrator import dispatch

@@ -168,6 +168,48 @@ def scan_git(since_days: int = 30) -> Dict[str, Any]:
     return {"available": True, "changed_files": sorted(changed), "since_days": since_days}
 
 
+def scan_lab_metrics() -> Dict[str, int]:
+    """Счётчики корпуса Research Lab: именно их паспорт цитирует в тексте.
+
+    Числа в документе живут вне автоблоков, поэтому критик сверяет их вручную.
+    """
+    metrics: Dict[str, int] = {}
+    for label, folder, pattern in (
+        ("css", "css", "*.css"),
+        ("js", "js", "*.js"),
+        ("data", "data", "*.json"),
+        ("pages", "pages", "*.html"),
+    ):
+        target = LAB_ROOT / folder
+        metrics[label] = len(list(target.rglob(pattern))) if target.is_dir() else 0
+    metrics["roots"] = _json_len(LAB_ROOT / "data" / "roots" / "roots.json")
+    dictionaries = _load_json(LAB_ROOT / "data" / "dictionaries.json")
+    metrics["dictionaries"] = len(dictionaries) if isinstance(dictionaries, dict) else 0
+    metrics["terms"] = sum(
+        len(item.get("terms") or []) for item in dictionaries.values()
+        if isinstance(item, dict)
+    ) if isinstance(dictionaries, dict) else 0
+    return metrics
+
+
+def _load_json(path: Path) -> Any:
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _json_len(path: Path) -> int:
+    payload = _load_json(path)
+    if isinstance(payload, list):
+        return len(payload)
+    if isinstance(payload, dict):
+        return len(payload.get("roots") or [])
+    return 0
+
+
 _facts_cache: Dict[str, Any] = {}
 
 
@@ -193,6 +235,7 @@ def collect_facts() -> Dict[str, Any]:
         "tree": scan_tree(),
         "entrypoints": scan_entrypoints(),
         "agents": scan_agents(),
+        "metrics": scan_lab_metrics(),
         "git": scan_git(),
         "doc_exists": ARCHITECTURE_DOC.is_file(),
     })
