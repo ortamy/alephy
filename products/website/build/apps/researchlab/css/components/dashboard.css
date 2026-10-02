@@ -240,6 +240,10 @@
 .pipeline-card-buttons .pipeline-run-btn { flex: 0 0 auto; width: auto; min-height: 32px; }
 /* «Результат» — жёлтая кнопка с иконкой, единственный акцент карточки. */
 .pipeline-result-btn { display: inline-flex; align-items: center; gap: 6px; }
+/* «Применить изменения» — запись в docs/, поэтому заметно серьёзнее запуска:
+   рамка акцентом и приглушённый тон, чтобы её не спутать с «Запустить». */
+.pipeline-apply-btn { color: var(--accent-gold); border-color: rgb(var(--accent-gold-rgb) / .45); }
+.pipeline-apply-btn:hover:not(:disabled) { color: var(--accent-gold); border-color: var(--accent-gold); }
 .pipeline-result-btn svg.lucide { width: 14px; height: 14px; }
 /* Диаграмма «Подробнее»: inline-аккордеон, цепь крупно, 150ms. */
 /* min-width:0 на обоих уровнях: карточка — grid, а .pipeline-diagram-inner

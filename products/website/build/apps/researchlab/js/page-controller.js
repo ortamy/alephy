@@ -2602,7 +2602,7 @@ var ARCH_AGENT_ICONS = {
     status.dataset.status = isOnline ? 'online' : 'offline';
     status.querySelector('.pipeline-server-label').textContent = isOnline ? 'Сервер запущен' : 'Сервер отключен';
     // Offline: действия с сервером muted + причина в тултипе (см. DESIGN-SYSTEM §4.4).
-    pipelines.querySelectorAll('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-create]').forEach(function(control) {
+    pipelines.querySelectorAll('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-create], [data-pipeline-apply]').forEach(function(control) {
       control.disabled = !isOnline;
       control.title = isOnline ? '' : PIPELINE_OFFLINE_HINT;
       control.setAttribute('aria-disabled', isOnline ? 'false' : 'true');
@@ -2709,6 +2709,10 @@ var ARCH_AGENT_ICONS = {
         '<div class="pipeline-card-buttons">' +
           '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact pipeline-run-btn" data-pipeline-run>Запустить</button>' +
           '<button type="button" class="lab-btn lab-btn-primary lab-btn-compact pipeline-result-btn" data-pipeline-open-detail><i data-lucide="file-text"></i>Результат</button>' +
+          // Кнопка записи есть только у пайплайнов из data/pipelines.json с
+          // writable:true. Это подсказка интерфейса, а не право: сервер
+          // всё равно сверяется со своим белым списком WRITABLE_PIPELINES.
+          (pipeline.writable ? '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact pipeline-apply-btn" data-pipeline-apply title="Перерисовать фактические блоки в документах">Применить изменения</button>' : '') +
         '</div>' +
       '</article>';
     }
@@ -2794,13 +2798,14 @@ var ARCH_AGENT_ICONS = {
     });
     // Делегирование: список перерисовывается фильтрами, поэтому слушатель один на хосте.
     pipelines.querySelector('[data-pipeline-list]').addEventListener('click', function(event) {
-      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail]');
+      var target = event.target.closest('[data-pipeline-run], [data-pipeline-edit], [data-pipeline-delete], [data-pipeline-open-detail], [data-pipeline-apply]');
       if (!target || target.disabled) return;
       var card = target.closest('[data-pipeline-id]');
       if (!card) return;
       var id = card.dataset.pipelineId;
       if (target.hasAttribute('data-pipeline-edit')) { openPipelineModal(container, pipelines, findPipeline(list, id)); return; }
       if (target.hasAttribute('data-pipeline-delete')) { deletePipeline(container, pipelines, list, id); return; }
+      if (target.hasAttribute('data-pipeline-apply')) { applyPipeline(card, findPipeline(list, id)); return; }
       if (target.hasAttribute('data-pipeline-run')) { runPipeline(card, findPipeline(list, id)); return; }
       if (target.hasAttribute('data-pipeline-open-detail')) { LabRouter.navigate('pipelines', [id]); return; }
     });
@@ -2828,6 +2833,38 @@ var ARCH_AGENT_ICONS = {
     }).catch(function(error) {
       setPipelineRunStatus(status, 'error', isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка запуска');
       alert(isAgentServerUnavailable(error) ? 'Сервер AI-Агентов отключен. Готовые результаты доступны в карточках.' : 'Не удалось запустить пайплайн: ' + error.message);
+    }).then(function() {
+      button.disabled = false;
+    });
+  }
+
+  // Запись в документы: единственный путь, где агент правит файлы проекта.
+  // Отдельная функция, а не флаг у runPipeline, — чтобы обычный «Запустить»
+  // физически не мог передать writeEnabled по ошибке.
+  function applyPipeline(card, pipeline) {
+    if (!pipeline || !pipeline.writable) return;
+    var status = card.querySelector('[data-pipeline-run-status]');
+    var button = card.querySelector('[data-pipeline-apply]');
+    if (!button || button.disabled) return;
+    // Подтверждение обязательно: запись меняет docs/ на диске, и отменить
+    // её без git можно только вручную.
+    if (!window.confirm('Перерисовать фактические блоки в документах?\n\nБудут изменены только блоки между маркерами alephy:auto в ARCHITECTURE.md и обновлён отчёт docs/13-REPORTS/ARCH-DRIFT.md. Ручной текст не трогается.')) return;
+    button.disabled = true;
+    setPipelineRunStatus(status, 'running', 'Запись…');
+    fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: pipeline.defaultQuery || '', writeEnabled: true }) }).then(function(response) {
+      if (!response.ok) return response.json().then(function(error) { throw new Error(error.error || 'HTTP ' + response.status); });
+      return response.json();
+    }).then(function(result) {
+      // Агент отдаёт состояние в result.data (сборщик не поднимает поля наверх),
+      // поэтому смотрим именно туда: arch_written — факт записи, arch_status —
+      // «written» или «dry-run».
+      var payload = (result.result || {}).data || {};
+      var written = payload.arch_written === true;
+      setPipelineRunStatus(status, 'done', written ? 'Записано' : 'Без правок');
+      LabRouter.navigate('pipelines', [pipeline.id]);
+    }).catch(function(error) {
+      setPipelineRunStatus(status, 'error', isAgentServerUnavailable(error) ? 'Сервер отключен' : 'Ошибка записи');
+      alert(isAgentServerUnavailable(error) ? 'Сервер AI-Агентов отключен. Запись недоступна.' : 'Не удалось применить изменения: ' + error.message);
     }).then(function() {
       button.disabled = false;
     });
