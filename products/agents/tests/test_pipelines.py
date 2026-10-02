@@ -216,6 +216,48 @@ class ArchKeeperTest(unittest.TestCase):
         self.assertIn("converged", output["result"])
 
 
+class ArchGraphTest(unittest.TestCase):
+    """Схема GRAPH.md — тоже источник правды, и тоже проверяется."""
+
+    GRAPH = "\n".join([
+        "```mermaid",
+        "    Lab[Research Lab<br/>apps/researchlab/index.html]",
+        "    Router[LabRouter<br/>js/router.js]",
+        "```",
+        "- `#dashboard` — рабочий стол.",
+        "- `#workbench/run/<id>` — запуск пайплайна.",
+    ])
+
+    def test_node_path_is_parsed(self):
+        from agents.arch_critic import parse_graph_nodes
+        self.assertEqual(parse_graph_nodes(self.GRAPH),
+                         ["apps/researchlab/index.html", "js/router.js"])
+
+    def test_subroute_reduces_to_module_root(self):
+        from agents.arch_critic import parse_graph_routes
+        self.assertEqual(parse_graph_routes(self.GRAPH), ["dashboard", "workbench"])
+
+    def test_dead_node_lands_in_adr_basket(self):
+        """Мёртвый узел схемы — архитектурное решение, а не арифметика."""
+        from agents.arch_planner import classify
+        for metric in ("graph_node", "route"):
+            proposal = classify({"metric": metric, "stated": "x", "actual": None})
+            self.assertEqual(proposal["basket"], "adr", metric)
+
+    def test_current_graph_and_routes_are_clean(self):
+        """Разбор не должен быть молчащим: он обязан видеть узлы схемы."""
+        from agents.arch_critic import GRAPH_DOC, check_graph, check_routes, parse_graph_nodes, \
+            parse_graph_routes
+        graph = GRAPH_DOC.read_text(encoding="utf-8")
+        # Узлов схемы больше, чем проверяемых: часть помечает слой без файла
+        # (`Docs[docs/00-START + docs/06-METHODOLOGY]`). Проверяются те, где
+        # назван конкретный файл, — иначе проверка молчала бы на половине схемы.
+        self.assertGreaterEqual(len(parse_graph_nodes(graph)), 6)
+        self.assertGreaterEqual(len(parse_graph_routes(graph)), 5)
+        self.assertEqual(check_graph(), [])
+        self.assertEqual(check_routes(), [])
+
+
 class ArchCriticTest(unittest.TestCase):
     """Критик ловит дрейф ручного текста, не подменяя мысль числом."""
 

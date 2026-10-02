@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
-from .arch_scanner import ARCHITECTURE_DOC, collect_facts
+from .arch_scanner import ARCHITECTURE_DOC, LAB_ROOT, collect_facts
 from .arch_writer import BLOCKS, block_body
 from .common import record
 
@@ -113,6 +113,81 @@ def check_paths(text: str) -> List[Dict[str, Any]]:
     return findings
 
 
+GRAPH_DOC = ARCHITECTURE_DOC.with_name("GRAPH.md")
+REGISTRY = LAB_ROOT / "js" / "module-registry.js"
+
+# Узел схемы в mermaid: `Name[Label<br/>path/to/file]`. Метка и путь разделены
+# переводом строки — именно в этой форме схема перечисляет свои границы.
+_GRAPH_NODE = re.compile(r"^\s*\w+\[([^\]]+)\]", re.MULTILINE)
+_GRAPH_PATH = re.compile(r"([\w./-]+\.[a-z]{2,4})")
+_GRAPH_ROUTE = re.compile(r"^-\s*`#([a-z0-9][a-z0-9/<>-]*)`", re.MULTILINE)
+
+
+def parse_graph_nodes(graph: str) -> List[str]:
+    """Пути из узлов mermaid-схемы.
+
+    Узел записан как `Name[Label<br/>path/to/file]`; в метке может быть
+    несколько похожих на путь строк, поэтому берётся последняя — она и
+    описывает сам узел, а не его название.
+    """
+    found: List[str] = []
+    seen = set()
+    for match in _GRAPH_NODE.finditer(graph):
+        paths = _GRAPH_PATH.findall(match.group(1))
+        if not paths or paths[-1] in seen:
+            continue
+        seen.add(paths[-1])
+        found.append(paths[-1])
+    return found
+
+
+def parse_graph_routes(graph: str) -> List[str]:
+    """Корни маршрутов из раздела «Ключевые маршруты» схемы.
+
+    `#workbench/run/<id>` хранит корень `workbench`: подмаршруты живут
+    внутри модуля и в реестре не объявляются.
+    """
+    roots = []
+    for match in _GRAPH_ROUTE.finditer(graph):
+        root = match.group(1).split("/")[0]
+        if root and root not in roots:
+            roots.append(root)
+    return roots
+
+
+def check_graph() -> List[Dict[str, Any]]:
+    """Узлы схемы связей, которых больше нет на диске.
+
+    Расхождение схемы с репозиторием — не опечатка, а закрытый или
+    переехавший слой, то есть архитектурное решение. Поэтому такие находки
+    уходят не в корзину `auto`, а в `adr`: восстанавливать слой или выводить
+    его из схемы — выбор человека, а не арифметика.
+    """
+    if not GRAPH_DOC.is_file():
+        return []
+    graph = GRAPH_DOC.read_text(encoding="utf-8")
+    return [{"kind": "факт", "metric": "graph_node", "stated": path, "actual": None,
+             "evidence": path}
+            for path in parse_graph_nodes(graph) if not _resolves(path)]
+
+
+def check_routes() -> List[Dict[str, Any]]:
+    """Маршруты из раздела «Ключевые маршруты» схемы против реестра лаборатории.
+
+    Схема перечисляет хабы, которыми пользуется пользователь; реестр — их
+    единственный источник правды. Переименованный или удалённый хаб обязан
+    исчезнуть из обоих, иначе читатель схемы идёт в никуда.
+    """
+    if not GRAPH_DOC.is_file() or not REGISTRY.is_file():
+        return []
+    graph = GRAPH_DOC.read_text(encoding="utf-8")
+    registry = REGISTRY.read_text(encoding="utf-8")
+    return [{"kind": "факт", "metric": "route", "stated": root, "actual": None,
+             "evidence": "#" + root}
+            for root in parse_graph_routes(graph)
+            if ("id: '%s'" % root) not in registry]
+
+
 def critique(data):
     """Шаг пайплайна: сверяет ручной текст паспорта с показаниями сканера.
 
@@ -124,12 +199,17 @@ def critique(data):
                       critique_count=1)
     text = ARCHITECTURE_DOC.read_text(encoding="utf-8")
     metrics = collect_facts().get("metrics") or {}
-    findings = check_claims(text, metrics) + check_paths(text)
+    findings = (check_claims(text, metrics) + check_paths(text)
+               + check_graph() + check_routes())
 
     notes = []
     for item in findings:
         if item["metric"] == "path":
             notes.append("путь не найден на диске: %s" % item["stated"])
+        elif item["metric"] == "graph_node":
+            notes.append("узел схемы GRAPH.md не найден: %s" % item["stated"])
+        elif item["metric"] == "route":
+            notes.append("маршрут схемы отсутствует в реестре лаборатории: %s" % item["stated"])
         else:
             notes.append("%s: в документе %d, на диске %d"
                          % (item["metric"], item["stated"], item["actual"]))

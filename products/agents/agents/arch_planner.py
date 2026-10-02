@@ -21,11 +21,22 @@ from .common import record
 # Показатели, где расхождение — чистая арифметика.
 AUTO_METRICS = {"roots", "dictionaries", "terms", "css", "js", "data", "path"}
 
+# Метрики, где расхождение — решение, а не правка: слой схемы исчез, хаб
+# переехал. Ответ («вернуть» / «вывести из схемы») неоднозначен, поэтому
+# такие находки адресуются человеку через docs/decisions.md.
+ADR_METRICS = {"graph_node", "route"}
+
 
 def classify(finding: Dict[str, Any]) -> Dict[str, Any]:
     """Определяет корзину и формулирует предложение."""
     metric = finding.get("metric")
-    if metric in AUTO_METRICS:
+    if metric in ADR_METRICS:
+        basket = "adr"
+        if metric == "graph_node":
+            action = "решить судьбу слоя: вернуть узел в схему или вывести его оттуда"
+        else:
+            action = "сверить хаб с реестром лаборатории и обновить раздел маршрутов"
+    elif metric in AUTO_METRICS:
         action = "исправить число на %d" % finding["actual"] if finding.get("actual") \
             else "убрать или восстановить путь"
         basket = "auto"
