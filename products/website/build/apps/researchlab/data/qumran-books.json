@@ -28,6 +28,29 @@
     {"id": "samaritan-torah", "ru": "Самаритянское Пятикнижие", "paleo": "ТОРА ШОМРОН", "category": "samaritan", "dataFile": "samaritan_paleo"},
     {"id": "1qs", "ru": "1QS · Устав общины", "paleo": "СЕРЕХ ХА-ЙАХАД", "category": "yahad", "dataFile": "1qs"},
     {"id": "1qphab", "ru": "1QpHab · Пешер Хаваккук", "paleo": "ПЕШЕР ХАВАККУК", "category": "yahad", "dataFile": "1qphab"},
-    {"id": "11qt", "ru": "11QT · Храмовый свиток", "paleo": "МЕГИЛЛАТ ХА-МИКДАШ", "category": "yahad", "dataFile": "11qt"}
+    {"id": "11qt", "ru": "11QT · Храмовый свиток", "paleo": "МЕГИЛЛАТ ХА-МИКДАШ", "category": "yahad", "dataFile": "11qt"},
+
+    {"id": "enoch-1", "ru": "1 Енох · Ханох", "paleo": "ХАНОХ", "category": "geniza"},
+    {"id": "jubilees", "ru": "Книга Юбилеев", "paleo": "ЙОВЛИМ", "category": "geniza"},
+    {"id": "ezra-4", "ru": "4 Ездра", "paleo": "ЭЗРА", "category": "geniza"},
+    {"id": "baruch", "ru": "2 Варух", "paleo": "БАРУХ", "category": "geniza"},
+    {"id": "enoch-3", "ru": "3 Енох · Сефер ҳейхалот", "paleo": "СЕФЕР ҲЕЙХАЛОТ", "category": "geniza"},
+
+    {"id": "ben-sira", "ru": "Премудрость Бен-Сиры", "paleo": "БЕН-СИРА", "category": "geniza"},
+    {"id": "tobit", "ru": "Книга Товита", "paleo": "ТОВИЯ", "category": "geniza"},
+    {"id": "wisdom-solomon", "ru": "Премудрость Соломона", "paleo": "ХОХМАТ ШЛОМО", "category": "geniza"},
+
+    {"id": "testaments-12", "ru": "Завещания двенадцати патриархов", "paleo": "ЦАВВАОТ ҲА-ШВАТИМ", "category": "geniza"},
+    {"id": "genesis-apocryphon", "ru": "Апокриф Бытия", "paleo": "МЕГИЛЛАТ БЕРЕШИТ", "category": "geniza"},
+
+    {"id": "damascus-document", "ru": "Дамасский документ", "paleo": "БРИТ ДАМЕСЕК", "category": "geniza"},
+    {"id": "war-scroll", "ru": "Свиток Войны", "paleo": "МИЛЬХЕМЕТ БНЕЙ ОР", "category": "geniza"},
+    {"id": "hodayot", "ru": "Благодарственные гимны", "paleo": "ҲОДАЙОТ", "category": "geniza"},
+    {"id": "melchizedek-scroll", "ru": "Свиток Мелхиседека", "paleo": "МАЛКИ-ЦЕДЕК", "category": "geniza"},
+
+    {"id": "gezer-calendar", "ru": "Гезерский календарь", "paleo": "ЛУАҲ ГЕЗЕР", "category": "geniza"},
+    {"id": "siloam-inscription", "ru": "Силоамская надпись", "paleo": "КТОВЕТ ҲА-ШИЛОАҲ", "category": "geniza"},
+    {"id": "lakhish-letters", "ru": "Письма из Лахиша", "paleo": "МИХТВЕЙ ЛАХИШ", "category": "geniza"},
+    {"id": "khirbet-qiaph-letters", "ru": "Надписи из Хирбет-Киафы", "paleo": "КТОВЕТ ХИРБЕТ-КИАФА", "category": "geniza"}
   ]
 }

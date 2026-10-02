@@ -390,9 +390,10 @@ const ScriptureReader = (function() {
     neviim: 'Невиим',
     ketuvim: 'Кетувим',
     samaritan: 'Самаритянская Тора',
-    yahad: 'Кумран / йахад'
+    yahad: 'Кумран / йахад',
+    geniza: 'Гениза'
   };
-  var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad'];
+  var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad', 'geniza'];
   // Глиф икон-чипа строки: чип по канону модуля «Агенты», но иконка несёт природу
   // корпуса — свиток Торы, книга Невиим, перо Ктувим, самаритянский список, свитки Кумрана.
   var BOOK_CATEGORY_ICONS = {
@@ -400,7 +401,8 @@ const ScriptureReader = (function() {
     neviim: 'book-open',
     ketuvim: 'feather',
     samaritan: 'book-marked',
-    yahad: 'scroll-text'
+    yahad: 'scroll-text',
+    geniza: 'library'
   };
 
   function bookSearchQuery() {
