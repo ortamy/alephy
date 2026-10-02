@@ -159,7 +159,7 @@ const PageController = (function() {
       { icon: 'scribe/scroll', name: 'Компаратор', desc: 'Сравнение свидетелей требует внешних источников; авто-вывод не выполняется (заглушка).', model: '—', cat: 'Исследование' },
       { icon: 'ui/keyboard', name: 'Редактор', desc: 'Приводит черновик к стилю проекта.', model: 'Claude Haiku 3.5', cat: 'Документация' },
       { icon: 'scribe/scroll', name: 'Переводчик палео-иврита', desc: 'Переводит букву через палео-образ к физическому смыслу.', model: 'Claude Sonnet 4', cat: 'Исследование' },
-      { icon: 'crafts/hammer-and-chisel', name: 'Фронтенд-разработчик', desc: 'Заглушка: генерация интерфейсов появится после подключения LLM-движка.', model: '—', cat: 'Разработка' },
+      { icon: 'crafts/hammer-and-chisel', name: 'Фронтенд-разработчик', desc: 'Аудитит фронтенд лаборатории на соответствие дизайн-канону: единый размер заголовков ячеек, сброс чёрки, специфичность селектора.', model: 'Локальный аудит', cat: 'Разработка', passport: true },
       { icon: 'ui/settings', name: 'AI-инженер', desc: 'Заглушка: подготовка задач для LLM-инженера после подключения модели.', model: '—', cat: 'Разработка' },
       { icon: 'ui/scales', name: 'Проверяющий', desc: 'Валидирует код, данные и исследовательские гипотезы.', model: 'Claude Sonnet 4', cat: 'Контроль качества' },
       { icon: 'scribe/scroll', name: 'Технический писатель', desc: 'Заглушка: оформление документации после подключения LLM.', model: '—', cat: 'Документация' },
@@ -1938,9 +1938,22 @@ const PageController = (function() {
 
   function agentResultParts(payload) {
     var core = (payload && payload.result && typeof payload.result === 'object') ? payload.result : {};
+    // Агенты-аудиторы кладут резюме в верхнеуровневое поле по именам
+    // (frontend_summary и т. п.), а не в result.summary: без этой строки
+    // панель показывала «сервер вернул структуру без резюме».
+    var flatSummary = '';
+    if (payload && typeof payload === 'object') {
+      Object.keys(payload).forEach(function (key) {
+        if (/_summary$/.test(key) && typeof payload[key] === 'string' && payload[key].trim()) {
+          flatSummary = payload[key].trim();
+        }
+      });
+    }
     return {
       json: JSON.stringify(payload, null, 2),
-      summary: typeof core.summary === 'string' ? core.summary : '',
+      summary: typeof core.summary === 'string' && core.summary.trim()
+        ? core.summary
+        : flatSummary,
       limitations: typeof core.limitations === 'string' ? core.limitations : ''
     };
   }
@@ -1995,6 +2008,9 @@ const PageController = (function() {
       window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
     detail.innerHTML = '<div class="agent-detail-page">' +
+      // Тулбар паспорта — сразу под шапкой (§4.7): хром страницы читается
+      // сверху вниз. Сама секция паспорта ниже несёт только содержимое.
+      (agent.passport && window.AgentPassport ? window.AgentPassport.toolbar() : '') +
       '<div class="agent-detail-grid">' +
       '<section class="agent-detail-section agent-detail-run">' +
         agentPanelHead(t('lab.agents.panel.run', 'ЗАПУСК')) +
@@ -2022,10 +2038,77 @@ const PageController = (function() {
         '<div class="agent-result-history" data-agent-history hidden><p class="agent-history-label">' + t('lab.agents.result.history', 'Последние запуски') + '</p><ul class="agent-history-list" data-agent-history-list></ul></div>' +
       '</section>' +
       '</div>' +
-      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.back', 'К списку агентов') + '</button></div>';
+      (agent.passport
+        ? '<section class="agent-detail-section agent-detail-passport">' +
+            agentPanelHead(t('lab.agents.panel.passport', 'ПАСПОРТ АГЕНТА')) +
+            '<div class="ap-view" data-agent-passport hidden></div>' +
+          '</section>'
+        : '') +
+      // Возврат к списку у агентов с паспортом живёт в тулбаре (§4.7) — хром
+      // страницы собран в одну строку; плашка внизу остаётся остальным агентам.
+      (agent.passport ? '' :
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-compact agent-detail-back" onclick="LabRouter.navigate(\'ai-agents\')"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + t('lab.agents.back', 'К списку агентов') + '</button>') + '</div>';
     initAgentRunPanel(detail, agent);
     renderAgentHistory(detail, agent.id);
     loadAgentPipelines(detail, agent);
+    if (agent.passport) loadAgentPassport(detail, agent);
+  }
+
+  // Паспорт агента: статические данные из data/agents/<slug>.json плюс
+  // исходник с сервера. Статика первая, поэтому экран наполняется сразу и без
+  // сервера; сервер лишь дописывает текст модуля.
+  function loadAgentPassport(detail, agent) {
+    if (!window.AgentPassport) return;
+    var view = detail.querySelector('[data-agent-passport]');
+    if (!view) return;
+
+    window.AgentPassport.load(agent.id).then(function (passport) {
+      // Пока грузились данные, пользователь мог уйти на другого агента.
+      if (detail.agentRef !== agent) return;
+
+      if (!passport) {
+        renderAgentPassport(detail, agent, null);
+        return;
+      }
+      detail.agentPassport = passport;
+      renderAgentPassport(detail, agent, passport);
+      loadAgentSourceIntoPassport(detail, agent);
+      // Поиск начинает считать строки сразу, а не после первого ввода.
+      var counter = detail.querySelector('[data-ap-findings-count]');
+      var rows = view.querySelectorAll('[data-ap-finding], [data-ap-searchable]');
+      if (counter) counter.innerHTML = '<strong>' + rows.length + '</strong> строк';
+    });
+  }
+
+  // Паспорт агента с кодовой базой: контракт, аудит, исходник и задачи.
+  // Данные берутся из результата запуска; до запуска в ячейках — честные
+  // пустые состояния, а не выдуманные значения (§6).
+  function renderAgentPassport(detail, agent, payload) {
+    var view = detail.querySelector('[data-agent-passport]');
+    if (!view || !window.AgentPassport) return;
+    view.hidden = false;
+    view.innerHTML = '';
+    view.agentPayload = payload || null;
+    window.AgentPassport.render(view, payload);
+  }
+
+  // Исходник не зависит от запуска: сервер отдаёт файл с диска, поэтому
+  // ячейка «Код агента» наполняется сразу при открытии паспорта.
+  function loadAgentSourceIntoPassport(detail, agent) {
+    if (!agent.passport || !window.AgentPassport) return;
+    var view = detail.querySelector('[data-agent-passport]');
+    if (!view) return;
+    window.AgentPassport.loadSource(agent.name).then(function (source) {
+      // Пока грузился исходник, пользователь мог уйти на другого агента:
+      // сверяем, что страница всё ещё показывает именно его.
+      if (!source || detail.agentRef !== agent) return;
+      // Исходник кладём в базу, а не только в результат слияния: паспорт
+      // перерисовывается после каждого запуска, и без базы ячейка кода
+      // очищалась бы на «Код недоступен».
+      detail.agentPassport = mergeAgentPassport(detail, { frontend_source: source });
+      view.agentPayload = detail.agentPassport;
+      window.AgentPassport.render(view, detail.agentPassport);
+    });
   }
 
   function agentAttr(value) {
@@ -2070,6 +2153,34 @@ const PageController = (function() {
     body.innerHTML = agentResultMarkup(payload);
     body.hidden = false;
     if (empty) empty.hidden = true;
+    // Агент с паспортом отдаёт туда же свои структуры: контракт, отчёт и задачи.
+    // Источник — detail.agentRef: он уже отслеживает текущего агента при
+    // повторном рендере детали, тогда как поиск по имени в разметке хрупок.
+    var agent = detail.agentRef;
+    if (agent && agent.passport) renderAgentPassport(detail, agent, mergeAgentPassport(detail, payload));
+  }
+
+  // Результат запуска дописывает статический паспорт, а не заменяет его:
+  // контракт, канон и функции приходят из JSON, отчёт — из ответа агента.
+  function mergeAgentPassport(detail, payload) {
+    var base = detail.agentPassport || {};
+    var merged = {};
+    var key;
+    for (key in base) { if (Object.prototype.hasOwnProperty.call(base, key)) merged[key] = base[key]; }
+    for (key in payload) { if (Object.prototype.hasOwnProperty.call(payload, key)) merged[key] = payload[key]; }
+    merged.contract = payload.frontend_contract || base.contract || null;
+    merged.canon = base.canon || null;
+    merged.module = base.module || null;
+    merged.tasks = payload.frontend_tasks || base.tasks || [];
+    // Ответ агента несёт frontend_source без поля source — только метаданные
+    // модуля. Без слияния с базой он затирал листинг, загруженный с сервера.
+    var baseSource = base.frontend_source || null;
+    var payloadSource = payload.frontend_source || null;
+    if (baseSource && payloadSource && !payloadSource.source) {
+      payloadSource = Object.assign({}, baseSource, payloadSource);
+    }
+    merged.frontend_source = payloadSource || baseSource || null;
+    return merged;
   }
 
   function clearAgentResult(detail) {
@@ -2148,7 +2259,9 @@ const PageController = (function() {
     if (button) button.disabled = true;
     checkAgentServer().then(function() {
       setAgentServerState(detail, true);
-      return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query }) });
+      // agent.name — русское имя из AGENT_FUNCTIONS: сервер запускает именно
+      // этого агента, а не пайплайн, подобранный по тексту запроса.
+      return fetch(AGENT_API_URL + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: query, agent: agent.name || '' }) });
     })
       .then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); })
       .then(function(payload) {

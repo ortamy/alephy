@@ -1,0 +1,339 @@
+/* agent-passport.css — «Паспорт агента» (секция ПАСПОРТ в #ai-agents).
+
+   Десятый эталон bento, по §5.2a и §4.1a. Префикс `ap-` (agent passport),
+   12 колонок, gap `--space-3`, ячейка `.ap-cell` — hairline `--line`, radius
+   `--radius-8`, тени = 0 (§0.2, §1.5). Шапка `.ap-cell-head` несёт номер
+   главы, лейбл капителью и подпись справа; лейбл объявлен по §4.1a —
+   с `.module` в селекторе и сбросом `border-bottom`, иначе базовой
+   `.module h2:not(:last-child)` напечатал бы крупный сериф с короткой
+   чёркой под текстом.
+
+   Здесь нет нового визуального языка: только существующие токены, hairline
+   и пустые состояния §4.6. Мобильный закон §5.3 — ячейки становятся 1 / -1. */
+
+/* ===== Тулбар: оболочка внутренней страницы §4.7 ===== */
+/* Паспорт не заводит свою панель: та же оболочка .lab-toolbar, что у каталогов
+   и конвейеров, поэтому тулбар на 900px сам складывается в две строки. */
+.ap-toolbar .ap-search { flex: 1 1 260px; }
+
+/* «Ничего не нашлось» появляется под сеткой только при нулевом совпадении. */
+.ap-view-empty { margin-top: var(--space-3); }
+.ap-view-empty[hidden] { display: none; }
+
+/* ===== Сетка (§5.2a) ===== */
+.ap-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  /* stretch, а не start: короткая ячейка в ряду (контракт рядом с каноном,
+     аудит рядом с задачами) иначе оставляет под собой пустую полосу — bento
+     читается как сетка, а не как лестница. */
+  align-items: stretch;
+}
+.ap-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  grid-column: span 4;
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  box-shadow: none;
+}
+/* Пустое состояние занимает всю высоту ячейки и центрируется по ней — иначе
+   при stretch оно липнет к шапке и низ остаётся пустым. */
+.ap-cell > .ap-empty { flex: 1 1 auto; justify-content: center; }
+/* Аудит и канон — широкие ячейки: там построчные записи в две колонки
+   «свойство · значение», в узкой ячейке они переносятся и теряют смысл. */
+.ap-cell--contract { grid-column: span 5; }
+.ap-cell--canon { grid-column: span 7; }
+.ap-cell--wide { grid-column: span 8; }
+.ap-cell--full { grid-column: span 12; }
+
+/* Внутренние блоки добирают высоту ячейки: при stretch высокая соседка
+   задаёт строку, а короткий список не должен оставлять под собой провал.
+   Растёт последний блок — он и есть «хвост» содержимого; список при этом
+   распределяет строки по высоте (space-between), иначе он прижался бы к
+   шапке и низ ячейки снова остался бы пустым. */
+.ap-cell > .ap-stack:last-child,
+.ap-cell > .ap-findings,
+.ap-cell > .ap-tasks,
+.ap-cell > .ap-fns,
+.ap-cell > .ap-canon-list { flex: 1 1 auto; min-height: 0; }
+/* Код — ячейка во всю ширину, соседней строки нет: растить блок незачем,
+   листинг и так занимает всю страницу, а растянутая ячейка лишь добавила бы
+   пустую полосу под листингом. */
+.ap-cell--full > .ap-source { flex: 0 0 auto; }
+.ap-cell > .ap-findings,
+.ap-cell > .ap-fns,
+.ap-cell > .ap-canon-list { justify-content: flex-start; }
+/* Задачи — короткий список, сосед с аудитом выше: разносим строки по высоте
+   ячейки, иначе под третьей задачей остаётся пустая полоса. */
+.ap-cell > .ap-tasks { justify-content: space-between; }
+/* Контракт и канон — по две колонки внутри ячейки: в одну колонку 01 и 02
+   расходились по высоте вдвое, и высокая соседка оставляла в низкой пустую
+   полосу. Сетка внутри ячейки выравнивает их без растягивания строк. */
+.ap-cell--contract .ap-stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  align-content: start;
+}
+.ap-cell--contract .ap-stack > .ap-block:last-child,
+.ap-cell--contract .ap-block:last-child > .ap-bullets { flex: 1 1 auto; }
+.ap-cell--canon .ap-canon-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-4);
+}
+.ap-cell--canon .ap-canon:last-child { grid-column: 1 / -1; }
+/* Сводка аудита прижата к шапке, а пустое состояние расходует остаток. */
+.ap-cell > .ap-findings > .ap-empty { flex: 1 1 auto; justify-content: center; }
+
+/* Границы в контракте — короткий список в последнем блоке: он и растягивает
+   ячейку, иначе низ 01 остаётся пустым рядом с высоким каноном. */
+.ap-cell--contract .ap-stack > .ap-block:last-child,
+.ap-cell--contract .ap-block:last-child > .ap-bullets { flex: 1 1 auto; }
+
+/* Мобильный закон §5.3: одна колонка, ничего не обрезается. */
+@media (max-width: 900px) {
+  .ap-cell, .ap-cell--contract, .ap-cell--canon, .ap-cell--wide, .ap-cell--full { grid-column: 1 / -1; }
+}
+
+/* ===== Шапка ячейки (§4.1a) ===== */
+.ap-cell-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 calc(var(--space-4) * -1);
+  padding: 0 var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--line);
+}
+.ap-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+
+/* Селектор с .module обязателен: базовое `.module h2:not(:last-child)` из
+   layout.css (0,2,1) иначе перебьёт одиночный класс и напечатает капитель
+   крупным серифом. `border-bottom: 0` — сброс той же базовой линии: полоса
+   шапки уже нарисована на .ap-cell-head и тянется во всю ширину ячейки. */
+.module .ap-cell .ap-cell-title {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.ap-cell-hint {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+  white-space: nowrap;
+}
+
+/* ===== Внутренние блоки: контракт, сводка, расхождения ===== */
+.ap-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+.ap-block { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ap-block-title {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+
+/* Ключ/значение: подпись фиксированной ширины, значение переносится. */
+.ap-meta { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; }
+.ap-meta-key { color: var(--text-muted); font-size: var(--text-xs); }
+.ap-meta-val {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  overflow-wrap: anywhere;
+}
+/* Сводка аудита: значения — числа, поэтому моноширинные и табличные. */
+.ap-metrics .ap-meta { flex-direction: row; align-items: baseline; gap: var(--space-2); }
+.ap-metrics .ap-meta-key { flex: 0 0 auto; }
+.ap-metrics .ap-meta-val { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.ap-bullets { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.ap-bullet { color: var(--text-secondary); font-size: var(--text-sm); }
+
+.ap-note { margin: 0; color: var(--text-muted); font-size: var(--text-xs); }
+.ap-note code {
+  padding: 1px 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xs);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+}
+
+/* ===== Расхождения: файл + селектор слева, суть справа ===== */
+.ap-findings { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ap-finding {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr);
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.ap-finding:last-child { border-bottom: 0; }
+.ap-finding[hidden] { display: none; }
+
+.ap-finding-where { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ap-finding-file {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-12);
+}
+.ap-finding-line {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  overflow-wrap: anywhere;
+}
+.ap-finding-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ap-finding-rule {
+  color: var(--red-text);
+  font-family: var(--font-ui);
+  font-size: var(--ui-11);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+}
+.ap-finding-detail { color: var(--text-secondary); font-size: var(--text-sm); }
+.ap-finding-fix { color: var(--text-muted); font-size: var(--text-xs); overflow-wrap: anywhere; }
+
+/* Счётчики по правилам — компактные метки, не плашки (§4.3). */
+.ap-rules { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ap-rule {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  font-size: var(--ui-12);
+}
+.ap-rule-count { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ===== Код агента ===== */
+.ap-source { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.ap-source-head { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+.ap-source-path {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  overflow-wrap: anywhere;
+}
+.ap-source-meta {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  white-space: nowrap;
+}
+.ap-source-code {
+  /* 380px, а не 320: разница уходила в пустую полосу под листингом. */
+  max-height: 380px;
+  margin: 0;
+  padding: var(--space-3);
+  overflow: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-8);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  line-height: 1.5;
+  tab-size: 4;
+  white-space: pre;
+}
+.ap-copy-status { min-height: 1em; }
+
+/* ===== Задачи лаборатории ===== */
+.ap-tasks { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ap-task { display: flex; flex-direction: column; gap: 2px; padding-bottom: var(--space-2); border-bottom: 1px solid var(--line); }
+.ap-task:last-child { padding-bottom: 0; border-bottom: 0; }
+.ap-task-head { display: flex; align-items: center; gap: var(--space-2); }
+.ap-task-title { color: var(--text-primary); font-size: var(--text-sm); font-weight: 600; }
+.ap-task-head .lab-btn { margin-left: auto; }
+.ap-task-about { color: var(--text-muted); font-size: var(--text-xs); }
+
+/* ===== Empty-state (§4.6): пунктир, глиф, подсказка ===== */
+.ap-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius-8);
+  text-align: center;
+}
+.ap-empty-glyph { display: inline-flex; color: var(--text-muted); opacity: 0.35; }
+.ap-empty-hint { margin: 0; color: var(--text-muted); font-size: var(--text-sm); }
+
+/* ===== Канон проверки: правило, значение, зачем ===== */
+.ap-canon-ref { color: var(--text-secondary); font-family: var(--font-mono); }
+.ap-canon-list { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: 0; list-style: none; }
+.ap-canon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 2px var(--space-2);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--line);
+}
+.ap-canon:last-child { border-bottom: 0; }
+.ap-canon[hidden] { display: none; }
+.ap-canon-label { color: var(--text-primary); font-size: var(--text-sm); font-weight: 600; }
+.ap-canon-value {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  overflow-wrap: anywhere;
+}
+.ap-canon-why { grid-column: 1 / -1; color: var(--text-muted); font-size: var(--text-xs); }
+
+/* ===== Функции модуля: имя + строка в файле + докстринг ===== */
+.ap-fns { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.ap-fn {
+  display: grid;
+  grid-template-columns: minmax(0, auto) minmax(0, 1fr);
+  gap: 2px var(--space-2);
+  padding: var(--space-1) 0;
+}
+.ap-fn-name { color: var(--text-primary); font-family: var(--font-mono); font-size: var(--ui-12); }
+.ap-fn-line {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ap-fn-doc { grid-column: 1 / -1; color: var(--text-muted); font-size: var(--text-xs); }
+
+.ap-source-hint { margin-top: var(--space-2); }
+
+/* На узкой колонке расхождения складываются в одну колонку. */
+@media (max-width: 640px) {
+  .ap-finding { grid-template-columns: 1fr; }
+  .ap-source-code { max-height: 240px; }
+}
