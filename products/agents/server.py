@@ -66,6 +66,10 @@ AGENT_FUNCTIONS = {
 
 AGENTS_DIR = Path(__file__).resolve().parent
 
+# Пайплайны с правом записи в файлы проекта. Всё остальное работает только
+# на чтение, даже если запросит флаг: белый список, а не проверка имени.
+WRITABLE_PIPELINES = {"arch_keeper"}
+
 # Русское имя агента (как в UI) → модуль в agents/. Тот же белый список, что и
 # AGENT_FUNCTIONS: эндпоинт исходников не должен читать произвольный путь.
 AGENT_SOURCES = {
@@ -381,7 +385,17 @@ def run_named_pipeline(pipeline_id):
     if not query:
         return jsonify({"error": "query is required"}), 400
     try:
-        output = execute_named_pipeline(str(pipeline.get("runner") or pipeline_id), query)
+        runner = str(pipeline.get("runner") or pipeline_id)
+        # Пайплайны, которым разрешено трогать файлы проекта. Запись включается
+        # только явным флагом в теле запроса и только для перечисленных
+        # пайплайнов: агент не должен получать право записи из интерфейса
+        # по умолчанию (§9 .clinerules — границы доверия).
+        write_enabled = runner in WRITABLE_PIPELINES and bool(payload.get("writeEnabled"))
+        if write_enabled and runner == "arch_keeper":
+            from pipelines.arch_keeper import run as run_arch_keeper
+            output = run_arch_keeper(query, write_enabled=True)
+        else:
+            output = execute_named_pipeline(runner, query)
     except ValueError as error:
         # Для пайплайнов, созданных в UI и не имеющих Python-раннера,
         # собираем линейную цепочку из русских имён агентов.

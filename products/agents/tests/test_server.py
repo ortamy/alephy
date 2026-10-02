@@ -13,6 +13,66 @@ from server import app  # noqa: E402
 from ollama_adapter import OllamaError  # noqa: E402
 
 
+class WritablePipelineTest(unittest.TestCase):
+    """Право записи выдаётся по белому списку и только явным флагом."""
+
+    ARCH = {"id": "arch_keeper", "runner": "arch_keeper", "name": "Смотритель",
+            "defaultQuery": "проверь архитектуру"}
+
+    def setUp(self):
+        app.config["TESTING"] = True
+        self.client = app.test_client()
+
+    def test_allowlist_is_explicit_and_narrow(self):
+        from server import WRITABLE_PIPELINES
+        self.assertEqual(WRITABLE_PIPELINES, {"arch_keeper"})
+
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    @patch("server.read_pipelines")
+    def test_flag_is_ignored_for_read_only_pipeline(self, read_pipelines, _read, _write):
+        """Чужой пайплайн не получает запись, даже если флаг прислали."""
+        read_pipelines.return_value = [{"id": "word_analyzer", "runner": "word_analyzer",
+                                        "name": "Разбор", "defaultQuery": "разбери слово Давар"}]
+        with patch("server.execute_named_pipeline",
+                   return_value={"result": {"title": "t"}, "trace": [], "agentTrace": []}) as execute:
+            response = self.client.post("/api/pipelines/word_analyzer/run",
+                                        json={"query": "тест", "writeEnabled": True})
+        self.assertEqual(response.status_code, 201)
+        execute.assert_called_once()
+
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    @patch("server.read_pipelines")
+    def test_arch_keeper_gets_write_flag(self, read_pipelines, _read, _write):
+        read_pipelines.return_value = [self.ARCH]
+        with patch("pipelines.arch_keeper.run", return_value={
+                "result": {"title": "t"}, "trace": [], "agentTrace": []}) as keeper:
+            self.client.post("/api/pipelines/arch_keeper/run",
+                             json={"query": "проверь архитектуру", "writeEnabled": True})
+        self.assertEqual(keeper.call_args.kwargs, {"write_enabled": True})
+
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    @patch("server.read_pipelines")
+    def test_without_flag_arch_keeper_stays_dry_run(self, read_pipelines, _read, _write):
+        """Без флага пайплайн идёт обычным путём: `run()` сам остаётся dry-run."""
+        read_pipelines.return_value = [self.ARCH]
+        with patch("server.execute_named_pipeline",
+                   return_value={"result": {"title": "t"}, "trace": [], "agentTrace": []}) as execute:
+            self.client.post("/api/pipelines/arch_keeper/run", json={"query": "проверь архитектуру"})
+        execute.assert_called_once_with("arch_keeper", "проверь архитектуру")
+
+    def test_default_run_of_arch_keeper_does_not_write(self):
+        """Контракт пайплайна: без явного флага документ не меняется."""
+        from pipelines.arch_keeper import run
+        from agents.arch_scanner import ARCHITECTURE_DOC
+        before = ARCHITECTURE_DOC.read_bytes()
+        data = run("проверь архитектуру")["result"]["data"]
+        self.assertEqual(ARCHITECTURE_DOC.read_bytes(), before)
+        self.assertIn(data["arch_status"], ("dry-run", "written"))
+
+
 class PipelineApiTest(unittest.TestCase):
     """Проверяет API без запуска отдельного Flask-процесса."""
 

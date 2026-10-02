@@ -303,7 +303,7 @@ products/agents/
 - `GET /api/info` — процесс и окружение;
 - `GET /api/pipelines` — список пайплайнов;
 - `GET /api/pipeline-results` — результаты запусков;
-- `POST /api/pipelines/<id>/run` — запуск пайплайна;
+- `POST /api/pipelines/<id>/run` — запуск пайплайна (тело: `query`, опционально `writeEnabled` — работает только для `WRITABLE_PIPELINES`);
 - `GET /api/pipelines/<id>/results` — история пайплайна;
 - `POST /api/pipelines` — создание пайплайна;
 - `PUT /api/pipelines/<id>` — изменение пайплайна;
