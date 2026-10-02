@@ -46,7 +46,10 @@ window.ModuleRegistry = (function () {
     // --- словари и лингвистика ---
     { id: 'dictionaries', kind: 'panel', nav: { section: 'data', icon: 'library' } },
     // Хаб документов разоблачения: корпус из data/exposures/documents.json.
-    { id: 'exposures', kind: 'panel', nav: { section: 'data', icon: 'shield-alert' } },
+    // Пункт убран из сайдбара (по решению владельца), поэтому nav не объявлен:
+    // модуль и документы группы остаются достижимы по прямому адресу, из палитры
+    // поиска и по deep-link. Отсутствие nav — штатный способ скрыть модуль.
+    { id: 'exposures', kind: 'panel' },
     { id: 'root-dictionary', kind: 'panel' },
     { id: 'paleo-glossary', kind: 'panel' },
     { id: 'word-analyzer', kind: 'panel' },
@@ -232,7 +235,10 @@ window.ModuleRegistry = (function () {
   var DOC_GROUPS = [
     { id: 'dictionaries', prefix: 'dict-', hub: COLLECTIONS.dictionaries.hub, index: false },
     { id: 'exposures', prefix: 'exposure-', hub: COLLECTIONS.exposures.hub, index: true },
-    { id: 'methodology', prefix: 'method-', hub: COLLECTIONS.methodology.hub, index: true }
+    // Хаб #methodology — только карточки (тулбар + нумерованный реестр):
+    // методички в список хаба не выводятся. Документы группы остаются
+    // достижимыми по маршрутам #method-* и через палитру поиска.
+    { id: 'methodology', prefix: 'method-', hub: COLLECTIONS.methodology.hub, index: false }
   ];
 
   var byId = {};

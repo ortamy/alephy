@@ -186,7 +186,15 @@ for (const group of registry.DOC_GROUPS) {
     problems.push(`хаб группы «${group.id}» отсутствует в реестре: ${group.hub}`);
     continue;
   }
-  if (!hub.nav) problems.push(`хаб группы «${group.id}» недостижим из сайдбара: ${group.hub}`);
+  // Хаб группы должен быть достижим. Обычно это пункт сайдбара, но модуль
+  // может быть скрыт из меню намеренно: тогда документы обязаны остаться в
+  // индексе палитры поиска, иначе группа живёт только по прямому адресу.
+  if (!hub.nav) {
+    const searchSource = fs.readFileSync(path.join(LAB, 'js/lab-search.js'), 'utf8');
+    if (!new RegExp(`['"]${group.id}['"]`).test(searchSource)) {
+      problems.push(`хаб группы «${group.id}» скрыт из сайдбара и не попадает в палитру поиска: ${group.hub}`);
+    }
+  }
   if (hub.kind !== 'panel' || !cases.has(group.hub)) {
     problems.push(`хаб группы «${group.id}» не рендерится в page-controller: ${group.hub}`);
   }

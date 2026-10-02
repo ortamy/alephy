@@ -1167,9 +1167,11 @@ const PageController = (function() {
 
   // Подписи обратной ссылки в хаб по группе документов. Группа и её хаб
   // объявлены в реестре (COLLECTIONS) — здесь только текст ссылки.
+  // Хаб #methodology — карточки, методичек в списке нет: подпись обратной
+  // ссылки ведёт в реестр карточек, а не в список документов.
   var GROUP_BACK_LABELS = {
     exposures: 'Все документы разоблачения',
-    methodology: 'Материалы методологии'
+    methodology: 'Методология'
   };
 
   // Маршрут документа по ключу записи в файле коллекции: список маршрутов группы
@@ -1274,10 +1276,10 @@ const PageController = (function() {
 
   // Хабы групп документов: точку вставки списка и разметку шапки держит одна
   // карта, чтобы новая группа не осталась без ссылок на свои документы.
-  // mount: null — модуль-хаб и есть список (страницу рисует renderCollectionIndex),
-  // иначе список вставляется врезкой в страницу, которую рисует JS-модуль
-  // (методология), перед указанным селектором. Полноту карты проверяет
-  // registry-check.mjs: группа без записи здесь = документы только по прямому адресу.
+  // Запись есть только у групп, чей хаб сам является списком корпуса
+  // (renderCollectionIndex). Группа с index: false в реестре сюда не попадает:
+  // её хаб рисует JS-модуль, а документы живут по своим маршрутам и в палитре
+  // поиска. Полноту карты проверяет registry-check.mjs.
   var GROUP_INDEX_HUBS = {
     exposures: {
       mount: null,
@@ -1290,20 +1292,9 @@ const PageController = (function() {
           '<div class="doc-grid" id="exposure-doc-grid">' + cards + '</div>';
       }
     },
-    methodology: {
-      mount: '.methodology-toolbar',
-      empty: 'Методички пока не перенесены в data/.',
-      section: function(count, cards) {
-        return '<section class="methodology-docs" id="methodology-hub-index" aria-labelledby="methodology-hub-title">' +
-            '<div class="methodology-docs-head">' +
-              '<h2 class="methodology-docs-label" id="methodology-hub-title">Методички</h2>' +
-              '<span class="methodology-docs-rule" aria-hidden="true"></span>' +
-              '<span class="methodology-docs-count">' + count + '</span>' +
-            '</div>' +
-            '<div class="doc-grid">' + cards + '</div>' +
-          '</section>';
-      }
-    }
+    // Хаб #methodology показывает только карточки: тулбар и нумерованный реестр.
+    // Методички в список хаба не выводятся (index: false) — документы живут
+    // по своим маршрутам #method-* и находятся через палитру поиска.
   };
 
   // Карточки корпуса: одна разметка на все группы, ссылка — из реестра.
@@ -1330,37 +1321,6 @@ const PageController = (function() {
   // Хаб-страница целиком: список корпуса и есть содержимое модуля (#exposures).
   function renderCollectionIndex(container, data, group) {
     container.innerHTML = collectionIndexMarkup(data, group);
-  }
-
-  // Врезка списка в страницу, которую рисует JS-модуль: файл берём у коллекции
-  // реестра, точку вставки — у карты хабов. Список дополняет страницу, поэтому
-  // ошибка загрузки молчит и не затирает рабочий модуль.
-  function mountCollectionIndex(container, group) {
-    var hub = GROUP_INDEX_HUBS[group];
-    var registry = window.ModuleRegistry;
-    var collection = registry && registry.COLLECTIONS ? registry.COLLECTIONS[group] : null;
-    if (!hub || !hub.mount || !collection || !collection.file) return;
-    var marker = '#' + group + '-hub-index';
-    function insert(data) {
-      if (container.querySelector(marker)) return;
-      var anchor = container.querySelector(hub.mount);
-      if (!anchor || !anchor.parentNode) return;
-      var host = document.createElement('div');
-      host.innerHTML = collectionIndexMarkup(data, group);
-      if (!host.firstChild) return;
-      anchor.parentNode.insertBefore(host.firstChild, anchor);
-      if (window.LabIcons) LabIcons.sync();
-    }
-    if (jsonCache[group]) {
-      insert(jsonCache[group]);
-      return;
-    }
-    fetchJson(collection.file).then(function(data) {
-      jsonCache[group] = data;
-      insert(data);
-    }).catch(function() {
-      // Молчание осознанное: страница модуля остаётся рабочей и без списка.
-    });
   }
 
   function renderManifestPage(container, data) {
@@ -3617,7 +3577,6 @@ const PageController = (function() {
         showSpinner(container, 'Загрузка методологии…');
         if (window.MethodologyLab) {
           window.MethodologyLab.init(container, parsed);
-          mountCollectionIndex(container, 'methodology');
         } else {
           showError(container, 'Модуль «Методология» не загрузился.');
         }
