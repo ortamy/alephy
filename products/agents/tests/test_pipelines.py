@@ -148,6 +148,74 @@ class LoopPipelinesTest(unittest.TestCase):
         self.assertIn("shmita_resets", output["result"])
 
 
+class ArchKeeperTest(unittest.TestCase):
+    """Смотритель архитектуры: дрейф виден, ручной текст не страдает."""
+
+    def test_dry_run_reports_drift_without_writing(self):
+        from pipelines.arch_keeper import run
+        output = run("проверь архитектуру")
+        self.assertTrue(output["trace"])
+        self._drift_shape(output)
+
+    def test_blocks_cover_reality(self):
+        from agents.arch_scanner import collect_facts
+        from agents.arch_writer import BLOCKS, render_blocks
+        blocks = render_blocks(collect_facts())
+        self.assertEqual(sorted(blocks), sorted(BLOCKS))
+        for lines in blocks.values():
+            self.assertTrue(lines)
+
+    def test_manual_text_is_never_touched(self):
+        from agents.arch_writer import marker, replace_blocks
+        text = "\n".join([
+            "ручной текст",
+            marker("repo-map")[0],
+            "старый блок",
+            marker("repo-map")[1],
+            "хвост документа",
+        ])
+        updated = replace_blocks(text, {"repo-map": ["новый блок"]})
+        self.assertIn("ручной текст", updated)
+        self.assertIn("хвост документа", updated)
+        self.assertNotIn("старый блок", updated)
+        self.assertIn("новый блок", updated)
+
+    def test_missing_block_is_high_severity(self):
+        from agents.arch_writer import diff_blocks
+        report = diff_blocks("документ без маркеров", {"repo-map": ["строка"]})
+        self.assertEqual(report[0]["state"], "missing")
+        self.assertEqual(report[0]["severity"], "high")
+
+    def test_first_iteration_is_not_converged(self):
+        from agents.arch_convergence import converge
+        from agents.common import packet
+        data = converge(packet("проверь архитектуру", arch_digest="a", arch_doc_digest="b",
+                               arch_drift=[{"block": "repo-map", "state": "stale"}]))
+        self.assertFalse(data["converged"])
+        self.assertEqual(data["convergence"]["status"], "поток")
+
+    def test_engine_and_endpoints_are_not_drift(self):
+        """Движок цепочек и эндпоинты server.py — не пайплайны-карточки."""
+        from agents.arch_scanner import collect_facts
+        agents = collect_facts()["agents"]
+        self.assertNotIn("core", agents["pipelines"])
+        self.assertIn("core", agents["engines"])
+        self.assertIn("scripture_analysis", agents["endpoints"])
+        self.assertNotIn("scripture_analysis", agents["drift"]["uncarded"])
+
+    def test_registry_drift_is_empty_in_clean_repo(self):
+        from agents.arch_scanner import collect_facts
+        drift = collect_facts()["agents"]["drift"]
+        for kind, items in drift.items():
+            self.assertEqual(items, [], "неожиданный дрейф реестров: " + kind)
+
+    def _drift_shape(self, output):
+        data = output["result"]["data"]
+        self.assertIn("arch_drift", data)
+        self.assertIn("arch_status", data)
+        self.assertIn("converged", output["result"])
+
+
 class OrchestratorTest(unittest.TestCase):
     def test_unknown_query_raises(self):
         from orchestrator import dispatch
@@ -158,7 +226,8 @@ class OrchestratorTest(unittest.TestCase):
         from orchestrator import PIPELINES
         for pipeline_id in ("paleo_translation", "research_audit", "mechanism_scanner",
                             "verse_reconstruction", "critique_loop", "gap_cycle",
-                            "spiral_swiva", "dialectic_loop", "midrash_recursion", "shmita_loop"):
+                            "spiral_swiva", "dialectic_loop", "midrash_recursion", "shmita_loop",
+                            "arch_keeper"):
             self.assertIn(pipeline_id, PIPELINES)
 
 

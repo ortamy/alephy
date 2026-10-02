@@ -16,6 +16,7 @@ from pipelines.spiral_swiva import run as run_spiral_swiva
 from pipelines.dialectic_loop import run as run_dialectic_loop
 from pipelines.midrash_recursion import run as run_midrash_recursion
 from pipelines.shmita_loop import run as run_shmita_loop
+from pipelines.arch_keeper import run as run_arch_keeper
 
 
 ROUTES = {
@@ -36,6 +37,8 @@ ROUTES = {
     "диалектика": run_dialectic_loop,
     "мидраш": run_midrash_recursion,
     "шмита": run_shmita_loop,
+    "проверь архитектуру": run_arch_keeper,
+    "следи за архитектурой": run_arch_keeper,
 }
 
 PIPELINES = {
@@ -52,6 +55,7 @@ PIPELINES = {
     "dialectic_loop": run_dialectic_loop,
     "midrash_recursion": run_midrash_recursion,
     "shmita_loop": run_shmita_loop,
+    "arch_keeper": run_arch_keeper,
 }
 
 

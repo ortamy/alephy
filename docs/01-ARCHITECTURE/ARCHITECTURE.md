@@ -187,7 +187,7 @@ Waitlist работает через адаптер в inline-скрипте:
 
 ## 4. Research Lab SPA
 
-Research Lab — отдельное статическое Vanilla JS-приложение внутри сайта. В текущем состоянии оно содержит около 53 пользовательских модулей, 44 CSS-файла, 50 JS-файлов и 74 файла данных.
+Research Lab — отдельное статическое Vanilla JS-приложение внутри сайта. В текущем состоянии оно содержит 67 CSS-файлов, 81 JS-файл и 111 файлов данных. Число модулей берётся из реестра `js/module-registry.js`, а не из ручного перечисления: единственный список маршрутов — источник правды, и его полноту проверяет гейт.
 
 ```text
 products/website/apps/researchlab/
@@ -211,7 +211,7 @@ products/website/apps/researchlab/
 │   ├── investigation.js
 │   └── ...                  # остальные специализированные модули
 ├── data/                    # JSON-источники и локальные результаты
-│   ├── roots/roots.json     # 127 корней в рабочем наборе данных
+│   ├── roots/roots.json     # 329 корней в рабочем наборе данных
 │   ├── dictionaries.json    # 21 словарь, 1913 терминов
 │   ├── learn/               # алфавит и учебные данные
 │   ├── methodology/         # карточки методологии
@@ -358,21 +358,29 @@ Docker-контур (`Dockerfile`, `docker-compose.yml`, `docker/`) предна
 
 ## 9. Инструментальный слой
 
+`tools/` — плоский каталог скриптов: подкаталоги генераторов и проверок
+в проекте нет, каждый скрипт самодостаточен и запускается из корня.
+
 ```text
 tools/
-├── alephy.py                 # CLI-меню проекта
-├── checkers/                # проверки структуры и качества
-├── generators/              # генерация индексов, данных и отчётов
-├── reports/                 # отчёты
-├── analyzers/               # анализ по методологии
-├── automation/              # рутинные операции
-├── sync/                    # синхронизация и changelog
-├── lib/ и utils/            # общие библиотеки
-├── data/                    # служебные данные
-└── cache/                   # производный локальный кэш
+├── check-docs.py            # целостность docs/: пути, ссылки, навигация
+├── check-build-sync.py      # паритет build/ и исходников Research Lab
+├── check-commit.py          # гейт коммита: конвенция, секреты, документация
+├── generate-docs-index.py   # генератор INDEX.md и STATS.md
+├── generate-methodology-docs.py
+├── generate-sitemap.py
+├── generate-files-json.py
+├── generate-agent-passports.py
+├── generate-bereshit-paleo.py
+├── generate-paleo-meanings.py
+├── i18n-check.py
+├── i18n-extract.py
+└── phase2-lab-hero.py
 ```
 
-Перед ручной правкой производного файла нужно проверить генератор или синхронизатор, который его создаёт.
+Автоматические файлы (`tools/cache/`) и артефакты редактора в список не входят:
+перед ручной правкой производного файла нужно проверить скрипт, который его
+создаёт.
 
 ## 10. Правила изменения архитектуры
 
@@ -387,7 +395,64 @@ tools/
 9. Не коммитить секреты, `.env`, ключи и персональные локальные данные.
 10. При расхождении документа и кода сначала исправить архитектурный паспорт.
 
-## 11. Связанные документы
+## 11. Автоматический контроль архитектуры
+
+Документ разделён на две части: ручную (решения, границы, правила) и
+автоматическую (факты о репозитории). Автоматические блоки помечены маркерами
+`<!-- alephy:auto:* -->` и перерисовываются агентом «Архитектурный сканер»
+пайплайна `arch_keeper` — по снимку диска, без интерпретаций.
+
+Граница намеренная: машина описывает то, что лежит на диске; человек описывает
+то, что должно быть. Агент никогда не решает, правильна ли архитектура, —
+он показывает расхождение и предлагает перерисовать факты. Правка запускается
+явно и только после зелёного `tools/check-docs.py`; по умолчанию пайплайн
+работает как аудит дрейфа и документ не трогает.
+
+<!-- alephy:auto:repo-map -->
+| слой | файлов | из них кода |
+| --- | --- | --- |
+| (корень) | 3 | 0 |
+| .entire | 1 | 0 |
+| docker | 2 | 0 |
+| docs | 213 | 0 |
+| products | 2518 | 1366 |
+| researches | 24 | 0 |
+| tasks | 21 | 6 |
+| tools | 73 | 45 |
+| **всего** | 2855 | — |
+<!-- alephy:auto-end:repo-map -->
+
+### 11.1 Точки входа
+
+<!-- alephy:auto:entrypoints -->
+| точка входа | состояние |
+| --- | --- |
+| products/agents/server.py | есть |
+| products/agents/main.py | есть |
+| products/agents/orchestrator.py | есть |
+| products/website/index.html | есть |
+| products/website/apps/researchlab/index.html | есть |
+| products/website/tools/build.sh | есть |
+| tools/check-docs.py | есть |
+| tools/check-build-sync.py | есть |
+| tools/check-commit.py | есть |
+| tools/generate-docs-index.py | есть |
+<!-- alephy:auto-end:entrypoints -->
+
+### 11.2 Агентный слой
+
+<!-- alephy:auto:agents -->
+| реестр | записей |
+| --- | --- |
+| модули агентов | 20 |
+| пайплайны-карточки | 14 |
+| пайплайны-эндпоинты server.py | core, scripture_analysis |
+| движки цепочек | `core` |
+
+Пайплайны: `arch_keeper`, `critique_loop`, `dialectic_loop`, `gap_cycle`, `mechanism_scanner`, `midrash_recursion`, `paleo_translation`, `research_audit`, `research_builder`, `scripture_analysis`, `shmita_loop`, `spiral_swiva`, `verse_comparator`, `verse_reconstruction`, `word_analyzer`
+<!-- alephy:auto-end:agents -->
+
+## 12. Связанные документы
 
 - [Манифест](../00-START/MANIFEST.md)
 - [Индекс документации](../INDEX.md)
