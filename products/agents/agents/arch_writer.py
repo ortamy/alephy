@@ -13,9 +13,10 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from datetime import datetime
 from typing import Any, Dict, List, Tuple
 
-from .arch_scanner import ARCHITECTURE_DOC, REPO_ROOT, collect_facts, digest_of
+from .arch_scanner import ARCHITECTURE_DOC, DOCS_DIR, REPO_ROOT, collect_facts, digest_of
 from .common import record
 
 BLOCKS = ("repo-map", "entrypoints", "agents")
@@ -172,6 +173,82 @@ def run_gate() -> Dict[str, Any]:
     return {"ran": True, "ok": proc.returncode == 0, "output": output.strip()}
 
 
+REPORT_DOC = DOCS_DIR / "13-REPORTS" / "ARCH-DRIFT.md"
+
+REPORT_HEADER = "\n".join([
+    "# Отчёт о дрейфе архитектуры",
+    "",
+    "**Файл:** `docs/13-REPORTS/ARCH-DRIFT.md`",
+    "**Статус:** активный отчёт",
+    "**Обновляется:** пайплайном `arch_keeper` (агент «Архитектурный писатель»)",
+    "",
+    "> Отчёт переписывается целиком при каждом прогоне, где есть что записать.",
+    "> Пустой прогон файл не трогает: молчание здесь и есть признак здоровья.",
+    "",
+])
+
+REPORT_CLEAN = "\n".join([
+    "## Итог",
+    "",
+    "Расхождений нет: паспорт, схема и документ об агентной системе совпадают",
+    "с репозиторием.",
+])
+
+
+def render_report(data, drift: List[Dict[str, Any]],
+                 proposals: List[Dict[str, Any]], written: bool) -> str:
+    """Собирает отчёт о дрейфе: что разошлось и в какую корзину попало."""
+    findings = data.get("critique_findings") or []
+    lines = [REPORT_HEADER, "## Прогон", ""]
+    lines.append("- дата: %s" % datetime.now().strftime("%Y-%m-%d"))
+    lines.append("- расхождений в тексте: **%d**" % len(findings))
+    lines.append("- расхождений автоблоков: **%d**" % len(drift))
+    lines.append("- паспорт: %s" % ("перерисован" if written else "не тронут"))
+
+    if findings:
+        lines.extend(["", "## Расхождения", "",
+                      "| Корзина | Показатель | В документе | На диске |",
+                      "| --- | --- | --- | --- |"])
+        for proposal in proposals or findings:
+            actual = proposal.get("actual")
+            lines.append("| %s | %s | %s | %s |" % (
+                proposal.get("bucket", "-"), proposal.get("metric", "-"),
+                proposal.get("stated", "-"), "—" if actual is None else actual))
+        lines.extend(["", "## Что делать", ""])
+        lines.extend("- **%s** %s — %s" % (p.get("bucket", "-"), p.get("evidence", "-"),
+                                           p.get("action", "разобрать вручную"))
+                     for p in (proposals or findings))
+    else:
+        lines.extend(["", REPORT_CLEAN])
+    return "\n".join(lines) + "\n"
+
+
+def report_is_stale(current: str) -> bool:
+    """Отчёт устарел, если в нём есть находки или он говорит о расхождении."""
+    return "Расхождений нет" not in current
+
+
+def write_report(data) -> Dict[str, Any]:
+    """Перезаписывает отчёт, если состояние изменилось; иначе не трогает файл.
+
+    Правило «молчание — здоровье» защищает репозиторий от пустых коммитов:
+    прогон без находок не меняет ничего, а прогон с находками всегда оставляет
+    след в истории.
+    """
+    drift = data.get("arch_drift") or []
+    proposals = data.get("proposals") or []
+    findings = data.get("critique_findings") or []
+    if not findings and not drift:
+        if not REPORT_DOC.is_file() or not report_is_stale(REPORT_DOC.read_text(encoding="utf-8")):
+            return {"written": False, "reason": "нет расхождений, отчёт не устарел"}
+    rendered = render_report(data, drift, proposals, bool(data.get("arch_written")))
+    if REPORT_DOC.is_file() and REPORT_DOC.read_text(encoding="utf-8") == rendered:
+        return {"written": False, "reason": "отчёт не изменился"}
+    REPORT_DOC.parent.mkdir(parents=True, exist_ok=True)
+    REPORT_DOC.write_text(rendered, encoding="utf-8")
+    return {"written": True, "reason": "записан"}
+
+
 def write(data):
     """Шаг пайплайна: считает дрейф и, только если разрешено, перерисовывает блоки.
 
@@ -217,12 +294,14 @@ def write(data):
     # Запись могла состояться на прошлом витке: статус пакета отражает факт
     # «документ синхронизирован», а не результат последнего витка.
     synced = bool(pending) or bool(data.get("arch_written"))
+    report = write_report(data)
     return record(data, "arch_writer",
                   arch_drift=drift,
                   arch_blocks=blocks,
                   arch_doc_digest=target_digest,
                   arch_gate=gate,
                   arch_navigation=navigation,
+                  arch_report=report,
                   arch_written=bool(written or data.get("arch_written")),
                   arch_status="written" if synced else "dry-run",
                   arch_notes=" ".join(notes))

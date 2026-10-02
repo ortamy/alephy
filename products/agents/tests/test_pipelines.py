@@ -1,7 +1,11 @@
 """Контрактные тесты движка: линейные цепочки, циклы, новые пайплайны."""
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+
+from agents import arch_writer
 
 AGENTS_DIR = Path(__file__).resolve().parents[1]
 if str(AGENTS_DIR) not in sys.path:
@@ -256,6 +260,55 @@ class ArchGraphTest(unittest.TestCase):
         self.assertGreaterEqual(len(parse_graph_routes(graph)), 5)
         self.assertEqual(check_graph(), [])
         self.assertEqual(check_routes(), [])
+
+
+class ArchReportTest(unittest.TestCase):
+    """Находки не должны теряться вместе с вкладкой браузера."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self.original = arch_writer.REPORT_DOC
+        arch_writer.REPORT_DOC = Path(self.tmp) / "ARCH-DRIFT.md"
+        self.addCleanup(lambda: setattr(arch_writer, "REPORT_DOC", self.original))
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+
+    def _clean(self):
+        return {"critique_findings": [], "arch_drift": [], "proposals": []}
+
+    def test_clean_run_writes_nothing(self):
+        """Молчание — здоровье: пустой прогон не трогает репозиторий."""
+        result = arch_writer.write_report(self._clean())
+        self.assertFalse(result["written"])
+        self.assertFalse(arch_writer.REPORT_DOC.exists())
+
+    def test_finding_produces_report(self):
+        data = {"critique_findings": [{"metric": "css", "stated": 67, "actual": 87}],
+                "arch_drift": [], "proposals": [{"bucket": "auto", "metric": "css",
+                                                 "evidence": "67 CSS-файлов", "stated": 67,
+                                                 "actual": 87, "action": "исправить число на 87"}]}
+        self.assertTrue(arch_writer.write_report(data)["written"])
+        text = arch_writer.REPORT_DOC.read_text(encoding="utf-8")
+        self.assertIn("67 CSS-файлов", text)
+        self.assertIn("исправить число на 87", text)
+
+    def test_report_is_idempotent(self):
+        data = {"critique_findings": [{"metric": "css", "stated": 67, "actual": 87}],
+                "arch_drift": [], "proposals": [{"basket": "auto", "metric": "css",
+                                                 "evidence": "67 CSS-файлов", "stated": 67,
+                                                 "actual": 87, "action": "исправить"}]}
+        arch_writer.write_report(data)
+        first = arch_writer.REPORT_DOC.read_text(encoding="utf-8")
+        self.assertFalse(arch_writer.write_report(data)["written"])
+        self.assertEqual(arch_writer.REPORT_DOC.read_text(encoding="utf-8"), first)
+
+    def test_clean_run_overwrites_stale_report(self):
+        data = {"critique_findings": [{"metric": "css", "stated": 67, "actual": 87}],
+                "arch_drift": [], "proposals": [{"basket": "auto", "metric": "css",
+                                                 "evidence": "67", "stated": 67, "actual": 87,
+                                                 "action": "исправить"}]}
+        arch_writer.write_report(data)
+        self.assertTrue(arch_writer.write_report(self._clean())["written"])
+        self.assertIn("Расхождений нет", arch_writer.REPORT_DOC.read_text(encoding="utf-8"))
 
 
 class ArchAgentDocTest(unittest.TestCase):
