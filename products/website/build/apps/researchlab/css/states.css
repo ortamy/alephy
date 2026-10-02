@@ -250,6 +250,18 @@
   color: var(--text-muted, #6b5b4e);
 }
 
+/* Дыхательный слой: тот же шрифт и цвет, что у описания, но меньший кегль и
+   курсив — читается как тихий слой, а не как второй вывод. Намеренно без
+   рамки и отступа-разделителя: карточка не должна распухать от добавленного
+   текста, поэтому кегль на ступень меньше описания. */
+.state-card-secondary .state-card-breath {
+  font-size: 11px;
+  line-height: 1.45;
+  font-style: italic;
+  color: var(--text-muted, #6b5b4e);
+  opacity: 0.85;
+}
+
 .state-card-secondary .state-card-intensity {
   font-size: 11px;
   color: var(--text-muted, #8b7b6e);
@@ -409,6 +421,14 @@
   font-size: var(--text-md);
   line-height: 1.7;
   color: var(--text-secondary, #4a3728);
+}
+
+/* Дыхательный слой на странице состояния: тот же кегль, что у абзаца
+   главы, но курсив и приглушённый тон — как в карточке, чтобы слой читался
+   одинаково в обоих местах. */
+.state-detail-breath {
+  font-style: italic;
+  color: var(--text-muted, #6b5b4e);
 }
 
 /* Палео-разбор: hairline-карточки глифов без заливок. */

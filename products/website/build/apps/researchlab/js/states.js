@@ -296,6 +296,9 @@ const AlephyStates = (function() {
         '<div class="state-card-secondary">' +
           '<div class="state-card-hebrew" dir="rtl">' + escapeHtml(s.hebrew || '') + '</div>' +
           '<div class="state-card-physics">' + escapeHtml(s.physics || '') + '</div>' +
+          // Дыхательный слой: ощущение тела в состоянии. Идёт после описания
+          // и до шкалы открытости, поэтому читается как слой, а не как вывод.
+          (s.breath ? '<div class="state-card-breath">' + escapeHtml(s.breath) + '</div>' : '') +
           '<div class="state-card-intensity">' +
             '<span>' + escapeHtml(s.intensity_label || '') + '</span>' +
             '<div class="state-intensity-bar">' +
@@ -479,8 +482,13 @@ const AlephyStates = (function() {
     }
 
     // 03 Смысл — дополняет короткое описание в шапке, а не повторяет его.
+    // Дыхание идёт вторым абзацем той же главы: это телесный слой того же
+    // состояния, отдельная глава ради него была бы раздуванием структуры.
     var isMeaningDuplicate = normalizeText(s.meaning) === normalizeText(s.physics);
-    var meaningHtml = s.meaning && !isMeaningDuplicate ? '<section class="state-detail-section">' + chapterHead('03', t('states.chapter.meaning', 'Смысл')) + '<p>' + escapeHtml(s.meaning) + '</p></section>' : '';
+    var breathHtml = s.breath ? '<p class="state-detail-breath">' + escapeHtml(s.breath) + '</p>' : '';
+    var meaningHtml = (s.meaning && !isMeaningDuplicate) || breathHtml ? '<section class="state-detail-section">' +
+      chapterHead('03', t('states.chapter.meaning', 'Смысл')) +
+      (s.meaning && !isMeaningDuplicate ? '<p>' + escapeHtml(s.meaning) + '</p>' : '') + breathHtml + '</section>' : '';
 
     // 04 Примеры
     var examplesHtml = '';
