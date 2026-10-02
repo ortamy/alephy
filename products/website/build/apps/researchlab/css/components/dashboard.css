@@ -185,7 +185,9 @@
 #pipelines { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-x: hidden; }
 .agent-pipelines-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  /* minmax(0,1fr), а не 1fr: иначе колонка шире контента и цепь узлов
+     выталкивает карточку за правый край вместо внутренней прокрутки. */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-4);
 }
 @media (min-width: 860px) {
@@ -240,9 +242,13 @@
 .pipeline-result-btn { display: inline-flex; align-items: center; gap: 6px; }
 .pipeline-result-btn svg.lucide { width: 14px; height: 14px; }
 /* Диаграмма «Подробнее»: inline-аккордеон, цепь крупно, 150ms. */
-.pipeline-diagram { animation: pipelineDiagramIn 150ms ease-out both; }
+/* min-width:0 на обоих уровнях: карточка — grid, а .pipeline-diagram-inner
+   прокручивается по горизонтали; без сброса auto-min-width длинная цепь
+   (например, «Смотритель архитектуры») распирает колонку и узлы с иконками
+   выезжают за правый край карточки. */
+.pipeline-diagram { animation: pipelineDiagramIn 150ms ease-out both; min-width: 0; max-width: 100%; }
 .pipeline-diagram[hidden] { display: none; }
-.pipeline-diagram-inner { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; padding: var(--space-3) 0 2px; border-top: 1px solid var(--border-light); overflow-x: auto; scrollbar-width: thin; }
+.pipeline-diagram-inner { display: flex; align-items: center; flex-wrap: nowrap; gap: 8px; min-width: 0; max-width: 100%; padding: var(--space-3) 0 2px; border-top: 1px solid var(--border-light); overflow-x: auto; scrollbar-width: thin; }
 /* Узел — строка: стрелка-разделитель лежит слева от тела узла, а не
    отдельной строкой над ним (в grid она всплывала вверх, ломая цепь). */
 .pipeline-diagram-node { display: flex; align-items: flex-start; gap: 8px; flex: 0 0 auto; }
