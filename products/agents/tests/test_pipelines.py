@@ -258,6 +258,31 @@ class ArchGraphTest(unittest.TestCase):
         self.assertEqual(check_routes(), [])
 
 
+class ArchAgentDocTest(unittest.TestCase):
+    """Агент проверяет документацию о себе самой — иначе дрейф некуда деться."""
+
+    def test_agent_doc_is_found(self):
+        from agents.arch_critic import AGENT_DOC
+        self.assertTrue(AGENT_DOC.is_file(), str(AGENT_DOC))
+
+    def test_mentioned_module_must_exist(self):
+        from agents.arch_critic import check_agent_doc
+        self.assertEqual(check_agent_doc({}), [])
+
+    def test_counts_come_from_disk(self):
+        """Метрики агентного слоя обязаны совпадать с реальными файлами."""
+        from agents.arch_scanner import AGENTS_ROOT, collect_facts
+        metrics = collect_facts()["metrics"]
+        modules = [p.stem for p in (AGENTS_ROOT / "agents").glob("*.py")
+                   if p.stem != "__init__"]
+        self.assertEqual(metrics["agents"], len(modules))
+
+    def test_current_agent_doc_has_no_drift(self):
+        from pipelines.arch_keeper import run
+        data = run("проверь архитектуру")["result"]["data"]
+        self.assertEqual(data.get("critique_count"), 0, data.get("critique_notes"))
+
+
 class ArchCriticTest(unittest.TestCase):
     """Критик ловит дрейф ручного текста, не подменяя мысль числом."""
 

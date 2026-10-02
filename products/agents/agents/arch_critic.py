@@ -12,7 +12,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
-from .arch_scanner import ARCHITECTURE_DOC, LAB_ROOT, collect_facts
+from .arch_scanner import ARCHITECTURE_DOC, DOCS_DIR, LAB_ROOT, collect_facts
 from .arch_writer import BLOCKS, block_body
 from .common import record
 
@@ -26,6 +26,8 @@ CLAIM_PATTERNS = (
     (re.compile(r"(\d+)\s+CSS-файл\w*", re.IGNORECASE), "css", "факт"),
     (re.compile(r"(\d+)\s+JS-файл\w*", re.IGNORECASE), "js", "факт"),
     (re.compile(r"(\d+)\s+файл\w*\s+данных", re.IGNORECASE), "data", "факт"),
+    (re.compile(r"(\d+)\s+агентами", re.IGNORECASE), "agents", "факт"),
+    (re.compile(r"(\d+)\s+пайплайн\w*", re.IGNORECASE), "agent_pipelines", "факт"),
 )
 
 
@@ -188,6 +190,42 @@ def check_routes() -> List[Dict[str, Any]]:
             if ("id: '%s'" % root) not in registry]
 
 
+AGENT_DOC = DOCS_DIR / "03-AI" / "AGENT-ARCHITECTURE.md"
+
+# Модуль агентного слоя может лежать в корне products/agents или в одной из
+# трёх подпапок; документ об агентах ссылается на них без указания папки.
+AGENT_MODULES = ("agents", "pipelines", "utils", "")
+
+_AGENT_MENTION = re.compile(r"`([a-z_][a-z0-9_]*\.py)`")
+
+
+def check_agent_doc(metrics: Dict[str, int]) -> List[Dict[str, Any]]:
+    """Числа и модули в `AGENT-ARCHITECTURE.md`, расходящиеся с агентным слоем.
+
+    Документ об агентах — единственное место, где перечислены все модули
+    пайплайна, и он дрейфует так же, как паспорт: модуль удалён или переименован,
+    а список остался. Проверяются числа вида «N агентами» и существование
+    каждого упомянутого файла; содержимое списка остаётся за человеком.
+    """
+    from .arch_scanner import AGENTS_ROOT
+
+    if not AGENT_DOC.is_file():
+        return []
+    body = AGENT_DOC.read_text(encoding="utf-8")
+    findings = check_claims(body, metrics)
+    seen = set()
+    for match in _AGENT_MENTION.finditer(body):
+        name = match.group(1)
+        if name in seen:
+            continue
+        seen.add(name)
+        if any((AGENTS_ROOT / folder / name).is_file() for folder in AGENT_MODULES):
+            continue
+        findings.append({"kind": "факт", "metric": "agent_module",
+                         "stated": name, "actual": None, "evidence": name})
+    return findings
+
+
 def critique(data):
     """Шаг пайплайна: сверяет ручной текст паспорта с показаниями сканера.
 
@@ -200,7 +238,7 @@ def critique(data):
     text = ARCHITECTURE_DOC.read_text(encoding="utf-8")
     metrics = collect_facts().get("metrics") or {}
     findings = (check_claims(text, metrics) + check_paths(text)
-               + check_graph() + check_routes())
+               + check_graph() + check_routes() + check_agent_doc(metrics))
 
     notes = []
     for item in findings:
@@ -210,6 +248,8 @@ def critique(data):
             notes.append("узел схемы GRAPH.md не найден: %s" % item["stated"])
         elif item["metric"] == "route":
             notes.append("маршрут схемы отсутствует в реестре лаборатории: %s" % item["stated"])
+        elif item["metric"] == "agent_module":
+            notes.append("модуль назван в AGENT-ARCHITECTURE.md, но отсутствует: %s" % item["stated"])
         else:
             notes.append("%s: в документе %d, на диске %d"
                          % (item["metric"], item["stated"], item["actual"]))

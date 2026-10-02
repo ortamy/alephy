@@ -17,9 +17,10 @@ from typing import Any, Dict, List
 from .common import record
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+DOCS_DIR = REPO_ROOT / "docs"
 AGENTS_ROOT = REPO_ROOT / "products" / "agents"
 LAB_ROOT = REPO_ROOT / "products" / "website" / "apps" / "researchlab"
-ARCHITECTURE_DOC = REPO_ROOT / "docs" / "01-ARCHITECTURE" / "ARCHITECTURE.md"
+ARCHITECTURE_DOC = DOCS_DIR / "01-ARCHITECTURE" / "ARCHITECTURE.md"
 
 # Производные и внешние деревья: они не описывают архитектуру исходников,
 # но весят десятки тысяч файлов. Без исключения сканер упирается в бюджет.
@@ -189,6 +190,11 @@ def scan_lab_metrics() -> Dict[str, int]:
         len(item.get("terms") or []) for item in dictionaries.values()
         if isinstance(item, dict)
     ) if isinstance(dictionaries, dict) else 0
+    # Агентный слой тоже цитируется числами в документах об агентах, поэтому
+    # его счётчики живут рядом с корпусными, а не в отдельном месте.
+    agents = scan_agents()
+    metrics["agents"] = len(agents["modules"])
+    metrics["agent_pipelines"] = len(agents["pipelines"])
     return metrics
 
 

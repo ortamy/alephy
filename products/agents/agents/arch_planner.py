@@ -19,7 +19,8 @@ from typing import Any, Dict, List
 from .common import record
 
 # Показатели, где расхождение — чистая арифметика.
-AUTO_METRICS = {"roots", "dictionaries", "terms", "css", "js", "data", "path"}
+AUTO_METRICS = {"roots", "dictionaries", "terms", "css", "js", "data", "path",
+                 "agents", "agent_pipelines", "agent_module"}
 
 # Метрики, где расхождение — решение, а не правка: слой схемы исчез, хаб
 # переехал. Ответ («вернуть» / «вывести из схемы») неоднозначен, поэтому
