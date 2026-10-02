@@ -165,9 +165,14 @@ const PageController = (function() {
       { icon: 'scribe/scroll', name: 'Технический писатель', desc: 'Заглушка: оформление документации после подключения LLM.', model: '—', cat: 'Документация' },
       { icon: 'ui/scales', name: 'Ревьюер кода', desc: 'Заглушка: авто-ревью кода появится после подключения LLM.', model: '—', cat: 'Контроль качества' },
       { icon: 'paleo/track', name: 'Архитектор потока', desc: 'Заглушка: используется линейный порядок агентов из конфига пайплайна.', model: '—', cat: 'Оркестрация' },
-      { icon: 'ui/link', name: 'Связной', desc: 'Связывает разрозненные исследования в единую сеть.', model: 'Claude Sonnet 4', cat: 'Оркестрация' }
+      { icon: 'ui/link', name: 'Связной', desc: 'Связывает разрозненные исследования в единую сеть.', model: 'Claude Sonnet 4', cat: 'Оркестрация' },
+      { icon: 'ui/search', name: 'Архитектурный сканер', desc: 'Снимает снимок репозитория: слои, точки входа, реестры, метрики. Ничего не оценивает.', model: 'Локальный аудит', cat: 'Архитектура' },
+      { icon: 'ui/scales', name: 'Архитектурный критик', desc: 'Сверяет ручной текст паспорта и схемы связей с диском: числа, пути, узлы, маршруты.', model: 'Локальный аудит', cat: 'Архитектура' },
+      { icon: 'ui/workflow', name: 'Архитектурный планировщик', desc: 'Раскладывает находки в корзины: auto, adr, manual. Предложения не применяет.', model: 'Локальный аудит', cat: 'Архитектура' },
+      { icon: 'scribe/scroll', name: 'Архитектурный писатель', desc: 'Перерисовывает только генерируемые блоки паспорта и ведёт отчёт о дрейфе. По умолчанию ничего не меняет.', model: 'Локальный аудит', cat: 'Архитектура' },
+      { icon: 'seals/ring', name: 'Архитектурный сход', desc: 'Останавливает цикл, когда снимок и документ совпали: эмет — доводить нечего.', model: 'Локальный аудит', cat: 'Архитектура' }
     ];
-    var agentSlugs = ['orchestrator', 'researcher', 'exposer', 'collector', 'critic', 'semitologist', 'comparator', 'editor', 'paleo-translator', 'frontend-developer', 'ai-engineer', 'verifier', 'technical-writer', 'code-reviewer', 'flow-architect', 'liaison'];
+    var agentSlugs = ['orchestrator', 'researcher', 'exposer', 'collector', 'critic', 'semitologist', 'comparator', 'editor', 'paleo-translator', 'frontend-developer', 'ai-engineer', 'verifier', 'technical-writer', 'code-reviewer', 'flow-architect', 'liaison', 'arch-scanner', 'arch-critic', 'arch-planner', 'arch-writer', 'arch-convergence'];
     agents.forEach(function(agent, index) {
       agent.id = agentSlugs[index] || ('agent-' + index);
       if (agent.model === '—') agent.model = '';
@@ -177,7 +182,7 @@ const PageController = (function() {
 
   // Честный статус заглушек (§6): без модели → «Заглушка», featured → «Активен», остальные «В разработке».
   var AGENT_VIEW_KEY = 'alephy_agents_view';
-  var AGENT_GROUPS = ['Оркестрация', 'Исследование', 'Контроль качества', 'Документация', 'Разработка'];
+  var AGENT_GROUPS = ['Оркестрация', 'Исследование', 'Контроль качества', 'Документация', 'Разработка', 'Архитектура'];
   var AGENT_STATUSES = { active: 'Активен', dev: 'В разработке', stub: 'Заглушка' };
   var AGENT_STATUS_I18N = { active: 'lab.agents.status.active', dev: 'lab.agents.status.dev', stub: 'lab.agents.status.stub' };
   var AGENT_ICONS = {
@@ -199,7 +204,20 @@ const PageController = (function() {
     return 'dev';
   }
 
+  // Иконки агентов Смотрителя архитектуры задаются по id и проверяются раньше
+// категории: пять агентов одной категории иначе получили бы одинаковую
+// иконку, а менять приоритет для остальных шестнадцати нельзя — это сдвинуло
+// бы вид уже свёрстанного дерева.
+var ARCH_AGENT_ICONS = {
+    'arch-scanner': 'search',
+    'arch-critic': 'scan-search',
+    'arch-planner': 'network',
+    'arch-writer': 'file-text',
+    'arch-convergence': 'git-compare'
+  };
+
   function getAgentIcon(agent) {
+    if (ARCH_AGENT_ICONS[agent.id]) return ARCH_AGENT_ICONS[agent.id];
     var categoryIcons = {
       'Оркестрация': 'workflow',
       'Исследование': 'search',
@@ -2621,7 +2639,12 @@ const PageController = (function() {
     'Технический писатель': 'file-text',
     'Ревьюер кода': 'scan-search',
     'Архитектор потока': 'workflow',
-    'Связной': 'link'
+    'Связной': 'link',
+    'Архитектурный сканер': 'search',
+    'Архитектурный критик': 'scan-search',
+    'Архитектурный планировщик': 'network',
+    'Архитектурный писатель': 'file-text',
+    'Архитектурный сход': 'git-compare'
   };
 
   function pipelineAgentIcon(agentName) {
