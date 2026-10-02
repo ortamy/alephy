@@ -41,9 +41,21 @@ const state = await page.evaluate(() => {
   const active = document.querySelector('#labContent .module.active');
   const spinners = Array.from(document.querySelectorAll('#labContent .lab-spinner'))
     .filter((n) => n.getBoundingClientRect().height > 0);
+  const heroKicker = active ? active.querySelector('.lab-hero__kicker') : null;
+  const heroTitle = active ? active.querySelector('.lab-hero__title-main') : null;
   return {
     activeId: active ? active.id : null,
     children: active ? active.children.length : 0,
+    heroes: active ? active.querySelectorAll('.lab-hero').length : 0,
+    heroKicker: heroKicker ? heroKicker.textContent : null,
+    heroTitle: heroTitle ? heroTitle.textContent : null,
+    docLinks: active ? Array.from(active.querySelectorAll('.doc-card')).slice(0, 3).map((a) => a.getAttribute('href')) : [],
+    docCards: active ? active.querySelectorAll('.doc-card').length : 0,
+    // Методички монтируются в тулбар модуля: карточки лежат внутри .methodology-docs.
+    hubCards: active ? active.querySelectorAll('.methodology-docs .doc-card').length : 0,
+    // Сырая разметка шапки: resolveConfig/i18n может подменить текст, а при
+    // разбирательстве нужен именно DOM, а не уже склеенный textContent.
+    heroHtml: active && active.querySelector('.lab-hero') ? active.querySelector('.lab-hero').innerHTML.slice(0, 400) : null,
     innerHead: active ? active.innerHTML.slice(0, 220) : '',
     text: active ? active.textContent.slice(0, 160) : '',
     visibleSpinners: spinners.length,

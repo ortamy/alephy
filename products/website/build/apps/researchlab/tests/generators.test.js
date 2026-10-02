@@ -93,11 +93,15 @@ function testRegistration() {
   ['artifact-generator', 'change-generator'].forEach(function(id) {
     assert.ok(registry.includes("id: '" + id + "'"), 'Маршрут в реестре: ' + id);
     assert.ok(controller.includes("case '" + id + "'"), 'Рендерер в PageController: ' + id);
-    assert.ok(search.includes("['" + id + "'"), 'Модуль в поиске: ' + id);
     assert.ok(hero.includes("'" + id + "': {"), 'Шапка описана: ' + id);
     assert.ok(index.includes('js/' + id + '.js'), 'Скрипт подключён: ' + id);
     assert.ok(index.includes('css/' + id + '.css'), 'Стили подключены: ' + id);
   });
+  // Индекс поиска строится из реестра и шапки, а не из своей копии списка:
+  // подпись модуля вне сайдбара берётся из LabHero.targets.
+  assert.ok(search.includes('ModuleRegistry') && search.includes('LabHero'),
+    'Поиск берёт модули и подписи из реестра и шапки');
+  assert.ok(!/var MODULES = \[/.test(search), 'Своего списка модулей в поиске больше нет');
   console.log('OK  регистрация: реестр, рендерер, поиск, шапка, index.html');
 }
 

@@ -156,6 +156,11 @@
         "subtitle": "",
         "title": ""
       },
+      "conveyors": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "clue-generator": {
         "kicker": "",
         "subtitle": "",
@@ -200,6 +205,11 @@
         "kicker": "",
         "subtitle": "",
         "title": ""
+      },
+      "exposures": {
+        "kicker": "ALEPHY · EXPOSURES",
+        "subtitle": "Unmasking corpus: principles, distortion mechanisms, language shifts and techniques.",
+        "title": "Exposures"
       },
       "generators": {
         "kicker": "",
@@ -489,9 +499,11 @@
       "cartography": "",
       "checkers": "",
       "club": "",
+      "conveyors": "",
       "dashboard": "",
       "design-system": "",
       "dictionaries": "",
+      "exposures": "Exposures",
       "ed-chat": "",
       "generators": "",
       "language-map": "",

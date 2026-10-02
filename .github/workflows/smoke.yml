@@ -63,7 +63,7 @@ jobs:
           SMOKE_QUICK: '0'
         run: npx playwright test
 
-      - name: Registry matches page-controller
+      - name: Registry matches page-controller, sidebar and docs
         run: node tools/design-baseline/registry-check.mjs
 
       - name: Website DOM render check

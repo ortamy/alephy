@@ -349,6 +349,12 @@
       subtitle: 'Словарные карты подмен с ивритским соответствием и палео-формой.',
       icon: 'ui/book.png'
     },
+    'exposures': {
+      kicker: 'АЛЕФИ · РАЗОБЛАЧЕНИЯ',
+      title: 'Разоблачения',
+      subtitle: 'Корпус документов разоблачения: принципы, механизмы подмены, языковые сдвиги и приёмы.',
+      glyphIcon: 'shield-alert'
+    },
     'methodology': {
       kicker: 'АЛЕФИ · МЕТОДОЛОГИЯ',
       title: 'Методология',
@@ -553,7 +559,11 @@
   }
 
   function fallbackConfig(moduleId) {
-    if (typeof console !== 'undefined' && console.warn) {
+    // У маршрутов документов (kind: 'markdown') записи в TARGETS нет намеренно:
+    // заголовок приходит из самих данных (page-controller ставит override).
+    var registry = window.ModuleRegistry;
+    var isDocRoute = registry && registry.kind && registry.kind(moduleId) === 'markdown';
+    if (!isDocRoute && typeof console !== 'undefined' && console.warn) {
       console.warn('[LabHero] нет TARGETS для маршрута «' + moduleId + '» — собран генерический герой');
     }
     return {

@@ -452,6 +452,9 @@ const PageController = (function() {
   // ===== JSON-СТРАНИЦЫ (словари, методология, палео-механика) =====
 
   var jsonCache = {};
+  // Заголовки документов, отрисованных на этой сессии: тела методичек лежат
+  // по файлам, поэтому крошки берут название здесь, а не из кэша коллекции.
+  var docTitles = {};
   var pageState = {
     dictionaries: { key: '', query: '' },
     methodology: { key: '' },
@@ -463,6 +466,7 @@ const PageController = (function() {
     fetchJson(path).then(function(data) {
       jsonCache[page] = data;
       if (page === 'dictionaries') renderDictionaries(container, data);
+      else if (page === 'exposures') renderCollectionIndex(container, data, 'exposures');
       else renderDocumentPage(container, page, data);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(page, LabRouter.parseHash());
     }).catch(function(error) {
@@ -1142,6 +1146,220 @@ const PageController = (function() {
       }
       state.key = this.value;
       renderDocumentPage(container, page, data);
+    });
+  }
+
+  // ===== ДОКУМЕНТЫ, ОБЪЯВЛЕННЫЕ В РЕЕСТРЕ =====
+  // Источник каждого документного маршрута объявлен в реестре (поле doc): запись
+  // коллекции даёт файл данных, группу и хаб. Словарь открывается страницей
+  // внутри #dictionaries, документы exposures и methodology — общей страницей
+  // документа, а коллекция без файла отдаёт плашку с путём к исходнику.
+
+  // Заголовок документа известен только после загрузки данных, а записи в
+  // LabHero.TARGETS у маршрутов документов нет — override ставится явно и
+  // ПОСЛЕ записи innerHTML: иначе шапку сносит вместе с содержимым.
+  function setDocHero(container, moduleId, title, subtitle, kicker) {
+    if (!container || !window.LabHero || !window.LabHero.setView) return;
+    var override = { kicker: kicker || 'АЛЕФИ · ДОКУМЕНТ', title: title || '', subtitle: subtitle || '' };
+    container._labHeroOverride = override;
+    LabHero.setView(moduleId, null, override);
+  }
+
+  // Подписи обратной ссылки в хаб по группе документов. Группа и её хаб
+  // объявлены в реестре (COLLECTIONS) — здесь только текст ссылки.
+  var GROUP_BACK_LABELS = {
+    exposures: 'Все документы разоблачения',
+    methodology: 'Материалы методологии'
+  };
+
+  // Маршрут документа по ключу записи в файле коллекции: список маршрутов группы
+  // берём из реестра. Документ вне реестра ведёт в хаб группы, а не в пустой адрес.
+  function documentRouteId(key, group) {
+    var registry = window.ModuleRegistry;
+    var entries = registry && registry.docs ? registry.docs(group) : [];
+    for (var i = 0; i < entries.length; i++) {
+      var source = registry.docSource(entries[i].id);
+      if (source && source.key === key) return entries[i].id;
+    }
+    var collection = registry && registry.COLLECTIONS ? registry.COLLECTIONS[group] : null;
+    return (collection && collection.hub) || group;
+  }
+
+  function documentSectionsMarkup(sections) {
+    var html = (sections || []).map(function(section) {
+      var content = typeof marked !== 'undefined' && marked.parse
+        ? marked.parse(section.content || '')
+        : escapeHtml(section.content || '');
+      return '<article class="research-section"><h2>' + escapeHtml(section.title || '') +
+        '</h2><div class="research-section-content">' + content + '</div></article>';
+    }).join('');
+    return html || '<div class="lab-alert lab-alert-info">В документе пока нет разделов.</div>';
+  }
+
+  function documentDescription(description) {
+    return escapeHtml(String(description || '').replace(/---/g, '').trim());
+  }
+
+  // Словарь живёт внутри модуля #dictionaries: свой маршрут dict-* открывает ту же
+  // страницу словаря на месте, без редиректа — старые адреса остаются живыми.
+  function loadDictionaryDocument(container, moduleId, source) {
+    showSpinner(container, 'Загрузка словаря…');
+    fetchJson(source.file).then(function(data) {
+      jsonCache.dictionaries = data;
+      var dictionary = data[source.key];
+      if (!dictionary) {
+        container.dataset.loaded = '1';
+        showError(container, 'Словарь «' + source.key + '» не найден в ' + source.file + '.');
+        return;
+      }
+      // Ключ проставляем до рендера: renderDictionaries читает его из pageState,
+      // а из hash для маршрута dict-* ключ словаря не приходит.
+      pageState.dictionaries.key = source.key;
+      renderDictionaries(container, data);
+      setDocHero(container, moduleId, dictionary.title, safeDocSummary(dictionary.description));
+      container.dataset.loaded = '1';
+    }).catch(function(error) {
+      container.dataset.loaded = '1';
+      showError(container, 'Ошибка загрузки словаря: ' + error.message);
+    });
+  }
+
+  // Документ коллекции: тело лежит либо в файле коллекции (exposures), либо в
+  // отдельном файле по ключу (methodology — указатель плюс каталог).
+  // Ключ записи объявлен в реестре рядом с маршрутом.
+  function loadCollectionDocument(container, moduleId, source) {
+    showSpinner(container, 'Загрузка документа…');
+    var body = source.doc
+      ? fetchJson(source.doc).then(function(documentData) { return { documentData: documentData, index: null }; })
+      : fetchJson(source.file).then(function(data) {
+        jsonCache[source.collection] = data;
+        return { documentData: data[source.key], index: data[source.key] || null };
+      });
+    body.then(function(loaded) {
+      if (source.doc && jsonCache[source.collection]) {
+        loaded.index = jsonCache[source.collection][source.key] || null;
+      }
+      if (!loaded.documentData) {
+        container.dataset.loaded = '1';
+        showError(container, 'Документ «' + source.key + '» не найден в ' + (source.doc || source.file) + '.');
+        return;
+      }
+      renderCollectionDocument(container, moduleId, source, loaded.documentData, loaded.index);
+      container.dataset.loaded = '1';
+    }).catch(function(error) {
+      container.dataset.loaded = '1';
+      showError(container, 'Ошибка загрузки документа: ' + error.message);
+    });
+  }
+
+  function renderCollectionDocument(container, moduleId, source, documentData, indexEntry) {
+    var key = source.key;
+    var hub = source.hub || source.collection;
+    var backLabel = GROUP_BACK_LABELS[source.collection] || hub;
+    docTitles[moduleId] = documentData.title || key;
+    // Провенанс: путь к исходнику есть у документов, перенесённых генератором.
+    var provenance = documentData.source
+      ? '<p class="text-small text-muted mt-8">Источник: <code>' + escapeHtml(documentData.source) + '</code></p>'
+      : '';
+    container.innerHTML =
+      '<div class="research-page-head">' +
+        '<h1>' + escapeHtml(documentData.title || key) + '</h1>' +
+        '<p class="subtitle">' + documentDescription(documentData.description) + '</p>' +
+        provenance +
+      '</div>' +
+      '<div class="research-meta"><a class="lab-btn lab-btn-secondary lab-btn-sm" href="#' + escapeHtml(hub) + '">← ' + escapeHtml(backLabel) + '</a></div>' +
+      '<div class="research-sections">' + documentSectionsMarkup(documentData.sections) + '</div>';
+    setDocHero(container, moduleId, documentData.title || key, safeDocSummary(documentData.description));
+  }
+
+  // Хабы групп документов: точку вставки списка и разметку шапки держит одна
+  // карта, чтобы новая группа не осталась без ссылок на свои документы.
+  // mount: null — модуль-хаб и есть список (страницу рисует renderCollectionIndex),
+  // иначе список вставляется врезкой в страницу, которую рисует JS-модуль
+  // (методология), перед указанным селектором. Полноту карты проверяет
+  // registry-check.mjs: группа без записи здесь = документы только по прямому адресу.
+  var GROUP_INDEX_HUBS = {
+    exposures: {
+      mount: null,
+      empty: 'Документы разоблачения пока не заполнены.',
+      section: function(count, cards) {
+        return '<div class="research-page-head">' +
+            '<h1>Разоблачения</h1>' +
+            '<p class="subtitle">' + count + ' документов корпуса: принципы, механизмы, приёмы подмены и языковые сдвиги.</p>' +
+          '</div>' +
+          '<div class="doc-grid" id="exposure-doc-grid">' + cards + '</div>';
+      }
+    },
+    methodology: {
+      mount: '.methodology-toolbar',
+      empty: 'Методички пока не перенесены в data/.',
+      section: function(count, cards) {
+        return '<section class="methodology-docs" id="methodology-hub-index" aria-labelledby="methodology-hub-title">' +
+            '<div class="methodology-docs-head">' +
+              '<h2 class="methodology-docs-label" id="methodology-hub-title">Методички</h2>' +
+              '<span class="methodology-docs-rule" aria-hidden="true"></span>' +
+              '<span class="methodology-docs-count">' + count + '</span>' +
+            '</div>' +
+            '<div class="doc-grid">' + cards + '</div>' +
+          '</section>';
+      }
+    }
+  };
+
+  // Карточки корпуса: одна разметка на все группы, ссылка — из реестра.
+  function collectionCardsMarkup(data, group) {
+    return Object.keys(data || {}).map(function(key) {
+      var documentData = data[key] || {};
+      return '<a href="#' + escapeHtml(documentRouteId(key, group)) + '" class="doc-card" data-key="' + escapeHtml(key) + '">' +
+        '<span class="doc-card-body">' +
+          '<span class="doc-card-title">' + escapeHtml(documentData.title || key) + '</span>' +
+          '<span class="doc-card-desc">' + escapeHtml(safeDocSummary(documentData.description)) + '</span>' +
+        '</span>' +
+        '<span class="doc-card-arrow" aria-hidden="true">→</span></a>';
+    }).join('');
+  }
+
+  function collectionIndexMarkup(data, group) {
+    var hub = GROUP_INDEX_HUBS[group];
+    if (!hub) return '';
+    var keys = Object.keys(data || {});
+    if (!keys.length) return '<div class="lab-alert lab-alert-info">' + escapeHtml(hub.empty) + '</div>';
+    return hub.section(keys.length, collectionCardsMarkup(data, group));
+  }
+
+  // Хаб-страница целиком: список корпуса и есть содержимое модуля (#exposures).
+  function renderCollectionIndex(container, data, group) {
+    container.innerHTML = collectionIndexMarkup(data, group);
+  }
+
+  // Врезка списка в страницу, которую рисует JS-модуль: файл берём у коллекции
+  // реестра, точку вставки — у карты хабов. Список дополняет страницу, поэтому
+  // ошибка загрузки молчит и не затирает рабочий модуль.
+  function mountCollectionIndex(container, group) {
+    var hub = GROUP_INDEX_HUBS[group];
+    var registry = window.ModuleRegistry;
+    var collection = registry && registry.COLLECTIONS ? registry.COLLECTIONS[group] : null;
+    if (!hub || !hub.mount || !collection || !collection.file) return;
+    var marker = '#' + group + '-hub-index';
+    function insert(data) {
+      if (container.querySelector(marker)) return;
+      var anchor = container.querySelector(hub.mount);
+      if (!anchor || !anchor.parentNode) return;
+      var host = document.createElement('div');
+      host.innerHTML = collectionIndexMarkup(data, group);
+      if (!host.firstChild) return;
+      anchor.parentNode.insertBefore(host.firstChild, anchor);
+      if (window.LabIcons) LabIcons.sync();
+    }
+    if (jsonCache[group]) {
+      insert(jsonCache[group]);
+      return;
+    }
+    fetchJson(collection.file).then(function(data) {
+      jsonCache[group] = data;
+      insert(data);
+    }).catch(function() {
+      // Молчание осознанное: страница модуля остаётся рабочей и без списка.
     });
   }
 
@@ -3387,6 +3605,7 @@ const PageController = (function() {
         showSpinner(container, 'Загрузка методологии…');
         if (window.MethodologyLab) {
           window.MethodologyLab.init(container, parsed);
+          mountCollectionIndex(container, 'methodology');
         } else {
           showError(container, 'Модуль «Методология» не загрузился.');
         }
@@ -3432,6 +3651,14 @@ const PageController = (function() {
 
       case 'dictionaries':
         loadJsonPage('dictionaries', 'data/dictionaries.json', container);
+        break;
+
+      case 'exposures':
+        // Хаб документов разоблачения: список всего корпуса, документы открываются
+        // по своим маршрутам #exposure-<key> (источник — data/exposures/documents.json).
+        if (jsonCache.exposures) renderCollectionIndex(container, jsonCache.exposures, 'exposures');
+        else loadJsonPage('exposures', 'data/exposures/documents.json', container);
+        container.dataset.loaded = '1';
         break;
 
       case 'paleo-mechanics':
@@ -3495,69 +3722,30 @@ const PageController = (function() {
         }
         break;
 
-      // ===== MARKDOWN-СТРАНИЦЫ =====
-      default:
-        // Пробуем загрузить как markdown-страницу
-        var mdPaths = {
-          'dict-religionims': '../../../analysis/dictionaries/dictionaries-religionims.md',
-          'dict-grecisms': '../../../analysis/dictionaries/dictionaries-grecisms.md',
-          'dict-latinisms': '../../../analysis/dictionaries/dictionaries-latinisms.md',
-          'dict-slavicisms': '../../../analysis/dictionaries/dictionaries-slavicisms.md',
-          'dict-names': '../../../analysis/dictionaries/dictionaries-names.md',
-          'dict-phrases': '../../../analysis/dictionaries/dictionaries-phrases.md',
-          'dict-economisms': '../../../analysis/dictionaries/dictionaries-economisms.md',
-          'dict-estethisms': '../../../analysis/dictionaries/dictionaries-estethisms.md',
-          'dict-gastronomisms': '../../../analysis/dictionaries/dictionaries-gastronomisms.md',
-          'dict-juridisms': '../../../analysis/dictionaries/dictionaries-juridisms.md',
-          'dict-marketisms': '../../../analysis/dictionaries/dictionaries-marketisms.md',
-          'dict-mediasms': '../../../analysis/dictionaries/dictionaries-mediasms.md',
-          'dict-medicinisms': '../../../analysis/dictionaries/dictionaries-medicinisms.md',
-          'dict-militarisms': '../../../analysis/dictionaries/dictionaries-militarisms.md',
-          'dict-modernisms': '../../../analysis/dictionaries/dictionaries-modernisms.md',
-          'dict-newageisms': '../../../analysis/dictionaries/dictionaries-newageisms.md',
-          'dict-politisms': '../../../analysis/dictionaries/dictionaries-politisms.md',
-          'dict-psychologisms': '../../../analysis/dictionaries/dictionaries-psychologisms.md',
-          'dict-scientisms': '../../../analysis/dictionaries/dictionaries-scientisms.md',
-          'dict-sportisms': '../../../analysis/dictionaries/dictionaries-sportisms.md',
-          'dict-technologisms': '../../../analysis/dictionaries/dictionaries-technologisms.md',
-          'exposure-dictionary': '../../../analysis/exposure/exposure-dictionary.md',
-          'exposure-principles': '../../../analysis/exposure/exposure-principles.md',
-          'exposure-distortions': '../../../analysis/exposure/exposure-distortions.md',
-          'exposure-mechanisms': '../../../analysis/exposure/exposure-mechanisms.md',
-          'exposure-linguistic-methods': '../../../analysis/exposure/exposure-linguistic-methods.md',
-          'exposure-methods': '../../../analysis/exposure/exposure-methods.md',
-          'exposure-language': '../../../analysis/exposure/exposure-language.md',
-          'exposure-language-shifts': '../../../analysis/exposure/exposure-language-shifts.md',
-          'exposure-bavelisms': '../../../analysis/exposure/exposure-bavelisms.md',
-          'exposure-masoretic': '../../../analysis/exposure/exposure-masoretic.md',
-          'exposure-philosophemes': '../../../analysis/exposure/exposure-philosophemes.md',
-          'exposure-system-architecture': '../../../analysis/exposure/exposure-system-architecture.md',
-          'exposure-religionism-theory': '../../../analysis/exposure/exposure-religionism-theory.md',
-          'exposure-techniques': '../../../analysis/exposure/exposure-techniques.md',
-          'method-archeology': '../../../analysis/methodology/methodology-archeology.md',
-          'method-hebrew-reconstruction': '../../../analysis/methodology/methodology-hebrew-reconstruction.md',
-          'method-layers': '../../../analysis/methodology/methodology-layers.md',
-          'method-translation': '../../../analysis/methodology/methodology-translation.md',
-          'method-transliteration': '../../../analysis/methodology/methodology-transliteration.md',
-          'method-tree': '../../../analysis/methodology/methodology-tree.md'
-        };
-        var mdPath = mdPaths[moduleId];
-        if (mdPath) {
-          showSpinner(container, 'Загрузка…');
-          fetchPage(mdPath).then(function(md) {
-            if (typeof marked !== 'undefined' && marked.parse) {
-              container.innerHTML = marked.parse(md);
-            } else {
-              container.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка: marked.js не загружен</div>';
-            }
-            container.dataset.loaded = '1';
-          }).catch(function(err) {
-            showError(container, 'Ошибка загрузки: ' + err.message);
-          });
-              } else {
+      // ===== МАРШРУТЫ ДОКУМЕНТОВ =====
+      // Источник содержимого объявлен в реестре (doc). Своя карта путей удалена:
+      // она вела в несуществующий каталог analysis/ и молча отдавала «Ошибка
+      // загрузки» на всех 41 маршруте документов.
+      default: {
+        var source = window.ModuleRegistry && ModuleRegistry.docSource
+          ? ModuleRegistry.docSource(moduleId)
+          : null;
+        if (!source) {
+          container.dataset.loaded = '1';
           showError(container, 'Маршрут «' + moduleId + '» не зарегистрирован.');
+        } else if (source.collection === 'dictionaries') {
+          loadDictionaryDocument(container, moduleId, source);
+        } else if (source.file) {
+          // Файл коллекции объявлен — корпус читается страницей документа.
+          loadCollectionDocument(container, moduleId, source);
+        } else {
+          // Коллекция без файла — состояние репозитория, а не страница лаборатории.
+          container.dataset.loaded = '1';
+          showError(container, 'У группы документов «' + (source.collection || moduleId) +
+            '» нет файла данных: объяви его в COLLECTIONS (module-registry.js).');
         }
         break;
+      }
     }
 
     // Единый вызов динамической шапки для всех модулей.
@@ -3738,6 +3926,20 @@ const PageController = (function() {
   var agentMapData = null;
 
   // ===== ПУБЛИЧНЫЙ API =====
+  // Заголовок маршрута-документа для крошек: он приходит из данных, поэтому
+  // router до их загрузки обязан откатиться на подпись реестра, а не на id.
+  // Тела методичек лежат по файлам, поэтому заголовок запоминаем при рендере,
+  // а не ищем в кэше коллекции.
+  function documentTitle(route) {
+    if (docTitles[route]) return docTitles[route];
+    var registry = window.ModuleRegistry;
+    var source = registry && registry.docSource ? registry.docSource(route) : null;
+    if (!source) return null;
+    var cache = jsonCache[source.collection];
+    var entry = cache && cache[source.key];
+    return entry && entry.title ? entry.title : null;
+  }
+
   return {
     init: init,
     render: render,
@@ -3758,6 +3960,7 @@ const PageController = (function() {
       }
     },
     jsonCache: jsonCache  ,
+    documentTitle: documentTitle,
     pageState: pageState,
     // Getter возвращает актуальный массив после открытия #ai-agents.
     // Простое значение здесь осталось бы снимком null, созданным до первого рендера.

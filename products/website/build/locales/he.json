@@ -156,6 +156,11 @@
         "subtitle": "",
         "title": ""
       },
+      "conveyors": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "clue-generator": {
         "kicker": "",
         "subtitle": "",
@@ -197,6 +202,11 @@
         "title": ""
       },
       "exposure-editor": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "exposures": {
         "kicker": "",
         "subtitle": "",
         "title": ""
@@ -489,9 +499,11 @@
       "cartography": "",
       "checkers": "",
       "club": "",
+      "conveyors": "",
       "dashboard": "",
       "design-system": "",
       "dictionaries": "",
+      "exposures": "",
       "ed-chat": "",
       "generators": "",
       "language-map": "",

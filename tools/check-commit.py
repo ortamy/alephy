@@ -10,6 +10,7 @@
   debug     [warn]   console.log / debugger / TODO / FIXME в добавленных строках;
   secrets   [error]  присвоение ключа/токена/пароля в добавленных строках;
   build     [error]  build/apps/researchlab разошёлся с исходниками;
+  data      [error]  data/methodology (index + documents/) разошёлся с docs/06-METHODOLOGY;
   docs      [error]  tools/check-docs.py check не проходит.
 
 Использование:
@@ -139,6 +140,32 @@ def check_docs() -> list[str]:
     return ["docs/ не проходит check-docs.py — вывод: python tools/check-docs.py check"]
 
 
+def check_generated_data() -> list[str]:
+    """docs/ → data/: методички переносит генератор, значит он же их и сверяет.
+
+    Запускается, когда затронуты исходники методичек, данные лаба или реестр, из
+    которого генератор берёт список документов: иначе правка в docs/ оставит
+    data/methodology/index.json и тела в documents/ молча устаревшими.
+    """
+    touched = [p.replace("\\", "/") for p in staged_paths()]
+    if not any(
+        p.startswith("docs/06-METHODOLOGY/")
+        or p.startswith("products/website/apps/researchlab/data/methodology/")
+        or p.endswith("apps/researchlab/js/module-registry.js")
+        for p in touched
+    ):
+        return []
+    proc = subprocess.run(
+        [sys.executable, str(ROOT / "tools" / "generate-methodology-docs.py"), "--check"],
+        cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
+    )
+    if proc.returncode == 0:
+        return []
+    detail = (proc.stdout or proc.stderr or "").strip().splitlines()
+    hint = detail[0] if detail else "запусти: python tools/generate-methodology-docs.py"
+    return [f"методички в data/ разошлись с docs/06-METHODOLOGY — {hint}"]
+
+
 def main() -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -153,6 +180,7 @@ def main() -> int:
     if args.message is not None:
         errors.extend(check_message(args.message))
     errors.extend(check_build_sync())
+    errors.extend(check_generated_data())
     errors.extend(check_docs())
 
     scan_errors, scan_warns = scan_added(lines)

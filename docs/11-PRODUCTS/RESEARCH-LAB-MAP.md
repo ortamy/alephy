@@ -17,16 +17,15 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 
 ### Сайдбар
 
-`#labSidebar` содержит верхние пункты и сворачиваемые группы. Каждый рабочий пункт — `.sidebar-item` с `data-module`; клик передаётся в `LabRouter.navigate()`.
+`#labSidebar` содержит верхние пункты и сворачиваемые группы. Каждый рабочий пункт — `.sidebar-item` с `data-module`; клик передаётся в `LabRouter.navigate()`. Состав, секции, иконки и i18n-ключи пунктов объявлены в `js/module-registry.js` (`nav`, `NAV_SECTIONS`), а расхождение разметки с реестром ловит `node tools/design-baseline/registry-check.mjs`.
 
-- Верхний уровень: **Манифест**, **Рабочий стол**.
-- **Данные**: Обучение, Словари, Исследования, Методология, Палео-механика, Палео-лингвистика, Карта языков, Религионизмы.
-- **Инструменты**: Палео-конструктор, Палео-клавиатура, Генераторы, Чекеры, Анализаторы, Конвейеры, Книгочтение, Компаратор.
-- **Исследование**: Расследование, Гербовник, Картография, Карта состояний, Палео-таймлайн.
-- **AI**: Агенты, Нейрочат, Палео-клавиатура.
-- **Система**: Настройки. Раздел доступен с учётом `AccessGate` и роли пользователя.
+- Верхний уровень: **Манифест**, **Рабочий стол**, **Мастерская**, **Палео-клуб**.
+- **Данные**: Книгочтение, Обучение, Словари, Разоблачения, Исследования, Методология, Палео-механика, Палео-лингвистика, Карта языков, Картография, Карта состояний, Таймлайн, Религионизмы.
+- **Инструменты**: Палео-конструктор, Палео-клавиатура, Генераторы, Чекеры, Анализаторы, Конвейеры.
+- **AI**: Агенты, Пайплайны, Запуск сервера, Нейрочат.
+- **Система**: Настройки, Дизайн-система. Раздел доступен с учётом `AccessGate` и роли пользователя.
 
-Часть инструментов доступна прямым hash-маршрутом, но сейчас не выведена отдельной ссылкой в сайдбаре: Корневой словарь, Палео-глоссарий, Разбор слов, Лингвистический тензор и дополнительные генераторы/чекеры.
+Часть инструментов доступна прямым hash-маршрутом, но не выведена отдельной ссылкой в сайдбаре: Корневой словарь, Палео-глоссарий, Разбор слов, Лингвистический тензор, дополнительные генераторы/чекеры и анализаторы. Эти модули попадают в поиск по подписи из `LabHero.targets`, но не занимают место в меню.
 
 ### Контентная область
 
@@ -69,8 +68,17 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 
 - **Маршрут:** `#dictionaries`.
 - **Функция:** навигация по словарям и корпусам подмен.
-- **Интерфейс:** заголовок страницы, список карточек/ссылок и переходы к отдельным Markdown-словарям.
+- **Интерфейс:** заголовок страницы, список карточек/ссылок с поиском, сортировкой и видом (список/сетка); страница одного словаря — таблица терминов с ивритским соответствием и палео-формой.
 - **Данные:** `data/dictionaries.json`.
+- **Отдельные маршруты:** `#dict-*` (21 словарь) открывают ту же страницу словаря, что и `#dictionaries/<key>`; источник объявлен в реестре (`doc.collection = 'dictionaries'`), провенанс — `docs/05-DICTIONARIES/*.md`.
+
+#### Разоблачения
+
+- **Маршрут:** `#exposures`.
+- **Функция:** каталог корпуса разоблачений — от принципов и механизмов подмены до приёмов и языковых сдвигов.
+- **Интерфейс:** заголовок страницы и сетка карточек документов (`.doc-grid`); карточка ведёт на маршрут документа.
+- **Данные:** `data/exposures/documents.json` — 14 документов (`title`, `description`, `sections`).
+- **Документы:** `#exposure-*` собираются из тех же данных: шапка и заголовок берутся из документа, «← Все документы разоблачения» возвращает в хаб.
 
 #### Исследования
 
@@ -85,6 +93,7 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 - **Функция:** изучение принципов, методов, механизмов и карточек методологического разбора.
 - **Интерфейс:** вкладки, фильтры и сетка карточек; детальные документы открываются внутри модуля.
 - **Данные:** `data/methodology/cards.json`, `principles.json`, `methods.json`, `mechanisms.json`.
+- **Документы:** `#method-*` (27 методичек) читают тела из `data/methodology/documents/<key>.json`, а список хаба — указатель `data/methodology/index.json` (заголовки, описания, провенанс). Оба набора собирает `tools/generate-methodology-docs.py` из `docs/06-METHODOLOGY/*.md` (список берётся из реестра). Страница документа показывает разделы Markdown, провенанс (`source`) и ссылку «← Материалы методологии» в хаб.
 
 #### Палео-механика
 
@@ -295,9 +304,9 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 - **Исследовательская доска:** `#board` — рабочая доска карточек, связей и групп; `#board-library` — архив сохранённых досок.
 - **Дополнительные анализаторы:** `#layer-analyzer`, `#ai-analyzer`, `#dialect-analyzer` — режимы общего `#analyzers`.
 - **Редактор:** `#exposure-editor` — динамический редактор материалов разоблачения.
-- **Словари:** `#dict-religionims`, `#dict-grecisms`, `#dict-latinisms`, `#dict-slavicisms`, `#dict-names`, `#dict-phrases`, `#dict-economisms`, `#dict-estethisms`, `#dict-gastronomisms`, `#dict-juridisms`, `#dict-marketisms`, `#dict-mediasms`, `#dict-medicinisms`, `#dict-militarisms`, `#dict-modernisms`, `#dict-newageisms`, `#dict-politisms`, `#dict-psychologisms`, `#dict-scientisms`, `#dict-sportisms`, `#dict-technologisms` — отдельные Markdown-страницы словарей.
-- **Документы разоблачения:** `#exposure-dictionary`, `#exposure-principles`, `#exposure-distortions`, `#exposure-mechanisms`, `#exposure-linguistic-methods`, `#exposure-methods`, `#exposure-language`, `#exposure-language-shifts`, `#exposure-bavelisms`, `#exposure-masoretic`, `#exposure-philosophemes`, `#exposure-system-architecture`, `#exposure-religionism-theory`, `#exposure-techniques` — Markdown-документы, загружаемые по карте `mdPaths`.
-- **Документы методологии:** `#method-archeology`, `#method-hebrew-reconstruction`, `#method-layers`, `#method-translation`, `#method-transliteration`, `#method-tree` — отдельные Markdown-документы методологии.
+- **Словари:** `#dict-religionims`, `#dict-grecisms`, `#dict-latinisms`, `#dict-slavicisms`, `#dict-names`, `#dict-phrases`, `#dict-economisms`, `#dict-estethisms`, `#dict-gastronomisms`, `#dict-juridisms`, `#dict-marketisms`, `#dict-mediasms`, `#dict-medicinisms`, `#dict-militarisms`, `#dict-modernisms`, `#dict-newageisms`, `#dict-politisms`, `#dict-psychologisms`, `#dict-scientisms`, `#dict-sportisms`, `#dict-technologisms` — маршруты словарей: открывают ту же страницу словаря, что и `#dictionaries/<key>` (источник объявлен в реестре, `collection: 'dictionaries'`).
+- **Документы разоблачения:** `#exposure-dictionary`, `#exposure-principles`, `#exposure-distortions`, `#exposure-mechanisms`, `#exposure-linguistic-methods`, `#exposure-methods`, `#exposure-language`, `#exposure-language-shifts`, `#exposure-bavelisms`, `#exposure-masoretic`, `#exposure-philosophemes`, `#exposure-system-architecture`, `#exposure-religionism-theory`, `#exposure-techniques` — документы корпуса из `data/exposures/documents.json`; хаб — `#exposures`, источник каждого маршрута объявлен в реестре (`doc`).
+- **Документы методологии:** 27 маршрутов `#method-*` — весь раздел `docs/06-METHODOLOGY` кроме служебных `README.md` и `TEMPLATE.md`: `#method-archeology`, `#method-hebrew-reconstruction`, `#method-layers`, `#method-translation`, `#method-transliteration`, `#method-tree`, `#method-books-states-map`, `#method-cultural-matrices`, `#method-davar`, `#method-distortions`, `#method-evidence`, `#method-exposure`, `#method-hypotheses`, `#method-linguistic-methods`, `#method-linguistic`, `#method-mechanisms`, `#method-methods`, `#method-paleo-reading-methods`, `#method-philosophemes`, `#method-principles`, `#method-protocol`, `#method-research-principles`, `#method-ritual-chain`, `#method-state-diagnostics`, `#method-states`, `#method-system-architecture`, `#method-techniques`. Содержимое собрано из `docs/06-METHODOLOGY/*.md` генератором `tools/generate-methodology-docs.py` в указатель `data/methodology/index.json` и тела `data/methodology/documents/<key>.json`; хаб — `#methodology`, который показывает список карточек, источник каждого маршрута объявлен в реестре (`doc`, `collection: 'methodology'`).
 
 ## 3. Связи между модулями
 
@@ -322,7 +331,7 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 
 ### LabSearch
 
-Глобальный поиск в хедере. Ищет по названиям и содержимому доступных модулей, включая карточки методологии, корни и книги. Результат содержит текст, название модуля и переход с параметрами через `LabRouter`.
+Глобальный поиск в хедере. Ищет по названиям и содержимому доступных модулей, включая карточки методологии, корни и книги. Индекс модулей строится из реестра (`ModuleRegistry.MODULES`), подписи берутся из сайдбара, а для модулей вне сайдбара — из `LabHero.targets`; своего списка модулей у поиска нет. Результат содержит текст, название модуля и переход с параметрами через `LabRouter`.
 
 ### LabModal
 
@@ -346,4 +355,4 @@ Research Lab находится в `products/website/apps/researchlab/` и ра�
 
 ### Сверка покрытия
 
-Карта включает все 27 видимых рабочих пунктов текущего сайдбара: 2 верхних пункта, 8 пунктов данных, 6 инструментов, 5 исследовательских модулей, 4 AI-модуля и 2 системных пункта. Скрытый `#settings` является алиасом `#admin-settings` и дополнительно учитывается в карте маршрутов. Перечислены также прямые маршруты, которые присутствуют в `router.js` и `PageController`, но не представлены отдельными пунктами текущего сайдбара.
+Карта включает все 29 видимых рабочих пунктов текущего сайдбара: 4 верхних пункта, 13 пунктов данных, 6 инструментов, 4 AI-модуля и 2 системных пункта. Состав сайдбара объявлен в `js/module-registry.js` и сверяется с разметкой гейтом `registry-check.mjs`. Скрытый `#settings` является алиасом `#admin-settings` и дополнительно учитывается в карте маршрутов. Перечислены также прямые маршруты, которые присутствуют в `router.js` и `PageController`, но не представлены отдельными пунктами текущего сайдбара. Корпус документов (21 словарь из `data/dictionaries.json`, 14 документов разоблачения из `data/exposures/documents.json`, 27 методичек из `data/methodology/index.json` и `documents/<key>.json`) объявлен там же полем `doc` и проверяется гейтом по файлам данных.

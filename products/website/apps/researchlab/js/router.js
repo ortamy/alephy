@@ -88,6 +88,21 @@ const LabRouter = (function() {
       var dictionary = PageController.jsonCache.dictionaries[dictionaryKey];
       if (dictionary && dictionary.title) return dictionary.title;
     }
+    // Маршрут-документ: подпись идёт из данных (PageController.documentTitle),
+    // а перед их загрузкой — из указателя коллекции в реестре. Английский id
+    // вида «method-states» в крошках пользователю показывать нечего.
+    if (window.ModuleRegistry && ModuleRegistry.kind(route) === 'markdown') {
+      var docTitle = window.PageController && PageController.documentTitle
+        ? PageController.documentTitle(route)
+        : null;
+      if (docTitle) return docTitle;
+      var docSource = ModuleRegistry.docSource(route);
+      if (docSource && docSource.docs) {
+        var file = String(docSource.docs).split('/').pop().replace(/\.md$/, '');
+        return fallbackTitle(file);
+      }
+      return fallbackTitle(String(route).split('/').pop().replace(/^(dict|exposure|method)-/, ''));
+    }
     if (window.LabHero && window.LabHero.getTitle) {
       var title = window.LabHero.getTitle(route);
       if (title) return title;
@@ -120,7 +135,13 @@ const LabRouter = (function() {
       routes.push('timeline/' + segments[1]);
       routes.push(segments.join('/'));
     } else {
-      for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
+      // Документ: АЛЕФИ → хаб группы → документ. Без хаба крошка вела бы в пустоту:
+    // у маршрута-документа нет родительского экрана в коде.
+    var docGroup = window.ModuleRegistry && ModuleRegistry.kind(moduleId) === 'markdown'
+      ? ModuleRegistry.docSource(moduleId)
+      : null;
+    if (docGroup && docGroup.hub) routes.push(docGroup.hub);
+    for (var i = 0; i < segments.length; i++) routes.push(segments.slice(0, i + 1).join('/'));
     }
 
     var crumb = container.querySelector('.lab-hero__kicker');

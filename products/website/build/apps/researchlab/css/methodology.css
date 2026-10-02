@@ -35,6 +35,36 @@
   margin: 0;
 }
 
+/* ===== МЕТОДИЧКИ (список документов-хаб) =====
+   Блок собирает page-controller (GROUP_INDEX_HUBS.methodology) и вставляется
+   перед тулбаром. Карточки — общие .doc-grid/.doc-card из
+   components/dict-term-doc.css, здесь только шапка коллекции. */
+.methodology-docs {
+  margin-bottom: var(--space-5);
+}
+.methodology-docs-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.methodology-docs-label {
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+.methodology-docs-rule {
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--border-light);
+}
+.methodology-docs-count {
+  color: var(--text-muted);
+  font-size: var(--ui-12);
+  font-variant-numeric: tabular-nums;
+}
 /* ===== РЕЕСТР КАРТОЧЕК =====
    Однотипные карточки раздела заменены плоским реестром: hairline-разделители,
    порядковый номер, заголовок с иконкой, короткая строка функции и действия,

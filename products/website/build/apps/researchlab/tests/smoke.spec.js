@@ -1,16 +1,22 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
 const { test, expect } = require('@playwright/test');
 
 const routerPath = path.resolve(__dirname, '..', 'js', 'module-registry.js');
 const screenshotDir = path.resolve(__dirname, 'screenshots');
 // Маршруты берём из js/module-registry.js — единственного источника правды.
-// Раньше список дублировался в router.js, и реестр молча расходился с рендером.
+// Читаем сам реестр (vm), а не текстовую регулярку: запись модуля теперь несёт
+// источник документа (doc), и шаблон по тексту молча терял 41 маршрут.
 function routesFromRegistry() {
-  const source = fs.readFileSync(routerPath, 'utf8');
-  const entries = [...source.matchAll(/\{ id: '([^']+)', kind: '([^']+)' \}/g)];
-  if (!entries.length) throw new Error('Could not find MODULES in js/module-registry.js');
-  return entries.map((item) => item[1]);
+  const sandbox = { window: {} };
+  vm.createContext(sandbox);
+  vm.runInContext(fs.readFileSync(routerPath, 'utf8'), sandbox);
+  const registry = sandbox.window.ModuleRegistry;
+  if (!registry || !registry.MODULES || !registry.MODULES.length) {
+    throw new Error('Could not find MODULES in js/module-registry.js');
+  }
+  return registry.MODULES.map((entry) => entry.id);
 }
 
 const routes = routesFromRegistry();
@@ -144,7 +150,13 @@ const moduleAnchors = {
   vision: '.vi-bento',
   analyzers: '.analyzers-shell',
   religionisms: '.rel-bento',
-  'design-system': '.ds-bento'
+  'design-system': '.ds-bento',
+  // Хаб разоблачений и документы: ловят случай «данные не дошли, панель пустая».
+  exposures: '#exposure-doc-grid',
+  'dict-grecisms': '.research-page-head',
+  'exposure-principles': '.research-section',
+  'method-tree': '.research-section',
+  'method-archeology': '.research-section'
 };
 
 const gridRoutes = process.env.SMOKE_QUICK === '1' ? routes.filter((route) => quickRoutes.has(route)) : routes;
@@ -249,6 +261,28 @@ test.describe('module registry', () => {
     });
     expect(unknown.id, 'неизвестный маршрут должен показать error-state').toBe('unknown-route');
     expect(unknown.text).toContain('не зарегистрирован');
+  });
+
+  // Достижимость корпуса: документ, до которого нельзя дойти с хаба, живёт
+  // только по прямому адресу. Проверяем список хаба против реестра — размер и
+  // число ссылок, без ручного перечисления маршрутов.
+  test('хабы показывают все документы своих групп', async ({ page }) => {
+    // Группы живут на разных хабах: список читается только на активной странице,
+    // поэтому каждую открываем и ждём её карточек.
+    await page.goto('/#dashboard', { waitUntil: 'domcontentloaded' });
+    const groups = await page.evaluate(() => window.ModuleRegistry.DOC_GROUPS
+      .filter((group) => group.index)
+      .map((group) => ({ id: group.id, hub: group.hub, expected: window.ModuleRegistry.docs(group.id).length })));
+    for (const group of groups) {
+      await page.goto(`/#${group.hub}`, { waitUntil: 'domcontentloaded' });
+      const cards = page.locator(`#${group.hub} .doc-card`);
+      await expect(cards, `список группы «${group.id}» на #${group.hub}`)
+        .toHaveCount(group.expected, { timeout: SPINNER_BUDGET_MS });
+      const keys = await page.evaluate((hub) => Array.from(document.querySelectorAll(`#${hub} .doc-card`))
+        .map((card) => card.getAttribute('data-key')), group.hub);
+      const orphans = keys.filter((key) => key === null || key === '');
+      expect(orphans, `#${group.hub}: карточки без ключа документа ${orphans}`).toEqual([]);
+    }
   });
 });
 

@@ -11,25 +11,52 @@
     scripture: 'data/qumran-books.json'
   };
   var state = { items: [], loaded: false, loading: null, roots: [], rootLinks: [] };
-  var MODULES = [
-    ['dashboard', 'Рабочий стол', 'Лаборатория'], ['manifest', 'Манифест', 'Система'],
-    ['root-dictionary', 'Корневой словарь', 'Словари'], ['dictionaries', 'Словари', 'Словари'],
-    ['word-analyzer', 'Разбор слова', 'Анализ'], ['methodology', 'Методология', 'Методология'],
-    ['researches', 'Исследования', 'Исследования'], ['learn', 'Обучение', 'Обучение'],
-    ['scripture-reader', 'Книгочтение', 'Книгочтение'], ['cartography', 'Картография', 'Данные'],
-    ['religionisms', 'Религионизмы', 'Анализ'],
-    ['pipelines', 'Конвейеры', 'Рабочая область'], ['workbench', 'Мастерская', 'Рабочая область'],
-    ['board', 'Доска', 'Рабочая область'], ['ai-agents', 'AI-агенты', 'Система'],
-    ['prompt-generator', 'Генератор промптов', 'Инструменты'], ['clue-generator', 'Генератор улик', 'Инструменты'],
-    ['hypothesis-generator', 'Генератор гипотез', 'Инструменты'], ['timescale-generator', 'Генератор шкалы времени', 'Инструменты'],
-    ['context-generator', 'Генератор контекста', 'Инструменты'],
-    ['artifact-generator', 'Генератор артефактов', 'Инструменты'],
-    ['change-generator', 'Генератор изменений', 'Инструменты'],
-    ['paleo-keyboard', 'Палео-клавиатура', 'Инструменты'], ['timeline', 'Временная шкала', 'Данные'],
-    ['language-map', 'Карта языков', 'Данные'], ['states', 'Состояния', 'Данные'],
-    ['video-lab', 'Видео-лаборатория', 'Инструменты'], ['admin-settings', 'Настройки', 'Система'],
-    ['design-system', 'Дизайн-система', 'Система']
-  ];
+
+  /* Индекс модулей собирается из реестра (маршруты), сайдбара (подписи и
+     разделы) и LabHero.targets (подписи модулей вне сайдбара). Своя копия
+     списка была третьей по счёту и расходилась с реестром молча; её больше нет,
+     а согласованность реестра с сайдбаром держит registry-check.mjs. */
+  function sidebarIndex() {
+    var index = {};
+    var nodes = document.querySelectorAll ? document.querySelectorAll('a.sidebar-item[data-module]') : [];
+    Array.prototype.forEach.call(nodes, function (node) {
+      var id = node.getAttribute('data-module');
+      if (!id || index[id]) return;
+      var section = node.closest ? node.closest('.sidebar-section') : null;
+      var head = section ? section.querySelector('.sidebar-section-header') : null;
+      index[id] = {
+        label: node.textContent.replace(/\s+/g, ' ').trim(),
+        section: head ? head.textContent.replace(/\s+/g, ' ').trim() : 'Лаборатория'
+      };
+    });
+    return index;
+  }
+
+  function heroTitles() {
+    var hero = global.LabHero;
+    var targets = (hero && hero.targets) || {};
+    var titles = {};
+    Object.keys(targets).forEach(function (id) {
+      if (targets[id] && targets[id].title) titles[id] = targets[id].title;
+    });
+    return titles;
+  }
+
+  function moduleEntries() {
+    var registry = global.ModuleRegistry;
+    if (!registry || !registry.MODULES) return [];
+    var inSidebar = sidebarIndex(), titles = heroTitles();
+    return registry.MODULES.filter(function (entry) {
+      return entry.kind === 'panel';
+    }).map(function (entry) {
+      var nav = inSidebar[entry.id];
+      return {
+        id: entry.id,
+        title: (nav && nav.label) || titles[entry.id] || entry.id,
+        section: nav ? nav.section : 'Лаборатория'
+      };
+    });
+  }
 
   function normalize(value) {
     return String(value == null ? '' : value).toLocaleLowerCase('ru-RU')
@@ -69,9 +96,44 @@
     });
   }
 
+  // Документы корпуса: тела лежат по файлам (methodology), поэтому в индекс
+  // попадает указатель коллекции — заголовок, описание и ключ. Ключ без
+  // маршрута в реестре не индексируется: ссылка была бы в никуда.
+  function documentItems(data, group, label) {
+    var registry = global.ModuleRegistry;
+    var routes = {};
+    registry.docs(group).forEach(function(entry) {
+      var doc = registry.docSource(entry.id);
+      if (doc && doc.key) routes[doc.key] = entry.id;
+    });
+    Object.keys(data || {}).forEach(function(key) {
+      var route = routes[key];
+      var documentData = data[key] || {};
+      if (!route) return;
+      add(state.items, 'document', documentData.title || key, documentData.description,
+        route, label, key + ' ' + (documentData.title || '') + ' ' + (documentData.description || ''));
+    });
+  }
+
+  function collectionIndex(group) {
+    var registry = global.ModuleRegistry;
+    var meta = registry && registry.COLLECTIONS ? registry.COLLECTIONS[group] : null;
+    return meta && meta.file ? meta : null;
+  }
+
+  // Подпись группы берётся из шапки её хаба — иначе в палитре появился бы
+  // английский идентификатор коллекции.
+  function collectionLabel(group) {
+    var meta = collectionIndex(group);
+    var titles = meta ? heroTitles() : {};
+    var hub = meta && meta.hub;
+    return (hub && titles[hub]) || group;
+  }
+
   function moduleItems() {
-    return MODULES.map(function (m) {
-      return { type: 'module', title: m[1], snippet: m[1], route: m[0], source: m[2], keywords: normalize(m[0] + ' ' + m[2]) };
+    return moduleEntries().map(function (m) {
+      return { type: 'module', title: m.title, snippet: m.title, route: m.id,
+        source: m.section || 'Лаборатория', keywords: normalize(m.id + ' ' + m.section) };
     });
   }
 
@@ -110,6 +172,17 @@
         });
       }).catch(function (error) { console.warn('[LabSearch] fallback:', error.message); });
     })).then(function () {
+      // Документы коллекций: словари уже разложены на слова и термины выше,
+      // поэтому в указатель попадают только exposures и methodology.
+      var documents = ['exposures', 'methodology'].map(function (group) {
+        var meta = collectionIndex(group);
+        if (!meta) return Promise.resolve();
+        return readJson(meta.file).then(function (data) {
+          documentItems(data, group, collectionLabel(group));
+        }).catch(function (error) { console.warn('[LabSearch] fallback:', error.message); });
+      });
+      return Promise.all(documents);
+    }).then(function () {
       addRootLinkItems();
       state.loaded = true;
       return state.items;
@@ -146,7 +219,7 @@
       if (!groups[key]) groups[key] = [];
       groups[key].push(item);
     });
-    var icons = { 'Лаборатория': 'layout-dashboard', 'Система': 'settings-2', 'Словари': 'book-open', 'Корни': 'git-branch', 'Методология': 'hammer', 'Книгочтение': 'book-open', 'Анализ': 'scan-search', 'Данные': 'globe-2', 'Инструменты': 'wrench', 'Рабочая область': 'panels-top-left', 'Исследования': 'library' };
+    var icons = { 'Лаборатория': 'layout-dashboard', 'Система': 'settings-2', 'Словари': 'book-open', 'Корни': 'git-branch', 'Методология': 'hammer', 'Книгочтение': 'book-open', 'Анализ': 'scan-search', 'Данные': 'globe-2', 'Инструменты': 'wrench', 'Рабочая область': 'panels-top-left', 'Исследования': 'library', 'Разоблачения': 'scan-search', 'Материалы методологии': 'hammer' };
     Object.keys(groups).forEach(function (source) {
       var group = document.createElement('section'); group.className = 'sr-group';
       var head = document.createElement('div'); head.className = 'sr-group-head';

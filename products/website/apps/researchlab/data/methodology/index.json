@@ -1,0 +1,164 @@
+{
+  "archeology": {
+    "title": "Археология смыслов",
+    "description": "Методология послойного анализа библейских понятий. Семь врат — от современного искажения до ивритского оригинала. Карта сдвига смысла.",
+    "source": "docs/06-METHODOLOGY/ARCHEOLOGY.md",
+    "file": "data/methodology/documents/archeology.json"
+  },
+  "reconstruction": {
+    "title": "Восстановление оригинала",
+    "description": "Методы восстановления ивритского оригинала греческих писаний. От обратного перевода до лингвистической реконструкции. Ресурсы, статистика, практическая схема.",
+    "source": "docs/06-METHODOLOGY/RECONSTRUCTION.md",
+    "file": "data/methodology/documents/reconstruction.json"
+  },
+  "layers": {
+    "title": "Метод послойного вскрытия",
+    "description": "Метод послойного вскрытия подмены. От современного перевода к ивритскому источнику через шесть слоёв.",
+    "source": "docs/06-METHODOLOGY/LAYERS.md",
+    "file": "data/methodology/documents/layers.json"
+  },
+  "translation": {
+    "title": "Переводческая методология",
+    "description": "Практическое руководство по переводу и исследованию ивритских терминов.",
+    "source": "docs/06-METHODOLOGY/TRANSLATION.md",
+    "file": "data/methodology/documents/translation.json"
+  },
+  "transliteration": {
+    "title": "Транслитерации",
+    "description": "Методологическая рамка для понимания транслитераций как инструмента культурного переноса.",
+    "source": "docs/06-METHODOLOGY/TRANSLITERATION.md",
+    "file": "data/methodology/documents/transliteration.json"
+  },
+  "tree": {
+    "title": "Метод дерева",
+    "description": "Инструмент проверки любого учения по модели дерева. От корней до плодов. Основано на ТаНаХе и словах Йешуа.",
+    "source": "docs/06-METHODOLOGY/TREE.md",
+    "file": "data/methodology/documents/tree.json"
+  },
+  "books-states-map": {
+    "title": "Дерех состояний по книгам",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/BOOKS-STATES-MAP.md",
+    "file": "data/methodology/documents/books-states-map.json"
+  },
+  "cultural-matrices": {
+    "title": "Культурные матрицы подмены",
+    "description": "Культурные матрицы подмены — от Вавилона до Синодального. Пять слоёв: Вавилон, Египет, Греция, Рим, Славянский.",
+    "source": "docs/06-METHODOLOGY/CULTURAL-MATRICES.md",
+    "file": "data/methodology/documents/cultural-matrices.json"
+  },
+  "davar": {
+    "title": "📜 guide-davar — давар: языковая модель проекта «алефи»",
+    "description": "Руководство по языковой модели «Давар» — архитектура, обучение, использование",
+    "source": "docs/06-METHODOLOGY/DAVAR.md",
+    "file": "data/methodology/documents/davar.json"
+  },
+  "distortions": {
+    "title": "📜 типы искажений",
+    "description": "Классификация типов искажений, через которые проходят ивритские понятия при переводе. Девять типов, каждый со своими приёмами. Комбинации типов и способы восстановления.",
+    "source": "docs/06-METHODOLOGY/DISTORTIONS.md",
+    "file": "data/methodology/documents/distortions.json"
+  },
+  "evidence": {
+    "title": "📜 критерии доказательности",
+    "description": "Критерии доказательности для разоблачений: факт, интерпретация, гипотеза. Карта утрат. Принцип Арона. Хук Свива. Правила работы с неполными данными.",
+    "source": "docs/06-METHODOLOGY/EVIDENCE.md",
+    "file": "data/methodology/documents/evidence.json"
+  },
+  "exposure": {
+    "title": "🎯 exposure-quickstart — быстрый старт",
+    "description": "Как быстро найти нужный метод, приём или тип искажения в exposure-файлах",
+    "source": "docs/06-METHODOLOGY/EXPOSURE.md",
+    "file": "data/methodology/documents/exposure.json"
+  },
+  "hypotheses": {
+    "title": "Гипотезы проекта «алефи»",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/HYPOTHESES.md",
+    "file": "data/methodology/documents/hypotheses.json"
+  },
+  "linguistic-methods": {
+    "title": "📜 лингвистические методы разоблачения",
+    "description": "Двенадцать лингвистических методов разоблачения переводческих искажений через обращение к палео-ивриту как первичному слою. Дополнительно: два метода диагностики поздних слоёв.",
+    "source": "docs/06-METHODOLOGY/LINGUISTIC-METHODS.md",
+    "file": "data/methodology/documents/linguistic-methods.json"
+  },
+  "linguistic": {
+    "title": "📜 языковые искажения",
+    "description": "Десять языковых искажений — каждое как единство макро-сдвига и микро-подмены.",
+    "source": "docs/06-METHODOLOGY/LINGUISTIC.md",
+    "file": "data/methodology/documents/linguistic.json"
+  },
+  "mechanisms": {
+    "title": "📜 механизмы подмены",
+    "description": "Девять механизмов подмены — стратегии, которые переводческие слои используют, чтобы заменить палео-механику на греко-римские конструкции.",
+    "source": "docs/06-METHODOLOGY/MECHANISMS.md",
+    "file": "data/methodology/documents/mechanisms.json"
+  },
+  "methods": {
+    "title": "📜 методы разоблачения",
+    "description": "40 методов разоблачения подмен. Каждый метод: суть, как применять, конкретный пример, восстановление.",
+    "source": "docs/06-METHODOLOGY/METHODS.md",
+    "file": "data/methodology/documents/methods.json"
+  },
+  "paleo-reading-methods": {
+    "title": "📜 методы чтения палео-ивритского слова",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/PALEO-READING-METHODS.md",
+    "file": "data/methodology/documents/paleo-reading-methods.json"
+  },
+  "philosophemes": {
+    "title": "📜 греческие философемы",
+    "description": "Греческие философемы — концептуальные модели мышления, навязанные ТаНаХу через переводы и культурную адаптацию.",
+    "source": "docs/06-METHODOLOGY/PHILOSOPHEMES.md",
+    "file": "data/methodology/documents/philosophemes.json"
+  },
+  "principles": {
+    "title": "📜 основные принципы разоблачения",
+    "description": "Основные принципы разоблачения переводческих искажений. Критерии эмет (верного, надёжного) и шекер (искажённого, разрушающего).",
+    "source": "docs/06-METHODOLOGY/PRINCIPLES.md",
+    "file": "data/methodology/documents/principles.json"
+  },
+  "protocol": {
+    "title": "📜 общий протокол разоблачения",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/PROTOCOL.md",
+    "file": "data/methodology/documents/protocol.json"
+  },
+  "research-principles": {
+    "title": "Принципы исследований",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/RESEARCH-PRINCIPLES.md",
+    "file": "data/methodology/documents/research-principles.json"
+  },
+  "ritual-chain": {
+    "title": "📜 ритуальная цепочка",
+    "description": "Полная теория религионизмов — каждая система, созданная человеком вне откровения Яхве, есть религионизм со своим алтарём, жрецами и жертвами.",
+    "source": "docs/06-METHODOLOGY/RITUAL-CHAIN.md",
+    "file": "data/methodology/documents/ritual-chain.json"
+  },
+  "state-diagnostics": {
+    "title": "ПРОТОКОЛ ДИАГНОСТИКИ СОСТОЯНИЙ СТРАН (Палео-механический стандарт v1.0)",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/STATE-DIAGNOSTICS.md",
+    "file": "data/methodology/documents/state-diagnostics.json"
+  },
+  "states": {
+    "title": "Карта состояний пространства",
+    "description": "",
+    "source": "docs/06-METHODOLOGY/STATES.md",
+    "file": "data/methodology/documents/states.json"
+  },
+  "system-architecture": {
+    "title": "📜 архитектура системы",
+    "description": "Полная архитектура системы — компоненты, этапы вербовки, защита, жизненный цикл.",
+    "source": "docs/06-METHODOLOGY/SYSTEM-ARCHITECTURE.md",
+    "file": "data/methodology/documents/system-architecture.json"
+  },
+  "techniques": {
+    "title": "📜 приёмы подмены",
+    "description": "Полный каталог приёмов подмены с палео-образами, способами распознавания и ссылками на типы искажений.",
+    "source": "docs/06-METHODOLOGY/TECHNIQUES.md",
+    "file": "data/methodology/documents/techniques.json"
+  }
+}
