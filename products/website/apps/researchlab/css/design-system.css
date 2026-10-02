@@ -162,6 +162,8 @@
 
 .module .ds-cell .ds-cell-title {
   margin: 0;
+  padding: 0;
+  border-bottom: 0;
   color: var(--text-secondary);
   font-family: var(--font-ui);
   font-size: var(--ui-11);
