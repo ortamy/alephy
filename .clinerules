@@ -267,6 +267,16 @@ products/website/apps/researchlab/css/lab.css
 
 Переиспользуй существующую разметку и стили. Новый общий компонент создавай только после проверки, что аналога нет. Если случая нет в DESIGN-SYSTEM.md — предложи токен/правило и ДОБАВЬ его в файл (согласовать), а не импровизируй.
 
+**Шапка ячейки bento (DESIGN-SYSTEM §4.1a) — копируй эталон, не пиши по памяти:**
+
+- Заголовок ячейки = лейбл полосы, **не** заголовок страницы: `font-family: var(--font-ui)`, `font-size: var(--ui-11)`, `font-weight: 700`, `letter-spacing: var(--tracking-caps)`, `text-transform: uppercase`. Один размер на все ячейки модуля; свой кегль или вес 600 — разнобой.
+- Коротких чёрточек под заголовком быть не должно. Линия живёт **только** на `.xx-cell-head` и тянется во всю ширину ячейки. Причина чёрки — незабитый сброс `margin/padding/border-bottom` базового `.module h2:not(:last-child)` из `layout.css`.
+- Селектор заголовка **обязан** содержать `.module` (специфичность 0,2,1 против базовых 0,2,0) и `border-bottom: 0`.
+- Номер главы — mono `--ui-11`, подпись справа — `--ui-12` mono, `margin-left: auto`.
+
+Образец для копирования: `products/website/apps/researchlab/css/religionisms.css`
+(`.rel-cell-head`, `.rel-cell-title`), также `scripture-reader-bento.css`, `workbench-bento.css`.
+
 ### Концепция «современный манускрипт»:
 
 - Whitespace как пергаментное дыхание (большие отступы = роскошь).
