@@ -57,7 +57,7 @@
   align-items: flex-start;
   gap: 10px;
   position: relative;
-  padding-right: 88px; /* место для двух 40px действий и зазора */
+  padding-right: 92px; /* место для двух 40px действий и зазора 6px */
 }
 
 .tl-detail-event .tl-status-dot {
@@ -77,7 +77,7 @@
   transform: translateY(-50%);
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tl-detail-event:hover .tl-event-actions,
@@ -85,6 +85,9 @@
   display: flex;
 }
 
+/* Иконка-действие события: Lucide-глиф 20px в 40px-квадрате. Глиф растёт
+   вдвое против прежней текстовой «›»/«⎘», а третичный фон и рамка делают
+   кнопку читаемой на белой карточке без наведения. */
 .tl-event-action-btn {
   display: inline-flex;
   align-items: center;
@@ -92,20 +95,25 @@
   width: 40px;
   height: 40px;
   padding: 0;
-  font-family: var(--font-ui);
-  font-size: var(--ui-11);
-  color: var(--text-muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
   cursor: pointer;
   transition: color var(--motion-base), border-color var(--motion-base), background var(--motion-base);
+}
+
+.tl-event-action-btn .lab-icon,
+.tl-event-action-btn svg {
+  width: 20px;
+  height: 20px;
+  margin-right: 0;
 }
 
 .tl-event-action-btn:hover {
   color: var(--accent-gold);
   border-color: var(--accent-gold);
-  background: var(--bg-secondary);
+  background: var(--bg-tertiary);
 }
 
 .tl-event-action-btn:focus-visible {

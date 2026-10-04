@@ -508,8 +508,19 @@ const Timeline = (function() {
     fallbackCopy(url);
   }
 
-  // Полный вид ленты (#timeline/<id>/full): поиск по событиям, мини-ось
-  // (sticky) и полные карточки событий с источником и кросс-ссылками.
+  // Иконки тулбара и меню событий приходят как data-lucide: после innerHTML
+  // их нужно материализовать. MutationObserver в lucide-init.js делает это
+  // отложенно; явный sync даёт глиф сразу на первом рендере.
+  function refreshIcons() {
+    if (window.LabIcons && typeof window.LabIcons.sync === 'function') {
+      window.LabIcons.sync();
+    } else if (window.lucide && window.lucide.createIcons) {
+      try { window.lucide.createIcons(); } catch (error) { /* иконки не критичны */ }
+    }
+  }
+
+  // Полный вид ленты (#timeline/<id>): командный тулбар (§4.7), липкая
+  // мини-ось и события листа bento с источником и кросс-ссылками.
   function renderDetail(timelineId) {
     var timeline = timelineItems.filter(function(item) {
       return item.id === timelineId;
@@ -521,30 +532,40 @@ const Timeline = (function() {
     var eventsHtml = events.map(function(event, index) {
       return renderEventRow(event, index, timeline.id);
     }).join('');
+    var countLabel = total + ' ' + pluralize(total, 'событие', 'события', 'событий');
+    // Сравнение доступно только датированным лентам: его контрол живёт в
+    // правом краю тулбара, отдельной строки-пикера больше нет.
+    var compareHtml = isDatedTimeline(timeline)
+      ? '<span class="tl-compare-label">Сравнение</span>' + compareSelectHtml(timeline.id, null, 'Лента для сравнения')
+      : '';
 
-    // Шапку детального экрана рисует LabHero. Внутри — back-ссылка,
-    // мета-строка, тулбар поиска, мини-ось и события.
+    // Шапку детального экрана рисует LabHero. Весь хром ленты — поиск,
+    // возврат в каталог, счётчик, сравнение и ссылку — несёт одна полоса
+    // тулбара вместо прежних четырёх. Поиск держит левый край (§4.7): он
+    // первым в разметке, а вторичные действия прижимает вправо margin-left:auto
+    // группы сравнения. Ниже — бенто из двух ячеек: липкая ось и события.
     // data-timeline-id на корне детали: deep-link #timeline/<id> обязан нести
     // идентификатор ленты в DOM (по нему работают smoke-проверки и кросс-ссылки).
     timelineContainer.innerHTML =
       '<section class="tl-detail" data-timeline-id="' + escapeHtml(timeline.id) + '" aria-label="Таймлайн: ' + escapeHtml(timeline.title) + '">' +
-        '<div class="tl-detail-toolbar"><button class="tl-detail-back" type="button">← К каталогу</button><button class="tl-detail-link" type="button" data-no-icon aria-label="Скопировать ссылку с текущим состоянием"><i data-lucide="link" aria-hidden="true"></i><span>Ссылка</span></button></div>' +
-        '<div class="tl-detail-meta tl-meta-line">' +
-          '<span class="tl-detail-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(timeline.paleoIcon) + '</span>' +
-          '<span class="meta-sep">·</span>' +
-          '<span>' + total + ' ' + pluralize(total, 'событие', 'события', 'событий') + '</span>' +
+        '<div class="lab-toolbar tl-detail-toolbar" role="search" aria-label="Управление лентой «' + escapeHtml(timeline.title) + '»">' +
+          '<input class="lab-input lab-toolbar-search tl-detail-search" type="search" placeholder="Поиск по событиям…" aria-label="Поиск по событиям">' +
+          '<button class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn tl-detail-back" type="button"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К каталогу</button>' +
+          '<span class="lab-toolbar-count tl-detail-count" aria-live="polite">' + total + ' из ' + total + '</span>' +
+          '<div class="lab-toolbar-group tl-detail-compare" role="group" aria-label="Сравнение лент">' + compareHtml + '</div>' +
+          '<button class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn tl-detail-link" type="button" aria-label="Скопировать ссылку с текущим состоянием"><i data-lucide="link" class="lab-icon" aria-hidden="true"></i>Ссылка</button>' +
         '</div>' +
-        (isDatedTimeline(timeline) ? compareLaunchHtml(timeline.id) : '') +
-        '<div class="tl-detail-toolbar">' +
-          '<input class="lab-input tl-detail-search" type="search" placeholder="Поиск по событиям…" aria-label="Поиск по событиям">' +
-          '<span class="tl-detail-count" aria-live="polite">' + total + ' из ' + total + '</span>' +
+        '<div class="tl-bento">' +
+          '<section class="tl-cell tl-cell--axis">' +
+            '<div class="tl-cell-head"><span class="tl-num">01</span><span class="tl-cell-title">Ось событий</span><span class="tl-cell-hint">' + escapeHtml(countLabel) + '</span></div>' +
+            '<div class="tl-axis-scroll tl-detail-axis">' + axisFrameHtml(events) + '</div>' +
+          '</section>' +
+          '<section class="tl-cell tl-cell--events">' +
+            '<div class="tl-cell-head"><span class="tl-num">02</span><span class="tl-cell-title">События</span></div>' +
+            '<div class="tl-detail-events" role="list" aria-label="События таймлайна">' + eventsHtml + '</div>' +
+            '<div class="tl-detail-empty" role="status" hidden>По вашему запросу событий не найдено. <button type="button" data-action="reset-search">Сбросить поиск</button></div>' +
+          '</section>' +
         '</div>' +
-        '<div class="tl-axis-scroll tl-detail-axis">' +
-          '<div class="tl-axis-caption">События на оси · ' + total + '</div>' +
-          axisFrameHtml(events) +
-        '</div>' +
-        '<div class="tl-detail-events" role="list" aria-label="События таймлайна">' + eventsHtml + '</div>' +
-        '<div class="tl-detail-empty" role="status" hidden>По вашему запросу событий не найдено. <button type="button" data-action="reset-search">Сбросить поиск</button></div>' +
       '</section>';
 
     // Шапка модуля подменяется на динамический заголовок таймлайна — ПОСЛЕ
@@ -650,6 +671,8 @@ const Timeline = (function() {
         }
       });
     });
+
+    refreshIcons();
   }
 
   // ===== СРАВНЕНИЕ ЛЕНТ (#timeline/compare/<idA>/<idB>) =====
@@ -664,19 +687,18 @@ const Timeline = (function() {
     });
   }
 
-  // Пикер второй ленты на детальном экране (скрыт, если сравнивать не с чем).
-  function compareLaunchHtml(excludeId) {
+  // Пикер второй ленты: только <select>. Оболочку (группу тулбара или строку
+  // экрана сравнения) задаёт вызывающий экран — сам контрол один на оба.
+  function compareSelectHtml(excludeId, selectedId, ariaLabel) {
     var others = getDatedTimelines(excludeId);
     if (!others.length) return '';
-    return '<div class="tl-compare-launch">' +
-      '<span class="tl-compare-label">СРАВНЕНИЕ</span>' +
-      '<select class="tl-compare-select" data-compare-of="' + escapeHtml(excludeId) + '" aria-label="Лента для сравнения">' +
-        '<option value="">— выберите ленту —</option>' +
-        others.map(function(tl) {
-          return '<option value="' + escapeHtml(tl.id) + '">' + escapeHtml(tl.title) + ' (' + tl.events.length + ')</option>';
-        }).join('') +
-      '</select>' +
-    '</div>';
+    return '<select class="tl-compare-select" data-compare-of="' + escapeHtml(excludeId) + '" aria-label="' + escapeHtml(ariaLabel) + '">' +
+      '<option value="">— выберите ленту —</option>' +
+      others.map(function(tl) {
+        var sel = selectedId && tl.id === selectedId ? ' selected' : '';
+        return '<option value="' + escapeHtml(tl.id) + '"' + sel + '>' + escapeHtml(tl.title) + ' (' + tl.events.length + ')</option>';
+      }).join('') +
+    '</select>';
   }
 
   function renderCompare(idA, idB) {
@@ -688,30 +710,23 @@ const Timeline = (function() {
     var timelineB = idB ? timelineItems.filter(function(t) { return t.id === idB; })[0] : null;
     // Сравнение строится по sortKey: недатированная или неизвестная лента B игнорируется.
     if (timelineB && !isDatedTimeline(timelineB)) timelineB = null;
-    var datedOthers = getDatedTimelines(idA);
 
+    // Тулбар тот же компонент, что и на полном виде ленты: возврат к ленте,
+    // мета-строка A × B, пикер второй ленты и «поменять стороны».
     var headHtml =
       '<section class="tl-compare" aria-label="Сравнение лент">' +
-        '<button class="tl-detail-back" type="button">К ленте «' + escapeHtml(timelineA.title) + '»</button>' +
-        '<div class="tl-detail-meta tl-meta-line">' +
-          '<span class="tl-detail-glyph" lang="hbo" aria-hidden="true">' + escapeHtml(timelineA.paleoIcon) + '</span>' +
-          '<span class="meta-sep">·</span>' +
-          '<span>' + escapeHtml(timelineA.title) + '</span>' +
-          (timelineB ? '<span class="meta-sep">×</span><span>' + escapeHtml(timelineB.title) + '</span>' : '') +
+        '<div class="lab-toolbar tl-detail-toolbar" role="search" aria-label="Управление сравнением лент">' +
+          '<button class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn tl-detail-back" type="button"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К ленте</button>' +
+          '<span class="tl-detail-meta tl-meta-line">' +
+            '<span>' + escapeHtml(timelineA.title) + '</span>' +
+            (timelineB ? '<span class="meta-sep">×</span><span>' + escapeHtml(timelineB.title) + '</span>' : '') +
+          '</span>' +
+          '<div class="lab-toolbar-group tl-detail-compare" role="group" aria-label="Вторая лента для сравнения">' +
+            '<span class="tl-compare-label">Сравнение</span>' +
+            compareSelectHtml(idA, timelineB && timelineB.id, 'Вторая лента для сравнения') +
+          '</div>' +
+          (timelineB ? '<button class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn tl-compare-swap" type="button"><i data-lucide="arrow-left-right" class="lab-icon" aria-hidden="true"></i>Поменять стороны</button>' : '') +
         '</div>';
-
-    headHtml +=
-      '<div class="tl-compare-launch">' +
-        '<span class="tl-compare-label">СРАВНЕНИЕ</span>' +
-        '<select class="tl-compare-select" aria-label="Вторая лента для сравнения">' +
-          '<option value="">— выберите ленту —</option>' +
-          datedOthers.map(function(tl) {
-            var sel = timelineB && timelineB.id === tl.id ? ' selected' : '';
-            return '<option value="' + escapeHtml(tl.id) + '"' + sel + '>' + escapeHtml(tl.title) + ' (' + tl.events.length + ')</option>';
-          }).join('') +
-        '</select>' +
-        (timelineB ? '<button class="tl-compare-swap" type="button">⇄ Поменять стороны</button>' : '') +
-      '</div>';
 
     var rowsHtml = '';
     if (timelineB) {
@@ -740,9 +755,21 @@ const Timeline = (function() {
       rowsHtml = '<div class="lab-alert lab-alert-info">Выберите вторую ленту — события выстроятся в одну хронологию по sortKey.</div>';
     }
 
+    // Бенто тех же двух ячеек, что и на полном виде: ось сравнения (если есть
+    // вторая лента) и сводная хронология.
     timelineContainer.innerHTML = headHtml +
-      (timelineB ? '<div class="tl-compare-axis tl-detail-axis">' + axisFrameHtml(sortedEvents(timelineA), sortedEvents(timelineB)) + '</div>' : '') +
-      '<div class="tl-detail-events" role="list" aria-label="Сводная хронология">' + rowsHtml + '</div>' +
+      '<div class="tl-bento">' +
+        (timelineB
+          ? '<section class="tl-cell tl-cell--axis">' +
+              '<div class="tl-cell-head"><span class="tl-num">01</span><span class="tl-cell-title">Ось сравнения</span></div>' +
+              '<div class="tl-axis-scroll tl-detail-axis tl-compare-axis">' + axisFrameHtml(sortedEvents(timelineA), sortedEvents(timelineB)) + '</div>' +
+            '</section>'
+          : '') +
+        '<section class="tl-cell tl-cell--events">' +
+          '<div class="tl-cell-head"><span class="tl-num">' + (timelineB ? '02' : '01') + '</span><span class="tl-cell-title">Сводная хронология</span></div>' +
+          '<div class="tl-detail-events" role="list" aria-label="Сводная хронология">' + rowsHtml + '</div>' +
+        '</section>' +
+      '</div>' +
       '</section>';
 
     timelineContainer._labHeroOverride = {
@@ -799,6 +826,8 @@ const Timeline = (function() {
         }
       });
     });
+
+    refreshIcons();
   }
 
   function fallbackCopy(text) {
@@ -868,8 +897,8 @@ const Timeline = (function() {
           linksHtml +
         '</div>' +
         '<div class="tl-event-actions">' +
-          '<button class="tl-event-action-btn" type="button" data-action="open" data-event-idx="' + index + '" title="Открыть событие" aria-label="Открыть событие: ' + escapeHtml(event.title) + '">›</button>' +
-          '<button class="tl-event-action-btn" type="button" data-action="copy" data-event-idx="' + index + '" title="Копировать ссылку" aria-label="Копировать ссылку на событие: ' + escapeHtml(event.title) + '">⎘</button>' +
+          '<button class="tl-event-action-btn" type="button" data-action="open" data-event-idx="' + index + '" title="Открыть событие" aria-label="Открыть событие: ' + escapeHtml(event.title) + '"><i data-lucide="chevron-right" class="lab-icon" aria-hidden="true"></i></button>' +
+          '<button class="tl-event-action-btn" type="button" data-action="copy" data-event-idx="' + index + '" title="Копировать ссылку" aria-label="Копировать ссылку на событие: ' + escapeHtml(event.title) + '"><i data-lucide="link" class="lab-icon" aria-hidden="true"></i></button>' +
         '</div>' +
       '</div>' +
     '</article>';
