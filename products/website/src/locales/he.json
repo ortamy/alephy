@@ -1199,17 +1199,38 @@
     "detail": {
       "badge": "",
       "notFound": "",
-      "openness": ""
+      "openness": "",
+      "toolbarAria": "",
+      "total": ""
     },
     "landscape": {
       "empty": "",
       "label": "",
       "open": "",
       "route": "",
-      "routesAria": ""
+      "routesAria": "",
+      "compass": "",
+      "transitions": ""
     },
     "nav": {
       "aria": ""
+    },
+    "map": {
+      "back": "",
+      "search": "",
+      "searchAria": "",
+      "toolbarAria": ""
+    },
+    "spectrum": {
+      "back": "",
+      "cycle": "",
+      "gate": "",
+      "high": "",
+      "label": "",
+      "low": ""
+    },
+    "compass": {
+      "label": ""
     }
   }
 }

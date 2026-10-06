@@ -33,6 +33,10 @@ const AlephyStates = (function() {
   // Каталог карточек состояний: поиск по названию/олиму/физике и порядок
   // вывода. Сжатость (intensity) — родной порядок модуля, он же по умолчанию.
   let gridState = { query: '', sort: 'intensity' };
+  let landscapeQuery = '';
+  // Поиск на паспорте состояния: гасит несовпавшие узлы компаса, не
+  // перестраивая лист. Живёт отдельно от фильтра карты.
+  let detailQuery = '';
   const STATE_SORTS = {
     intensity: 'По сжатости',
     name: 'По алфавиту'
@@ -189,7 +193,11 @@ const AlephyStates = (function() {
 
     container.innerHTML = html;
     attachHandlers(container);
-    if (currentView !== 'detail' && currentView !== 'landscape' && currentView !== 'diagnostic') {
+    if (currentView === 'landscape') {
+      bindLandscapeToolbar(container);
+    } else if (currentView === 'detail') {
+      bindDetailToolbar(container);
+    } else if (currentView !== 'diagnostic') {
       bindGridToolbar(container);
     }
   }
@@ -242,32 +250,55 @@ const AlephyStates = (function() {
         }
       });
     });
+
+    // Кнопки тулбара карты приходят с lucide-иконками — их нужно
+    // материализовать после каждой перерисовки, не только в каталоге.
+    refreshIcons();
   }
 
-  function attachLandscapeHandlers(container) {
-    // Переходы ландшафта и кнопка маршрута ведут на целевое состояние.
+  // Спектр: ховер подсвечивает рёбра, клик открывает состояние. Отдельный
+  // биндер, потому что тело карты перерисовывается на каждый ввод поиска и
+  // связи нужно навешивать заново, не трогая кнопки тулбара.
+  function bindSpectrum(container) {
+    if (!window.AlephyStateSpectrum) return;
+    window.AlephyStateSpectrum.bind(container, function(id) {
+      if (currentView === 'landscape') {
+        selectLandscapeState(id);
+        return;
+      }
+      openState(id);
+    });
+  }
+
+  function bindLandscapeRoutes(container) {
     container.querySelectorAll('.state-landscape-route, .state-landscape-open').forEach(function(route) {
       route.addEventListener('click', function() {
         var targetId = this.getAttribute('data-to');
         if (targetId) openState(targetId);
       });
     });
+  }
 
-    // Чип-навигация состояний под героем.
-    container.querySelectorAll('.state-nav-chip').forEach(function(chip) {
-      chip.addEventListener('click', function() {
+  function attachLandscapeHandlers(container) {
+    // Спектр: ховер подсвечивает рёбра, клик открывает состояние.
+    bindSpectrum(container);
+
+    // Возврат к каталогу состояний: кнопка тулбара карты.
+    container.querySelectorAll('[data-action="open-grid"]').forEach(function(button) {
+      button.addEventListener('click', function() { openGrid(); });
+    });
+
+    // Переходы ландшафта и кнопка маршрута ведут на целевое состояние.
+    bindLandscapeRoutes(container);
+
+    // Узлы компаса-колеса: клик открывает состояние. Это единственная
+    // навигация по состояниям на паспорте — отдельного списка чипов нет.
+    container.querySelectorAll('.state-compass-node').forEach(function(node) {
+      node.addEventListener('click', function() {
         var id = this.getAttribute('data-state-id');
         if (id) openState(id);
       });
     });
-
-    var activeChip = container.querySelector('.state-nav-chip.is-active');
-    if (activeChip && typeof activeChip.scrollIntoView === 'function') {
-      requestAnimationFrame(function() {
-        var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        activeChip.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduced ? 'auto' : 'smooth' });
-      });
-    }
   }
 
   // ===== РЕНДЕР СЕТКИ КАРТОЧЕК =====
@@ -281,6 +312,32 @@ const AlephyStates = (function() {
     return list.sort(gridState.sort === 'name'
       ? function(a, b) { return (a.name || '').localeCompare(b.name || '', 'ru'); }
       : function(a, b) { return (a.intensity || 0) - (b.intensity || 0); });
+  }
+
+  function firstLandscapeState() {
+    return states.slice().sort(function(a, b) {
+      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
+    })[0] || null;
+  }
+
+  function landscapeMatches() {
+    var query = normalizeText(landscapeQuery);
+    if (!query) return states.slice();
+    return states.filter(function(state) {
+      var hay = normalizeText([state.name, state.hebrew, state.olam, state.physics, state.paleo].join(' '));
+      return hay.indexOf(query) !== -1;
+    });
+  }
+
+  function resolveLandscapeState() {
+    var matches = landscapeMatches();
+    if (currentStateId && statesById[currentStateId]) {
+      var stillVisible = !landscapeQuery || matches.some(function(state) {
+        return state.id === currentStateId;
+      });
+      if (stillVisible || !matches.length) return statesById[currentStateId];
+    }
+    return matches[0] || firstLandscapeState();
   }
 
   function stateCardsMarkup(list) {
@@ -404,25 +461,28 @@ const AlephyStates = (function() {
     refreshIcons();
   }
 
-  // ===== СЕКЦИИ-ГЛАВЫ: номер + uppercase-лейбл вместо сериф-заголовков =====
-  function chapterHead(index, label) {
-    return '<div class="state-chapter-head"><span class="state-chapter-index" aria-hidden="true">' + index + '</span><span class="state-chapter-label">' + escapeHtml(label) + '</span></div>';
+  // ===== БЕНТО-ЯЧЕЙКИ ВНУТРЕННЕЙ СТРАНИЦЕ =====
+  // Секции-главы печатаются ячейками общего листа (тот же приём, что
+  // .rel-cell в «Религионизмах»): номер главы — mono, лейбл — uppercase
+  // подпись полосы, а не сериф-заголовок, и волосяная линия живёт только
+  // на .state-cell-head.
+  function cellHead(index, label) {
+    return '<div class="state-cell-head">' +
+      (index ? '<span class="state-cell-num">' + escapeHtml(index) + '</span>' : '') +
+      '<span class="state-cell-title">' + escapeHtml(label) + '</span>' +
+    '</div>';
   }
 
-  // ===== ЧИП-НАВИГАЦИЯ СОСТОЯНИЙ =====
-  function renderStateNav(currentId) {
-    var sorted = states.slice().sort(function(a, b) {
-      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
-    });
-    return '<nav class="state-nav" aria-label="' + escapeHtml(t('states.nav.aria', 'Все состояния')) + '">' +
-      sorted.map(function(item) {
-        var active = item.id === currentId;
-        return '<button type="button" class="state-nav-chip' + (active ? ' is-active' : '') + '" data-state-id="' + escapeHtml(item.id) + '"' + (active ? ' aria-current="true"' : '') + '>' + escapeHtml(item.name) + '</button>';
-      }).join('') +
-    '</nav>';
+  // span — модификатор размера из CSS (.state-cell--full/wide/half/tall),
+  // а не число колонок: раскладку читает стилевой файл.
+  function stateCell(index, label, body, span) {
+    return '<section class="state-cell state-cell--' + span + '">' +
+      cellHead(index, label) +
+      '<div class="state-cell-body">' + body + '</div>' +
+    '</section>';
   }
 
-  // ===== РЕНДЕР СТРАНИЦЫ СОСТОЯНИЯ =====
+  // ===== РЕНДЕР ПАСПОРТА СОСТОЯНИЯ =====
     function renderStateDetail(id) {
     var s = statesById[id];
     if (!s) return '<div class="lab-alert lab-alert-error">' + escapeHtml(t('states.detail.notFound', 'Состояние не найдено')) + '</div>';
@@ -447,83 +507,140 @@ const AlephyStates = (function() {
       });
     }
 
-    var landscapeHtml = renderStateLandscape(s);
+    // Бенто-лист: раскладка задана спанами ячеек, а не порядком секций.
+    // Пустая глава просто не печатается — сетка доберёт освобождённые
+    // колонки соседям, поэтому фиксированного числа ячеек не требуется.
+    var cells = [];
 
-    // 01 Открытость: тонкий бар + mono-процент.
-    var intensityHtml = '';
+    // Компас — единственное место, где собраны все состояния: колесо
+    // глифов по возрастанию сжатости, текущее — в центре. Отдельного
+    // списка-навигации (спектр, лента чипов) на паспорте больше нет.
+    cells.push(stateCell('01', t('states.compass.label', 'Компас'), compassWheelMarkup(s), 'full'));
+
+    // Переходы — исходящие маршруты выбранного состояния.
+    cells.push(routesCellMarkup(s, '02', 'wide'));
+
+    // 03 Открытость: тонкий бар + mono-процент.
     if (intensityPercent !== null) {
       var visualPercent = Math.max(5, intensityPercent);
-      intensityHtml = '<section class="state-detail-section">' +
-        chapterHead('01', t('states.chapter.openness', 'Открытость')) +
+      cells.push(stateCell('03', t('states.chapter.openness', 'Открытость'),
         '<div class="state-openness">' +
           '<span class="state-openness-label">' + escapeHtml(s.intensity_label || '') + '</span>' +
           '<span class="state-openness-value">' + visualPercent + '%</span>' +
           '<div class="state-intensity-bar"><div class="state-intensity-fill" style="width: ' + visualPercent + '%"></div></div>' +
-        '</div>' +
-      '</section>';
+        '</div>',
+        'half'));
     }
 
-    // 02 Палео-разбор: hairline-карточки глифов + caption muted слева.
-    var paleoHtml = '';
+    // 04 Палео-разбор: hairline-карточки глифов + caption muted слева.
     if (s.paleo_breakdown && s.paleo_breakdown.length) {
-      paleoHtml = '<section class="state-detail-section">' +
-        chapterHead('02', t('states.chapter.paleo', 'Палео-разбор')) +
-        '<div class="paleo-breakdown">';
-      s.paleo_breakdown.forEach(function(p) {
-        paleoHtml += '<div class="paleo-breakdown-item">' +
-          '<span class="paleo-char">' + escapeHtml(p.paleo || '') + '</span>' +
-          '<span class="paleo-name">' + escapeHtml(p.name || '') + '</span>' +
-          '<span class="paleo-func">' + escapeHtml(p.function || '') + '</span>' +
-        '</div>';
-      });
-      paleoHtml += '</div>' +
-        (s.paleo_meaning ? '<p class="paleo-meaning-caption">' + escapeHtml(s.paleo_meaning) + '</p>' : '') +
-      '</section>';
+      var paleoBody = '<div class="paleo-breakdown">' +
+        s.paleo_breakdown.map(function(p) {
+          return '<div class="paleo-breakdown-item">' +
+            '<span class="paleo-char">' + escapeHtml(p.paleo || '') + '</span>' +
+            '<span class="paleo-name">' + escapeHtml(p.name || '') + '</span>' +
+            '<span class="paleo-func">' + escapeHtml(p.function || '') + '</span>' +
+          '</div>';
+        }).join('') +
+        '</div>' +
+        (s.paleo_meaning ? '<p class="paleo-meaning-caption">' + escapeHtml(s.paleo_meaning) + '</p>' : '');
+      cells.push(stateCell('04', t('states.chapter.paleo', 'Палео-разбор'), paleoBody, 'wide'));
     }
 
-    // 03 Смысл — дополняет короткое описание в шапке, а не повторяет его.
+    // 05 Смысл — дополняет короткое описание в шапке, а не повторяет его.
     // Дыхание идёт вторым абзацем той же главы: это телесный слой того же
     // состояния, отдельная глава ради него была бы раздуванием структуры.
     var isMeaningDuplicate = normalizeText(s.meaning) === normalizeText(s.physics);
-    var breathHtml = s.breath ? '<p class="state-detail-breath">' + escapeHtml(s.breath) + '</p>' : '';
-    var meaningHtml = (s.meaning && !isMeaningDuplicate) || breathHtml ? '<section class="state-detail-section">' +
-      chapterHead('03', t('states.chapter.meaning', 'Смысл')) +
-      (s.meaning && !isMeaningDuplicate ? '<p>' + escapeHtml(s.meaning) + '</p>' : '') + breathHtml + '</section>' : '';
+    var meaningBody = (s.meaning && !isMeaningDuplicate ? '<p>' + escapeHtml(s.meaning) + '</p>' : '') +
+      (s.breath ? '<p class="state-detail-breath">' + escapeHtml(s.breath) + '</p>' : '');
+    if (meaningBody) {
+      cells.push(stateCell('05', t('states.chapter.meaning', 'Смысл'), meaningBody, 'half'));
+    }
 
-    // 04 Примеры
-    var examplesHtml = '';
+    // 06 Примеры
     if (s.examples && s.examples.length) {
-      examplesHtml = '<section class="state-detail-section">' +
-        chapterHead('04', t('states.chapter.examples', 'Примеры')) +
-        '<div class="examples-list state-card-grid" role="list">' +
+      var examplesBody = '<div class="examples-list state-card-grid" role="list">' +
         s.examples.map(function(ex, index) {
           return '<div class="example-tag state-example-card" role="listitem"><span class="state-example-index" aria-hidden="true">' + String(index + 1).padStart(2, '0') + '</span><span>' + escapeHtml(ex) + '</span></div>';
         }).join('') +
-        '</div></section>';
+        '</div>';
+      cells.push(stateCell('06', t('states.chapter.examples', 'Примеры'), examplesBody, 'full'));
     }
 
-    // 05 Города в этом состоянии
-    var citiesHtml = renderCitiesForState(id);
+    // 07 Города в этом состоянии
+    var citiesHtml = renderCitiesForState(id, '07');
+    if (citiesHtml) cells.push(citiesHtml);
 
-    return '<div class="states-page">' +
-      '<div class="state-detail">' +
-        renderStateNav(id) +
-        landscapeHtml +
-        intensityHtml +
-        paleoHtml +
-        meaningHtml +
-        examplesHtml +
-        citiesHtml +
+    return '<div class="states-page states-detail-page">' +
+      detailToolbarMarkup() +
+      '<div class="state-passport" id="states-detail-body">' +
+        '<div class="state-bento">' + cells.join('') + '</div>' +
       '</div>' +
     '</div>';
   }
 
+  // ===== ПАНЕЛЬ ПАСПОРТА =====
+  // Одна полоса, как на карте: поиск ведёт левый край, счётчик идёт за ним,
+  // возврат в каталог прижат к правому. Поиск не перерисовывает лист — он
+  // лишь гасит несовпавшие узлы компаса, поэтому поле не теряет фокус.
+  function detailToolbarMarkup() {
+    return '<div class="lab-toolbar states-map-toolbar states-detail-toolbar" role="search" aria-label="' + escapeHtml(t('states.detail.toolbarAria', 'Управление паспортом состояния')) + '">' +
+      '<input type="search" class="lab-input lab-toolbar-search" id="states-detail-search" autocomplete="off" placeholder="' + escapeHtml(t('states.map.search', 'Найти состояние…')) + '" aria-label="' + escapeHtml(t('states.map.searchAria', 'Поиск по состояниям')) + '" value="' + escapeHtml(detailQuery) + '">' +
+      '<span class="lab-toolbar-count states-map-count" aria-live="polite">' + detailCountMarkup() + '</span>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn states-map-back" data-action="open-grid"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + escapeHtml(t('states.map.back', 'Все состояния')) + '</button>' +
+    '</div>';
+  }
+
+  function detailCountMarkup() {
+    if (!detailQuery) return '<strong>' + states.length + '</strong> ' + escapeHtml(t('states.detail.total', 'состояний'));
+    return '<strong>' + detailMatches().length + '</strong> из ' + states.length;
+  }
+
+  // Совпадения поиска на паспорте: то же поле, что у карты, чтобы фильтр
+  // вёл себя одинаково на обоих экранах.
+  function detailMatches() {
+    var query = normalizeText(detailQuery);
+    if (!query) return states.slice();
+    return states.filter(function(state) {
+      var hay = normalizeText([state.name, state.hebrew, state.olam, state.physics, state.paleo].join(' '));
+      return hay.indexOf(query) !== -1;
+    });
+  }
+
+  function bindDetailToolbar(container) {
+    var search = container.querySelector('#states-detail-search');
+    if (!search) return;
+
+    function applyFilter() {
+      detailQuery = search.value;
+      var query = normalizeText(detailQuery);
+      var ids = {};
+      detailMatches().forEach(function(state) { ids[state.id] = true; });
+      container.querySelectorAll('.state-compass-node').forEach(function(node) {
+        node.classList.toggle('is-miss', !!query && !ids[node.getAttribute('data-state-id')]);
+      });
+      var count = container.querySelector('.states-map-count');
+      if (count) count.innerHTML = detailCountMarkup();
+    }
+
+    search.addEventListener('input', applyFilter);
+    search.addEventListener('keydown', function(event) {
+      if (event.key !== 'Enter') return;
+      var matches = detailMatches();
+      if (matches.length) {
+        event.preventDefault();
+        openState(matches[0].id);
+      }
+    });
+  }
+
+  // ===== КАРТА (ЛАНДШАФТ) =====
+  // Одна страница с общей панелью: возврат в каталог, поиск и счётчик.
+  // Ленты чипов в тулбаре нет — навигацию несёт сам спектр.
   function renderLandscapePage() {
-    var firstState = states.slice().sort(function(a, b) {
-      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
-    })[0];
+    var firstState = firstLandscapeState();
     if (!firstState) return '<div class="lab-alert lab-alert-info">Карта состояний пока пуста.</div>';
-    currentStateId = firstState.id;
+    if (!currentStateId) currentStateId = firstState.id;
 
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('states', 'landscape', {
@@ -535,21 +652,131 @@ const AlephyStates = (function() {
     }
 
     return '<div class="states-page states-landscape-page">' +
-      '<div class="states-controls"><button type="button" class="states-nav-btn states-nav-back" onclick="AlephyStates.openGrid()">Все состояния</button></div>' +
-      renderStateNav(firstState.id) +
-      renderStateLandscape(firstState) +
+      landscapeToolbarMarkup() +
+      '<div class="states-map-bento" id="states-landscape-body">' +
+        landscapeBodyMarkup(resolveLandscapeState() || firstState) +
+      '</div>' +
     '</div>';
   }
 
-  // ===== ЛАНДШАФТ СОСТОЯНИЯ =====
-  function renderStateLandscape(state) {
+  // Панель карты: возврат в каталог слева, поиск по состояниям, счётчик.
+  function landscapeToolbarMarkup() {
+    return '<div class="lab-toolbar states-map-toolbar" role="search" aria-label="' + escapeHtml(t('states.map.toolbarAria', 'Управление картой состояний')) + '">' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-toolbar-btn states-map-back" data-action="open-grid"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>' + escapeHtml(t('states.map.back', 'Все состояния')) + '</button>' +
+      '<input type="search" class="lab-input lab-toolbar-search" id="states-landscape-search" autocomplete="off" placeholder="' + escapeHtml(t('states.map.search', 'Найти состояние…')) + '" aria-label="' + escapeHtml(t('states.map.searchAria', 'Поиск по состояниям')) + '" value="' + escapeHtml(landscapeQuery) + '">' +
+      '<span class="lab-toolbar-count states-map-count" aria-live="polite">' + landscapeCountMarkup() + '</span>' +
+    '</div>';
+  }
+
+  function landscapeCountMarkup() {
+    if (!landscapeQuery) return '<strong>' + states.length + '</strong> состояний';
+    return '<strong>' + landscapeMatches().length + '</strong> из ' + states.length;
+  }
+
+  // Тело карты: спектр (он же навигация) + компас и переходы выбранного
+  // состояния. Поиск отдаёт в спектр список совпадений: узлы вне запроса
+  // гаснут, но карта сохраняет форму — позиции по оси интенсивности.
+  function landscapeBodyMarkup(selected) {
+    var matchIds = landscapeQuery
+      ? landscapeMatches().map(function(state) { return state.id; })
+      : null;
+    var spectrumHtml = window.AlephyStateSpectrum
+      ? window.AlephyStateSpectrum.render(states, {
+          low: t('states.spectrum.low', 'точка отсчёта'),
+          high: t('states.spectrum.high', 'полнота'),
+          gate: t('states.spectrum.gate', 'вход в спектр'),
+          cycle: t('states.spectrum.cycle', 'взаимный цикл'),
+          back: t('states.spectrum.back', 'возврат по спектру')
+        }, selected.id, { matchIds: matchIds })
+      : '';
+
+    return stateCell('01', t('states.spectrum.label', 'Спектр движения'), spectrumHtml, 'full') +
+      renderStateLandscape(selected, { compass: '02', routes: '03' });
+  }
+
+  // Ввод в поиске перерисовывает только тело карты: панель остаётся на
+  // месте, поэтому поле не теряет фокус и каретку.
+  function bindLandscapeToolbar(container) {
+    var search = container.querySelector('#states-landscape-search');
+    if (!search) return;
+    search.addEventListener('input', function() {
+      landscapeQuery = search.value;
+      refreshLandscapeBody(container);
+    });
+  }
+
+  function refreshLandscapeBody(container) {
+    var body = container.querySelector('#states-landscape-body');
+    if (!body) { renderView(container); return; }
+    body.innerHTML = landscapeBodyMarkup(resolveLandscapeState() || firstLandscapeState());
+    bindSpectrum(container);
+    bindLandscapeRoutes(container);
+    refreshIcons();
+
+    var count = container.querySelector('.states-map-count');
+    if (count) count.innerHTML = landscapeCountMarkup();
+  }
+
+  // Клик по узлу спектра на карте переводит компас на выбранное состояние.
+  function selectLandscapeState(id) {
+    if (!statesById[id]) return;
+    currentStateId = id;
+    var container = document.getElementById('states');
+    if (container) refreshLandscapeBody(container);
+  }
+
+  // ===== КОМПАС-КОЛЕСО =====
+  // Единственное место, где собраны все состояния: глифы идут по кругу по
+  // возрастанию сжатости (порядок спектра, свёрнутый в круг), текущее — в
+  // центре. Позиции узлов считаются здесь и печатаются в left/top в
+  // процентах, поэтому круг верен на любой ширине без пересчёта на resize.
+  function compassWheelMarkup(current) {
+    var ordered = states.slice().sort(function(a, b) {
+      return (Number(a.intensity) || 0) - (Number(b.intensity) || 0);
+    });
+    var total = ordered.length || 1;
+    var matchIds = detailQuery
+      ? detailMatches().map(function(state) { return state.id; })
+      : null;
+
+    var nodes = ordered.map(function(state, index) {
+      var angle = (-90 + (360 / total) * index) * Math.PI / 180;
+      var x = 50 + Math.cos(angle) * 42;
+      var y = 50 + Math.sin(angle) * 42;
+      var isCurrent = state.id === current.id;
+      var isMiss = matchIds && matchIds.indexOf(state.id) === -1;
+      return '<button type="button" class="state-compass-node' +
+        (isCurrent ? ' is-current' : '') + (isMiss ? ' is-miss' : '') + '"' +
+        ' data-state-id="' + escapeHtml(state.id) + '"' +
+        ' style="left:' + x.toFixed(2) + '%;top:' + y.toFixed(2) + '%"' +
+        (isCurrent ? ' aria-current="true"' : '') +
+        ' aria-label="' + escapeHtml(state.name) + '" title="' + escapeHtml(state.name) + '">' +
+        '<span class="state-compass-node-glyph" aria-hidden="true">' + escapeHtml(state.paleo || '') + '</span>' +
+        '<span class="state-compass-node-name">' + escapeHtml(state.name) + '</span>' +
+      '</button>';
+    }).join('');
+
+    var hubLen = Array.from(String(current.paleo || '')).length;
+    return '<div class="state-compass" role="group" aria-label="' + escapeHtml(t('states.nav.aria', 'Все состояния')) + '">' +
+      '<span class="state-compass-ring" aria-hidden="true"></span>' +
+      nodes +
+      '<div class="state-compass-hub">' +
+        '<span class="state-compass-hub-paleo" data-len="' + hubLen + '" aria-hidden="true">' + escapeHtml(current.paleo || '') + '</span>' +
+        '<strong class="state-compass-hub-name">' + escapeHtml(current.name) + '</strong>' +
+        (current.hebrew ? '<span class="state-compass-hub-hebrew" dir="rtl" lang="hbo">' + escapeHtml(current.hebrew) + '</span>' : '') +
+        '<span class="state-compass-hub-label">' + escapeHtml(current.intensity_label || '') + '</span>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ===== ПЕРЕХОДЫ (ЯЧЕЙКА) =====
+  // Hairline-строки: стрелка + paleo-глифы + имя + подсказка действия. Один
+  // и тот же блок печатают карта (компас + переходы) и паспорт состояния,
+  // поэтому разметка вынесена из renderStateLandscape.
+  function routesCellMarkup(state, num, modifier) {
     var transitions = (state.transitions || []).filter(function(transition) {
       return statesById[transition.to];
     });
-    var recommended = transitions[0] || null;
-    var target = recommended && statesById[recommended.to];
-
-    // Переходы — hairline-строки: стрелка + paleo-глифы + имя + подсказка действия.
     var routesHtml = transitions.map(function(transition) {
       var routeTarget = statesById[transition.to];
       var hint = transition.action || transition.label || '';
@@ -561,35 +788,49 @@ const AlephyStates = (function() {
         '</span>' +
       '</button>';
     }).join('');
+    var body = routesHtml
+      ? '<div class="state-landscape-routes">' + routesHtml + '</div>'
+      : '<div class="state-landscape-routes is-empty">' + escapeHtml(t('states.landscape.empty', 'Исходящих переходов нет.')) + '</div>';
+    return stateCell(num, t('states.landscape.transitions', 'Переходы'), body, modifier || 'split');
+  }
 
-    // Рекомендуемый маршрут: чипы «Тоху → Шаанаим» + muted-подсказка + compact-кнопка справа.
-    var routeHtml = target ? '<div class="state-landscape-route-detail">' +
-      '<span class="state-landscape-route-kicker">' + escapeHtml(t('states.landscape.route', 'Маршрут')) + '</span>' +
-      '<div class="state-landscape-route-chain">' +
-        '<span class="state-landscape-chain-chip">' + escapeHtml(state.name) + '</span>' +
-        '<span class="state-landscape-chain-arrow" aria-hidden="true">→</span>' +
-        '<span class="state-landscape-chain-chip is-target">' + escapeHtml(target.name) + '</span>' +
-      '</div>' +
-      (recommended.action ? '<p class="state-landscape-route-hint">' + escapeHtml(recommended.action) + '</p>' : '') +
-      '<button type="button" class="state-landscape-open" data-to="' + escapeHtml(target.id) + '">' + escapeHtml(t('states.landscape.open', 'Открыть состояние')) + '</button>' +
-    '</div>' : '<div class="state-landscape-route-detail is-empty">' + escapeHtml(t('states.landscape.empty', 'Для этого состояния пока не задан маршрут перехода.')) + '</div>';
+  // ===== ЛАНДШАФТ КАРТЫ =====
+  // Две ячейки бенто карты: компас («я здесь») и исходящие переходы
+  // («куда идти»). Номера глав приходят снаружи: перед ними стоит спектр.
+  function renderStateLandscape(state, chapter) {
+    var nums = chapter || { compass: '02', routes: '03' };
+    var transitions = (state.transitions || []).filter(function(transition) {
+      return statesById[transition.to];
+    });
+    var recommended = transitions[0] || null;
+    var target = recommended && statesById[recommended.to];
 
-    return '<section class="state-landscape" aria-labelledby="state-landscape-title">' +
-      '<div class="state-landscape-head"><span class="state-landscape-kicker" id="state-landscape-title">' + escapeHtml(t('states.landscape.label', 'Ландшафт')) + '</span></div>' +
-      '<div class="state-landscape-stage">' +
+    var compassBody = '<div class="state-landscape-stage">' +
         '<div class="state-landscape-current">' +
-          '<span class="state-landscape-current-paleo" aria-hidden="true">' + escapeHtml(state.paleo || '') + '</span>' +
+          '<span class="state-landscape-current-paleo" data-len="' + Array.from(String(state.paleo || '')).length + '" aria-hidden="true">' + escapeHtml(state.paleo || '') + '</span>' +
           '<strong>' + escapeHtml(state.name) + '</strong>' +
           '<small>' + escapeHtml(state.intensity_label || '') + '</small>' +
         '</div>' +
-      '</div>' +
-      (routesHtml ? '<div class="state-landscape-routes" aria-label="' + escapeHtml(t('states.landscape.routesAria', 'Переходы из состояния')) + '">' + routesHtml + '</div>' : '') +
-      routeHtml +
-    '</section>';
+        (state.physics ? '<p class="state-landscape-physics">' + escapeHtml(state.physics) + '</p>' : '') +
+      '</div>';
+
+    if (target) {
+      compassBody += '<div class="state-landscape-route-detail">' +
+        '<div class="state-landscape-route-chain">' +
+          '<span class="state-landscape-chain-chip">' + escapeHtml(state.name) + '</span>' +
+          '<span class="state-landscape-chain-arrow" aria-hidden="true">→</span>' +
+          '<span class="state-landscape-chain-chip is-target">' + escapeHtml(target.name) + '</span>' +
+        '</div>' +
+        (recommended.action ? '<p class="state-landscape-route-hint">' + escapeHtml(recommended.action) + '</p>' : '') +
+        '<button type="button" class="state-landscape-open" data-to="' + escapeHtml(target.id) + '">' + escapeHtml(t('states.landscape.open', 'Открыть состояние')) + '</button>' +
+      '</div>';
+    }
+
+    return stateCell(nums.compass, t('states.landscape.compass', 'Компас'), compassBody, 'split') + routesCellMarkup(state, nums.routes, 'split');
   }
 
   // ===== ГОРОДА ДЛЯ СОСТОЯНИЯ =====
-  function renderCitiesForState(stateId) {
+  function renderCitiesForState(stateId, chapterNumber) {
     var matching = cartographyEntries.filter(function(e) {
       return e.state === stateId;
     });
@@ -598,8 +839,7 @@ const AlephyStates = (function() {
       return '';
     }
 
-    return '<section class="state-detail-section">' +
-      chapterHead('05', t('states.chapter.cities', 'Города')) +
+    return stateCell(chapterNumber || '05', t('states.chapter.cities', 'Города'),
       '<div class="state-cities">' +
       matching.map(function(e) {
         return '<div class="state-city-card" role="button" tabindex="0" aria-label="Открыть запись картографии: ' + escapeHtml(e.name) + '" data-city-id="' + escapeHtml(e.id) + '">' +
@@ -608,8 +848,8 @@ const AlephyStates = (function() {
           (e.summary ? '<div class="city-summary">' + escapeHtml(e.summary) + '</div>' : '') +
         '</div>';
       }).join('') +
-      '</div>' +
-    '</section>';
+      '</div>',
+      'full');
   }
 
   // ===== ДИАГНОСТИКА =====
@@ -671,8 +911,6 @@ const AlephyStates = (function() {
     var hasAnswer = selectedValue !== '';
 
     return '<div class="states-page">' +
-      '<div class="states-controls">' +
-      '</div>' +
       '<div class="diagnostic-page">' +
         '<div class="diagnostic-header">' +
           '<h2><img src="assets/icons/32/archaeology/testtube.svg" class="lab-icon" alt=""> Диагностика состояния</h2>' +
@@ -755,8 +993,6 @@ const AlephyStates = (function() {
       : '';
 
     return '<div class="states-page">' +
-      '<div class="states-controls">' +
-      '</div>' +
       '<div class="diagnostic-page">' +
         '<div class="diagnostic-result">' +
           '<span class="diagnostic-result-paleo">' + escapeHtml(state.paleo || '') + '</span>' +
@@ -855,6 +1091,9 @@ const AlephyStates = (function() {
   function openState(id) {
     currentView = 'detail';
     currentStateId = id;
+    // Паспорт открывается с чистым поиском: фильтр прошлого состояния не
+    // должен гасить узлы компаса на новом.
+    detailQuery = '';
     LabRouter.navigate('states', null, { state: id });
   }
 

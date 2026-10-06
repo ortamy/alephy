@@ -1199,17 +1199,38 @@
     "detail": {
       "badge": "interpretation",
       "notFound": "State not found",
-      "openness": "openness"
+      "openness": "openness",
+      "toolbarAria": "",
+      "total": ""
     },
     "landscape": {
       "empty": "No transition route is defined for this state yet.",
       "label": "Landscape",
       "open": "Open state",
       "route": "Route",
-      "routesAria": "Transitions from the state"
+      "routesAria": "Transitions from the state",
+      "compass": "",
+      "transitions": ""
     },
     "nav": {
       "aria": "All states"
+    },
+    "map": {
+      "back": "",
+      "search": "",
+      "searchAria": "",
+      "toolbarAria": ""
+    },
+    "spectrum": {
+      "back": "",
+      "cycle": "",
+      "gate": "",
+      "high": "",
+      "label": "",
+      "low": ""
+    },
+    "compass": {
+      "label": ""
     }
   }
 }

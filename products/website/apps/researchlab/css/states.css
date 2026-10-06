@@ -19,6 +19,13 @@
   padding-top: 0;
 }
 
+/* Карта тоже снимает верхний паддинг: как у сетки и «Картографии», иначе
+   --space-6 складывался с margin-bottom героя и раздвигал тулбар от шапки
+   вдвое сильнее, чем в хабе. */
+.states-page.states-landscape-page {
+  padding-top: 0;
+}
+
 .states-head {
   margin-bottom: var(--space-6);
 }
@@ -307,78 +314,209 @@
   transition: width 0.5s ease;
 }
 
-/* ===== СТРАНИЦА СОСТОЯНИЯ ===== */
-.state-detail {
-  max-width: var(--shell-page);
-  margin: 0 auto;
-  padding: 0 var(--space-7) 36px;
-  background: var(--bg-card, #fffdf8);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+/* ===== ПАСПОРТ СОСТОЯНИЯ =====
+   Внешней рамки-контейнера нет: паспорт — это сам бенто-лист карточек,
+   поэтому лист печатается прямо на странице. Панель сверху повторяет
+   оболочку карты (поиск, счётчик, возврат). */
+.states-page.states-detail-page {
+  padding-top: 0;
 }
 
-/* Чип-навигация состояний под героем: горизонтальный скролл на mobile. */
-.state-nav {
-  display: flex;
-  gap: 8px;
-  margin: var(--space-5) 0 var(--space-6);
-  padding: 2px 2px 10px;
-  overflow-x: auto;
-  scrollbar-width: thin;
+/* ===== КОМПАС-КОЛЕСО =====
+   Единственное место, где собраны все состояния: глифы идут по кругу по
+   возрастанию сжатости, текущее — в центре. left/top узлов проставляет
+   JS (проценты от квадрата), поэтому круг верен на любой ширине. */
+.state-compass {
+  position: relative;
+  width: min(100%, 480px);
+  aspect-ratio: 1;
+  margin: var(--space-4) auto;
 }
 
-.state-nav-chip {
-  flex: 0 0 auto;
-  padding: 6px 12px;
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-secondary, #4a3728);
-  font-family: var(--font-mono, monospace);
-  font-size: 12px;
-  white-space: nowrap;
+.state-compass-ring {
+  position: absolute;
+  inset: 8%;
+  border: 1px dashed var(--border-light);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.state-compass-node {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color var(--motion-base), color var(--motion-base);
+  transition: border-color var(--motion-base), background var(--motion-base);
 }
 
-.state-nav-chip:hover {
-  border-color: var(--accent-gold);
+.state-compass-node-glyph {
   color: var(--accent-gold);
+  font-family: var(--font-paleo, serif);
+  font-size: 17px;
+  line-height: 1;
 }
 
-.state-nav-chip.is-active {
+/* Имя узла — только по ховеру/фокусу: 16 подписей в круге не читаются. */
+.state-compass-node-name {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  padding: 2px 6px;
+  transform: translateX(-50%);
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: var(--ui-10, 10px);
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-base);
+}
+
+.state-compass-node:hover,
+.state-compass-node:focus-visible {
+  z-index: 3;
   border-color: var(--accent-gold);
-  color: var(--accent-gold);
-  font-weight: 700;
-}
-
-.state-nav-chip:focus-visible {
   outline: 2px solid var(--accent-gold);
   outline-offset: 2px;
 }
 
-/* Секции-главы: номер + uppercase-лейбл вместо сериф-заголовков. */
-.state-chapter-head {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
+.state-compass-node:hover .state-compass-node-name,
+.state-compass-node:focus-visible .state-compass-node-name { opacity: 1; }
+
+.state-compass-node.is-current {
+  border-color: var(--accent-gold);
+  background: var(--accent-gold);
+}
+
+.state-compass-node.is-current .state-compass-node-glyph { color: var(--text-on-accent); }
+
+/* Поиск в панели гасит несовпавшие узлы, но карта сохраняет форму. */
+.state-compass-node.is-miss { opacity: .28; }
+
+.state-compass-hub {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 3px;
+  width: 44%;
+  aspect-ratio: 1;
+  margin: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--accent-gold);
+  border-radius: 50%;
+  background: var(--bg-card);
+  text-align: center;
+}
+
+.state-compass-hub-paleo {
+  color: var(--accent-gold);
+  font-family: var(--font-paleo, serif);
+  font-size: 34px;
+  line-height: 1;
+}
+.state-compass-hub-paleo[data-len="4"] { font-size: 27px; }
+.state-compass-hub-paleo[data-len="5"] { font-size: 22px; }
+.state-compass-hub-name {
+  color: var(--text-primary);
+  font-family: var(--font-heading, Georgia, serif);
+  font-size: 20px;
+}
+.state-compass-hub-hebrew { color: var(--text-secondary); font-size: 13px; }
+.state-compass-hub-label { color: var(--text-muted); font-size: var(--ui-11, 11px); }
+
+/* ===== БЕНТО-ЛИСТ ПАСПОРТА =====
+   12 колонок, dense-раскладка. Каждая строка закрывается парой
+   (wide 7 + half 5) либо ячейкой во всю ширину, поэтому лист не читается
+   таблицей и не оставляет дыр. align-items: stretch — карточки одной
+   строки равны по высоте, короткая не «висит» над пустой полосой. */
+.state-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  gap: var(--space-3);
+  align-items: stretch;
   margin-bottom: var(--space-4);
 }
 
-.state-chapter-index {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  color: var(--accent-gold);
+.state-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
 }
 
-.state-chapter-label {
+/* Модификаторы размера: full — во всю ширину, wide — 7 колонок,
+   half — 5. Числа в разметке не нужны: раскладку читает CSS. */
+.state-cell--full { grid-column: span 12; }
+.state-cell--wide { grid-column: span 7; }
+.state-cell--half { grid-column: span 5; }
+
+/* Две равные половины — для карты (компас и переходы). Отдельный
+   модификатор, потому что --half = 5 колонок и рассчитан в паре с --wide. */
+.state-cell--split { grid-column: span 6; }
+
+/* Шапка ячейки: номер главы + лейбл полосы, линия тянется во всю ширину
+   ячейки. Никаких border-bottom под заголовком — линия только здесь. */
+.state-cell-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 calc(var(--space-3) * -1);
+  padding: 0 var(--space-3) 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.state-cell-num {
+  flex: 0 0 auto;
+  color: var(--accent-gold);
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
+  font-size: var(--ui-11, 11px);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps, .14em);
+}
+
+.state-cell-title {
+  font-family: var(--font-mono, monospace);
+  font-size: var(--ui-11, 11px);
   font-weight: 700;
-  letter-spacing: .14em;
+  letter-spacing: var(--tracking-caps, .14em);
   text-transform: uppercase;
   color: var(--text-muted, #6b5b4e);
+  line-height: 1.3;
+}
+
+.state-cell-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.state-cell-body p {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: 1.7;
+  color: var(--text-secondary, #4a3728);
 }
 
 /* 01 Открытость: тонкий бар + mono-процент. */
@@ -406,23 +544,6 @@
   height: 2px;
 }
 
-.state-detail-section {
-  margin-bottom: 28px;
-  padding-bottom: 28px;
-  border-bottom: 1px solid var(--border-light, #d4c4a8);
-  text-align: left;
-}
-
-.state-detail-section:last-child {
-  border-bottom: none;
-}
-
-.state-detail-section p {
-  font-size: var(--text-md);
-  line-height: 1.7;
-  color: var(--text-secondary, #4a3728);
-}
-
 /* Дыхательный слой на странице состояния: тот же кегль, что у абзаца
    главы, но курсив и приглушённый тон — как в карточке, чтобы слой читался
    одинаково в обоих местах. */
@@ -435,9 +556,8 @@
 .paleo-breakdown {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-2);
   flex-wrap: wrap;
-  margin-bottom: var(--space-4);
 }
 
 .paleo-breakdown-item {
@@ -708,19 +828,207 @@
   line-height: 1.4;
 }
 
-/* ===== ЛАНДШАФТ ВНУТРЕННЕЙ СТРАНИЦЫ =====
-   Канон: uppercase-лейбл + волосяная линия, plain-фон, без теней и градиент-ванн. */
-.state-landscape {
-  margin: 0 0 var(--space-7);
+/* ===== ЛАНДШАФТ СОСТОЯНИЯ =====
+   Канон: uppercase-лейбл + волосяная линия, plain-фон, без теней и градиент-ванн.
+   На карте ландшафт печатается своей полосой с линией, на внутренней
+   странице — ячейкой бенто, где линию уже несёт .state-cell-head. */
+/* Лист карты: спектр на всю ширину, под ним компас и переходы. */
+.states-map-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: row dense;
+  gap: var(--space-3);
+  /* stretch, а не start: компас и переходы делят одну строку и должны
+     читаться как пара — переходы дотягиваются до высоты компаса. */
+  align-items: stretch;
 }
 
-.state-landscape-head {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border-light, #d4c4a8);
-  text-align: left;
+/* На карте под спектром ровно две одинаковые ячейки — они делят ширину
+   пополам (класс --split), поэтому отдельных правок раскладки не нужно. */
+.states-map-bento .state-cell { min-width: 0; }
+
+/* ===== СПЕКТР ДВИЖЕНИЯ =====
+   Карта переходов: X = интенсивность, две банки по вертикали.
+   Координаты узлов и SVG-путей живут в одной сетке viewBox
+   (1000×300), поэтому подписи ложатся ровно на свои рёбра. */
+.st-spectrum {
+  position: relative;
+  height: 300px;
+  margin-top: var(--space-5);
 }
 
-.state-landscape-kicker,
+.st-spectrum-links {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  /* Нити идут под кругами: иначе они пересекают глифы соседей. */
+  z-index: 1;
+}
+
+/* Наконечник стрелки красится золотом — направление перехода
+   остаётся читаемым даже на выцветшей нити. */
+.st-spectrum-links marker path { fill: var(--accent-gold); }
+
+/* non-scaling-stroke обязателен: слой растянут preserveAspectRatio="none",
+   иначе связи превращаются в нити разной толщины. */
+.st-spectrum-edge {
+  fill: none;
+  stroke: var(--border-light, #d4c4a8);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0.55;
+  transition: stroke var(--motion-base), opacity var(--motion-base);
+}
+
+/* Возврат по спектру — петля: читается как «назад», а не «вперёд». */
+.st-spectrum-edge--back {
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+}
+
+.st-spectrum-edge.is-lit {
+  stroke: var(--accent-gold);
+  opacity: 1;
+}
+
+.st-spectrum-tick {
+  position: absolute;
+  bottom: -18px;
+  transform: translateX(-50%);
+  color: var(--text-muted, #6b5b4e);
+  font: 500 var(--ui-11, 11px) var(--font-mono, monospace);
+  letter-spacing: var(--tracking-caps, 0.14em);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Узел — круг с глифом и подписью. Интенсивность показывает сама
+   позиция по оси X, поэтому шкала внутри узла не нужна. */
+.st-spectrum-node {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.st-spectrum-node-dot {
+  display: grid;
+  place-items: center;
+  width: 62px;
+  height: 62px;
+  border: 1px solid var(--border-light, #d4c4a8);
+  border-radius: 50%;
+  background: var(--bg-card, #fffdf8);
+  transition: border-color var(--motion-base), box-shadow var(--motion-base),
+    opacity var(--motion-base);
+}
+
+.st-spectrum-node-paleo {
+  font-family: var(--font-paleo, Georgia, serif);
+  font-size: 22px;
+  line-height: 1;
+  color: var(--text-primary, #2c1810);
+}
+
+/* Длинные палео-слова подгоняем по кеглю, чтобы глиф не выходил за круг:
+   𐤌𐤑𐤓𐤉𐤌 (5 знаков) не влезал в узел 62px. data-len пишет разметка. */
+.st-spectrum-node-paleo[data-len="4"] { font-size: 16px; }
+.st-spectrum-node-paleo[data-len="5"] { font-size: 13px; }
+
+/* Шлюз — ромб: в него не входят, из него только выходят.
+   Ромб уже круга, поэтому глиф мельче: иначе углы буквы выходят
+   за диагонали повёрнутого квадрата. */
+.st-spectrum-node--gate .st-spectrum-node-dot {
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  transform: rotate(45deg);
+  border-color: var(--accent-gold);
+}
+
+.st-spectrum-node--gate .st-spectrum-node-paleo {
+  transform: rotate(-45deg);
+  font-size: 17px;
+}
+
+/* Ромб теснее круга, поэтому здесь кегль ужимается на шаг раньше. */
+.st-spectrum-node--gate .st-spectrum-node-paleo[data-len="4"] { font-size: 13px; }
+.st-spectrum-node--gate .st-spectrum-node-paleo[data-len="5"] { font-size: 11px; }
+
+/* Узел цикла получает внешнее кольцо. */
+.st-spectrum-node--cycle .st-spectrum-node-dot {
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-gold) 22%, transparent);
+}
+
+.st-spectrum-node-name {
+  color: var(--text-secondary, #4a3728);
+  font: 600 var(--ui-12, 12px) var(--font-ui, sans-serif);
+  white-space: nowrap;
+}
+
+/* Легенда объясняет три формы узла и тип связи — без неё ромб и кольцо
+   читаются как декор. */
+.st-spectrum-legend {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--text-muted, #6b5b4e);
+  font: 500 var(--ui-11, 11px) var(--font-mono, monospace);
+  letter-spacing: var(--tracking-caps, 0.14em);
+  text-transform: uppercase;
+}
+
+.st-spectrum-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+
+.st-spectrum-legend-mark {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--accent-gold);
+}
+
+.st-spectrum-legend-mark--gate { border-radius: 2px; transform: rotate(45deg); }
+.st-spectrum-legend-mark--cycle { border-radius: 50%; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-gold) 22%, transparent); }
+.st-spectrum-legend-mark--back { width: 18px; height: 0; border: 0; border-top: 1px dashed var(--accent-gold); }
+
+.st-spectrum-node:hover .st-spectrum-node-dot,
+.st-spectrum-node.is-root .st-spectrum-node-dot {
+  border-color: var(--accent-gold);
+  box-shadow: 0 6px 18px rgba(44, 24, 16, 0.12);
+}
+
+.st-spectrum-node.is-lit .st-spectrum-node-dot { border-color: var(--accent-gold); }
+.st-spectrum-node.is-lit .st-spectrum-node-name { color: var(--text-primary, #2c1810); }
+
+/* Пока курсор на карте, нерелевантные узлы приглушаются — график
+   остаётся читаемым, но фокус виден сразу. */
+.st-spectrum.is-focused .st-spectrum-node:not(.is-lit) { opacity: 0.38; }
+.st-spectrum.is-focused .st-spectrum-edge:not(.is-lit) { opacity: 0.12; }
+
+/* Поиск на карте: узлы вне запроса гаснут, нити уходят в фон —
+   совпадения читаются сразу, но карта сохраняет форму. */
+.st-spectrum.is-filtered .st-spectrum-node.is-miss { opacity: 0.3; }
+.st-spectrum.is-filtered .st-spectrum-edge { opacity: 0.12; }
+.st-spectrum.is-filtered .st-spectrum-edge.is-lit { opacity: 1; }
+
+/* Канон блока: uppercase-лейбл + волосяная линия, plain-фон, без теней
+   и градиент-ванн. Ландшафт печатается ячейкой листа, где линию уже
+   несёт .state-cell-head, — отдельной обёртки у него нет. */
 .state-landscape-route-kicker {
   display: block;
   color: var(--accent-gold);
@@ -736,6 +1044,13 @@
   padding: var(--space-6) var(--space-4);
   border-bottom: 1px solid var(--border-light, #d4c4a8);
   background: transparent;
+}
+
+/* Внутри ячейки бенто своя линия была бы второй чертой подряд: сцену
+   отделяет от переходов уже волосяная линия шапки ячейки. */
+.state-cell .state-landscape-stage {
+  padding-top: var(--space-4);
+  border-bottom: 0;
 }
 
 /* Круг текущего состояния: hairline-кольцо, глифы внутри, без тени. */
@@ -798,6 +1113,84 @@
 .state-landscape-route-detail.is-empty { display: block; padding-top: var(--space-4); color: var(--text-muted); font-size: var(--text-sm); }
 .state-landscape-open { margin-left: auto; padding: 7px 14px; border: 1px solid var(--accent-gold); border-radius: var(--radius-xs); background: var(--accent-gold); color: #fffdf8; cursor: pointer; font: 600 12px var(--font-mono, monospace); letter-spacing: .04em; }
 .state-landscape-open:hover { background: var(--accent-gold-hover); border-color: var(--accent-gold-hover); }
+
+/* ===== КАРТА СОСТОЯНИЙ: ТУЛБАР + КОМПАКТНЫЙ БЕНТО =====
+   Страница карты отказалась от трёх отдельных полос в пользу одной
+   панели: возврат к каталогу, лента состояний и счётчик живут в общем
+   .lab-toolbar. Ниже — тот же 12-колоночный лист, что и на внутренней
+   странице: сцена слева, переходы и маршрут справа. */
+
+/* Панель карты: одна строка — поиск и счётчик слева, возврат в каталог
+   у правого края. Чип-ленты в тулбаре нет: навигацию несёт спектр, а панель
+   отвечает только за поиск и выход в каталог. */
+.states-map-toolbar {
+  flex-wrap: nowrap;
+  margin-bottom: var(--space-3);
+}
+
+.states-map-toolbar .lab-toolbar-search {
+  order: 1;
+  /* Поиск держит левый край панели, счётчик идёт сразу за ним. */
+  flex: 0 1 400px;
+  margin-right: var(--space-3);
+}
+
+.states-map-toolbar .states-map-count {
+  order: 2;
+}
+
+.states-map-toolbar .states-map-back {
+  order: 3;
+  flex: 0 0 auto;
+  /* Возврат прижат к правому краю, между ним и счётчиком — воздух. */
+  margin-left: auto;
+}
+
+/* Карта печатает компас и переходы ячейками .state-cell--split, поэтому
+   собственной грид-обёртки у страницы нет: раскладку держит
+   .states-map-bento. Здесь остались только типографика и воздух сцены. */
+.states-landscape-page .state-landscape-current {
+  width: min(128px, 100%);
+  padding: var(--space-3);
+}
+
+.states-landscape-page .state-landscape-current-paleo { font-size: 30px; }
+.states-landscape-page .state-landscape-current-paleo[data-len="4"] { font-size: 24px; }
+.states-landscape-page .state-landscape-current-paleo[data-len="5"] { font-size: 19px; }
+.states-landscape-page .state-landscape-current strong { font-size: 18px; }
+.states-landscape-page .state-landscape-current small { font-size: 11px; }
+
+/* Компас несёт физику состояния — это единственный текст, который
+   даёт узлу имя, пока карта не открыта. */
+.state-landscape-physics {
+  margin: var(--space-4) 0 0;
+  color: var(--text-muted, #6b5b4e);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.states-landscape-page .state-landscape-routes {
+  width: 100%;
+}
+
+.states-landscape-page .state-landscape-route {
+  padding: 9px 4px;
+  gap: 10px;
+}
+
+.states-landscape-page .state-landscape-route-paleo { font-size: 20px; }
+.states-landscape-page .state-landscape-route-copy strong { font-size: 15px; }
+
+.states-landscape-page .state-landscape-route-detail {
+  gap: 8px 12px;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-light, #d4c4a8);
+}
+
+.states-landscape-page .state-landscape-route-detail.is-empty {
+  padding-top: var(--space-3);
+}
 
 /* ===== ДИАГНОСТИКА ===== */
 .diagnostic-page {
@@ -1143,78 +1536,46 @@
   color: var(--accent-gold);
 }
 
-/* ===== ПАНЕЛЬ УПРАВЛЕНИЯ СОСТОЯНИЯМИ ===== */
-.states-controls {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: var(--space-6);
-  align-items: center;
+/* Панель состояния (поиск, счётчик, возврат) живёт в общем .lab-toolbar:
+   паспорт повторяет оболочку карты — собственных правил у модуля нет. */
+
+/* ===== АДАПТАЦИЯ =====
+   Бенто держит 12 колонок до планшетной ширины; ниже неё спан уступает
+   место строке — иначе ячейка в 5 колонок сжимает глифы в столбик. */
+@media (max-width: 1024px) {
+  .state-cell--wide,
+  .state-cell--half,
+  .state-cell--split {
+    grid-column: span 6;
+  }
 }
 
-.states-toolbar {
-  width: 100%;
-  min-height: 58px;
-  justify-content: flex-end;
-  padding: 10px var(--space-4);
-  background: var(--bg-card, #fffdf8);
-  border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: var(--radius-md);
-  box-shadow: 0 6px 18px rgba(44, 24, 16, 0.08);
-  box-sizing: border-box;
-}
-
-.states-toolbar .states-nav-back {
-  display: none;
-}
-
-.states-controls .states-nav-btn {
-  padding: var(--space-2) var(--space-4);
-  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: var(--radius-xs);
-  cursor: pointer;
-  transition: all var(--motion-base);
-  border: 1px solid var(--border-light, #d4c4a8);
-  background: var(--bg-card, #faf3e0);
-  color: var(--text-primary, #2c1810);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.states-controls .states-nav-btn:hover {
-  border-color: var(--accent-gold);
-  color: var(--accent-gold);
-}
-
-.states-controls .states-nav-btn.active {
-  background: var(--accent-gold);
-  border-color: var(--accent-gold);
-  color: #faf3e0;
-}
-
-.states-controls .states-nav-back {
-  margin-right: auto;
-}
-
-/* ===== АДАПТАЦИЯ ===== */
 @media (max-width: 768px) {
-  .states-toolbar {
-    justify-content: stretch;
+  .state-cell--wide,
+  .state-cell--half,
+  .state-cell--split {
+    grid-column: span 12;
   }
 
-  .states-toolbar .states-nav-btn {
-    width: 100%;
-    justify-content: center;
+  /* Тулбар карты на узком экране: возврат — отдельной строкой, поиск
+     занимает всю ширину следующей строки. */
+  .states-map-toolbar {
+    flex-wrap: wrap;
   }
 
-  .state-detail {
-    width: 100%;
-    padding: 0 var(--space-4) var(--space-6);
-    border-radius: var(--radius-sm);
+  .states-map-toolbar .states-map-back {
+    order: 1;
+    margin-left: 0;
   }
+
+  .states-map-toolbar .lab-toolbar-search {
+    order: 2;
+    flex: 1 1 100%;
+    max-width: none;
+    margin-right: 0;
+  }
+
+  .states-map-toolbar .states-map-count { display: none; }
 
   .states-page { padding: 16px 0; }
   .states-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1222,15 +1583,50 @@
   .diagnostic-page { padding: 16px; }
   .question-options-scale { flex-wrap: wrap; }
   .state-cities { grid-template-columns: 1fr; }
-  .states-controls { flex-wrap: wrap; }
-  .states-controls .states-nav-back { margin-right: 0; }
 
   .state-landscape-stage { padding: var(--space-5) var(--space-3); }
   .state-landscape-current { width: min(170px, 72vw); }
   .state-landscape-open { margin-left: 0; }
+
+  /* Компас-колесо мельчает, но узлы остаются тап-таргетом ≥ 40px. */
+  .state-compass { margin: var(--space-3) auto; }
+  .state-compass-node { width: 40px; height: 40px; }
+  .state-compass-node-glyph { font-size: 15px; }
+  .state-compass-hub-paleo { font-size: 26px; }
+  .state-compass-hub-name { font-size: 16px; }
+
+  /* Спектр на планшете: 16 подписей в строку не помещаются, поэтому
+     узлы мельчают, а подписи переходят под ось в два ряда. */
+  .st-spectrum { height: 280px; }
+  .st-spectrum-node-dot { width: 52px; height: 52px; }
+  .st-spectrum-node-paleo { font-size: 19px; }
+  .st-spectrum-node--gate .st-spectrum-node-dot { width: 44px; height: 44px; }
 }
 
 @media (max-width: 720px) {
+  /* Ниже планшета SVG-связи мешают читать подписи, и карта перестаёт
+     быть картой: узлы выстраиваются в список с интенсивностью. */
+  .st-spectrum { height: auto; margin-top: var(--space-2); }
+
+  .st-spectrum-links { display: none; }
+
+  .st-spectrum-node {
+    position: static;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    transform: none;
+    padding: 10px var(--space-3);
+    border-bottom: 1px solid var(--border-light, #d4c4a8);
+  }
+
+  .st-spectrum-node-dot { width: 40px; height: 40px; flex: 0 0 auto; }
+  .st-spectrum-node-paleo { font-size: 17px; }
+  .st-spectrum-node-name { flex: 1 1 auto; font-size: var(--ui-13, 13px); }
+  .st-spectrum-legend { position: static; margin-top: var(--space-3); }
+  .st-spectrum-tick { display: none; }
+
   .paleo-breakdown { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .paleo-breakdown-item .paleo-func { max-width: none; }
 }
@@ -1243,7 +1639,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .state-card { animation: none; transition: none; }
-  .state-nav-chip { transition: none; }
+  .state-compass-node { transition: none; }
   .state-landscape-route { transition: none; }
   .question-card { animation: none; }
   .diagnostic-result { animation: none; }
