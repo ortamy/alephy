@@ -1,5 +1,419 @@
 [
   {
+    "id": "word_analyzer-20261006102200",
+    "pipelineId": "word_analyzer",
+    "title": "Исследование: Давар",
+    "query": "разбери слово Давар",
+    "createdAt": "2026-10-06T10:22:00Z",
+    "source": "local-agents",
+    "status": "ready",
+    "trace": [
+      "researcher",
+      "semitologist",
+      "exposer",
+      "editor",
+      "collector"
+    ],
+    "agentTrace": [
+      {
+        "agentId": "researcher",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Давар"
+        },
+        "observations": [
+          {
+            "field": "term",
+            "value": "Давар"
+          },
+          {
+            "field": "root",
+            "value": null
+          },
+          {
+            "field": "sources",
+            "value": [
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+              "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+            ]
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "term": "Давар",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+          ]
+        }
+      },
+      {
+        "agentId": "semitologist",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Давар",
+          "term": "Давар",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+          ]
+        },
+        "observations": [
+          {
+            "field": "semitic_parallels",
+            "value": {
+              "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+              "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+              "letters": "Давар"
+            }
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Давар"
+          }
+        }
+      },
+      {
+        "agentId": "exposer",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Давар",
+          "term": "Давар",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Давар"
+          }
+        },
+        "observations": [
+          {
+            "field": "exposures",
+            "value": [
+              {
+                "source": "Давар",
+                "translation": "не найдено в локальном словаре",
+                "status": "требует проверки"
+              }
+            ]
+          },
+          {
+            "field": "gaps",
+            "value": [
+              {
+                "source": "Давар",
+                "cause": "нет записи в roots.json"
+              }
+            ]
+          },
+          {
+            "field": "fresh_gap_count",
+            "value": 1
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "exposures": [
+            {
+              "source": "Давар",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Давар",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1
+        }
+      },
+      {
+        "agentId": "editor",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Давар",
+          "term": "Давар",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Давар"
+          },
+          "exposures": [
+            {
+              "source": "Давар",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Давар",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1
+        },
+        "observations": [
+          {
+            "field": "editorial_note",
+            "value": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет"
+          },
+          {
+            "field": "addressed_issues",
+            "value": 0
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+          "addressed_issues": 0
+        }
+      },
+      {
+        "agentId": "collector",
+        "iteration": 0,
+        "status": "done",
+        "input": {
+          "query": "разбери слово Давар",
+          "term": "Давар",
+          "root": null,
+          "sources": [
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+            "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+          ],
+          "semitic_parallels": {
+            "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+            "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+            "letters": "Давар"
+          },
+          "exposures": [
+            {
+              "source": "Давар",
+              "translation": "не найдено в локальном словаре",
+              "status": "требует проверки"
+            }
+          ],
+          "gaps": [
+            {
+              "source": "Давар",
+              "cause": "нет записи в roots.json"
+            }
+          ],
+          "fresh_gap_count": 1,
+          "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+          "addressed_issues": 0
+        },
+        "observations": [
+          {
+            "field": "result",
+            "value": {
+              "title": "Исследование: Давар",
+              "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+              "trace": [
+                "researcher",
+                "semitologist",
+                "exposer",
+                "editor",
+                "collector"
+              ],
+              "data": {
+                "query": "разбери слово Давар",
+                "term": "Давар",
+                "root": null,
+                "sources": [
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+                  "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+                ],
+                "semitic_parallels": {
+                  "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+                  "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+                  "letters": "Давар"
+                },
+                "exposures": [
+                  {
+                    "source": "Давар",
+                    "translation": "не найдено в локальном словаре",
+                    "status": "требует проверки"
+                  }
+                ],
+                "gaps": [
+                  {
+                    "source": "Давар",
+                    "cause": "нет записи в roots.json"
+                  }
+                ],
+                "fresh_gap_count": 1,
+                "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+                "addressed_issues": 0
+              },
+              "gaps": [
+                {
+                  "source": "Давар",
+                  "cause": "нет записи в roots.json"
+                }
+              ]
+            }
+          }
+        ],
+        "decisions": [],
+        "hypotheses": [],
+        "limitations": [],
+        "output": {
+          "result": {
+            "title": "Исследование: Давар",
+            "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+            "trace": [
+              "researcher",
+              "semitologist",
+              "exposer",
+              "editor",
+              "collector"
+            ],
+            "data": {
+              "query": "разбери слово Давар",
+              "term": "Давар",
+              "root": null,
+              "sources": [
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+                "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+              ],
+              "semitic_parallels": {
+                "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+                "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+                "letters": "Давар"
+              },
+              "exposures": [
+                {
+                  "source": "Давар",
+                  "translation": "не найдено в локальном словаре",
+                  "status": "требует проверки"
+                }
+              ],
+              "gaps": [
+                {
+                  "source": "Давар",
+                  "cause": "нет записи в roots.json"
+                }
+              ],
+              "fresh_gap_count": 1,
+              "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+              "addressed_issues": 0
+            },
+            "gaps": [
+              {
+                "source": "Давар",
+                "cause": "нет записи в roots.json"
+              }
+            ]
+          }
+        }
+      }
+    ],
+    "result": {
+      "title": "Исследование: Давар",
+      "summary": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+      "trace": [
+        "researcher",
+        "semitologist",
+        "exposer",
+        "editor",
+        "collector"
+      ],
+      "data": {
+        "query": "разбери слово Давар",
+        "term": "Давар",
+        "root": null,
+        "sources": [
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\masonic-hive.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pedophilia.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\pornography.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\psychology.md",
+          "C:\\Users\\DELL\\Desktop\\alephy\\products\\website\\src\\content\\md\\researches\\archive\\rock-mantras.md"
+        ],
+        "semitic_parallels": {
+          "аккадский": "Требует сверки по словарю; автоматический вывод не выполняется.",
+          "арамейский": "Требует сверки по корпусу; автоматический вывод не выполняется.",
+          "letters": "Давар"
+        },
+        "exposures": [
+          {
+            "source": "Давар",
+            "translation": "не найдено в локальном словаре",
+            "status": "требует проверки"
+          }
+        ],
+        "gaps": [
+          {
+            "source": "Давар",
+            "cause": "нет записи в roots.json"
+          }
+        ],
+        "fresh_gap_count": 1,
+        "editorial_note": "Материал собран в последовательность: источник → образ → проверка. замечаний критика нет",
+        "addressed_issues": 0
+      },
+      "gaps": [
+        {
+          "source": "Давар",
+          "cause": "нет записи в roots.json"
+        }
+      ]
+    }
+  },
+  {
     "id": "word_analyzer-20260918220643",
     "pipelineId": "word_analyzer",
     "title": "Исследование: Берешит",

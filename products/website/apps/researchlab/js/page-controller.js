@@ -2445,9 +2445,10 @@ var ARCH_AGENT_ICONS = {
     if (!examples) return;
     var queries = [];
     related.forEach(function(pipeline) {
-      if (pipeline.defaultQuery && queries.indexOf(pipeline.defaultQuery) === -1) queries.push(pipeline.defaultQuery);
+      (pipeline.examples || []).concat([pipeline.defaultQuery]).forEach(function(query) {
+        if (query && queries.indexOf(query) === -1 && queries.length < 3) queries.push(query);
+      });
     });
-    queries = queries.slice(0, 3);
     examples.hidden = !queries.length;
     examples.innerHTML = queries.length
       ? '<span class="agent-run-examples-label">' + t('lab.agents.run.examples', 'Примеры запроса') + '</span>' + queries.map(function(query) {
@@ -2527,7 +2528,7 @@ var ARCH_AGENT_ICONS = {
     // Промежуточный контейнер .agent-pipelines-view удалён: рамка с тенью
     // вокруг тулбара и карточек разрезала блок пополам. Модуль, как «Агенты»,
     // рендерит панель и список прямо в свой контейнер.
-    var pipelineDetail = container.querySelector('.pipeline-detail-page');
+    var pipelineDetail = container.querySelector('.pd-page');
     if (pipelineDetail) pipelineDetail.remove();
     if (container.id === 'pipelines' && window.LabHero && window.LabHero.setView) window.LabHero.setView('pipelines', null);
     var pipelines = container;
@@ -2911,8 +2912,57 @@ var ARCH_AGENT_ICONS = {
     setTimeout(function() { URL.revokeObjectURL(url); }, 0);
   }
 
+  // ===== Паспорт пайплайна (#pipelines/<id>) =====
+  // Bento-страница по DESIGN-SYSTEM §5.2s: ячейки pd-cell--* со шапками
+  // по §4.1a. Выбранный прогон из истории помнится в pipelineDetailState,
+  // поэтому «Открыть результат» старого запуска не перезапрашивает данные.
+  var PIPELINE_KIND_LABELS = { linear: 'Линейный', loop: 'Цикл', spiral: 'Спираль' };
+  var pipelineDetailState = { pipelineId: null, runId: null };
+
+  function pipelineKindLabel(pipeline) {
+    return PIPELINE_KIND_LABELS[pipeline.type] || PIPELINE_KIND_LABELS.linear;
+  }
+
+  function pdEmpty(hint) {
+    return '<div class="lab-empty"><span class="lab-empty-glyph" aria-hidden="true">\uD800\uDF00</span>' +
+      '<p class="lab-empty-hint">' + escapeHtml(hint) + '</p></div>';
+  }
+
+  // Срез этапа читаемыми полями: статус, итерация, наблюдения. Raw JSON
+  // остаётся в экспорте — дампом в интерфейс его показывать нельзя.
+  function pdStepEvidence(detail) {
+    if (!detail) return '';
+    var rows = '';
+    if (detail.status) rows += '<div><dt>статус</dt><dd>' + escapeHtml(detail.status) + '</dd></div>';
+    if (typeof detail.iteration === 'number') rows += '<div><dt>итерация</dt><dd>' + detail.iteration + '</dd></div>';
+    (detail.observations || []).slice(0, 5).forEach(function(observation) {
+      var value = observation.value == null
+        ? '—'
+        : (typeof observation.value === 'string' ? observation.value : JSON.stringify(observation.value));
+      rows += '<div><dt>' + escapeHtml(String(observation.field || '')) + '</dt><dd>' + escapeHtml(value) + '</dd></div>';
+    });
+    if (!rows) return '';
+    return '<details class="pd-details"><summary>Срез этапа</summary><dl class="pd-step-facts">' + rows + '</dl></details>';
+  }
+
+  function pdHistoryRow(item, currentId) {
+    var ready = item.status === 'ready';
+    return '<li class="pd-history-row" data-status="' + (ready ? 'ready' : escapeHtml(item.status || 'unknown')) + '"' +
+      (item.id === currentId ? ' data-current="true"' : '') + '>' +
+      '<span class="pd-history-dot" aria-hidden="true"></span>' +
+      '<span class="pd-history-time">' + escapeHtml(formatPipelineDate(item.createdAt)) + '</span>' +
+      '<span class="pd-history-state">' + (ready ? 'Готов' : escapeHtml(item.status || 'нет данных')) + '</span>' +
+      '<span class="pd-history-query" title="' + escapeHtml(item.query || '') + '">' + escapeHtml(item.query || 'без запроса') + '</span>' +
+      '<span class="pd-history-actions">' +
+        (ready ? '<button type="button" class="lab-btn lab-btn-compact lab-btn-secondary" data-pd-open-run="' + escapeHtml(item.id) + '">Открыть</button>' : '') +
+        '<button type="button" class="lab-btn lab-btn-compact lab-btn-secondary" data-pd-restore="' + escapeHtml(item.id) + '">Запрос</button>' +
+        '<button type="button" class="pd-icon-btn" data-pd-delete-run="' + escapeHtml(item.id) + '" aria-label="Удалить прогон" title="Удалить прогон"><i data-lucide="trash-2"></i></button>' +
+      '</span></li>';
+  }
+
   function renderPipelineDetail(container, pipelineId) {
-    container.innerHTML = '<div class="pipeline-detail-page"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка процесса пайплайна…</div></div></div>';
+    if (pipelineDetailState.pipelineId !== pipelineId) pipelineDetailState = { pipelineId: pipelineId, runId: null };
+    container.innerHTML = '<div class="pd-page"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка процесса пайплайна…</div></div></div>';
     loadPipelineDetailData().then(function(payload) {
       var pipeline = findPipeline(payload[0], pipelineId);
       if (!pipeline) {
@@ -2920,36 +2970,289 @@ var ARCH_AGENT_ICONS = {
         container.innerHTML = '<div class="lab-alert lab-alert-error">Пайплайн не найден. <a href="#pipelines">К списку</a></div>';
         return;
       }
-      var history = (payload[1] || []).filter(function(item) { return item.pipelineId === pipelineId; });
+      var history = (payload[1] || []).filter(function(item) { return item.pipelineId === pipelineId; })
+        .sort(function(a, b) { return String(b.createdAt || '').localeCompare(String(a.createdAt || '')); });
       var latest = findPipelineResult(history, pipelineId);
-      var body = latest && latest.result || {};
-      var steps = (pipeline.agents || []).map(function(agent, index) {
-        var trace = latest && (latest.trace || [])[index];
-        var detail = latest && (latest.agentTrace || [])[index];
-        var evidence = detail ? '<details><summary>Доступный срез этапа</summary><pre>' + escapeHtml(JSON.stringify(detail, null, 2)) + '</pre></details>' : '';
-        return '<li class="pipeline-process-step" data-status="' + (trace ? 'done' : 'pending') + '"><span>' + (index + 1) + '</span><div><strong>' + escapeHtml(agent) + '</strong><p>' + (trace ? 'Этап в сохранённом следе: <code>' + escapeHtml(trace) + '</code>.' : 'нет сохранённого факта выполнения.') + '</p>' + evidence + '</div></li>';
-      }).join('');
-      if (window.LabHero && window.LabHero.setView) {
-        window.LabHero.setView('pipelines', 'pipeline', { title: pipeline.name, subtitle: pipeline.description || 'Цепочка передачи контекста', icon: 'paleo/track.png', meta: [latest ? 'Есть сохранённый запуск' : 'Ожидание запуска'] });
+      // Выбранный прогон: из истории (кнопка «Открыть результат») или последний готовый.
+      var shown = latest;
+      if (pipelineDetailState.runId) {
+        shown = history.filter(function(item) { return item.id === pipelineDetailState.runId; })[0] || latest;
       }
-      container.innerHTML = '<article class="pipeline-detail-page"><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">01</span><div><h2>Запуск</h2><p>Локальный прогон цепочки агентов.</p></div></header><label class="pipeline-detail-label" for="pipeline-detail-query">Запрос</label><textarea id="pipeline-detail-query" class="lab-input" data-pipeline-query rows="2">' + escapeHtml(latest && latest.query || pipeline.defaultQuery || '') + '</textarea><div class="pipeline-detail-actions"><button class="lab-btn lab-btn-primary" data-pipeline-detail-run>Запустить локально</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-open-result>Открыть результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-copy>Копировать результат</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-json>Экспорт JSON</button><button class="lab-btn lab-btn-secondary" data-pipeline-detail-markdown>Экспорт Markdown</button></div><p class="pipeline-run-status" data-pipeline-detail-status>Последний запуск: ' + escapeHtml(latest ? formatPipelineDate(latest.createdAt) : 'нет') + '</p></section><div class="pipeline-detail-grid"><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">02</span><div><h2>Цепочка процесса</h2><p>Доступные факты выполнения. Скрытые рассуждения не отображаются.</p></div></header><ol class="pipeline-process-list">' + steps + '</ol></section><section class="pipeline-detail-card" id="pipeline-result"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">03</span><div><h2>Результат</h2></div></header><p class="pipeline-result-body">' + escapeHtml(body.aiSummary || body.summary || 'Запустите локальный пайплайн, чтобы получить результат.') + '</p>' + (body.limitations ? '<p class="pipeline-result-limitations"><strong>Ограничения:</strong> ' + escapeHtml(body.limitations) + '</p>' : '') + '</section></div><section class="pipeline-detail-card"><header class="pipeline-detail-card-head"><span class="pipeline-detail-step">04</span><div><h2>История запусков</h2></div></header><ul class="pipeline-detail-history">' + (history.map(function(item) { return '<li><strong>' + escapeHtml(item.title || pipeline.name) + '</strong><span>' + escapeHtml(formatPipelineDate(item.createdAt)) + '</span><p>' + escapeHtml(item.query || '') + '</p></li>'; }).join('') || '<li>Сохранённых запусков пока нет.</li>') + '</ul></section></article>';
-      var status = container.querySelector('[data-pipeline-detail-status]');
-      // Статус: текст + тон, чтобы ошибка/успех читались без цветовой зависимости.
-      function setPipelineStatus(message, tone) { status.textContent = message; status.className = 'pipeline-run-status' + (tone ? ' is-' + tone : ''); }
-      container.querySelector('[data-pipeline-detail-open-result]').addEventListener('click', function() { var result = document.getElementById('pipeline-result'); if (result) result.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
-      container.querySelector('[data-pipeline-detail-run]').addEventListener('click', function() {
-        var button = this;
-        button.disabled = true;
-        setPipelineStatus('Пайплайн выполняется и сохраняется…');
-        fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: container.querySelector('[data-pipeline-query]').value.trim() }) }).then(function(response) { if (!response.ok) throw new Error('HTTP ' + response.status); return response.json(); }).then(function() { renderPipelineDetail(container, pipelineId); }).catch(function(error) { button.disabled = false; setPipelineStatus('Не удалось запустить: ' + error.message, 'error'); });
+      var body = shown && shown.result || {};
+      var hasResult = !!(body.aiSummary || body.summary);
+      var trace = (shown && shown.trace) || [];
+      var agents = pipeline.agents || [];
+      var agentIds = {};
+      getAgentMapData().forEach(function(agent) { agentIds[agent.name] = agent.id; });
+
+      var steps = agents.map(function(agentName, index) {
+        var done = !!trace[index];
+        var agentId = agentIds[agentName];
+        var href = agentId ? '#ai-agents/' + encodeURIComponent(agentId) : null;
+        var nameHtml = href
+          ? '<span class="pd-step-name">' + escapeHtml(agentName) + '</span>'
+          : '<strong>' + escapeHtml(agentName) + '</strong>';
+        // Шаг кликабелен весь: ссылка-растяжка поверх карточки ведёт
+        // в паспорт агента (канон stretched-link: details/summary внутри
+        // остаются кликабельными, т.к. у них position и z-index выше).
+        return '<li class="pd-step" data-status="' + (done ? 'done' : 'pending') + '">' +
+          (href ? '<a class="pd-step-link" href="' + href + '" aria-label="Открыть паспорт агента: ' + escapeHtml(agentName) + '"></a>' : '') +
+          '<span class="pd-step-idx">' + (index + 1) + '</span>' +
+          '<span class="pd-step-icon" aria-hidden="true"><i data-lucide="' + pipelineAgentIcon(agentName) + '"></i></span>' +
+          '<div class="pd-step-body">' + nameHtml +
+            '<p class="pd-step-fact">' + (done ? 'След: <code>' + escapeHtml(trace[index]) + '</code>' : 'нет сохранённого факта выполнения') + '</p>' +
+            pdStepEvidence(shown && (shown.agentTrace || [])[index]) +
+          '</div>' +
+          (href ? '<span class="pd-step-go" aria-hidden="true"><i data-lucide="arrow-up-right"></i></span>' : '') +
+        '</li>';
+      }).join('');
+
+      var kindLabel = pipelineKindLabel(pipeline);
+      if (window.LabHero && window.LabHero.setView) {
+        window.LabHero.setView('pipelines', 'pipeline', {
+          title: pipeline.name,
+          subtitle: pipeline.description || 'Цепочка передачи контекста',
+          icon: 'paleo/track.png',
+          meta: [kindLabel, agents.length + ' ' + pluralizeSteps(agents.length), latest ? 'Есть сохранённый запуск' : 'Ожидание запуска']
+        });
+      }
+      var facts =
+        '<div class="pd-fact"><dt>Тип</dt><dd>' + kindLabel + '</dd></div>' +
+        '<div class="pd-fact"><dt>Этапов</dt><dd>' + agents.length + '</dd></div>' +
+        '<div class="pd-fact"><dt>Runner</dt><dd><code>' + escapeHtml(pipeline.runner || pipeline.id) + '</code></dd></div>' +
+        (pipeline.maxIterations ? '<div class="pd-fact"><dt>Витков максимум</dt><dd>' + escapeHtml(String(pipeline.maxIterations)) + '</dd></div>' : '') +
+        '<div class="pd-fact"><dt>Запусков</dt><dd>' + history.length + '</dd></div>' +
+        '<div class="pd-fact"><dt>Последний запуск</dt><dd>' + (latest ? escapeHtml(formatPipelineDate(latest.createdAt)) : 'нет') + '</dd></div>';
+
+      // Чипы примеров (§4.3): сначала персональные из pipelines.json,
+      // затем уникальные из истории — не более четырёх.
+      var examples = [];
+      (pipeline.examples || []).forEach(function(query) {
+        if (query && examples.indexOf(query) === -1 && examples.length < 4) examples.push(query);
       });
-      container.querySelector('[data-pipeline-detail-copy]').addEventListener('click', function() {
+      history.forEach(function(item) {
+        if (item.query && examples.indexOf(item.query) === -1 && examples.length < 4) examples.push(item.query);
+      });
+      var examplesHtml = examples.length
+        ? '<div class="pd-examples"><span class="pd-examples-label">примеры:</span>' + examples.map(function(query) {
+            return '<button type="button" class="pd-chip" data-pd-example="' + escapeHtml(query) + '" title="Подставить в запрос">' + escapeHtml(query) + '</button>';
+          }).join('') + '</div>'
+        : '';
+
+      // Персональная рекомендация сценария из pipelines.json: что дать
+      // на вход именно этому пайплайну, чтобы результат был точнее.
+      var tipHtml = pipeline.tip
+        ? '<p class="pd-tip"><strong>Как пользоваться.</strong> ' + escapeHtml(pipeline.tip) + '</p>'
+        : '';
+
+      var resultHtml = hasResult
+        ? '<p class="pd-result-summary">' + escapeHtml(body.aiSummary || body.summary) + '</p>' +
+          '<div class="pd-result-meta">' +
+            (shown && shown.ollama && shown.ollama.model ? '<span class="pd-chip pd-chip--static pd-chip--mono">Ollama · ' + escapeHtml(shown.ollama.model) + '</span>' : '') +
+            (shown && shown.createdAt ? '<span class="pd-chip pd-chip--static pd-chip--mono">' + escapeHtml(formatPipelineDate(shown.createdAt)) + '</span>' : '') +
+          '</div>' +
+          (body.limitations ? '<p class="pd-caveat"><strong>Ограничения.</strong> ' + escapeHtml(body.limitations) + '</p>' : '') +
+          (latest && shown && shown.id !== latest.id
+            ? '<p class="pd-note">Показан прогон из истории. <button type="button" class="lab-btn lab-btn-secondary lab-btn-compact" data-pd-open-run="' + escapeHtml(latest.id) + '">К последнему запуску</button></p>'
+            : '')
+        : pdEmpty('Запустите локальный пайплайн, чтобы получить результат.');
+
+      // История включает прогоны с любым статусом: ошибка не должна теряться.
+      var historyHtml = history.length
+        ? history.map(function(item) { return pdHistoryRow(item, shown && shown.id); }).join('')
+        : pdEmpty('Сохранённых запусков пока нет.');
+
+      var exportHtml = '<div class="pd-actions-group">' +
+        '<button type="button" class="pd-icon-btn" data-pipeline-detail-copy aria-label="Копировать результат" title="Копировать результат"' + (hasResult ? '' : ' disabled') + '><i data-lucide="copy"></i></button>' +
+        '<button type="button" class="pd-icon-btn" data-pipeline-detail-json aria-label="Экспорт JSON" title="Экспорт JSON"' + (hasResult ? '' : ' disabled') + '><i data-lucide="download"></i></button>' +
+        '<button type="button" class="pd-icon-btn" data-pipeline-detail-markdown aria-label="Экспорт Markdown" title="Экспорт Markdown"' + (hasResult ? '' : ' disabled') + '><i data-lucide="file-down"></i></button>' +
+      '</div>';
+      container.innerHTML = '<article class="pd-page">' +
+        '<section class="pd-cell pd-cell--passport" aria-labelledby="pd-passport-title">' +
+          '<header class="pd-cell-head"><span class="pd-num" aria-hidden="true">01</span>' +
+            '<h2 class="pd-cell-title" id="pd-passport-title">Паспорт</h2>' +
+            '<span class="pd-cell-hint">' + escapeHtml(pipeline.id) + '</span></header>' +
+          '<p class="pd-desc">' + escapeHtml(pipeline.description || 'Цепочка передачи контекста между агентами.') + '</p>' +
+          '<dl class="pd-facts">' + facts + '</dl>' +
+        '</section>' +
+        '<section class="pd-cell pd-cell--run" aria-labelledby="pd-run-title">' +
+          '<header class="pd-cell-head"><span class="pd-num" aria-hidden="true">02</span>' +
+            '<h2 class="pd-cell-title" id="pd-run-title">Запуск</h2>' +
+            '<span class="pd-cell-hint" data-pd-server>проверка сервера…</span></header>' +
+          '<label class="pd-label" for="pd-query">Запрос</label>' +
+          '<textarea id="pd-query" class="pd-query" data-pipeline-query rows="2">' + escapeHtml((shown && shown.query) || pipeline.defaultQuery || '') + '</textarea>' +
+          examplesHtml +
+          tipHtml +
+          '<div class="pd-actions">' +
+            '<button type="button" class="lab-btn lab-btn-primary" data-pipeline-detail-run>Запустить локально</button>' +
+            (pipeline.writable ? '<button type="button" class="lab-btn lab-btn-secondary" data-pipeline-detail-apply>Применить изменения</button>' : '') +
+            '<button type="button" class="lab-btn lab-btn-secondary" data-pipeline-detail-open-result>К результату</button>' +
+          '</div>' +
+          '<p class="lab-status" data-pipeline-detail-status role="status" aria-live="polite"></p>' +
+        '</section>' +
+        '<section class="pd-cell pd-cell--chain" aria-labelledby="pd-chain-title">' +
+          '<header class="pd-cell-head"><span class="pd-num" aria-hidden="true">03</span>' +
+            '<h2 class="pd-cell-title" id="pd-chain-title">Цепочка</h2>' +
+            '<span class="pd-cell-hint">' + agents.length + ' ' + pluralizeSteps(agents.length) + '</span></header>' +
+          pipelineDiagram(pipeline) +
+          '<ol class="pd-steps">' + steps + '</ol>' +
+          '<p class="pd-note">Скрытые рассуждения агентов не отображаются.</p>' +
+        '</section>' +
+        '<section class="pd-cell pd-cell--result" id="pipeline-result" tabindex="-1" aria-labelledby="pd-result-title">' +
+          '<header class="pd-cell-head"><span class="pd-num" aria-hidden="true">04</span>' +
+            '<h2 class="pd-cell-title" id="pd-result-title">Результат</h2></header>' +
+          resultHtml +
+          (hasResult ? '<div class="pd-actions">' + exportHtml + '</div>' : '') +
+        '</section>' +
+        '<section class="pd-cell pd-cell--history" aria-labelledby="pd-history-title">' +
+          '<header class="pd-cell-head"><span class="pd-num" aria-hidden="true">05</span>' +
+            '<h2 class="pd-cell-title" id="pd-history-title">История запусков</h2>' +
+            '<span class="pd-cell-hint">' + history.length + '</span></header>' +
+          '<ul class="pd-history">' + historyHtml + '</ul>' +
+        '</section>' +
+      '</article>';
+
+      var status = container.querySelector('[data-pipeline-detail-status]');
+      // Статус: текст + тон (§6), чтобы ошибка/успех читались без цвета.
+      function setPipelineStatus(message, tone) { status.textContent = message; status.className = 'lab-status' + (tone ? ' is-' + tone : ''); }
+
+      // Индикатор сервера: офлайн гасит запуск с причиной в тултипе (§4.4),
+      // как в списке пайплайнов (updatePipelineServerStatus).
+      var serverHint = container.querySelector('[data-pd-server]');
+      var runButton = container.querySelector('[data-pipeline-detail-run]');
+      var applyButton = container.querySelector('[data-pipeline-detail-apply]');
+      checkAgentServer().then(function() {
+        serverHint.textContent = 'сервер: онлайн';
+        serverHint.dataset.state = 'ok';
+      }).catch(function() {
+        serverHint.textContent = 'сервер: отключён';
+        serverHint.dataset.state = 'off';
+        [runButton, applyButton].forEach(function(button) {
+          if (!button) return;
+          button.disabled = true;
+          button.title = PIPELINE_OFFLINE_HINT;
+          button.setAttribute('aria-disabled', 'true');
+        });
+        // Кнопки удаления тоже серверные: офлайн — мёртвые с той же причиной.
+        container.querySelectorAll('[data-pd-delete-run]').forEach(function(button) {
+          button.disabled = true;
+          button.title = PIPELINE_OFFLINE_HINT;
+          button.setAttribute('aria-disabled', 'true');
+        });
+        setPipelineStatus('Сервер агентов отключен — запуск недоступен.', 'error');
+      });
+
+      function postRun(payload) {
+        payload.query = container.querySelector('[data-pipeline-query]').value.trim();
+        return fetch(AGENT_API_URL + '/api/pipelines/' + encodeURIComponent(pipeline.id) + '/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).then(function(response) {
+          if (!response.ok) return response.json().then(function(error) { throw new Error(error.error || 'HTTP ' + response.status); });
+          return response.json();
+        });
+      }
+
+      // Один обработчик на контейнер через onclick: при перерисовке он
+      // перезаписывается, поэтому слушатели не накапливаются между заходами.
+      container.onclick = function(event) {
+        var example = event.target.closest('[data-pd-example]');
+        if (example) {
+          var exampleField = container.querySelector('[data-pipeline-query]');
+          exampleField.value = example.getAttribute('data-pd-example');
+          exampleField.focus();
+          return;
+        }
+        var openRun = event.target.closest('[data-pd-open-run]');
+        if (openRun) {
+          pipelineDetailState.runId = openRun.getAttribute('data-pd-open-run');
+          renderPipelineDetail(container, pipelineId);
+          return;
+        }
+        var restore = event.target.closest('[data-pd-restore]');
+        if (restore) {
+          var restored = history.filter(function(item) { return item.id === restore.getAttribute('data-pd-restore'); })[0];
+          var restoreField = container.querySelector('[data-pipeline-query]');
+          if (restored && restoreField) {
+            restoreField.value = restored.query || '';
+            restoreField.focus();
+            setPipelineStatus('Запрос восстановлен из истории.');
+          }
+          return;
+        }
+        // Удаление прогона: DELETE /api/pipeline-results/<id>, офлайн —
+        // та же мёртвая кнопка, что у запуска (§4.4).
+        var deleteRun = event.target.closest('[data-pd-delete-run]');
+        if (deleteRun) {
+          var deleteId = deleteRun.getAttribute('data-pd-delete-run');
+          if (!window.confirm('Удалить этот прогон из истории?')) return;
+          deleteRun.disabled = true;
+          fetch(AGENT_API_URL + '/api/pipeline-results/' + encodeURIComponent(deleteId), { method: 'DELETE' }).then(function(response) {
+            if (!response.ok) return response.json().then(function(error) { throw new Error(error.error || 'HTTP ' + response.status); });
+            return response.json();
+          }).then(function() {
+            if (pipelineDetailState.runId === deleteId) pipelineDetailState.runId = null;
+            renderPipelineDetail(container, pipelineId);
+          }).catch(function(error) {
+            deleteRun.disabled = false;
+            setPipelineStatus(isAgentServerUnavailable(error) ? 'Сервер отключен — удаление недоступно.' : 'Не удалось удалить прогон: ' + error.message, 'error');
+          });
+          return;
+        }
+        if (event.target.closest('[data-pipeline-detail-open-result]')) {
+          var cell = document.getElementById('pipeline-result');
+          if (cell) {
+            cell.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            cell.focus({ preventScroll: true });
+          }
+        }
+      };
+      runButton.addEventListener('click', function() {
+        if (runButton.disabled) return;
+        runButton.disabled = true;
+        setPipelineStatus('Пайплайн выполняется и сохраняется…');
+        postRun({}).then(function() {
+          pipelineDetailState.runId = null;
+          renderPipelineDetail(container, pipelineId);
+        }).catch(function(error) {
+          runButton.disabled = false;
+          setPipelineStatus(isAgentServerUnavailable(error) ? 'Сервер отключен — запуск недоступен.' : 'Не удалось запустить: ' + error.message, 'error');
+        });
+      });
+
+      if (applyButton) {
+        // Запись в документы: подтверждение обязательно, как в applyPipeline —
+        // отменить правку без git нельзя.
+        applyButton.addEventListener('click', function() {
+          if (!window.confirm('Перерисовать фактические блоки в документах?\n\nБудут изменены только блоки между маркерами alephy:auto в ARCHITECTURE.md и обновлён отчёт docs/13-REPORTS/ARCH-DRIFT.md. Ручной текст не трогается.')) return;
+          applyButton.disabled = true;
+          setPipelineStatus('Запись в документы…');
+          postRun({ writeEnabled: true }).then(function() {
+            pipelineDetailState.runId = null;
+            renderPipelineDetail(container, pipelineId);
+          }).catch(function(error) {
+            applyButton.disabled = false;
+            setPipelineStatus(isAgentServerUnavailable(error) ? 'Сервер отключен — запись недоступна.' : 'Не удалось применить изменения: ' + error.message, 'error');
+          });
+        });
+      }
+      // Экспорт есть только при результате: без результата кнопок в DOM нет.
+      var copyButton = container.querySelector('[data-pipeline-detail-copy]');
+      if (copyButton) copyButton.addEventListener('click', function() {
         var text = body.aiSummary || body.summary || '';
         if (!text || !navigator.clipboard) { setPipelineStatus('Копирование недоступно в этом браузере.', 'error'); return; }
         navigator.clipboard.writeText(text).then(function() { setPipelineStatus('Результат скопирован.', 'success'); }).catch(function() { setPipelineStatus('Не удалось скопировать результат.', 'error'); });
       });
-      container.querySelector('[data-pipeline-detail-json]').addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.json', JSON.stringify({ pipeline: pipeline, result: latest || null }, null, 2), 'application/json'); });
-      container.querySelector('[data-pipeline-detail-markdown]').addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.md', '# ' + pipeline.name + '\n\n' + (body.aiSummary || body.summary || '') + '\n\n## Ограничения\n\n' + (body.limitations || ''), 'text/markdown'); });
+      var jsonButton = container.querySelector('[data-pipeline-detail-json]');
+      if (jsonButton) jsonButton.addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.json', JSON.stringify({ pipeline: pipeline, result: shown || null }, null, 2), 'application/json'); });
+      var markdownButton = container.querySelector('[data-pipeline-detail-markdown]');
+      if (markdownButton) markdownButton.addEventListener('click', function() { downloadPipelineFile(pipeline.id + '-result.md', '# ' + pipeline.name + '\n\n' + (body.aiSummary || body.summary || '') + '\n\n## Ограничения\n\n' + (body.limitations || ''), 'text/markdown'); });
+
+      // Диаграмма цепочки: статусы узлов по следу выбранного прогона.
+      container.querySelectorAll('[data-pipeline-diagram] .pipeline-diagram-node').forEach(function(node, index) {
+        node.dataset.status = trace[index] ? 'done' : 'pending';
+      });
     }).catch(function(error) { container.innerHTML = '<div class="lab-alert lab-alert-error">Не удалось загрузить процесс: ' + escapeHtml(error.message) + '</div>'; });
   }
 
