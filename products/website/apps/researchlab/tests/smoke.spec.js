@@ -456,6 +456,25 @@ test.describe('paleo-keyboard keys', () => {
     await expect(page.locator('#pk-keys-count')).toHaveText('22');
   });
 });
+test.describe('paleo-builder palette', () => {
+  test('palette stays filled after the module re-renders (retry path)', async ({ page }) => {
+    await page.goto('/#paleo-builder', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#paleo-builder .paleo-letter-card')).toHaveCount(22, { timeout: 10_000 });
+
+    // Перерисовка контейнера (путь retryModule после ошибки модуля) не должна
+    // оставлять палитру пустой: флаг инициализации жил на контейнере и переживал
+    // замену innerHTML, из-за чего повторный init выходил сразу.
+    await page.evaluate(() => {
+      document.getElementById('paleo-builder').dataset.moduleError = '1';
+      location.hash = '#dashboard';
+    });
+    await page.waitForTimeout(400);
+    await page.evaluate(() => { location.hash = '#paleo-builder'; });
+    await expect(page.locator('#paleo-builder .paleo-letter-card')).toHaveCount(22, { timeout: 10_000 });
+  });
+});
+
+
 
 // ===== Параметризованные маршруты: рендер детали существует =====
 // Sample-id берутся из данных модулей (languages.json, timeline.json,
@@ -468,10 +487,13 @@ function readLabJson(relativePath) {
 }
 
 function agentSlugsFromRegistry() {
-  const source = fs.readFileSync(path.resolve(labRoot, 'js', 'page-controller.js'), 'utf8');
-  const match = source.match(/var agentSlugs = \[(.*?)\];/s);
-  if (!match) throw new Error('Could not find agentSlugs registry in page-controller.js');
-  return [...match[1].matchAll(/['"]([^'"]+)['"]/g)].map((item) => item[1]);
+  // Реестр агентов живёт в сгенерированном манифесте паспортов
+  // (tools/generate-agent-passports.py → js/agent-passport-manifest.js),
+  // а не в page-controller.js: helper держим в синхроне с источником.
+  const source = fs.readFileSync(path.resolve(labRoot, 'js', 'agent-passport-manifest.js'), 'utf8');
+  const match = source.match(/"agents"\s*:\s*\[(.*)/s);
+  if (!match) throw new Error('Could not find agents registry in agent-passport-manifest.js');
+  return [...match[1].matchAll(/"id"\s*:\s*"([^"]+)"/g)].map((item) => item[1]);
 }
 
 function checkerRoutesFromHub() {

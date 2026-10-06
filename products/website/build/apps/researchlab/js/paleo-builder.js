@@ -224,8 +224,15 @@
   }
 
   function init(container) {
-    if (!container || container.dataset.builderInitialized) return;
-    container.dataset.builderInitialized = '1';
+    if (!container) return;
+    var palette = container.querySelector('[data-paleo-palette]');
+    if (!palette) return;
+    // Флаг живёт на узле палитры, а не на контейнере: container.innerHTML
+    // заменяет разметку при повторном рендере и retry, а data-атрибут
+    // контейнера переживает перерисовку — повторный init выходил раньше
+    // времени, и палитра оставалась пустой. Свежий узел палитры = сброшенный флаг.
+    if (palette.dataset.rendered === '1') return;
+    palette.dataset.rendered = '1';
     activeContainer = container;
     assembly = [];
     renderPalette(container);
