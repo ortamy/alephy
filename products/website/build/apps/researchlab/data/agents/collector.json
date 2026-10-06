@@ -60,8 +60,8 @@
   "canon": null,
   "module": {
     "path": "products/agents/agents/collector.py",
-    "lines": 23,
-    "bytes": 1037,
+    "lines": 26,
+    "bytes": 1401,
     "entrypoint": "collector.collect(data)",
     "registration": "AGENT_FUNCTIONS в server.py",
     "functions": [

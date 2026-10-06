@@ -4,10 +4,10 @@ from agents.comparator import compare
 from agents.critic import critique
 from agents.editor import edit
 from agents.collector import collect
+from pipelines.core import run_steps
 
 
 def run(query):
     data = packet(query)
-    for step in (compare, critique, edit, collect):
-        data = step(data)
-    return data
+    return run_steps(data, (compare, critique, edit, collect))
+

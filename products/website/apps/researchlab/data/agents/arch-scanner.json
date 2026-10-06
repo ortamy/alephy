@@ -60,8 +60,8 @@
   "canon": null,
   "module": {
     "path": "products/agents/agents/arch_scanner.py",
-    "lines": 287,
-    "bytes": 13072,
+    "lines": 306,
+    "bytes": 13990,
     "entrypoint": "arch_scanner.scan(data)",
     "registration": "AGENT_FUNCTIONS в server.py",
     "functions": [
@@ -81,58 +81,63 @@
         "doc": "Какие заявленные точки входа действительно лежат в репозитории."
       },
       {
-        "name": "_endpoint_pipelines",
+        "name": "_routed_pipelines",
         "line": 102,
+        "doc": "Идентификаторы пайплайнов, известные оркестратору."
+      },
+      {
+        "name": "_endpoint_pipelines",
+        "line": 115,
         "doc": "Пайплайны, импортируемые прямо в server.py мимо оркестратора."
       },
       {
         "name": "scan_agents",
-        "line": 111,
+        "line": 130,
         "doc": "Реестры агентного слоя, разложенные по способу запуска."
       },
       {
         "name": "scan_git",
-        "line": 157,
+        "line": 176,
         "doc": "Недавняя активность репозитория: помогает заметить незадокументированный слой."
       },
       {
         "name": "scan_lab_metrics",
-        "line": 172,
+        "line": 191,
         "doc": "Счётчики корпуса Research Lab: именно их паспорт цитирует в тексте."
       },
       {
         "name": "_load_json",
-        "line": 201,
+        "line": 220,
         "doc": ""
       },
       {
         "name": "_json_len",
-        "line": 210,
+        "line": 229,
         "doc": ""
       },
       {
         "name": "reset_cache",
-        "line": 222,
+        "line": 241,
         "doc": "Сбрасывает снимок фактов."
       },
       {
         "name": "collect_facts",
-        "line": 232,
+        "line": 251,
         "doc": "Полный снимок: всё, что писатель может отрисовать в документе."
       },
       {
         "name": "digest_of",
-        "line": 251,
+        "line": 270,
         "doc": "Подпись снимка: она входит в ключ сходимости цикла."
       },
       {
         "name": "summarize",
-        "line": 257,
+        "line": 276,
         "doc": "Компактная сводка для агентного пакета."
       },
       {
         "name": "scan",
-        "line": 279,
+        "line": 298,
         "doc": "Шаг пайплайна: снимает снимок фактов и фиксирует его подпись."
       }
     ],

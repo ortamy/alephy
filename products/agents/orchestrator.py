@@ -17,6 +17,9 @@ from pipelines.dialectic_loop import run as run_dialectic_loop
 from pipelines.midrash_recursion import run as run_midrash_recursion
 from pipelines.shmita_loop import run as run_shmita_loop
 from pipelines.arch_keeper import run as run_arch_keeper
+from pipelines.witness_council import run as run_witness_council
+from pipelines.ui_canon import run as run_ui_canon
+from pipelines.registry_audit import run as run_registry_audit
 
 
 ROUTES = {
@@ -39,6 +42,13 @@ ROUTES = {
     "шмита": run_shmita_loop,
     "проверь архитектуру": run_arch_keeper,
     "следи за архитектурой": run_arch_keeper,
+    "совет свидетелей": run_witness_council,
+    "три свидетеля": run_witness_council,
+    "канон интерфейса": run_ui_canon,
+    "аудит bento": run_ui_canon,
+    "проверь чёрки": run_ui_canon,
+    "аудит реестров": run_registry_audit,
+    "проверь реестры": run_registry_audit,
 }
 
 PIPELINES = {
@@ -56,6 +66,9 @@ PIPELINES = {
     "midrash_recursion": run_midrash_recursion,
     "shmita_loop": run_shmita_loop,
     "arch_keeper": run_arch_keeper,
+    "witness_council": run_witness_council,
+    "ui_canon": run_ui_canon,
+    "registry_audit": run_registry_audit,
 }
 
 

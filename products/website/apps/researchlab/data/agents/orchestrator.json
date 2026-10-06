@@ -128,29 +128,47 @@
       "title": "проверь архитектуру",
       "query": "проверь архитектуру",
       "about": "Маршрут в пайплайн arch_keeper"
+    },
+    {
+      "id": "route-witness_council",
+      "title": "совет свидетелей",
+      "query": "совет свидетелей",
+      "about": "Маршрут в пайплайн witness_council"
+    },
+    {
+      "id": "route-ui_canon",
+      "title": "канон интерфейса",
+      "query": "канон интерфейса",
+      "about": "Маршрут в пайплайн ui_canon"
+    },
+    {
+      "id": "route-registry_audit",
+      "title": "аудит реестров",
+      "query": "аудит реестров",
+      "about": "Маршрут в пайплайн registry_audit"
     }
   ],
   "canon": null,
   "module": {
     "path": "products/agents/orchestrator.py",
-    "lines": 87,
-    "bytes": 3999,
+    "lines": 100,
+    "bytes": 4658,
     "entrypoint": "orchestrator.dispatch(query)",
     "registration": "server.py → orchestrator.dispatch",
     "functions": [
       {
         "name": "select_pipeline",
-        "line": 62,
+        "line": 75,
         "doc": ""
       },
       {
         "name": "dispatch",
-        "line": 72,
+        "line": 85,
         "doc": "Запускает выбранный пайплайн и возвращает JSON-совместимый словарь."
       },
       {
         "name": "run_pipeline",
-        "line": 79,
+        "line": 92,
         "doc": "Запускает цепочку по её явному идентификатору."
       }
     ],

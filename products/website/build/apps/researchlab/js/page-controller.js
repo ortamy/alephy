@@ -3030,6 +3030,16 @@ var ARCH_AGENT_ICONS = {
       }).join('');
 
       var kindLabel = pipelineKindLabel(pipeline);
+      // Итог цикла (эмет / Мавет) приезжает в самом результате: без него
+      // паспорт показывал только «Витков максимум» из карточки и молчал о том,
+      // чем цикл кончился на самом деле.
+      var cycleFact = '';
+      if (typeof body.converged === 'boolean' || typeof body.stalled === 'boolean') {
+        var rounds = Array.isArray(body.iterations) ? body.iterations.length : 0;
+        var verdict = body.converged ? 'эмет' : (body.stalled ? 'Мавет' : 'не сошёлся');
+        cycleFact = '<div class="pd-fact"><dt>Итог цикла</dt><dd>' + verdict +
+          (rounds ? ' · витков: ' + rounds : '') + '</dd></div>';
+      }
       if (window.LabHero && window.LabHero.setView) {
         window.LabHero.setView('pipelines', 'pipeline', {
           title: pipeline.name,
@@ -3043,6 +3053,7 @@ var ARCH_AGENT_ICONS = {
         '<div class="pd-fact"><dt>Этапов</dt><dd>' + agents.length + '</dd></div>' +
         '<div class="pd-fact"><dt>Runner</dt><dd><code>' + escapeHtml(pipeline.runner || pipeline.id) + '</code></dd></div>' +
         (pipeline.maxIterations ? '<div class="pd-fact"><dt>Витков максимум</dt><dd>' + escapeHtml(String(pipeline.maxIterations)) + '</dd></div>' : '') +
+        cycleFact +
         '<div class="pd-fact"><dt>Запусков</dt><dd>' + history.length + '</dd></div>' +
         '<div class="pd-fact"><dt>Последний запуск</dt><dd>' + (latest ? escapeHtml(formatPipelineDate(latest.createdAt)) : 'нет') + '</dd></div>';
 

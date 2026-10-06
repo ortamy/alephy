@@ -3,7 +3,10 @@ from .common import record
 
 
 def collect(data):
-    summary = data.get("critique") or data.get("editorial_note", "Материал собран.")
+    # `summary` — явный заголовок результата: пайплайн, который знает свой
+    # итог (например, аудит с посчитанным числом расхождений), не должен
+    # подменять его текстом критика или заглушкой.
+    summary = data.get("summary") or data.get("critique") or data.get("editorial_note", "Материал собран.")
     result = {
         "title": f"Исследование: {data.get('term', data['query'])}",
         "summary": summary,

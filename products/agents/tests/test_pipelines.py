@@ -17,7 +17,7 @@ from agents.convergence import converge  # noqa: E402
 from agents.paleo_translator import translate  # noqa: E402
 from agents.critic import critique  # noqa: E402
 from agents.verifier import verify  # noqa: E402
-from pipelines.core import run_steps, run_loop  # noqa: E402
+from pipelines.core import run_steps, run_loop, run_fanout  # noqa: E402
 
 
 class EmptyStepTest(unittest.TestCase):
@@ -207,6 +207,9 @@ class ArchKeeperTest(unittest.TestCase):
         self.assertIn("core", agents["engines"])
         self.assertIn("scripture_analysis", agents["endpoints"])
         self.assertNotIn("scripture_analysis", agents["drift"]["uncarded"])
+        # Импорт в server.py сам по себе не делает пайплайн эндпоинтом:
+        # arch_keeper запускается оркестратором, а ветка записи — деталь.
+        self.assertNotIn("arch_keeper", agents["endpoints"])
 
     def test_registry_drift_is_empty_in_clean_repo(self):
         from agents.arch_scanner import collect_facts
@@ -480,7 +483,7 @@ class OrchestratorTest(unittest.TestCase):
         for pipeline_id in ("paleo_translation", "research_audit", "mechanism_scanner",
                             "verse_reconstruction", "critique_loop", "gap_cycle",
                             "spiral_swiva", "dialectic_loop", "midrash_recursion", "shmita_loop",
-                            "arch_keeper"):
+                            "arch_keeper", "witness_council", "ui_canon", "registry_audit"):
             self.assertIn(pipeline_id, PIPELINES)
 
 
@@ -547,6 +550,111 @@ class DriftAuditScriptTest(unittest.TestCase):
             self.assertEqual(module.main(), 0)
         finally:
             sys.argv = argv
+
+
+class FanoutEngineTest(unittest.TestCase):
+    """Веер: ветки независимы, пустая ветка не глушит веер."""
+
+    def test_branch_does_not_see_the_other_branch_evidence(self):
+        seen = {}
+
+        def spy(data):
+            seen[data["branch_id"]] = sorted(
+                key for key in data if key not in ("query", "trace", "agentTrace", "branch_id"))
+            return data
+
+        run_fanout(packet("тест"), branches=(("подмены", (critique,)), ("свидетели", (spy,))))
+        # Свидетели не видят улик ветки подмен: копии пакетов независимы.
+        self.assertEqual(seen["свидетели"], [])
+
+    def test_empty_branch_is_marked_and_does_not_stop_the_fan(self):
+        def dead(_data):
+            return None
+
+        data = run_fanout(packet("тест"),
+                          branches=(("мёртвая", (dead,)), ("живая", (critique,))))
+        summaries = {item["id"]: item for item in data["branches"]}
+        self.assertTrue(summaries["мёртвая"]["empty"])
+        self.assertFalse(summaries["живая"]["empty"])
+        self.assertIn("critique", data)
+
+    def test_summary_lists_what_each_branch_brought(self):
+        from agents.comparator import compare
+        data = run_fanout(packet("тест"), branches=(("свидетели", (compare,)),))
+        self.assertEqual(data["branches"][0]["fields"], ["witnesses"])
+
+    def test_join_runs_after_branches_and_merges_traces(self):
+        from agents.comparator import compare
+        data = run_fanout(packet("тест"),
+                          branches=(("свидетели", (compare,)), ("образ", (translate,))),
+                          join=(critique, verify))
+        self.assertEqual(data["trace"],
+                         ["comparator", "paleo_translator", "critic", "verifier"])
+        self.assertIn("witnesses", data)
+        self.assertIn("paleo_image", data)
+
+
+class NewCardsTest(unittest.TestCase):
+    """Новые карточки: контракт следа, результата и заголовка."""
+
+    def _assert_ok(self, output):
+        self.assertTrue(output["trace"])
+        self.assertTrue(output["agentTrace"])
+        self.assertIn("result", output)
+
+    def test_witness_council_runs_three_branches_into_one_join(self):
+        from pipelines.witness_council import run
+        output = run("совет свидетелей Шалом")
+        self._assert_ok(output)
+        self.assertEqual(output["trace"],
+                         ["researcher", "comparator", "researcher", "paleo_translator",
+                          "researcher", "exposer", "verifier", "critic", "collector"])
+        branches = output["result"]["data"]["branches"]
+        self.assertEqual([item["id"] for item in branches], ["свидетели", "палео-образ", "подмены"])
+        self.assertFalse(any(item["empty"] for item in branches))
+        for field in ("witnesses", "paleo_image", "exposures"):
+            self.assertIn(field, output["result"]["data"])
+
+    def test_ui_canon_audits_real_css(self):
+        from pipelines.ui_canon import run
+        output = run("аудит bento-заголовков")
+        self._assert_ok(output)
+        self.assertEqual(output["trace"], ["frontend_developer", "collector"])
+        # Число заголовков считано с диска, а не выведено из запроса.
+        self.assertGreater(output["result"]["data"]["frontend"]["titles"], 0)
+        self.assertIn("Заголовков ячеек", output["result"]["summary"])
+
+    def test_registry_audit_reads_disk_and_writes_nothing(self):
+        from pipelines.registry_audit import run
+        from agents.arch_scanner import ARCHITECTURE_DOC
+        before = ARCHITECTURE_DOC.read_bytes()
+        output = run("проверь реестры")
+        self._assert_ok(output)
+        self.assertEqual(output["trace"], ["arch_scanner", "verifier", "collector"])
+        self.assertEqual(ARCHITECTURE_DOC.read_bytes(), before)
+        summary = output["result"]["summary"]
+        self.assertTrue(summary.startswith("Расхождений реестров")
+                        or "совпадают с диском" in summary, summary)
+
+    def test_headline_counts_drift_from_snapshot(self):
+        from pipelines.registry_audit import headline
+        data = {"arch_summary": {"drift": {"missing_runner": ["a"], "missing_card": [],
+                                           "uncarded": ["b", "c"]}}}
+        text = headline(data)
+        self.assertIn("Расхождений реестров: 3", text)
+        self.assertIn("карточка без раннера", text)
+        self.assertNotIn("раннер без карточки", text)
+
+    def test_clean_registry_drift_reads_as_clean(self):
+        from pipelines.registry_audit import headline
+        self.assertIn("совпадают с диском", headline({"arch_summary": {"drift": {}}}))
+
+    def test_empty_result_stops_linear_card_contract(self):
+        """Карточки без раннера тоже обязаны останавливаться на пустом шаге."""
+        from pipelines.core import is_empty
+        self.assertTrue(is_empty(None))
+        self.assertTrue(is_empty({}))
+        self.assertFalse(is_empty({"query": "тест"}))
 
 
 if __name__ == "__main__":

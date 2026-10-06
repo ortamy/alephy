@@ -187,7 +187,7 @@ Waitlist работает через адаптер в inline-скрипте:
 
 ## 4. Research Lab SPA
 
-Research Lab — отдельное статическое Vanilla JS-приложение внутри сайта. В текущем состоянии оно содержит 87 CSS-файлов, 81 JS-файл и 111 файлов данных. Число модулей берётся из реестра `js/module-registry.js`, а не из ручного перечисления: единственный список маршрутов — источник правды, и его полноту проверяет гейт.
+Research Lab — отдельное статическое Vanilla JS-приложение внутри сайта. В текущем состоянии оно содержит 88 CSS-файлов, 83 JS-файла и 131 файл данных. Число модулей берётся из реестра `js/module-registry.js`, а не из ручного перечисления: единственный список маршрутов — источник правды, и его полноту проверяет гейт.
 
 ```text
 products/website/apps/researchlab/
@@ -414,12 +414,12 @@ tools/
 | (корень) | 3 | 0 |
 | .entire | 1 | 0 |
 | docker | 2 | 0 |
-| docs | 213 | 0 |
-| products | 2520 | 1368 |
+| docs | 215 | 0 |
+| products | 2547 | 1375 |
 | researches | 24 | 0 |
 | tasks | 21 | 6 |
-| tools | 73 | 45 |
-| **всего** | 2857 | — |
+| tools | 74 | 46 |
+| **всего** | 2887 | — |
 <!-- alephy:auto-end:repo-map -->
 
 ### 11.1 Точки входа
@@ -445,11 +445,11 @@ tools/
 | реестр | записей |
 | --- | --- |
 | модули агентов | 22 |
-| пайплайны-карточки | 14 |
-| пайплайны-эндпоинты server.py | core, scripture_analysis |
+| пайплайны-карточки | 17 |
+| пайплайны-эндпоинты server.py | scripture_analysis |
 | движки цепочек | `core` |
 
-Пайплайны: `arch_keeper`, `critique_loop`, `dialectic_loop`, `gap_cycle`, `mechanism_scanner`, `midrash_recursion`, `paleo_translation`, `research_audit`, `research_builder`, `scripture_analysis`, `shmita_loop`, `spiral_swiva`, `verse_comparator`, `verse_reconstruction`, `word_analyzer`
+Пайплайны: `arch_keeper`, `critique_loop`, `dialectic_loop`, `gap_cycle`, `mechanism_scanner`, `midrash_recursion`, `paleo_translation`, `registry_audit`, `research_audit`, `research_builder`, `scripture_analysis`, `shmita_loop`, `spiral_swiva`, `ui_canon`, `verse_comparator`, `verse_reconstruction`, `witness_council`, `word_analyzer`
 <!-- alephy:auto-end:agents -->
 
 ## 12. Связанные документы

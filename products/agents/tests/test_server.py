@@ -201,6 +201,47 @@ class PipelineApiTest(unittest.TestCase):
         self.assertIn("collector", body["trace"])
         write_results.assert_called_once()
 
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    @patch("server.execute_named_pipeline", side_effect=ValueError("Неизвестный пайплайн: custom-loop"))
+    @patch("server.read_pipelines")
+    def test_custom_loop_card_runs_engine_loop(self, read_pipelines, execute, _read_results, write_results):
+        """Тип loop в карточке UI — не украшение: шаги идут витками со сходимостью."""
+        read_pipelines.return_value = [{
+            "id": "custom-loop",
+            "runner": "custom-loop",
+            "name": "Кастомный цикл",
+            "type": "loop",
+            "maxIterations": 3,
+            "agents": ["Критик", "Проверяющий"],
+        }]
+
+        response = self.client.post("/api/pipelines/custom-loop/run", json={"query": "шум"})
+
+        self.assertEqual(response.status_code, 201)
+        result = response.get_json()["result"]
+        self.assertTrue(result["converged"])
+        self.assertEqual(result["iterations"][0]["iteration"], 1)
+
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    @patch("server.execute_named_pipeline", side_effect=ValueError("Неизвестный пайплайн: custom-linear"))
+    @patch("server.read_pipelines")
+    def test_custom_linear_card_has_no_cycle_fields(self, read_pipelines, execute, _read_results, write_results):
+        """Линейная карточка не получает витков: поля цикла не выдумываются."""
+        read_pipelines.return_value = [{
+            "id": "custom-linear",
+            "runner": "custom-linear",
+            "name": "Кастомный линейный",
+            "agents": ["Компаратор", "Критик"],
+        }]
+
+        response = self.client.post("/api/pipelines/custom-linear/run", json={"query": "стих"})
+
+        body = response.get_json()
+        self.assertNotIn("iterations", body["result"])
+        self.assertEqual(body["trace"], ["comparator", "critic", "collector"])
+
 
 class DeletePipelineResultTest(unittest.TestCase):
     """Удаление одного прогона из истории: 404 на чужом id, запись без него."""

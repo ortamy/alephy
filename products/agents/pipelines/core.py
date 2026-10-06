@@ -46,6 +46,65 @@ def _shmita_reset(data: Packet, reset_fields: Iterable[str]) -> Packet:
     return data
 
 
+# Служебные поля веера: следы и сама сводка веток не являются уликами и не
+# сливаются в общий пакет.
+_BRANCH_BOOKKEEPING = {"trace", "agentTrace", "branches", "branch_id", "iteration", "result"}
+
+
+def run_fanout(
+    data: Packet,
+    *,
+    branches: Iterable[tuple],
+    join: Iterable[Step] = (),
+) -> Packet:
+    """Веер: независимые ветки от одного пакета, затем общее сведение.
+
+    `branches` — пары `(branch_id, steps)`. Каждая ветка идёт по своей копии
+    входного пакета с полем `branch_id`: улики ветки не видны соседним веткам,
+    иначе «независимость» была бы только словом. Пустой результат ветки не
+    останавливает веер — ветка честно помечается пустой в `data["branches"]`,
+    а решение о сведении принимает `join`.
+
+    `join` — шаги сведения: они получают общий пакет с уликами всех веток.
+    Порядок `branches` задаёт приоритет при совпадении имён полей.
+
+    Ветки идут по очереди: шаги — детерминированные функции одного процесса,
+    параллельность им ничего не даёт и только запутывает след.
+    """
+    base = {key: value for key, value in data.items() if key not in _BRANCH_BOOKKEEPING}
+    trace = list(data.get("trace") or [])
+    agent_trace = list(data.get("agentTrace") or [])
+    summaries = []
+
+    for branch_id, steps in branches:
+        branch = deepcopy(base)
+        branch["branch_id"] = branch_id
+        branch["trace"] = []
+        branch["agentTrace"] = []
+        branch = run_steps(branch, steps)
+        empty = is_empty(branch)
+        branch = branch or {}
+        summaries.append({
+            "id": branch_id,
+            "steps": list(branch.get("trace") or []),
+            "empty": empty,
+            "fields": sorted(key for key in branch
+                             if key not in _BRANCH_BOOKKEEPING and key not in base),
+        })
+        if empty:
+            continue
+        trace.extend(branch.get("trace") or [])
+        agent_trace.extend(branch.get("agentTrace") or [])
+        for key, value in branch.items():
+            if key not in _BRANCH_BOOKKEEPING:
+                data[key] = value
+
+    data["trace"] = trace
+    data["agentTrace"] = agent_trace
+    data["branches"] = summaries
+    return run_steps(data, join) if join else data
+
+
 def run_loop(
     data: Packet,
     *,

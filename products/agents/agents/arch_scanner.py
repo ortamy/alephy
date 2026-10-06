@@ -99,13 +99,32 @@ def scan_entrypoints() -> Dict[str, bool]:
     return {rel: (REPO_ROOT / rel).is_file() for rel in ENTRYPOINTS}
 
 
+def _routed_pipelines() -> set:
+    """Идентификаторы пайплайнов, известные оркестратору.
+
+    Импорт локальный: на уровне модуля он создал бы цикл — `orchestrator`
+    импортирует пайплайны, а те импортируют сканер.
+    """
+    try:
+        from orchestrator import PIPELINES
+    except ImportError:
+        return set()
+    return set(PIPELINES)
+
+
 def _endpoint_pipelines() -> List[str]:
-    """Пайплайны, импортируемые прямо в server.py мимо оркестратора."""
+    """Пайплайны, импортируемые прямо в server.py мимо оркестратора.
+
+    Сам факт импорта эндпоинтом не делает: `arch_keeper` сервер импортирует
+    лишь ради особой ветки записи, а запускается он через оркестратор. Движок
+    цепочек (`core`) — тоже не эндпоинт, он вообще не пайплайн.
+    """
     server = AGENTS_ROOT / "server.py"
     if not server.is_file():
         return []
     source = server.read_text(encoding="utf-8")
-    return sorted({module for module, _ in _ENDPOINT_IMPORT.findall(source)})
+    imported = {module for module, _ in _ENDPOINT_IMPORT.findall(source)}
+    return sorted(imported - ENGINE_MODULES - _routed_pipelines())
 
 
 def scan_agents() -> Dict[str, Any]:

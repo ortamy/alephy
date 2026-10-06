@@ -24,8 +24,9 @@ from pathlib import Path
 
 from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 from orchestrator import dispatch, run_pipeline as execute_named_pipeline
-from pipelines.core import run_steps
+from pipelines.core import run_loop, run_steps
 from agents.common import packet
+from agents.convergence import converge
 from agents import ai_engineer, arch_convergence, arch_critic, arch_planner, arch_scanner, \
     arch_writer, code_reviewer, collector, comparator, critic, editor, exposer, \
     flow_architect, frontend, liaison, paleo_translator, researcher, semitologist, verifier, writer
@@ -70,6 +71,9 @@ AGENTS_DIR = Path(__file__).resolve().parent
 # на чтение, даже если запросит флаг: белый список, а не проверка имени.
 WRITABLE_PIPELINES = {"arch_keeper"}
 
+# Витки циклической карточки из UI, если она не назвала своё число сама.
+DEFAULT_MAX_ITERATIONS = 5
+
 # Русское имя агента (как в UI) → модуль в agents/. Тот же белый список, что и
 # AGENT_FUNCTIONS: эндпоинт исходников не должен читать произвольный путь.
 AGENT_SOURCES = {
@@ -95,6 +99,28 @@ AGENT_SOURCES = {
     "Архитектурный сход": "agents/arch_convergence.py",
     "Оркестратор": "orchestrator.py",
 }
+
+
+def run_card_pipeline(pipeline, data, steps):
+    """Карточка без Python-раннера: цепочка исполняется по её типу из данных.
+
+    Тип `loop`/`spiral` в карточке — не украшение: если он заявлен, шаги идут
+    витками со сходимостью (`run_loop`), иначе `maxIterations` было бы полем,
+    которое ничего не значит. Карточка, не завершившая работу Сборщиком,
+    получает собранный результат: без него запуску нечего показать.
+    """
+    if str(pipeline.get("type") or "linear").strip().lower() in ("loop", "spiral"):
+        try:
+            max_iterations = int(pipeline.get("maxIterations"))
+        except (TypeError, ValueError):
+            max_iterations = DEFAULT_MAX_ITERATIONS
+        data = run_loop(data, cycle_steps=tuple(steps), converge_step=converge,
+                        max_iterations=max_iterations)
+    else:
+        data = run_steps(data, steps)
+    if isinstance(data, dict) and data and "result" not in data:
+        data = collector.collect(data)
+    return data
 
 
 def read_pipelines():
@@ -398,11 +424,12 @@ def run_named_pipeline(pipeline_id):
             output = execute_named_pipeline(runner, query)
     except ValueError as error:
         # Для пайплайнов, созданных в UI и не имеющих Python-раннера,
-        # собираем линейную цепочку из русских имён агентов.
+        # собираем цепочку из русских имён агентов и исполняем её по типу
+        # карточки: линейная цепочка или цикл со сходимостью.
         steps = [AGENT_FUNCTIONS[name] for name in pipeline.get("agents", []) if name in AGENT_FUNCTIONS]
         if not steps:
             return jsonify({"error": str(error)}), 400
-        output = run_steps(packet(query), steps)
+        output = run_card_pipeline(pipeline, packet(query), steps) or {}
     created_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
     result = {
         "id": pipeline_id + "-" + datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S"),
