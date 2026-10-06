@@ -786,33 +786,48 @@ var ARCH_AGENT_ICONS = {
         return String(value || '').toLowerCase().indexOf(query) !== -1;
       })
     });
-    var backBtn = '<button class="lab-btn lab-btn-secondary lab-btn-sm" onclick="LabRouter.navigate(\'dictionaries\')">Назад к словарям</button>';
     var options = keys.map(function(key) {
       return '<option value="' + escapeHtml(key) + '"' + (key === state.key ? ' selected' : '') + '>' +
         escapeHtml(data[key].title || key) + '</option>';
     }).join('');
+    // Карточка термина — запись манускрипта (§5.2t): HEAD несёт подмену
+    // (сериф-заголовок) и палео-форму (золото, RTL), ниже — иврит-лемма и
+    // восстановленный смысл. Разметка — div, не p/h3: базовый
+    // `.lab-content .module p` дал бы абзацу 20px снизу и меру 750px.
     var termCards = terms.map(function(term, index) {
       var paleo = (term.paleo || []).join(' ');
       return '<article class="term-card" style="animation-delay: ' + (index * 50) + 'ms">' +
-        '<div class="term-paleo" lang="hbo" dir="rtl">' + escapeHtml(paleo) + '</div>' +
-        '<div class="term-word">' + escapeHtml(term.word) + '</div>' +
-        '<div class="term-hebrew" lang="he" dir="rtl">' + escapeHtml(term.hebrew) + '</div>' +
-        '<div class="term-restored">' + escapeHtml(term.restored) + '</div>' +
+        '<header class="term-head">' +
+        '<span class="term-word">' + escapeHtml(term.word) + '</span>' +
+        (paleo ? '<span class="term-paleo" lang="hbo" dir="rtl">' + escapeHtml(paleo) + '</span>' : '') +
+        '</header>' +
+        (term.hebrew ? '<div class="term-hebrew" lang="he" dir="rtl">' + escapeHtml(term.hebrew) + '</div>' : '') +
+        (term.restored ? '<div class="term-restored">' + escapeHtml(term.restored) + '</div>' : '') +
         '</article>';
     }).join('');
-    var dictionaryDescription = escapeHtml((dictionary.description || '').replace(/---/g, '').trim());
-    var dictionaryHeading = escapeHtml(dictionary.title || 'Словари');
-    container.innerHTML = '<div class="research-page-head">' +
-      '<h1><img src="assets/icons/32/ui/book.png" class="lab-icon" alt="">' + dictionaryHeading + '</h1>' +
-      '<p class="subtitle text-muted">' + dictionaryDescription + '</p>' + backBtn +
-      '</div>' +
-      '<div class="research-controls">' +
-      '<label>Словарь<select id="research-dictionary-select" class="lab-input">' + options + '</select></label>' +
-      '<label class="research-search-label">Поиск<input id="research-dictionary-search" class="lab-input" type="search" value="' + escapeHtml(state.query) + '" placeholder="Слово, иврит или восстановленный смысл"></label>' +
-      '</div>' +
+    var totalTerms = (dictionary.terms || []).length;
+    // Тулбар — оболочка агентов (§4.7, как реестр словарей): один ряд без
+    // лейблов над полями (placeholder несёт смысл, §4.5). Возврат к реестру
+    // живёт в тулбаре, а не отдельной кнопкой: .research-page-head у модуля
+    // скрыт шапкой, и заголовок со ссылкой там дублируют hero (§5.2t).
+    var toolbar = '<section class="agent-controls-panel dict-controls-panel" aria-label="Управление словарём">' +
+      '<div class="agent-toolbar-row">' +
+      '<input type="search" class="lab-input agents-search" id="research-dictionary-search" value="' + escapeHtml(state.query) + '" ' +
+      'placeholder="Слово, иврит или восстановленный смысл" aria-label="Поиск термина">' +
+      '<span class="dict-sort-wrap"><select id="research-dictionary-select" class="lab-input dict-sort-select" aria-label="Словарь">' + options + '</select></span>' +
+      '<div class="agent-toolbar-actions">' +
+      '<span class="pipeline-count" data-dict-count aria-live="polite"><strong>' + terms.length + '</strong> ' +
+      dictT('lab.dictionaries.of', 'из') + ' ' + totalTerms + '</span>' +
+      '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" data-dict-back>Назад к словарям</button>' +
+      '</div></div></section>';
+    container.innerHTML = toolbar +
       '<div class="term-grid" id="term-grid">' + (termCards || '<div class="lab-alert lab-alert-info">По запросу ничего не найдено.</div>') + '</div>';
     var termGrid = document.getElementById('term-grid');
     if (termGrid) termGrid.querySelectorAll('.term-card').forEach(function(c) { c.classList.add('fade-in-stagger'); });
+    var back = container.querySelector('[data-dict-back]');
+    if (back) back.addEventListener('click', function() {
+      if (window.LabRouter) LabRouter.navigate('dictionaries');
+    });
     var select = document.getElementById('research-dictionary-select');
     var search = document.getElementById('research-dictionary-search');
     if (select) select.addEventListener('change', function() {
@@ -2018,13 +2033,16 @@ var ARCH_AGENT_ICONS = {
       title: agent.name,
       subtitle: agent.desc,
       subtitleClass: 'lab-hero__subtitle--one-line',
-      icon: agent.icon + '.png',
       meta: [
         { label: agent.cat, className: 'agent-hero-chip' },
         { label: AGENT_STATUSES[status], className: 'agent-hero-chip agent-hero-chip--' + status, dot: true },
         { label: model, className: 'agent-hero-chip agent-hero-chip--model' }
       ]
     };
+    // Иконка шапки — только когда она объявлена у агента: записи реестра поля
+    // `icon` не несут, и `undefined.png` перебивал бы базовую иконку модуля
+    // (битая метка вместо «молотка и зубила»). Оркестратор несёт свою ui/arrows.
+    if (agent.icon) container._labHeroOverride.icon = agent.icon + '.png';
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
