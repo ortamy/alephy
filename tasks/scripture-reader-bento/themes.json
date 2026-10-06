@@ -1,0 +1,138 @@
+{
+  "white": {
+    "library": {
+      "theme": "white",
+      "icon": "14px in chip 32pxx32px",
+      "inkCell": "rgb(251, 250, 246) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(58, 44, 28)",
+      "chipText": "n/a ratio null",
+      "activeChip": "n/a on n/a ratio null",
+      "jump": "rgb(58, 44, 28) border rgb(203, 191, 168) ratio 12.91",
+      "label": "n/a ratio null",
+      "resumeTitleRatio": 12.91,
+      "resumeRefRatio": 20.06,
+      "resumeNoteRatio": 3.61,
+      "rowTextRatio": 16.44,
+      "pillRatio": 20.06,
+      "bookPill": "rgb(141, 130, 113) chip bg rgb(241, 236, 225)"
+    },
+    "reading": {
+      "theme": "white",
+      "icon": "0px in chip 32pxx32px",
+      "inkCell": "rgb(251, 250, 246) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(58, 44, 28)",
+      "chipText": "rgb(58, 44, 28) ratio 12.91",
+      "activeChip": "rgb(255, 255, 255) on rgb(184, 134, 11) ratio 3.25",
+      "jump": "rgb(58, 44, 28) border rgb(203, 191, 168) ratio 12.91",
+      "label": "rgb(141, 130, 113) ratio 3.61",
+      "resumeTitleRatio": 12.91,
+      "resumeRefRatio": 20.06,
+      "resumeNoteRatio": 3.61,
+      "rowTextRatio": 16.44,
+      "pillRatio": 20.06,
+      "bookPill": "rgb(141, 130, 113) chip bg rgb(241, 236, 225)"
+    }
+  },
+  "beige": {
+    "library": {
+      "theme": "beige",
+      "icon": "16px in chip 32pxx32px",
+      "inkCell": "rgb(239, 227, 200) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(58, 43, 23)",
+      "chipText": "n/a ratio null",
+      "activeChip": "n/a on n/a ratio null",
+      "jump": "rgb(58, 43, 23) border rgb(194, 172, 125) ratio 10.72",
+      "label": "n/a ratio null",
+      "resumeTitleRatio": 10.72,
+      "resumeRefRatio": 16.45,
+      "resumeNoteRatio": 5.49,
+      "rowTextRatio": 11.03,
+      "pillRatio": 16.92,
+      "bookPill": "rgb(156, 135, 102) chip bg rgb(233, 220, 189)"
+    },
+    "reading": {
+      "theme": "beige",
+      "icon": "0px in chip 32pxx32px",
+      "inkCell": "rgb(239, 227, 200) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(58, 43, 23)",
+      "chipText": "rgb(58, 43, 23) ratio 10.72",
+      "activeChip": "rgb(255, 250, 240) on rgb(184, 134, 11) ratio 3.13",
+      "jump": "rgb(58, 43, 23) border rgb(194, 172, 125) ratio 10.72",
+      "label": "rgb(106, 86, 58) ratio 5.49",
+      "resumeTitleRatio": 10.72,
+      "resumeRefRatio": 16.45,
+      "resumeNoteRatio": 5.49,
+      "rowTextRatio": 11.03,
+      "pillRatio": 16.92,
+      "bookPill": "rgb(156, 135, 102) chip bg rgb(233, 220, 189)"
+    }
+  },
+  "brown": {
+    "library": {
+      "theme": "brown",
+      "icon": "14px in chip 32pxx32px",
+      "inkCell": "rgb(39, 26, 13) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(246, 239, 224)",
+      "chipText": "n/a ratio null",
+      "activeChip": "n/a on n/a ratio null",
+      "jump": "rgb(246, 239, 224) border rgb(112, 88, 49) ratio 14.79",
+      "label": "n/a ratio null",
+      "resumeTitleRatio": 14.79,
+      "resumeRefRatio": 1.23,
+      "resumeNoteRatio": 7.43,
+      "rowTextRatio": 10.1,
+      "pillRatio": 1.72,
+      "bookPill": "rgb(176, 155, 120) chip bg rgb(79, 58, 35)"
+    },
+    "reading": {
+      "theme": "brown",
+      "icon": "0px in chip 32pxx32px",
+      "inkCell": "rgb(39, 26, 13) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(246, 239, 224)",
+      "chipText": "rgb(246, 239, 224) ratio 14.79",
+      "activeChip": "rgb(36, 23, 7) on rgb(184, 134, 11) ratio 5.37",
+      "jump": "rgb(246, 239, 224) border rgb(112, 88, 49) ratio 14.79",
+      "label": "rgb(194, 168, 128) ratio 7.43",
+      "resumeTitleRatio": 14.79,
+      "resumeRefRatio": 1.23,
+      "resumeNoteRatio": 7.43,
+      "rowTextRatio": 10.1,
+      "pillRatio": 1.72,
+      "bookPill": "rgb(176, 155, 120) chip bg rgb(79, 58, 35)"
+    }
+  },
+  "dark": {
+    "library": {
+      "theme": "dark",
+      "icon": "15px in chip 32pxx32px",
+      "inkCell": "rgb(9, 5, 2) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(246, 239, 224)",
+      "chipText": "n/a ratio null",
+      "activeChip": "n/a on n/a ratio null",
+      "jump": "rgb(246, 239, 224) border rgb(69, 53, 37) ratio 17.73",
+      "label": "n/a ratio null",
+      "resumeTitleRatio": 17.73,
+      "resumeRefRatio": 1.03,
+      "resumeNoteRatio": 8.59,
+      "rowTextRatio": 15.73,
+      "pillRatio": 1.11,
+      "bookPill": "rgb(156, 141, 116) chip bg rgb(34, 23, 16)"
+    },
+    "reading": {
+      "theme": "dark",
+      "icon": "0px in chip 32pxx32px",
+      "inkCell": "rgb(9, 5, 2) / border rgb(184, 134, 11)",
+      "inkCellText": "rgb(246, 239, 224)",
+      "chipText": "n/a ratio null",
+      "activeChip": "n/a on n/a ratio null",
+      "jump": "rgb(246, 239, 224) border rgb(69, 53, 37) ratio 17.73",
+      "label": "n/a ratio null",
+      "resumeTitleRatio": 17.73,
+      "resumeRefRatio": 1.03,
+      "resumeNoteRatio": 8.59,
+      "rowTextRatio": 15.73,
+      "pillRatio": 1.11,
+      "bookPill": "rgb(156, 141, 116) chip bg rgb(34, 23, 16)"
+    }
+  }
+}
