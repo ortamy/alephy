@@ -70,6 +70,20 @@
     return { rows: rows, leftTotal: leftTotal, rightTotal: rightTotal, verdict: verdict, winner: winner };
   }
 
+  function totalRow(language, score, leads) {
+    return '<div class="tensor-total' + (leads ? ' is-lead' : '') + '">' +
+      '<span class="tensor-total-name">' + escapeHtml(language.name) + '</span>' +
+      '<strong class="tensor-total-value">' + score + '</strong>' +
+      '<span class="tensor-total-bar" aria-hidden="true"><span class="tensor-total-fill" style="width:' + score + '%"></span></span>' +
+      '</div>';
+  }
+
+  /* Иконки новой разметки: LabIcons.sync() рендерит <i data-lucide> (js/lucide-init.js). */
+  function refreshIcons() {
+    if (window.LabIcons && window.LabIcons.sync) { window.LabIcons.sync(); return; }
+    if (window.lucide && window.lucide.createIcons) { try { window.lucide.createIcons(); } catch (error) { /* иконки не критичны */ } }
+  }
+
   function render(container) {
     var left = getLanguage(current.left);
     var right = getLanguage(current.right);
@@ -89,15 +103,32 @@
         '</div>' +
         '<p class="tensor-axis-verdict">' + escapeHtml(lead) + '</p></article>';
     }).join('');
+    // Страница-результат: bento из трёх ячеек (§5.2u) — матрица осей (8) и
+    // сводка (4) в первой строке, ink-вердикт во всю ширину во второй.
     container.querySelector('#tensor-results').innerHTML =
       '<section class="tensor-results" aria-labelledby="tensor-results-title">' +
-      '<div class="tensor-results-head"><div class="tensor-results-titles"><p class="tensor-kicker">СЛОЙ СРАВНЕНИЯ · 06 ОСЕЙ</p><h2 id="tensor-results-title">Плотность языкового потока</h2></div>' +
-      '<div class="tensor-totals"><span><b>' + analysis.leftTotal + '</b>' + escapeHtml(left.name) + '</span><i aria-hidden="true">/</i><span><b>' + analysis.rightTotal + '</b>' + escapeHtml(right.name) + '</span></div></div>' +
+      '<div class="tensor-bento">' +
+      '<section class="tensor-cell tensor-cell--matrix">' +
+      '<header class="tensor-cell-head"><span class="tensor-num">01</span><h2 class="tensor-cell-title" id="tensor-results-title">Плотность языкового потока</h2><span class="tensor-cell-hint">06 осей</span></header>' +
       '<div class="tensor-matrix" role="list" aria-label="Сравнение по шести осям">' + cards + '</div>' +
-      '<aside class="tensor-verdict" aria-labelledby="tensor-verdict-title"><div><p class="tensor-kicker">ИТОГОВЫЙ ВЕРДИКТ</p><h2 id="tensor-verdict-title">' + escapeHtml(analysis.verdict) + '</h2><p>Баллы нормированы по шкале 0–100 и собраны из исследовательских признаков Карты языков.</p></div><button type="button" class="lab-btn lab-btn-secondary tensor-copy" id="tensor-copy">Копировать как промпт</button></aside>' +
-      '</section>';
+      '</section>' +
+      '<section class="tensor-cell tensor-cell--summary">' +
+      '<header class="tensor-cell-head"><span class="tensor-num">02</span><h2 class="tensor-cell-title">Сводка тензора</h2></header>' +
+      '<div class="tensor-totals">' +
+      totalRow(left, analysis.leftTotal, analysis.leftTotal > analysis.rightTotal) +
+      totalRow(right, analysis.rightTotal, analysis.rightTotal > analysis.leftTotal) +
+      '</div>' +
+      '<p class="tensor-note">Баллы нормированы по шкале 0–100 и собраны из исследовательских признаков Карты языков.</p>' +
+      '</section>' +
+      '<section class="tensor-cell tensor-cell--ink tensor-cell--verdict">' +
+      '<header class="tensor-cell-head"><span class="tensor-num">03</span><h2 class="tensor-cell-title">Итоговый вердикт</h2></header>' +
+      '<p class="tensor-verdict-text">' + escapeHtml(analysis.verdict) + '</p>' +
+      '<div class="tensor-verdict-foot"><button type="button" class="lab-btn lab-btn-secondary tensor-copy" id="tensor-copy">Копировать как промпт</button></div>' +
+      '</section>' +
+      '</div></section>';
     var copyButton = container.querySelector('#tensor-copy');
     if (copyButton) copyButton.addEventListener('click', function() { copyPrompt(container, left, right, analysis, copyButton); });
+    refreshIcons();
   }
 
   function promptText(left, right, analysis) {
@@ -119,14 +150,30 @@
     try { document.execCommand('copy'); done(); } finally { document.body.removeChild(field); }
   }
 
+  function emptyState() {
+    return '<div class="lab-empty tensor-empty">' +
+      '<span class="lab-empty-glyph" aria-hidden="true">𐤀</span>' +
+      '<p class="lab-empty-hint">Выберите два языка и запустите анализ — тензор соберёт шесть осей плотности Давара.</p>' +
+      '</div>';
+  }
+
   function renderShell(container) {
     var defaultLeft = current.languages.filter(function(language) { return language.id === 'russian'; })[0] || current.languages[0];
     var defaultRight = current.languages.filter(function(language) { return language.id === 'hebrew'; })[0] || current.languages[1];
     current.left = current.left || (defaultLeft && defaultLeft.id);
     current.right = current.right || (defaultRight && defaultRight.id);
+    // Тулбар §4.7 — оболочка агентов (.agent-controls-panel + .agent-toolbar-row):
+    // строка «Первый язык · VS · Второй язык · запуск», без лейблов над полями (§4.5).
     container.innerHTML = '<section class="tensor-shell" aria-label="Лингвистический тензор">' +
-      '<form class="tensor-controls" id="tensor-form"><div class="tensor-field"><label for="tensor-left">Первый язык</label><select id="tensor-left" class="lab-select">' + selectOptions(current.left, current.right) + '</select></div><div class="tensor-vs" aria-hidden="true">VS</div><div class="tensor-field"><label for="tensor-right">Второй язык</label><select id="tensor-right" class="lab-select">' + selectOptions(current.right, current.left) + '</select></div><button type="submit" class="lab-btn lab-btn-primary tensor-run"><img src="assets/icons/32/archaeology/testtube.svg" width="24" height="24" alt="">Запустить анализ</button></form>' +
-      '<p class="tensor-status" id="tensor-status" role="status" aria-live="polite">Выберите два языка, чтобы собрать тензор.</p><div id="tensor-results"></div></section>';
+      '<form class="agent-controls-panel tensor-controls-panel" id="tensor-form" aria-label="Пара языков для сравнения"><div class="agent-toolbar-row">' +
+      '<span class="tensor-toolbar-field"><select id="tensor-left" class="lab-input tensor-toolbar-select" aria-label="Первый язык">' + selectOptions(current.left, current.right) + '</select></span>' +
+      '<span class="tensor-vs" aria-hidden="true">VS</span>' +
+      '<span class="tensor-toolbar-field"><select id="tensor-right" class="lab-input tensor-toolbar-select" aria-label="Второй язык">' + selectOptions(current.right, current.left) + '</select></span>' +
+      '<div class="agent-toolbar-actions"><button type="submit" class="lab-btn lab-btn-primary tensor-run"><i data-lucide="play" class="lab-icon" aria-hidden="true"></i>Запустить анализ</button></div>' +
+      '</div></form>' +
+      '<p class="tensor-status" id="tensor-status" role="status" aria-live="polite">Выберите два языка, чтобы собрать тензор.</p>' +
+      '<div id="tensor-results">' + emptyState() + '</div></section>';
+    refreshIcons();
     container.querySelector('#tensor-form').addEventListener('submit', function(event) {
       event.preventDefault();
       current.left = container.querySelector('#tensor-left').value;
