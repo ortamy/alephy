@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "semitologist",
+  "name": "Семитолог",
+  "title": "Семитолог",
+  "icon": "bot",
+  "cat": "Исследование",
+  "model": "Локальный агент",
+  "domain": "Семитские параллели без подмены источников",
+  "role": "Семитолог: фиксирует семитские параллели без подмены источников.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "semitologist.compare(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-semitologist",
+      "title": "Запустить: Семитолог",
+      "query": "семитолог",
+      "about": "Семитские параллели без подмены источников"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/semitologist.py",
+    "lines": 14,
+    "bytes": 704,
+    "entrypoint": "semitologist.compare(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "compare",
+        "line": 6,
+        "doc": ""
+      }
+    ],
+    "doc": "Семитолог: фиксирует семитские параллели без подмены источников."
+  }
+}

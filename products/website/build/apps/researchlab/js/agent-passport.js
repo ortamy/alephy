@@ -206,6 +206,24 @@
       '<ul class="ap-canon-list">' + rules + '</ul>';
   }
 
+  function capabilitiesMarkup(capabilities) {
+    if (!capabilities) return emptyState('sliders-horizontal', 'Способности агента не объявлены.');
+    var labels = {
+      execution: 'Запуск',
+      readRepository: 'Чтение репозитория',
+      writesFiles: 'Запись файлов',
+      streaming: 'Потоковый вывод'
+    };
+    var rows = Object.keys(labels).map(function (key) {
+      var enabled = capabilities[key] === true;
+      return '<li class="ap-capability" data-ap-searchable>' +
+        '<span class="ap-capability-dot ap-capability-dot--' + (enabled ? 'on' : 'off') + '" aria-hidden="true"></span>' +
+        '<span class="ap-capability-label">' + escapeHtml(labels[key]) + '</span>' +
+        '<span class="ap-capability-value">' + (enabled ? 'да' : 'нет') + '</span></li>';
+    }).join('');
+    return '<ul class="ap-capabilities">' + rows + '</ul>';
+  }
+
   // Собирает весь экран «Паспорт». Данные приходят из статического файла,
   // дополненного результатом запуска и исходником с сервера.
   function render(view, data) {
@@ -216,6 +234,7 @@
     var info = data.module || null;
     var canon = data.canon || null;
     var tasks = data.frontend_tasks || data.tasks || [];
+    var capabilities = data.capabilities || (contract && contract.capabilities) || null;
 
     // Раскладка: 5+7 (контракт и канон), 8+4 (аудит и задачи), 12 (код).
     // Порядок в DOM повторяет визуальный — иначе ячейка на 12 колонок
@@ -226,6 +245,8 @@
       cell('02', 'Канон проверки', canon ? canon.reference : 'нет данных',
         canon ? canonMarkup(canon) : emptyState('book-open', 'Справочник канона не собран.'),
         'ap-cell--canon') +
+      cell('06', 'Способности', capabilities ? 'единый контракт' : 'нет данных',
+        capabilitiesMarkup(capabilities)) +
       cell('03', 'Аудит канона', report ? report.clean + ' из ' + report.titles + ' чисто' : 'не запускался',
         auditMarkup(report), 'ap-cell--wide') +
       cell('05', 'Задачи лаборатории', tasks.length ? tasks.length + ' готовых' : 'нет',

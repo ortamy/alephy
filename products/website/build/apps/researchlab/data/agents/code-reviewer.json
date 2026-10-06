@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "code-reviewer",
+  "name": "Ревьюер кода",
+  "title": "Ревьюер кода",
+  "icon": "bot",
+  "cat": "Контроль качества",
+  "model": "Локальный агент",
+  "domain": "Минимальный технический контроль пайплайна",
+  "role": "Ревьюер кода: фиксирует минимальный технический контроль пайплайна.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "code_reviewer.review(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-code-reviewer",
+      "title": "Запустить: Ревьюер кода",
+      "query": "ревьюер кода",
+      "about": "Минимальный технический контроль пайплайна"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/code_reviewer.py",
+    "lines": 7,
+    "bytes": 315,
+    "entrypoint": "code_reviewer.review(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "review",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Ревьюер кода: фиксирует минимальный технический контроль пайплайна."
+  }
+}

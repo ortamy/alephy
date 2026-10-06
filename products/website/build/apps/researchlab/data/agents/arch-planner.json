@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "id": "arch-planner",
+  "name": "Архитектурный планировщик",
+  "title": "Архитектурный планировщик",
+  "icon": "bot",
+  "cat": "Архитектура",
+  "model": "Локальный агент",
+  "domain": "Классификация находок по корзинам решения",
+  "role": "Планировщик: раскладывает находки критика по корзинам решения.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "arch_planner.plan(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-arch-planner",
+      "title": "Запустить: Архитектурный планировщик",
+      "query": "архитектурный планировщик",
+      "about": "Классификация находок по корзинам решения"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/arch_planner.py",
+    "lines": 65,
+    "bytes": 3548,
+    "entrypoint": "arch_planner.plan(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "classify",
+        "line": 31,
+        "doc": "Определяет корзину и формулирует предложение."
+      },
+      {
+        "name": "plan",
+        "line": 57,
+        "doc": "Шаг пайплайна: находки → предложения, без записи в документ."
+      }
+    ],
+    "doc": "Планировщик: раскладывает находки критика по корзинам решения.\n\nКорзины — не украшение, а разные адресаты:\n\n- `auto` — число или путь, где правда однозначна: человек не решает, а\n  исправляет по факту;\n- `adr` — расхождение затрагивает решение (структура слоёв, границы), и\n  ответ на него неочевиден: нужен заход в `docs/decisions.md`;\n- `manual` — утверждение оценочное («около 50 модулей»), где автоматика\n  ошиблась бы, подменив мысль числом.\n\nПланировщик формирует предложения, но не применяет их. Право менять паспорт\nостаётся у человека и у писателя, который работает только с маркерами."
+  }
+}

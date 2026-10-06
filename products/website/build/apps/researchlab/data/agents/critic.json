@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "critic",
+  "name": "Критик",
+  "title": "Критик",
+  "icon": "bot",
+  "cat": "Контроль качества",
+  "model": "Локальный агент",
+  "domain": "Проверка хода работы по эмет и шекер",
+  "role": "Критик: проверяет ход работы по критериям эмет / шекер.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "critic.critique(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-critic",
+      "title": "Запустить: Критик",
+      "query": "критик",
+      "about": "Проверка хода работы по эмет и шекер"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/critic.py",
+    "lines": 32,
+    "bytes": 1554,
+    "entrypoint": "critic.critique(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "critique",
+        "line": 13,
+        "doc": ""
+      }
+    ],
+    "doc": "Критик: проверяет ход работы по критериям эмет / шекер."
+  }
+}

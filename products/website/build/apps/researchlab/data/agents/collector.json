@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "collector",
+  "name": "Сборщик",
+  "title": "Сборщик",
+  "icon": "bot",
+  "cat": "Оркестрация",
+  "model": "Локальный агент",
+  "domain": "Единый результат линейных и циклических цепочек",
+  "role": "Сборщик: формирует единый результат пайплайна, включая сходимость циклов.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "collector.collect(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-collector",
+      "title": "Запустить: Сборщик",
+      "query": "сборщик",
+      "about": "Единый результат линейных и циклических цепочек"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/collector.py",
+    "lines": 23,
+    "bytes": 1037,
+    "entrypoint": "collector.collect(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "collect",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Сборщик: формирует единый результат пайплайна, включая сходимость циклов."
+  }
+}

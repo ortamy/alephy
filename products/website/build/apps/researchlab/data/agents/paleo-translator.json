@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "paleo-translator",
+  "name": "Переводчик палео-иврита",
+  "title": "Переводчик палео-иврита",
+  "icon": "bot",
+  "cat": "Исследование",
+  "model": "Локальный агент",
+  "domain": "Палео-образ и физический смысл букв",
+  "role": "Переводчик палео-иврита: собирает буквы в образ; на повторе перечитывает образ как термин.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "paleo_translator.translate(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-paleo-translator",
+      "title": "Запустить: Переводчик палео-иврита",
+      "query": "переводчик палео-иврита",
+      "about": "Палео-образ и физический смысл букв"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/paleo_translator.py",
+    "lines": 27,
+    "bytes": 1220,
+    "entrypoint": "paleo_translator.translate(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "translate",
+        "line": 6,
+        "doc": ""
+      }
+    ],
+    "doc": "Переводчик палео-иврита: собирает буквы в образ; на повторе перечитывает образ как термин."
+  }
+}

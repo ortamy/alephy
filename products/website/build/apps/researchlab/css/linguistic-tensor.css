@@ -1,8 +1,9 @@
 /* ============================================================
-   linguistic-tensor.css — Лингвистический тензор (#linguistic-tensor).
-   Шесть осей собраны в одну матрицу-карточку: строка = ось
-   (название | две полосы | вердикт), разделители — hairline,
-   без теней. Плотность базы 4px, кегль по размеру, не по пафосу.
+   linguistic-tensor.css — Лингвистический тензор (#linguistic-tensor),
+   дизайн-система §5.2u. Bento 12 колонок: 01 матрица осей (8) +
+   02 сводка (4) в первой строке, 03 ink-вердикт во всю ширину.
+   Ячейка hairline radius -8 без теней (§0.2), шапка по §4.1a,
+   тулбар — оболочка агентов (§4.7), мобильный закон §5.3.
    ============================================================ */
 
 .tensor-shell {
@@ -14,37 +15,29 @@
   color: var(--text-primary);
 }
 
-/* ===== КОНТРОЛЫ: одна hairline-панель, компактные высоты ===== */
-.tensor-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
-  align-items: end;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-}
-.tensor-field { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
-.tensor-field label {
-  color: var(--text-secondary);
-  font-family: var(--font-ui);
-  font-size: var(--ui-11);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-.tensor-field select { width: 100%; min-height: var(--control-h); }
+/* ===== ТУЛБАР (§4.7): оболочка агентов =====
+   Панель даёт .agent-controls-panel, раскладку — .agent-toolbar-row
+   (display: contents), поэтому порядок задаёт панель через order. */
+.tensor-controls-panel { gap: var(--space-2); }
+.tensor-toolbar-field { display: inline-flex; flex: 0 1 220px; min-width: 0; order: 1; }
+.tensor-toolbar-select { width: 100%; min-width: 0; cursor: pointer; }
 .tensor-vs {
-  align-self: center;
-  padding-bottom: 2px;
+  flex: 0 0 auto;
+  order: 2;
   color: var(--text-gold);
   font-family: var(--font-mono);
   font-size: var(--ui-11);
   font-weight: 700;
+  letter-spacing: var(--tracking-caps);
 }
-.tensor-run { min-height: var(--control-h); white-space: nowrap; }
-.tensor-run img { width: 14px; height: 14px; }
+.tensor-controls-panel .agent-toolbar-actions {
+  order: 3;
+  gap: var(--space-3);
+  margin-left: auto;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--border-light);
+}
+.tensor-run { flex: 0 0 auto; white-space: nowrap; }
 
 /* Статус — служебная строка, пустая не резервирует высоту. */
 .tensor-status {
@@ -57,62 +50,97 @@
 .tensor-status:empty { display: none; }
 /* ===== РЕЗУЛЬТАТЫ ===== */
 .tensor-results { animation: tensor-reveal 180ms var(--ease-out); }
-.tensor-results-head {
+
+/* ===== BENTO: 12 колонок, hairline-ячейки, тени = 0 (§5.2a) ===== */
+.tensor-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: stretch;
+}
+.tensor-cell {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-2) var(--space-4);
-  margin-top: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  box-shadow: none;
 }
-.tensor-kicker {
-  margin: 0 0 2px;
-  color: var(--text-gold);
-  font-family: var(--font-mono);
-  font-size: var(--ui-10);
-  letter-spacing: var(--tracking-caps);
-  line-height: 1.4;
-}
-.tensor-results h2 {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: var(--text-xl);
-  line-height: 1.15;
+.tensor-cell--matrix { grid-column: span 8; }
+.tensor-cell--summary { grid-column: span 4; }
+.tensor-cell--verdict { grid-column: 1 / -1; }
+
+/* Ink-ячейка: подложка --bg-dark + золотая рамка. На экране она ровно
+   одна — вердикт, — иначе золото перестаёт быть акцентом (§5.2a). */
+.tensor-cell--ink {
+  background: var(--bg-dark);
+  border-color: var(--border-gold);
+  color: var(--text-on-dark);
 }
 
-/* Итоги: пара чисел через разделитель, подпись в одну строку. */
-.tensor-totals {
+/* Мера прозы модуля (`.lab-content .module p`) не для ячейки: ритм задаёт
+   gap ячейки, а не 20px под каждым абзацем (§5.2e/§5.2h). */
+.lab-content .module .tensor-cell p { margin: 0; max-width: none; }
+
+/* ===== Шапка ячейки: номер + капитель + подпись, линия во всю ширину (§4.1a) ===== */
+.tensor-cell-head {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  color: var(--text-muted);
+  align-items: center;
+  gap: 8px;
+  margin: 0 calc(var(--space-3) * -1);
+  padding: 0 var(--space-3) 6px;
+  border-bottom: 1px solid var(--border-light);
+}
+.tensor-cell--ink .tensor-cell-head { border-bottom-color: var(--line-strong); }
+.tensor-num {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--ui-11);
+  font-weight: 600;
+  letter-spacing: var(--tracking-caps);
+}
+.tensor-cell--ink .tensor-num { color: var(--accent-gold); }
+/* Селектор с .module обязателен: базовое `.module h2:not(:last-child)`
+   (0,2,1) из layout.css иначе напечатает капитель крупным серифом. */
+.module .tensor-cell .tensor-cell-title {
+  margin: 0;
+  padding: 0;
+  border-bottom: 0;
+  color: var(--text-secondary);
   font-family: var(--font-ui);
   font-size: var(--ui-11);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
 }
-.tensor-totals span { display: flex; align-items: baseline; gap: 4px; }
-.tensor-totals b {
-  color: var(--text-gold);
+.tensor-cell--ink .tensor-cell-title { color: var(--header-ink-muted); }
+.tensor-cell-hint {
+  margin-left: auto;
+  color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: var(--text-lg);
-  line-height: 1;
+  font-size: var(--ui-12);
+  white-space: nowrap;
 }
-.tensor-totals i { color: var(--border-light); font-style: normal; }
+.tensor-cell--ink .tensor-cell-hint { color: var(--header-ink-muted); }
 
-/* ===== МАТРИЦА ОСЕЙ: одна карточка, строки разделены hairline ===== */
+/* ===== МАТРИЦА ОСЕЙ: строки во всю ширину ячейки, разделители — hairline.
+   Отрицательные поля растягивают линию строки до краёв ячейки. ===== */
 .tensor-matrix {
   display: grid;
   gap: 0;
-  background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  overflow: hidden;
+  margin: 0 calc(var(--space-3) * -1);
 }
 .tensor-axis {
   display: grid;
-  grid-template-columns: minmax(0, 16rem) minmax(0, 1fr) 12rem;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 11rem;
   align-items: center;
   gap: var(--space-2) var(--space-4);
-  padding: var(--space-2) var(--space-4);
+  padding: var(--space-3);
   border-top: 1px solid var(--border-light);
 }
 .tensor-axis:first-child { border-top: 0; }
@@ -195,34 +223,75 @@
   text-align: right;
 }
 
-/* ===== ВЕРДИКТ: hairline-рамка золотом, текст без пафоса ===== */
-.tensor-verdict {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-2);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-gold);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+/* ===== СВОДКА (02): два языка, балл и полоса; лидер — золотом ===== */
+.tensor-cell--summary .tensor-totals { flex: 1 1 auto; align-content: start; }
+.tensor-totals { display: grid; gap: var(--space-3); }
+.tensor-total {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 4px var(--space-2);
 }
-.tensor-verdict h2 {
-  max-width: 62ch;
-  margin: 0 0 2px;
-  color: var(--text-gold);
-  font-family: var(--font-heading);
-  font-size: var(--text-lg);
-  line-height: 1.25;
+.tensor-total-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--ui-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.tensor-verdict p:last-child {
-  margin: 0;
+.tensor-total-value {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+.tensor-total.is-lead .tensor-total-value { color: var(--text-gold); }
+.tensor-total-bar {
+  grid-column: 1 / -1;
+  height: 5px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--bg-hover);
+}
+.tensor-total-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--border-light);
+  transition: width var(--motion-base);
+}
+.tensor-total.is-lead .tensor-total-fill { background: var(--accent-gold); }
+.tensor-note {
   color: var(--text-muted);
   font-family: var(--font-ui);
   font-size: var(--ui-11);
   line-height: 1.4;
 }
-.tensor-copy { flex: 0 0 auto; min-height: var(--control-h); }
+
+/* ===== ВЕРДИКТ (03, ink-ячейка): сериф на всю меру, кнопка у правого края ===== */
+.tensor-verdict-text {
+  max-width: 62ch;
+  color: var(--text-on-dark);
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  line-height: 1.25;
+}
+.tensor-verdict-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+.tensor-copy {
+  flex: 0 0 auto;
+  min-height: var(--control-h);
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--text-on-dark);
+}
+.tensor-copy:hover,
+.tensor-copy:focus-visible { border-color: var(--accent-gold); color: var(--text-on-dark); box-shadow: none; }
 
 @keyframes tensor-reveal {
   from { opacity: 0; transform: translateY(4px); }
@@ -231,26 +300,32 @@
 
 @media (max-width: 900px) {
   /* Одна колонка: ось, полосы, вердикт — стопкой, но всё ещё в одной карточке. */
+  .tensor-cell--matrix,
+  .tensor-cell--summary { grid-column: 1 / -1; }
   .tensor-axis { grid-template-columns: minmax(0, 1fr); gap: var(--space-2); }
   .tensor-axis-verdict { text-align: left; }
 }
-@media (max-width: 820px) {
-  .tensor-controls { grid-template-columns: 1fr 1fr; }
-  .tensor-vs { display: none; }
-  .tensor-run { grid-column: 1 / -1; }
-}
 /* Мобильный закон: тач-таргеты 44px, поля крупнее. */
 @media (max-width: 640px) {
-  .tensor-controls { grid-template-columns: 1fr; padding: var(--space-3); }
-  .tensor-run { grid-column: auto; width: 100%; }
-  .tensor-field select,
+  .tensor-toolbar-field { flex: 1 1 100%; }
+  .tensor-vs { display: none; }
+  .tensor-controls-panel .agent-toolbar-actions {
+    width: 100%;
+    margin-left: 0;
+    padding-top: var(--space-2);
+    padding-left: 0;
+    border-top: 1px solid var(--border-light);
+    border-left: 0;
+  }
+  .tensor-run { flex: 1 1 100%; justify-content: center; }
+  .tensor-toolbar-select,
   .tensor-run,
   .tensor-copy { min-height: 44px; font-size: 16px; }
-  .tensor-axis { padding: var(--space-3); }
-  .tensor-verdict { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .tensor-verdict-text { font-size: var(--text-xl); }
   .tensor-copy { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tensor-results { animation: none; }
-  .tensor-score-fill { transition: none; }
+  .tensor-score-fill,
+  .tensor-total-fill { transition: none; }
 }

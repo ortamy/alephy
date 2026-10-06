@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "1.0",
+  "id": "arch-critic",
+  "name": "Архитектурный критик",
+  "title": "Архитектурный критик",
+  "icon": "bot",
+  "cat": "Архитектура",
+  "model": "Локальный агент",
+  "domain": "Сверка паспорта с фактами репозитория",
+  "role": "Критик паспорта архитектуры: сверяет ручной текст с фактами.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "arch_critic.critique(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-arch-critic",
+      "title": "Запустить: Архитектурный критик",
+      "query": "архитектурный критик",
+      "about": "Сверка паспорта с фактами репозитория"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/arch_critic.py",
+    "lines": 257,
+    "bytes": 13072,
+    "entrypoint": "arch_critic.critique(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "manual_text",
+        "line": 34,
+        "doc": "Ручная часть документа: всё, кроме содержимого автоблоков."
+      },
+      {
+        "name": "check_claims",
+        "line": 54,
+        "doc": "Ищет числа, которые расходятся с показаниями сканера."
+      },
+      {
+        "name": "_resolves",
+        "line": 82,
+        "doc": ""
+      },
+      {
+        "name": "check_paths",
+        "line": 91,
+        "doc": "Пути от корня репозитория, которых нет на диске."
+      },
+      {
+        "name": "parse_graph_nodes",
+        "line": 128,
+        "doc": "Пути из узлов mermaid-схемы."
+      },
+      {
+        "name": "parse_graph_routes",
+        "line": 146,
+        "doc": "Корни маршрутов из раздела «Ключевые маршруты» схемы."
+      },
+      {
+        "name": "check_graph",
+        "line": 160,
+        "doc": "Узлы схемы связей, которых больше нет на диске."
+      },
+      {
+        "name": "check_routes",
+        "line": 176,
+        "doc": "Маршруты из раздела «Ключевые маршруты» схемы против реестра лаборатории."
+      },
+      {
+        "name": "check_agent_doc",
+        "line": 202,
+        "doc": "Числа и модули в `AGENT-ARCHITECTURE.md`, расходящиеся с агентным слоем."
+      },
+      {
+        "name": "critique",
+        "line": 229,
+        "doc": "Шаг пайплайна: сверяет ручной текст паспорта с показаниями сканера."
+      }
+    ],
+    "doc": "Критик паспорта архитектуры: сверяет ручной текст с фактами.\n\nСканер проверяет автоблоки, но ручная часть документа живёт вне маркеров, и\nименно в ней копится дрейф: «127 корней» против 329 на диске, «44 CSS-файла»\nпротив 67. Критик ловит такие расхождения по шаблону «число + существительное»\nи раскладывает их по трём корзинам (§11 .clinerules: факт, интерпретация,\nгипотеза). Он ничего не пишет в документ и не вызывает LLM — спорные места\nон помечает как требующие человека, а не разрешает сам."
+  }
+}
