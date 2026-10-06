@@ -439,6 +439,18 @@ def list_pipeline_history(pipeline_id):
     return jsonify(results)
 
 
+@app.delete("/api/pipeline-results/<result_id>")
+def delete_pipeline_result(result_id):
+    # Удаление одного прогона из истории: интерфейс страницы паспорта
+    # предлагает кнопку у каждой строки (CRUD истории, §5.2s).
+    results = read_results()
+    filtered = [item for item in results if item.get("id") != result_id]
+    if len(filtered) == len(results):
+        return jsonify({"error": "result not found"}), 404
+    write_results(filtered)
+    return jsonify({"deleted": result_id})
+
+
 @app.post("/api/pipelines")
 def create_pipeline():
     payload = request.get_json(silent=True) or {}

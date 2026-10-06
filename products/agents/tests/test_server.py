@@ -202,5 +202,32 @@ class PipelineApiTest(unittest.TestCase):
         write_results.assert_called_once()
 
 
+class DeletePipelineResultTest(unittest.TestCase):
+    """Удаление одного прогона из истории: 404 на чужом id, запись без него."""
+
+    def setUp(self):
+        app.config["TESTING"] = True
+        self.client = app.test_client()
+
+    @patch("server.write_results")
+    @patch("server.read_results")
+    def test_deletes_single_result(self, read_results, write_results):
+        read_results.return_value = [
+            {"id": "word_analyzer-1", "pipelineId": "word_analyzer"},
+            {"id": "word_analyzer-2", "pipelineId": "word_analyzer"},
+        ]
+        response = self.client.delete("/api/pipeline-results/word_analyzer-1")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"deleted": "word_analyzer-1"})
+        write_results.assert_called_once_with(
+            [{"id": "word_analyzer-2", "pipelineId": "word_analyzer"}])
+
+    @patch("server.write_results")
+    @patch("server.read_results", return_value=[])
+    def test_unknown_result_is_404(self, _read, _write):
+        response = self.client.delete("/api/pipeline-results/no-such-run")
+        self.assertEqual(response.status_code, 404)
+
+
 if __name__ == "__main__":
     unittest.main()
