@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "liaison",
+  "name": "Связной",
+  "title": "Связной",
+  "icon": "bot",
+  "cat": "Оркестрация",
+  "model": "Локальный агент",
+  "domain": "Передача контекста и расширение горизонта",
+  "role": "Связной: передаёт контекст и расширяет горизонт (спираль Хук Свива).",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "liaison.relay(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-liaison",
+      "title": "Запустить: Связной",
+      "query": "связной",
+      "about": "Передача контекста и расширение горизонта"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/liaison.py",
+    "lines": 28,
+    "bytes": 1299,
+    "entrypoint": "liaison.relay(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "relay",
+        "line": 11,
+        "doc": ""
+      }
+    ],
+    "doc": "Связной: передаёт контекст и расширяет горизонт (спираль Хук Свива)."
+  }
+}

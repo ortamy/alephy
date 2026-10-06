@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "1.0",
+  "id": "arch-scanner",
+  "name": "Архитектурный сканер",
+  "title": "Архитектурный сканер",
+  "icon": "bot",
+  "cat": "Архитектура",
+  "model": "Локальный агент",
+  "domain": "Снимок фактов о репозитории",
+  "role": "Архитектурный сканер: снимок фактов о репозитории без интерпретаций.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "arch_scanner.scan(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-arch-scanner",
+      "title": "Запустить: Архитектурный сканер",
+      "query": "архитектурный сканер",
+      "about": "Снимок фактов о репозитории"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/arch_scanner.py",
+    "lines": 287,
+    "bytes": 13072,
+    "entrypoint": "arch_scanner.scan(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "_iter_sources",
+        "line": 57,
+        "doc": "Обход исходников без входа в производные и внешние деревья."
+      },
+      {
+        "name": "scan_tree",
+        "line": 75,
+        "doc": "Считает исходники по слоям и возвращает карту слоёв."
+      },
+      {
+        "name": "scan_entrypoints",
+        "line": 97,
+        "doc": "Какие заявленные точки входа действительно лежат в репозитории."
+      },
+      {
+        "name": "_endpoint_pipelines",
+        "line": 102,
+        "doc": "Пайплайны, импортируемые прямо в server.py мимо оркестратора."
+      },
+      {
+        "name": "scan_agents",
+        "line": 111,
+        "doc": "Реестры агентного слоя, разложенные по способу запуска."
+      },
+      {
+        "name": "scan_git",
+        "line": 157,
+        "doc": "Недавняя активность репозитория: помогает заметить незадокументированный слой."
+      },
+      {
+        "name": "scan_lab_metrics",
+        "line": 172,
+        "doc": "Счётчики корпуса Research Lab: именно их паспорт цитирует в тексте."
+      },
+      {
+        "name": "_load_json",
+        "line": 201,
+        "doc": ""
+      },
+      {
+        "name": "_json_len",
+        "line": 210,
+        "doc": ""
+      },
+      {
+        "name": "reset_cache",
+        "line": 222,
+        "doc": "Сбрасывает снимок фактов."
+      },
+      {
+        "name": "collect_facts",
+        "line": 232,
+        "doc": "Полный снимок: всё, что писатель может отрисовать в документе."
+      },
+      {
+        "name": "digest_of",
+        "line": 251,
+        "doc": "Подпись снимка: она входит в ключ сходимости цикла."
+      },
+      {
+        "name": "summarize",
+        "line": 257,
+        "doc": "Компактная сводка для агентного пакета."
+      },
+      {
+        "name": "scan",
+        "line": 279,
+        "doc": "Шаг пайплайна: снимает снимок фактов и фиксирует его подпись."
+      }
+    ],
+    "doc": "Архитектурный сканер: снимок фактов о репозитории без интерпретаций.\n\nСканер не обращается к LLM и ничего не оценивает: он только читает диск и\nвозвращает проверяемые числа и реестры. Интерпретацией занимается критик,\nправкой — писатель. Такое разделение страхует от выдуманной архитектуры:\nвсё, что попадёт в документ, сначала было фактом на диске."
+  }
+}

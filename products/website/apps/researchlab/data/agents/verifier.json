@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "verifier",
+  "name": "Проверяющий",
+  "title": "Проверяющий",
+  "icon": "bot",
+  "cat": "Контроль качества",
+  "model": "Локальный агент",
+  "domain": "Валидация обязательных полей результата",
+  "role": "Проверяющий: валидирует обязательные поля результата.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "verifier.verify(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-verifier",
+      "title": "Запустить: Проверяющий",
+      "query": "проверяющий",
+      "about": "Валидация обязательных полей результата"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/verifier.py",
+    "lines": 16,
+    "bytes": 662,
+    "entrypoint": "verifier.verify(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "verify",
+        "line": 7,
+        "doc": ""
+      }
+    ],
+    "doc": "Проверяющий: валидирует обязательные поля результата."
+  }
+}

@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "1.0",
+  "id": "orchestrator",
+  "name": "Оркестратор",
+  "title": "Оркестратор",
+  "icon": "ui/arrows",
+  "cat": "Оркестрация",
+  "model": "ALEPHY",
+  "domain": "Управление выполнением и распределение подзадач",
+  "role": "Оркестратор: маршрутизирует запрос в один из пайплайнов.",
+  "status": "active",
+  "capabilities": {
+    "execution": false,
+    "readRepository": false,
+    "writesFiles": false,
+    "streaming": true
+  },
+  "contract": {
+    "input": {
+      "type": "dict (пакет запроса)",
+      "required": [
+        "query"
+      ],
+      "query": "строка на русском: команда маршрута, например «разбери слово»"
+    },
+    "output": {
+      "type": "dict (пакет выбранного пайплайна)",
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ],
+      "note": "оркестратор возвращает пакет пайплайна без изменений"
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "example": "{\"query\": \"разбери слово Берешит\"}",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "не исполняет шаг сам: выбирает пайплайн по ключевой фразе",
+      "неизвестная команда — ValueError, а не молчаливый дефолт",
+      "пустой запрос — ValueError",
+      "не пишет на диск: запись разрешена только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "route-word_analyzer",
+      "title": "разбери слово",
+      "query": "разбери слово",
+      "about": "Маршрут в пайплайн word_analyzer"
+    },
+    {
+      "id": "route-verse_comparator",
+      "title": "сравни стих",
+      "query": "сравни стих",
+      "about": "Маршрут в пайплайн verse_comparator"
+    },
+    {
+      "id": "route-research_builder",
+      "title": "собери исследование",
+      "query": "собери исследование",
+      "about": "Маршрут в пайплайн research_builder"
+    },
+    {
+      "id": "route-paleo_translation",
+      "title": "обратный перевод",
+      "query": "обратный перевод",
+      "about": "Маршрут в пайплайн paleo_translation"
+    },
+    {
+      "id": "route-research_audit",
+      "title": "проверь отчёт",
+      "query": "проверь отчёт",
+      "about": "Маршрут в пайплайн research_audit"
+    },
+    {
+      "id": "route-mechanism_scanner",
+      "title": "сканер подмен",
+      "query": "сканер подмен",
+      "about": "Маршрут в пайплайн mechanism_scanner"
+    },
+    {
+      "id": "route-verse_reconstruction",
+      "title": "реконструируй стих",
+      "query": "реконструируй стих",
+      "about": "Маршрут в пайплайн verse_reconstruction"
+    },
+    {
+      "id": "route-critique_loop",
+      "title": "самокритика",
+      "query": "самокритика",
+      "about": "Маршрут в пайплайн critique_loop"
+    },
+    {
+      "id": "route-gap_cycle",
+      "title": "карантин пропусков",
+      "query": "карантин пропусков",
+      "about": "Маршрут в пайплайн gap_cycle"
+    },
+    {
+      "id": "route-spiral_swiva",
+      "title": "хук свива",
+      "query": "хук свива",
+      "about": "Маршрут в пайплайн spiral_swiva"
+    },
+    {
+      "id": "route-dialectic_loop",
+      "title": "диалектика",
+      "query": "диалектика",
+      "about": "Маршрут в пайплайн dialectic_loop"
+    },
+    {
+      "id": "route-midrash_recursion",
+      "title": "мидраш",
+      "query": "мидраш",
+      "about": "Маршрут в пайплайн midrash_recursion"
+    },
+    {
+      "id": "route-shmita_loop",
+      "title": "шмита",
+      "query": "шмита",
+      "about": "Маршрут в пайплайн shmita_loop"
+    },
+    {
+      "id": "route-arch_keeper",
+      "title": "проверь архитектуру",
+      "query": "проверь архитектуру",
+      "about": "Маршрут в пайплайн arch_keeper"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/orchestrator.py",
+    "lines": 87,
+    "bytes": 3999,
+    "entrypoint": "orchestrator.dispatch(query)",
+    "registration": "server.py → orchestrator.dispatch",
+    "functions": [
+      {
+        "name": "select_pipeline",
+        "line": 62,
+        "doc": ""
+      },
+      {
+        "name": "dispatch",
+        "line": 72,
+        "doc": "Запускает выбранный пайплайн и возвращает JSON-совместимый словарь."
+      },
+      {
+        "name": "run_pipeline",
+        "line": 79,
+        "doc": "Запускает цепочку по её явному идентификатору."
+      }
+    ],
+    "doc": "Оркестратор: маршрутизирует запрос в один из пайплайнов.\n\nНеизвестный тип запроса — явная ошибка (ValueError), а не молчаливый\nдефолт: система не должна подменять запрос исследователя."
+  }
+}

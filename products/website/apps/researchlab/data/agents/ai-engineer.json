@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "ai-engineer",
+  "name": "AI-инженер",
+  "title": "AI-инженер",
+  "icon": "bot",
+  "cat": "Разработка",
+  "model": "Локальный агент",
+  "domain": "Подготовка задач для подключённой LLM",
+  "role": "Заглушка AI-инженера: провайдер подключается только при наличии ключа.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "ai_engineer.prepare(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-ai-engineer",
+      "title": "Запустить: AI-инженер",
+      "query": "ai-инженер",
+      "about": "Подготовка задач для подключённой LLM"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/ai_engineer.py",
+    "lines": 7,
+    "bytes": 307,
+    "entrypoint": "ai_engineer.prepare(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "prepare",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Заглушка AI-инженера: провайдер подключается только при наличии ключа."
+  }
+}

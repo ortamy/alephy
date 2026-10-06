@@ -358,6 +358,10 @@
 .agent-detail-run { grid-column: span 8; }
 .agent-detail-links { grid-column: span 4; }
 .agent-detail-result { grid-column: 1 / -1; }
+/* Паспорт — отдельная секция вне .agent-detail-grid, поэтому gap сетки его не
+   отделяет: без собственного отступа карточка паспорта липла к карточке
+   результата. Шаг тот же, что и у сетки, — --space-4 (§5.2q). */
+.agent-detail-passport { margin-top: var(--space-4); }
 /* Панель детали: hairline-рамка, без теней (§4.2 канон). */
 .agent-detail-section {
   padding: var(--space-5);
@@ -432,6 +436,8 @@
   .agent-detail-run { order: 1; }
   .agent-detail-result { order: 2; }
   .agent-detail-links { order: 3; }
+  /* Отступ паспорта держит шаг мобильной сетки (responsive.css: --space-3). */
+  .agent-detail-passport { margin-top: var(--space-3); }
 }
 
 /* Низ детали: компактная secondary со стрелкой, не широкая кнопка (§4.4). */

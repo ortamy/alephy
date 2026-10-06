@@ -149,34 +149,38 @@ const PageController = (function() {
   }
 
   function getAgentMapData() {
-    var agents = [
-      { icon: 'ui/arrows', name: 'Оркестратор', desc: 'Оркестратор — получает запрос, разбивает его на подзадачи и распределяет их между агентами.', model: 'ALEPHY', cat: 'Оркестрация', featured: true },
-      { icon: 'archaeology/testtube', name: 'Исследователь', desc: 'Разбирает корни, стихи, термины.', model: 'Claude Sonnet 4', cat: 'Исследование' },
-      { icon: 'ui/question', name: 'Разоблачитель', desc: 'Ищет подмены в переводах, сравнивает LXX и Синодальный.', model: 'GPT-4o', cat: 'Исследование' },
-      { icon: 'scribe/scrolls', name: 'Сборщик', desc: 'Объединяет результаты в единый отчёт.', model: 'Claude Haiku 3.5', cat: 'Оркестрация' },
-      { icon: 'ui/scales', name: 'Критик', desc: 'Проверяет разбор на соответствие методологии.', model: 'Claude Sonnet 4', cat: 'Контроль качества' },
-      { icon: 'seals/ring', name: 'Семитолог', desc: 'Авто-вывод не выполняется: требуется ручная сверка параллелей по словарям (заглушка).', model: '—', cat: 'Исследование' },
-      { icon: 'scribe/scroll', name: 'Компаратор', desc: 'Сравнение свидетелей требует внешних источников; авто-вывод не выполняется (заглушка).', model: '—', cat: 'Исследование' },
-      { icon: 'ui/keyboard', name: 'Редактор', desc: 'Приводит черновик к стилю проекта.', model: 'Claude Haiku 3.5', cat: 'Документация' },
-      { icon: 'scribe/scroll', name: 'Переводчик палео-иврита', desc: 'Переводит букву через палео-образ к физическому смыслу.', model: 'Claude Sonnet 4', cat: 'Исследование' },
-      { icon: 'crafts/hammer-and-chisel', name: 'Фронтенд-разработчик', desc: 'Аудитит фронтенд лаборатории на соответствие дизайн-канону: единый размер заголовков ячеек, сброс чёрки, специфичность селектора.', model: 'Локальный аудит', cat: 'Разработка', passport: true },
-      { icon: 'ui/settings', name: 'AI-инженер', desc: 'Заглушка: подготовка задач для LLM-инженера после подключения модели.', model: '—', cat: 'Разработка' },
-      { icon: 'ui/scales', name: 'Проверяющий', desc: 'Валидирует код, данные и исследовательские гипотезы.', model: 'Claude Sonnet 4', cat: 'Контроль качества' },
-      { icon: 'scribe/scroll', name: 'Технический писатель', desc: 'Заглушка: оформление документации после подключения LLM.', model: '—', cat: 'Документация' },
-      { icon: 'ui/scales', name: 'Ревьюер кода', desc: 'Заглушка: авто-ревью кода появится после подключения LLM.', model: '—', cat: 'Контроль качества' },
-      { icon: 'paleo/track', name: 'Архитектор потока', desc: 'Заглушка: используется линейный порядок агентов из конфига пайплайна.', model: '—', cat: 'Оркестрация' },
-      { icon: 'ui/link', name: 'Связной', desc: 'Связывает разрозненные исследования в единую сеть.', model: 'Claude Sonnet 4', cat: 'Оркестрация' },
-      { icon: 'ui/search', name: 'Архитектурный сканер', desc: 'Снимает снимок репозитория: слои, точки входа, реестры, метрики. Ничего не оценивает.', model: 'Локальный аудит', cat: 'Архитектура' },
-      { icon: 'ui/scales', name: 'Архитектурный критик', desc: 'Сверяет ручной текст паспорта и схемы связей с диском: числа, пути, узлы, маршруты.', model: 'Локальный аудит', cat: 'Архитектура' },
-      { icon: 'ui/workflow', name: 'Архитектурный планировщик', desc: 'Раскладывает находки в корзины: auto, adr, manual. Предложения не применяет.', model: 'Локальный аудит', cat: 'Архитектура' },
-      { icon: 'scribe/scroll', name: 'Архитектурный писатель', desc: 'Перерисовывает только генерируемые блоки паспорта и ведёт отчёт о дрейфе. По умолчанию ничего не меняет.', model: 'Локальный аудит', cat: 'Архитектура' },
-      { icon: 'seals/ring', name: 'Архитектурный сход', desc: 'Останавливает цикл, когда снимок и документ совпали: эмет — доводить нечего.', model: 'Локальный аудит', cat: 'Архитектура' }
-    ];
-    var agentSlugs = ['orchestrator', 'researcher', 'exposer', 'collector', 'critic', 'semitologist', 'comparator', 'editor', 'paleo-translator', 'frontend-developer', 'ai-engineer', 'verifier', 'technical-writer', 'code-reviewer', 'flow-architect', 'liaison', 'arch-scanner', 'arch-critic', 'arch-planner', 'arch-writer', 'arch-convergence'];
-    agents.forEach(function(agent, index) {
-      agent.id = agentSlugs[index] || ('agent-' + index);
-      if (agent.model === '—') agent.model = '';
-    });
+    var descriptions = {
+      orchestrator: 'Оркестратор — получает запрос, разбивает его на подзадачи и распределяет их между агентами.',
+      researcher: 'Разбирает корни, стихи, термины.', exposer: 'Ищет подмены в переводах, сравнивает LXX и Синодальный.',
+      collector: 'Объединяет результаты в единый отчёт.', critic: 'Проверяет разбор на соответствие методологии.',
+      semitologist: 'Авто-вывод не выполняется: требуется ручная сверка параллелей по словарям (заглушка).',
+      comparator: 'Сравнение свидетелей требует внешних источников; авто-вывод не выполняется (заглушка).',
+      editor: 'Приводит черновик к стилю проекта.', 'paleo-translator': 'Переводит букву через палео-образ к физическому смыслу.',
+      'frontend-developer': 'Аудитит фронтенд лаборатории на соответствие дизайн-канону.', 'ai-engineer': 'Заглушка: подготовка задач для LLM-инженера после подключения модели.',
+      verifier: 'Валидирует код, данные и исследовательские гипотезы.', 'technical-writer': 'Заглушка: оформление документации после подключения LLM.',
+      'code-reviewer': 'Заглушка: авто-ревью кода появится после подключения LLM.', 'flow-architect': 'Заглушка: используется линейный порядок агентов из конфига пайплайна.',
+      liaison: 'Связывает разрозненные исследования в единую сеть.', 'arch-scanner': 'Снимает снимок репозитория: слои, точки входа, реестры, метрики.',
+      'arch-critic': 'Сверяет ручной текст паспорта и схемы связей с диском.', 'arch-planner': 'Раскладывает находки в корзины: auto, adr, manual.',
+      'arch-writer': 'Перерисовывает только генерируемые блоки паспорта и ведёт отчёт о дрейфе.',
+      'arch-convergence': 'Останавливает цикл, когда снимок и документ совпали.'
+    };
+    var manifest = window.AgentPassportManifest;
+    var agents = manifest && manifest.agents ? manifest.agents.map(function(agent) {
+      return Object.assign({}, agent, { desc: descriptions[agent.id] || agent.domain, passport: true });
+    }) : [];
+    // Оркестратор — единственный control-plane: паспорт у него есть, но иконку
+    // и статус «Активен» реестр не несёт. Дополняем запись на месте, а не вторым
+    // unshift(): прежний дубль давал 22 агента, а detail открывался без паспорта,
+    // потому что поиск брал первую (хардкодную) запись с passport: false.
+    var orchestrator = agents.filter(function(agent) { return agent.id === 'orchestrator'; })[0];
+    if (orchestrator) {
+      orchestrator.icon = 'ui/arrows';
+      orchestrator.featured = true;
+    } else {
+      agents.unshift({ id: 'orchestrator', icon: 'ui/arrows', name: 'Оркестратор',
+        desc: descriptions.orchestrator, model: 'ALEPHY', cat: 'Оркестрация',
+        featured: true, passport: true });
+    }
     return agents;
   }
 

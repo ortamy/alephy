@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "flow-architect",
+  "name": "Архитектор потока",
+  "title": "Архитектор потока",
+  "icon": "bot",
+  "cat": "Оркестрация",
+  "model": "Локальный агент",
+  "domain": "Порядок этапов исследования",
+  "role": "Архитектор потока: задаёт порядок этапов исследования.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "flow_architect.design(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-flow-architect",
+      "title": "Запустить: Архитектор потока",
+      "query": "архитектор потока",
+      "about": "Порядок этапов исследования"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/flow_architect.py",
+    "lines": 7,
+    "bytes": 265,
+    "entrypoint": "flow_architect.design(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "design",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Архитектор потока: задаёт порядок этапов исследования."
+  }
+}

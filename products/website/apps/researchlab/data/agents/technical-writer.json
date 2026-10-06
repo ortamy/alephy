@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "technical-writer",
+  "name": "Технический писатель",
+  "title": "Технический писатель",
+  "icon": "bot",
+  "cat": "Документация",
+  "model": "Локальный агент",
+  "domain": "Оформление исследования в Markdown",
+  "role": "Технический писатель: оформляет исследование для Markdown-документации.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "writer.write(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-technical-writer",
+      "title": "Запустить: Технический писатель",
+      "query": "технический писатель",
+      "about": "Оформление исследования в Markdown"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/writer.py",
+    "lines": 10,
+    "bytes": 428,
+    "entrypoint": "writer.write(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "write",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Технический писатель: оформляет исследование для Markdown-документации."
+  }
+}

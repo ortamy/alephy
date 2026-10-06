@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.45,
+    "coverage": 0.43,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -552,7 +552,8 @@
       "panel": {
         "links": "LINKS",
         "result": "RESULT",
-        "run": "RUN"
+        "run": "RUN",
+        "passport": ""
       },
       "result": {
         "copied": "Result copied.",

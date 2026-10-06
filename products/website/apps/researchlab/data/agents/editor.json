@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "editor",
+  "name": "Редактор",
+  "title": "Редактор",
+  "icon": "bot",
+  "cat": "Документация",
+  "model": "Локальный агент",
+  "domain": "Приведение материала к стилю проекта",
+  "role": "Редактор: приводит материал к ясному стилю проекта и учитывает замечания критика.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "editor.edit(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-editor",
+      "title": "Запустить: Редактор",
+      "query": "редактор",
+      "about": "Приведение материала к стилю проекта"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/editor.py",
+    "lines": 15,
+    "bytes": 749,
+    "entrypoint": "editor.edit(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "edit",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Редактор: приводит материал к ясному стилю проекта и учитывает замечания критика."
+  }
+}

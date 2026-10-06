@@ -25,3 +25,42 @@ def record(data: Dict[str, Any], agent: str, **values: Any) -> Dict[str, Any]:
         "output": deepcopy(values),
     })
     return data
+
+
+def agent_contract(agent_id: str, entrypoint: str, *, writes_files: bool = False) -> Dict[str, Any]:
+    """Return the shared passport contract for every executable agent.
+
+    Domain agents keep their existing payload fields; this metadata makes the
+    execution boundary explicit without forcing every module to duplicate the
+    same boilerplate contract function.
+    """
+    return {
+        "version": "1.0",
+        "agentId": agent_id,
+        "input": {
+            "type": "dict",
+            "required": ["query"],
+            "keys": ["query", "task"],
+        },
+        "output": {
+            "type": "dict",
+            "required": ["trace", "agentTrace"],
+            "keys": ["trace", "agentTrace", "result"],
+        },
+        "capabilities": {
+            "execution": True,
+            "readRepository": True,
+            "writesFiles": writes_files,
+            "streaming": False,
+        },
+        "run": {
+            "endpoint": "POST /api/run",
+            "entrypoint": entrypoint,
+            "server": "python products/agents/server.py",
+        },
+        "boundaries": [
+            "принимает пакет с обязательным полем query",
+            "сохраняет trace и agentTrace",
+            "запись на диск разрешается только именованным пайплайнам",
+        ],
+    }

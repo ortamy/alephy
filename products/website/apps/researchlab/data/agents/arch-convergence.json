@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "1.0",
+  "id": "arch-convergence",
+  "name": "Архитектурный сход",
+  "title": "Архитектурный сход",
+  "icon": "bot",
+  "cat": "Архитектура",
+  "model": "Локальный агент",
+  "domain": "Остановка цикла при совпадении снимка и документа",
+  "role": "Сходимость архитектурного цикла: когда документ догнал репозиторий.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "arch_convergence.converge(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-arch-convergence",
+      "title": "Запустить: Архитектурный сход",
+      "query": "архитектурный сход",
+      "about": "Остановка цикла при совпадении снимка и документа"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/arch_convergence.py",
+    "lines": 56,
+    "bytes": 2822,
+    "entrypoint": "arch_convergence.converge(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "_signature",
+        "line": 15,
+        "doc": ""
+      },
+      {
+        "name": "converge",
+        "line": 26,
+        "doc": "Шаг сходимости пайплайна `arch_keeper`."
+      }
+    ],
+    "doc": "Сходимость архитектурного цикла: когда документ догнал репозиторий.\n\nКлюч подписи — пара «снимок репозитория + текст, который получился бы после\nзаписи». Пока эта пара не меняется между витками, доводить нечего: виток\nзавершается как сходящийся. Если же файлы продолжают меняться под нашими\nногами, цикл честно помечается как несошедшийся — ждать дальше бессмысленно."
+  }
+}

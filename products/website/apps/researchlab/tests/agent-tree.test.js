@@ -13,12 +13,13 @@ const path = require('path');
 
 const TREE_SOURCE = fs.readFileSync(path.join(__dirname, '..', 'js', 'agent-tree.js'), 'utf8');
 const CONTROLLER_SOURCE = fs.readFileSync(path.join(__dirname, '..', 'js', 'page-controller.js'), 'utf8');
+const MANIFEST_SOURCE = fs.readFileSync(path.join(__dirname, '..', 'js', 'agent-passport-manifest.js'), 'utf8');
 const TREE_CSS = fs.readFileSync(path.join(__dirname, '..', 'css', 'agent-tree.css'), 'utf8');
 
 function registrySlugs() {
-  const raw = CONTROLLER_SOURCE.match(/var agentSlugs = \[([^\]]+)\]/);
-  assert.ok(raw, 'В page-controller есть список agentSlugs');
-  return Array.from(raw[1].matchAll(/'([^']+)'/g)).map(function(m) { return m[1]; });
+  const raw = MANIFEST_SOURCE.match(/"id": "([a-z-]+)"/g) || [];
+  assert.ok(raw.length, 'В паспортном manifest есть реестр исполняемых агентов');
+  return raw.map(function(m) { return m.match(/"id": "([a-z-]+)"/)[1]; });
 }
 
 function treeIds() {

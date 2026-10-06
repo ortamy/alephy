@@ -160,6 +160,43 @@ class PassportTest(unittest.TestCase):
         # Исходник в статику не копируется: его отдаёт сервер.
         self.assertNotIn("source", payload)
 
+    def test_passports_cover_registered_executable_agents(self):
+        """Каждый runner из server.py должен иметь статический паспорт."""
+        import json
+        import server
+        data_dir = (Path(__file__).resolve().parents[3] / "products" / "website" / "apps"
+                    / "researchlab" / "data" / "agents")
+        missing = [name for name in server.AGENT_FUNCTIONS
+                   if name != "Оркестратор" and not any(
+                       json.loads(path.read_text(encoding="utf-8")).get("name") == name
+                       for path in data_dir.glob("*.json"))]
+        self.assertEqual(missing, [])
+
+    def test_orchestrator_passport_is_control_plane(self):
+        """У Оркестратора есть паспорт, но он control-plane, а не процессор."""
+        import json
+        target = (Path(__file__).resolve().parents[3] / "products" / "website" / "apps"
+                  / "researchlab" / "data" / "agents" / "orchestrator.json")
+        self.assertTrue(target.exists(), "паспорт Оркестратора собран")
+        payload = json.loads(target.read_text(encoding="utf-8"))
+        self.assertEqual(payload["module"]["entrypoint"], "orchestrator.dispatch(query)")
+        self.assertTrue(payload["contract"]["boundaries"])
+        self.assertTrue(payload["tasks"])
+        self.assertFalse(payload["capabilities"]["execution"], "не исполняет шаг сам")
+        self.assertTrue(payload["capabilities"]["streaming"])
+
+    def test_generic_passport_has_shared_schema(self):
+        import json
+        target = (Path(__file__).resolve().parents[3] / "products" / "website" / "apps"
+                  / "researchlab" / "data" / "agents" / "researcher.json")
+        if not target.exists():
+            self.skipTest("паспорта ещё не собраны")
+        payload = json.loads(target.read_text(encoding="utf-8"))
+        self.assertEqual(payload["schemaVersion"], "1.0")
+        self.assertEqual(payload["contract"]["input"]["required"], ["query"])
+        self.assertIn("agentTrace", payload["contract"]["output"]["required"])
+        self.assertIn("execution", payload["capabilities"])
+
     def test_canon_scope_is_repo_relative(self):
         """Путь области аудита должен быть относительным: абсолютный путь
         машины автора в интерфейсе бессмысленен и обрезается в ячейке."""

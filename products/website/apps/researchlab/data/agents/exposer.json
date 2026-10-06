@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "exposer",
+  "name": "Разоблачитель",
+  "title": "Разоблачитель",
+  "icon": "bot",
+  "cat": "Исследование",
+  "model": "Локальный агент",
+  "domain": "Карта сдвигов и пропусков перевода",
+  "role": "Разоблачитель: отмечает сдвиги между образом и переводом, копит карту пропусков.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "exposer.expose(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-exposer",
+      "title": "Запустить: Разоблачитель",
+      "query": "разоблачитель",
+      "about": "Карта сдвигов и пропусков перевода"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/exposer.py",
+    "lines": 33,
+    "bytes": 1370,
+    "entrypoint": "exposer.expose(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "expose",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Разоблачитель: отмечает сдвиги между образом и переводом, копит карту пропусков."
+  }
+}

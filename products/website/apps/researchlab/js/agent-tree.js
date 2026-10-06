@@ -44,6 +44,12 @@
         { id: 'verifier', children: [
           { id: 'code-reviewer' }
         ] }
+      ] },
+      { id: 'arch-scanner', children: [
+        { id: 'arch-critic' },
+        { id: 'arch-planner' },
+        { id: 'arch-writer' },
+        { id: 'arch-convergence' }
       ] }
     ]
   };

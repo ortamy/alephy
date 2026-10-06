@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "1.0",
+  "id": "comparator",
+  "name": "Компаратор",
+  "title": "Компаратор",
+  "icon": "bot",
+  "cat": "Исследование",
+  "model": "Локальный агент",
+  "domain": "Сравнение текстовых свидетелей",
+  "role": "Компаратор текстовых свидетелей.",
+  "status": "ready",
+  "capabilities": {
+    "execution": true,
+    "readRepository": true,
+    "writesFiles": false,
+    "streaming": false
+  },
+  "contract": {
+    "input": {
+      "type": "dict",
+      "required": [
+        "query"
+      ],
+      "keys": [
+        "query",
+        "task"
+      ]
+    },
+    "output": {
+      "type": "dict",
+      "required": [
+        "trace",
+        "agentTrace"
+      ],
+      "keys": [
+        "trace",
+        "agentTrace",
+        "result"
+      ]
+    },
+    "run": {
+      "endpoint": "POST /api/run",
+      "entrypoint": "comparator.compare(data)",
+      "server": "python products/agents/server.py"
+    },
+    "boundaries": [
+      "принимает пакет с обязательным полем query",
+      "сохраняет trace и agentTrace",
+      "запись на диск разрешается только именованным пайплайнам"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "run-comparator",
+      "title": "Запустить: Компаратор",
+      "query": "компаратор",
+      "about": "Сравнение текстовых свидетелей"
+    }
+  ],
+  "canon": null,
+  "module": {
+    "path": "products/agents/agents/comparator.py",
+    "lines": 11,
+    "bytes": 435,
+    "entrypoint": "comparator.compare(data)",
+    "registration": "AGENT_FUNCTIONS в server.py",
+    "functions": [
+      {
+        "name": "compare",
+        "line": 5,
+        "doc": ""
+      }
+    ],
+    "doc": "Компаратор текстовых свидетелей."
+  }
+}
