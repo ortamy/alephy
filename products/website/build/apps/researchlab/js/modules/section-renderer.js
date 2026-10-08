@@ -29,12 +29,26 @@ const SectionRenderer = (function() {
     return wrapTranslit(renderMarkdown(value));
   }
 
+  // Тела дел часто заканчиваются на `---`/`***` вплотную к тексту, без пустой
+  // строки. В таком виде marked трактует предыдущий абзац как setext-заголовок
+  // и склеивает его в один <h2>, а разделитель исчезает. Гарантируем пустую
+  // строку перед каждым тематическим разделителем, идущим сразу за непустой
+  // строкой: абзацы остаются абзацами, `---` рендерится как <hr>. Намеренных
+  // setext-заголовков в данных нет (все заголовки — через #), поэтому
+  // поведение остальных страниц не меняется.
+  function normalizeMarkdown(value) {
+    return String(value == null ? '' : value).replace(
+      /([^\n])\n([ \t]{0,3})(-{3,}|\*{3,}|_{3,})[ \t]*(?=\n|$)/g,
+      '$1\n\n$2$3'
+    );
+  }
+
   function renderMarkdown(value) {
     if (Array.isArray(value)) {
       return '<ul>' + value.map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>';
     }
     if (value == null || value === '') return '';
-    var text = String(value);
+    var text = normalizeMarkdown(value);
     var html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(text) : '<p>' + escapeHtml(text).replace(/\n/g, '<br>') + '</p>';
     var safe = (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) ? DOMPurify.sanitize(html) : escapeHtml(text).replace(/\n/g, '<br>');
     return wrapPaleo(safe);
