@@ -114,6 +114,10 @@
   color: var(--accent-gold);
   font-family: var(--font-paleo), var(--font-hebrew), serif;
   font-weight: 400;
+  /* Изолируем инлайн-paleo от LTR-контекста: без unicode-bidi RTL-глифы 𐤃𐤁𐤓
+     «съедают» пробелы и утаскивают пунктуацию соседнего русского текста.
+     На блочных строках (tanakh/original) правило — no-op, вид не меняется. */
+  unicode-bidi: isolate;
 }
 
 /* Палео-глиф внутри карточек дела — всегда gold, независимо от темы:
