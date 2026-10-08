@@ -599,7 +599,7 @@ var ARCH_AGENT_ICONS = {
   }
 
   function paleoGlossaryDescription() {
-    return 'Первая партия: 100 слов как русла потока — палео-форма, квадратное письмо, функция и корень.';
+    return 'Словоформы ТаНаха и карточки корней — палео-форма, квадратное письмо, функция и корень.';
   }
 
   /* Объём словарей берётся из данных, а не из литералов: словари растут,
@@ -626,10 +626,10 @@ var ARCH_AGENT_ICONS = {
     var entries = [
       dictEntry('__root_dictionary', 'Корневой словарь',
         rootDictionaryDescription(),
-        null, 'book-open', 'root-dictionary', 329),
+        null, 'book-open', 'root-dictionary', 364),
       dictEntry('__paleo_glossary', 'Палео-глоссарий',
         paleoGlossaryDescription(),
-        null, 'languages', 'paleo-glossary', 100)
+        null, 'languages', 'paleo-glossary', 6326)
     ];
     keys.forEach(function(key) {
       var dict = data[key];

@@ -143,26 +143,35 @@ const PaleoGlossary = (function() {
     render();
   }
 
-  // Дверь в корневой словарь: deep-link на карточку корня по транслиту.
+  // Дверь в корневой словарь: deep-link на карточку корня по транслиту корня.
+  // Для слово-форм (source: 'tanakh') транслит слова не совпадает с корнем,
+  // поэтому при наличии rootTranslit ведём по нему.
   function rootDoorUrl(word) {
-    var key = String(word && word.translit || '').trim();
+    var key = String(word && (word.rootTranslit || word.translit) || '').trim();
     return '#root-dictionary' + (key ? '?q=' + encodeURIComponent(key) : '');
   }
 
   function openRootDoor(word) {
+    if (!word || !word.root) return; // у слово-формы без корня двери нет
     window.location.hash = rootDoorUrl(word);
   }
 
   function cardHtml(word) {
-    var html = '<article class="paleo-glossary-card" data-word-root="' + escapeHtml(word.root) + '" tabindex="0" role="button" aria-label="' +
-      escapeHtml(t('lab.paleoGlossary.openRoot', 'Открыть корень') + ': ' + (word.root || word.translit)) + '">' +
+    var hasRoot = !!word.root;
+    var articleAttrs = hasRoot
+      ? ' tabindex="0" role="button" aria-label="' +
+        escapeHtml(t('lab.paleoGlossary.openRoot', 'Открыть корень') + ': ' + word.root) + '"'
+      : '';
+    var door = hasRoot
+      ? '<span class="paleo-glossary-door" lang="he">→ ' + escapeHtml(t('lab.paleoGlossary.toRoot', 'корень')) + ' ' + escapeHtml(word.root) + '</span>'
+      : '';
+    var html = '<article class="paleo-glossary-card" data-word-root="' + escapeHtml(word.root) + '"' + articleAttrs + '>' +
       '<div class="paleo-glossary-card-top">' +
       '<div class="paleo-glossary-card-paleo" lang="hbo">' + escapeHtml(word.paleo) + '</div>' +
       '<span class="paleo-glossary-card-translit">' + escapeHtml(word.translit) + '</span>' +
       '</div>' +
       '<p class="paleo-glossary-card-function">' + escapeHtml(word['function']) + '</p>' +
-      '<div class="paleo-glossary-card-foot">' +
-      '<span class="paleo-glossary-door" lang="he">→ ' + escapeHtml(t('lab.paleoGlossary.toRoot', 'корень')) + ' ' + escapeHtml(word.root) + '</span>';
+      '<div class="paleo-glossary-card-foot">' + door;
     if (word['function']) {
       html += '<span class="paleo-glossary-card-fn">' + escapeHtml(String(word['function']).split(',')[0]) + '</span>';
     }
