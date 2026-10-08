@@ -17,12 +17,153 @@ const SectionRenderer = (function() {
 
   function wrapPaleo(html) {
     return String(html || '').replace(/>([^<]*)</g, function(full, text) {
-      return '>' + text.replace(/[\u{10900}-\u{1091F}]+/gu, '<span class="paleo-glyph">$&</span>') + '<';
+      // Нормализуем пробелы после , ; : . (Фаза E) до оборачивания палео:
+      // текст здесь ещё «сырой», поэтому правка не задевает разметку.
+      var spaced = normalizeSpacing(text);
+      return '>' + spaced.replace(/[\u{10900}-\u{1091F}]+/gu, '<span class="paleo-glyph">$&</span>') + '<';
     });
   }
 
   function wrapTranslit(html) {
     return String(html || '').replace(/\(([^<>()\n]{1,48})\)/g, '<span class="essence-translit">($1)</span>');
+  }
+
+  // ===== ИКОНКИ РАЗДЕЛОВ (Фаза A) =====
+  // Заголовки секций несут `![icon](icons/32/scroll.png)`. Раньше cleanTitle
+  // выбрасывал метку, а CSS прятал результат — иконки были мертвы. Здесь —
+  // минимальный резолвер: имя файла из метки → Lucide-иконка (единый стиль
+  // с навигацией/кнопками, без растровых ассетов). Имя PNG переводим в
+  // kebab-case Lucide; неизвестный ключ не роняет страницу — тихий fallback
+  // на circle-help. Оживление (<i>→<svg>) делает lucide-init через
+  // MutationObserver сразу после вставки статьи в DOM.
+  var SECTION_ICON_LUCIDE = {
+    scroll: 'scroll-text',
+    scrolls: 'scroll-text',
+    book: 'book-open',
+    hourglass: 'hourglass',
+    sword: 'sword',
+    shield: 'shield',
+    anchor: 'anchor',
+    lamp: 'lamp',
+    torch: 'flame',
+    scales: 'scale',
+    vase: 'amphora',
+    track: 'footprints',
+    makom: 'map-pin',
+    question: 'circle-help'
+  };
+  var SECTION_ICON_FALLBACK = 'circle-help';
+
+  function sectionIconKey(value) {
+    var match = String(value || '').match(/([^/\\]+?)(?:\.png|\.svg)?$/i);
+    return match ? match[1].toLowerCase() : '';
+  }
+
+  function sectionIconHtml(icon) {
+    var key = sectionIconKey(icon);
+    if (!key) return '';
+    var name = SECTION_ICON_LUCIDE[key] || SECTION_ICON_FALLBACK;
+    return '<i class="exposure-section-icon" data-lucide="' + name + '" aria-hidden="true"></i>';
+  }
+
+  // ===== ЧИСТКА СЛУЖЕБНЫХ СТРОК =====
+  // «Источник разоблачения: docs/06-METHODOLOGY/…» — внутренняя карта утрат,
+  // не контент для читателя. Убираем строку при рендере (JSON не трогаем),
+  // чтобы не светить внутренние пути/документы. Забираем и хвостовой `---`.
+  function stripInternalNotes(value) {
+    return String(value == null ? '' : value)
+      .replace(/^[ \t]*Источник разоблачения:.*$/gim, '')
+      .replace(/[ \t]*docs\/06-METHODOLOGY\/[^\s`]*/gi, '')
+      // Убираем inline-разделители `---`/`***`/`___`: они рендерились как <hr>
+      // внутри карточки (визуальный мусор). Между карточками рисуем свой
+      // отдельный сепаратор в renderArticle — см. research-section-divider.
+      .replace(/^[ \t]*(?:-{3,}|\*{3,}|_{3,})[ \t]*$/gm, '')
+      .replace(/\n[ \t]*\n[ \t]*\n+/g, '\n\n');
+  }
+
+  // ===== МИКРОТИПОГРАФИКА (Фаза E) =====
+  // В данных запятая/двоеточие часто стоят вплотную к следующему слову
+  // («тело,живой», «среды,а не»). Это ломает строку в «стену текста».
+  // Ставим пробел после , ; : . — только внутри текстовых узлов, не трогая
+  // разметку. Многоточия, числа с запятой (2,5) и т.п. не задеваем.
+  function normalizeSpacing(text) {
+    return String(text || '')
+      .replace(/([,;:])(?=[^\s\d.,;:!?)\]])/g, '$1 ')
+      .replace(/\.(?=[А-ЯЁA-Z][а-яёa-z])/g, '. ')
+      // Схлопываем «стены» подряд идущих пробелов, табов и переносов в один:
+      // в текстовом узле других видов пробелов не остаётся, а «тело  ,  живой»
+      // должно становиться единым ритмом, а не раздутой стеной.
+      .replace(/\s+/g, ' ');
+  }
+
+  // ===== ССЫЛКИ НА СТИХИ (Фаза C) =====
+  // «Берешит 2:21» в тексте → кликабельная ссылка на ридер ТаНаХа
+  // (#scripture-reader?book=bereshit&verse=21) с иконкой свитка перед ней.
+  // Работаем только по текстовым узлам (как wrapPaleo), чтобы не затронуть
+  // разметку. Неизвестная книга остаётся обычным текстом — битых ссылок нет.
+  var VERSE_BOOKS = {
+    'берешит': 'bereshit',
+    'брешит': 'bereshit',
+    'шмот': 'shmot',
+    'исход': 'shmot',
+    'ваикра': 'vayikra',
+    'вайикра': 'vayikra',
+    'бемидбар': 'bemidbar',
+    'бамидбар': 'bemidbar',
+    'числа': 'bemidbar',
+    'дварим': 'dvarim',
+    'второзаконие': 'dvarim',
+    'йешаяу': 'yeshayahu',
+    'йешаяhу': 'yeshayahu',
+    'йирмеяу': 'yirmeyahu',
+    'йирмеяhу': 'yirmeyahu',
+    'йехезкель': 'yehezkel',
+    'йехэцель': 'yehezkel',
+    'даниэль': 'daniel',
+    'тегилим': 'tehillim',
+    'теhилим': 'tehillim',
+    'псалтирь': 'tehillim',
+    'мишлей': 'mishlei',
+    'притчи': 'mishlei',
+    'иов': 'iyov',
+    'ийов': 'iyov',
+    'коэлет': 'kohelet',
+    'коhелет': 'kohelet',
+    'екклесиаст': 'kohelet',
+    'рут': 'rut',
+    'рфь': 'rut',
+    'эиха': 'eikhah',
+    'эйха': 'eikhah',
+    'плач': 'eikhah',
+    'шофтим': 'shoftim',
+    'судей': 'shoftim',
+    'йеошуа': 'yehoshua',
+    'йеhошуа': 'yehoshua',
+    'исус навин': 'yehoshua'
+  };
+
+  var VERSE_ICON_SVG = '<svg class="verse-ref-icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false">' +
+    '<path fill="currentColor" d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5L14 3.5Z"/>' +
+    '<path fill="currentColor" d="M8 12h8v1.6H8V12Zm0 3.4h8V17H8v-1.6Z"/></svg>';
+
+  function verseRefHtml(name, chapter, verse, bookId) {
+    var href = '#scripture-reader?book=' + encodeURIComponent(bookId) + '&verse=' + encodeURIComponent(verse);
+    var label = name + ' ' + chapter + ':' + verse;
+    return '<a class="verse-ref" href="' + href + '" title="Открыть стих в ридере ТаНаХа">' +
+      VERSE_ICON_SVG + '<span>' + escapeHtml(label) + '</span></a>';
+  }
+
+  function linkifyVerses(html) {
+    return String(html || '').replace(/>([^<]*)</g, function(full, text) {
+      var replaced = text.replace(
+        /([A-ZА-ЯЁ][А-ЯЁа-яёA-Za-z]{2,14})\s+(\d{1,3}):(\d{1,3})(?!\d)/g,
+        function(match, name, chapter, verse) {
+          var bookId = VERSE_BOOKS[name.toLowerCase()];
+          return bookId ? verseRefHtml(name, chapter, verse, bookId) : match;
+        }
+      );
+      return '>' + replaced + '<';
+    });
   }
 
   function renderEssence(value) {
@@ -48,10 +189,10 @@ const SectionRenderer = (function() {
       return '<ul>' + value.map(function(item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>';
     }
     if (value == null || value === '') return '';
-    var text = normalizeMarkdown(value);
+    var text = normalizeMarkdown(stripInternalNotes(value));
     var html = (typeof marked !== 'undefined' && marked.parse) ? marked.parse(text) : '<p>' + escapeHtml(text).replace(/\n/g, '<br>') + '</p>';
     var safe = (typeof DOMPurify !== 'undefined' && DOMPurify.sanitize) ? DOMPurify.sanitize(html) : escapeHtml(text).replace(/\n/g, '<br>');
-    return wrapPaleo(safe);
+    return linkifyVerses(wrapPaleo(safe));
   }
 
   // В контексте ТаНаХа разделяем квадратный текст, транслитерацию и перевод.
@@ -199,6 +340,12 @@ const SectionRenderer = (function() {
     return title || 'Раздел';
   }
 
+  // Достаёт путь иконки из метки `![icon](icons/32/scroll.png)` в начале заголовка.
+  function iconFromHeading(value) {
+    var match = String(value || '').match(/^!\[icon\]\(([^)]+)\)/i);
+    return match ? match[1] : '';
+  }
+
   // Сокращает заголовок секции до 1–2 слов по правилам проекта.
   // Используется и для карточек внутри статьи, и для оглавления (TOC).
   function shortenTitle(value) {
@@ -260,10 +407,13 @@ const SectionRenderer = (function() {
   }
 
   function normalizeSection(section) {
-    var title = cleanTitle(section && (section.title || section.heading));
+    var rawTitle = section && (section.title || section.heading);
+    var title = cleanTitle(rawTitle);
+    var icon = (section && section.icon) || iconFromHeading(rawTitle);
     return {
       id: (section && section.id) || idForTitle(title),
       title: title,
+      icon: icon,
       tocTitle: section && section.tocTitle ? String(section.tocTitle) : '',
       content: section && section.content !== undefined ? section.content : (section && section.body) || '',
       layout: section && section.layout ? String(section.layout) : '',
@@ -395,6 +545,7 @@ const SectionRenderer = (function() {
     return '<article class="exposure-section research-section-card ' + rule.className + '" id="exposure-section-' + index + '" data-section-index="' + index + '" data-section-id="' + escapeHtml(section.id) + '">' +
       '<header class="research-section-card-head">' +
         '<span class="research-section-index" aria-hidden="true">' + padChapter(index) + '</span>' +
+        (section.icon ? sectionIconHtml(section.icon) : '') +
         '<h2 class="exposure-section-heading-text">' + escapeHtml(shortenTitle(section.title)) + '</h2>' +
         chip +
       '</header>' +
@@ -403,7 +554,10 @@ const SectionRenderer = (function() {
   }
 
   function renderArticle(article) {
-    return normalizeArticle(article).map(renderSection).join('');
+    // Между карточками — отдельный «висячий» сепаратор, не приклеенный ни к
+    // одной из них (inline-`---` из данных убраны в stripInternalNotes).
+    var divider = '<div class="research-section-divider" role="separator" aria-hidden="true"></div>';
+    return normalizeArticle(article).map(renderSection).join(divider);
   }
 
   window.SectionRenderer = {
