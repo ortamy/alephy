@@ -19,6 +19,41 @@ const LoadResearches = (function() {
   var state = { query: '', category: 'all', confidence: 'all', activeSlug: '', view: 'cards', sort: 'date' };
   var items = [];
 
+  /* Иконка карточки по категории дела (§4.2: маркер в заголовке).
+     Имена проверены против js/vendor/lucide.min.js; без совпадения — compass. */
+  var CATEGORY_ICONS = {
+    'Анатомия': 'heart-pulse',
+    'Архив': 'archive',
+    'География': 'map',
+    'Законы': 'scale',
+    'Имена': 'signature',
+    'История': 'history',
+    'Кеhилла': 'users',
+    'Книги': 'book-open',
+    'Компании': 'building-2',
+    'Медиа': 'newspaper',
+    'Медицина': 'stethoscope',
+    'Наука': 'microscope',
+    'Общество': 'users-round',
+    'Подмена': 'shuffle',
+    'Практики': 'clipboard-list',
+    'Психология': 'brain',
+    'Рабство': 'link-2',
+    'Символика': 'shapes',
+    'Системы': 'network',
+    'Спорт': 'trophy',
+    'Творение': 'sparkles',
+    'Термин': 'whole-word',
+    'Технологии': 'cpu',
+    'Экономика': 'trending-up',
+    'Язык': 'languages',
+    'Писания': 'scroll-text'
+  };
+
+  function categoryIcon(category) {
+    return CATEGORY_ICONS[category] || 'compass';
+  }
+
   function readView() {
     try {
       var view = localStorage.getItem(VIEW_STORAGE_KEY);
@@ -349,9 +384,12 @@ const LoadResearches = (function() {
         (item.category ? '<span class="res-card-cat">' + escapeHtml(item.category) + '</span>' : '') +
         '<span class="res-card-date">' + escapeHtml(fmtDate(item.updatedAt || item.createdAt)) + '</span>' +
       '</div>' +
-      '<div class="res-card-title">' + escapeHtml(item.title || '') + '</div>' +
+      '<div class="res-card-title">' +
+        '<span class="res-card-icon"><i data-lucide="' + categoryIcon(item.category) + '" aria-hidden="true"></i></span>' +
+        '<span class="res-card-title-text">' + escapeHtml(item.title || '') + '</span>' +
+      '</div>' +
       '<div class="res-card-summary">' + escapeHtml(getSummaryLite(item)) + '</div>' +
-      (terms.length ? '<div class="res-card-terms">' + terms.map(function(t) {
+      (terms.length ? '<div class="res-card-terms">' + terms.slice(0, 3).map(function(t) {
         return '<span class="res-card-term">' + escapeHtml(t) + '</span>';
       }).join('') + '</div>' : '') +
     '</a>';
@@ -471,6 +509,7 @@ const LoadResearches = (function() {
       var list = getFiltered();
       if (meta) meta.textContent = list.length + ' из ' + items.length;
       results.innerHTML = renderResults(list);
+      LabIcons && LabIcons.enhance(document);
       syncFilterControls();
       updateHash();
     }

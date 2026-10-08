@@ -961,73 +961,140 @@ html[data-theme="dark"] .res-dot-needs-review { background: var(--accent-gold); 
 html[data-theme="dark"] .res-dot-hypothesis { background: #8fb4ea; }
 html[data-theme="dark"] .res-dot-disputed { background: #e08a8a; }
 
-/* Карточка ~140px */
-.res-card {
+/* ===== Карточка каталога исследований — DESIGN-SYSTEM §4.2 =====
+   «Бумага»: белая на light/white/parchment, токен темы на dark/brown.
+   Hairline-рамка, radius -8, без теней (§1.5).
+   Hover: рамка → --accent-gold + подложка rgba(gold,.06). */
+#researches { --res-paper: #ffffff; }
+html[data-theme="dark"] #researches,
+html[data-theme="brown"] #researches { --res-paper: var(--bg-card); }
+
+.exposure-card.res-card {
+  background-color: var(--res-paper, #ffffff);
+  background-image: none;
+  border: 1px solid var(--border-light, #d4c4a8);
+  border-radius: var(--radius-8, 8px);
+  box-shadow: none;
+  gap: var(--space-2);
   min-height: 140px;
-  gap: 8px;
-  padding: 14px 16px;
+  padding: var(--space-4);
+}
+
+.exposure-card.res-card:hover {
+  border-color: var(--accent-gold);
+  background-image: linear-gradient(rgb(var(--accent-gold-rgb) / .06), rgb(var(--accent-gold-rgb) / .06));
+  box-shadow: none;
+  transform: none;
+}
+
+.exposure-card.res-card:focus-visible {
+  border-color: var(--accent-gold);
+  box-shadow: var(--ring-focus);
+  transform: none;
 }
 
 .res-card-top {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
+/* Категория-чип: pill, hairline, uppercase --ui-10 (§4.3). */
 .res-card-cat {
-  font-size: .72rem;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  color: var(--text-muted, #897866);
+  flex: 0 1 auto;
+  max-width: 45%;
+  padding: 2px var(--space-2);
   border: 1px solid var(--border-light, #d4c4a8);
   border-radius: var(--radius-pill, 999px);
-  padding: 2px 8px;
+  color: var(--text-secondary, #5c4a3a);
+  font-family: var(--font-ui, 'DM Sans', sans-serif);
+  font-size: var(--ui-10, 10px);
+  font-weight: 700;
+  letter-spacing: var(--tracking-caps);
+  text-transform: uppercase;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 45%;
 }
 
 .res-card-date {
   margin-left: auto;
-  font-size: .78rem;
-  color: var(--text-muted, #897866);
+  color: var(--text-secondary, #5c4a3a);
+  font-family: var(--font-ui, 'DM Sans', sans-serif);
+  font-size: var(--ui-12, 12px);
   white-space: nowrap;
 }
 
+/* Заголовок: сериф-кегль + золотая иконка категории (§1.2: иерархия — размеры). */
 .res-card-title {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   color: var(--text-primary, #2c1810);
-  font-family: var(--font-heading, Georgia, serif);
-  font-size: 1.08rem;
-  line-height: 1.25;
+  font-family: var(--font-heading, 'Cormorant Garamond', Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* Аннотация: одна строка ellipsis (§4.2); на mobile — две (см. @media). */
+.res-card-summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--text-secondary, #5c4a3a);
+  font-family: var(--font-ui, 'DM Sans', sans-serif);
+  font-size: var(--text-14, 14px);
+  line-height: 1.5;
+  text-overflow: ellipsis;
+}
+
+/* Текст заголовка: ≤2 строки (§4.2), max-height — страховка на случай,
+   если line-clamp не поддержан в режиме flex-item. */
+.res-card-title-text {
+  flex: 1 1 auto;
+  min-width: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
+  max-height: 2.6em;
   overflow: hidden;
 }
 
-.res-card-summary {
-  color: var(--text-secondary, #675848);
-  font-size: .88rem;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Иконка-маркер исследования: золото, 18px, по первой строке заголовка. */
+.res-card-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+  color: var(--accent-gold, #b8860b);
 }
 
+.res-card-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Термины: pill, hairline, --ui-12, максимум 3 (§4.2/§4.3). */
 .res-card-terms {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--space-1) var(--space-2);
 }
 
 .res-card-term {
-  font-size: .72rem;
-  color: var(--accent-gold);
-  border: 1px solid rgb(var(--accent-gold-rgb) / .4);
+  padding: 2px var(--space-2);
+  border: 1px solid rgb(var(--accent-gold-rgb) / .35);
   border-radius: var(--radius-pill, 999px);
-  padding: 1px 7px;
+  color: var(--gold-text, var(--accent-gold));
+  font-family: var(--font-ui, 'DM Sans', sans-serif);
+  font-size: var(--ui-12, 12px);
   white-space: nowrap;
 }
 
@@ -1038,25 +1105,26 @@ html[data-theme="dark"] .res-dot-disputed { background: #e08a8a; }
   gap: 6px;
 }
 
+/* Строки режима «список» (§4.8): та же белая бумага, без теней (§1.5). */
 .res-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 48px;
-  padding: 0 12px;
+  padding: 0 var(--space-3);
   border: 1px solid var(--border-light, #d4c4a8);
-  border-radius: var(--radius-sm, 8px);
-  background: var(--bg-secondary, #f7f1e5);
-  box-shadow: 0 1px 4px rgba(44, 24, 16, .06);
+  border-radius: var(--radius-8, 8px);
+  background-color: var(--res-paper, #ffffff);
+  background-image: none;
   text-decoration: none;
-  transition: border-color var(--motion-base);
+  transition: border-color var(--motion-base), background-color var(--motion-base);
 }
 
 .res-row:hover,
 .res-row:focus-visible {
   border-color: var(--accent-gold);
-  box-shadow: 0 6px 16px rgb(var(--accent-gold-rgb) / .14);
+  background-image: linear-gradient(rgb(var(--accent-gold-rgb) / .06), rgb(var(--accent-gold-rgb) / .06));
 }
 
 .res-row-title {
@@ -1123,7 +1191,7 @@ html[data-theme="dark"] .res-dot-disputed { background: #e08a8a; }
     margin: 0;
   }
 
-  .res-card { min-height: 0; padding: 12px 14px; }
+  .exposure-card.res-card { min-height: 0; padding: var(--space-3) var(--space-4); }
 
   /* Карточка на всю ширину полосы: без min-width:0 грид отдаёт
      колонке ширину контента, и текст анонса уезжает под обрез. */
