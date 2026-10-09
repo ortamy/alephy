@@ -25,9 +25,12 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--border-light);
+  margin-bottom: var(--space-5);
+  padding-bottom: 0;
+  /* Без border-bottom: подзаголовок главы не нуждается в подчёркивании —
+     иерархию несёт лейбл-капс + номер. Визуальный разделитель между главами
+     даёт отдельный .research-section-divider (см. renderArticle). */
+  border-bottom: 0;
 }
 
 .research-section-index,
@@ -73,10 +76,24 @@
   text-transform: uppercase;
 }
 
+/* Иконка главы — Lucide (<i data-lucide> → <svg>). Размер/цвет держим на
+   самом элементе: createIcons сохраняет наш класс на итоговом <svg>. */
 .research-section-card-head .exposure-section-icon,
+.research-section-card-head .exposure-section-icon svg {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  color: var(--accent-gold);
+  opacity: 0.9;
+  align-self: center;
+  stroke-width: 1.75;
+}
+
 .typology-link-icon,
 .section-patch-icon,
-.exposure-section-icon { display: none; }
+.exposure-card-icon {
+  display: none;
+}
 
 .research-section-card .exposure-section-body {
   color: var(--text-primary);
@@ -87,6 +104,13 @@
 }
 .research-section-card .exposure-section-body > :first-child { margin-top: 0; }
 .research-section-card .exposure-section-body > :last-child { margin-bottom: 0; }
+
+/* Параграфы внутри карточки: 16px снизу — уравниваем ритм, убираем зависание
+   «стены текста», но не допускаем пустоту в начале и в конце блока. */
+.research-section-card .exposure-section-body p { margin: 0 0 var(--space-4); }
+/* Универсальный ритм между разными блочными элементами тела (h3, blockquote,
+   ul, p ...): каждый идёт со своим верхним отступом. */
+.research-section-card .exposure-section-body > * + * { margin-top: var(--space-4); }
 .essence-card .exposure-section-body,
 .essence-card .exposure-section-body p,
 .essence-card .exposure-section-body strong {
@@ -118,6 +142,58 @@
      «съедают» пробелы и утаскивают пунктуацию соседнего русского текста.
      На блочных строках (tanakh/original) правило — no-op, вид не меняется. */
   unicode-bidi: isolate;
+}
+
+/* Термин-чип (Фаза B): инлайн-палео отделяем лёгкой подложкой, чтобы глиф
+   читался как «слово-образ», а не сливался с русским потоком. Пунктуация
+   остаётся снаружи спана (unicode-bidi уже изолирует), поэтому точка/запятая
+   после 𐤃𐤁𐤓 не затягиваются внутрь RTL-сегмента. */
+.research-section-card .exposure-section-body .paleo-glyph {
+  display: inline-block;
+  padding: 0 0.28em;
+  margin: 0 0.05em;
+  border-radius: 4px;
+  background: rgb(var(--accent-gold-rgb) / 0.10);
+  font-size: 1.08em;
+  line-height: 1.4;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+/* Ссылка на стих (Фаза C): иконка + текст в одной «пилюле». */
+.verse-ref {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.05em 0.5em 0.05em 0.4em;
+  border: 1px solid rgb(var(--accent-gold-rgb) / 0.30);
+  border-radius: 999px;
+  background: rgb(var(--accent-gold-rgb) / 0.06);
+  color: var(--accent-gold);
+  font-family: var(--font-ui);
+  font-size: 0.9em;
+  font-weight: 600;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: baseline;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+.verse-ref:hover,
+.verse-ref:focus-visible {
+  background: rgb(var(--accent-gold-rgb) / 0.14);
+  border-color: rgb(var(--accent-gold-rgb) / 0.55);
+  color: var(--accent-gold-hover);
+}
+.verse-ref .verse-ref-icon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  color: currentColor;
+}
+html[data-theme="dark"] .verse-ref {
+  border-color: rgb(var(--accent-gold-rgb) / 0.35);
+  background: rgb(var(--accent-gold-rgb) / 0.10);
 }
 
 /* Палео-глиф внутри карточек дела — всегда gold, независимо от темы:
@@ -277,4 +353,24 @@ html[data-theme="dark"] .research-section-card blockquote { background: transpar
 @media (max-width: 640px) {
   .research-section-card { padding: 0 0 var(--space-5); }
   .typology-links-gallery { grid-template-columns: 1fr; }
+}
+
+/* Карточка → отдельный «висячий» сепаратор. Инлайн-`---` из данных испускают на
+   их место этот блок, вставленный в `renderArticle` между карточками. Один
+   короткий золотой штрих, центрированный, с жидкой дырой сверху и снизу — ни
+   одна карточка не прикасается к нему, не растягивается на всю ширину. */
+.research-section-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin: var(--space-8) auto;
+  width: 100%;
+  max-width: 120px;
+  padding: var(--space-1) 0;
+}
+.research-section-divider::before {
+  content: '';
+  width: 36px;
+  height: 1px;
+  background: var(--accent-gold);
 }
