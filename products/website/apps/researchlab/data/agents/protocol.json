@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "1.0",
+  "kind": "protocol-spec",
+  "id": "agent-protocol",
+  "title": "Протокол обмена агентной системы",
+  "doc": "docs/03-AI/AGENT-PROTOCOL.md",
+  "implementedBy": [
+    "products/agents/pipelines/core.py",
+    "products/agents/agents/common.py",
+    "products/agents/agents/convergence.py"
+  ],
+  "packet": {
+    "type": "dict",
+    "required": [
+      "query"
+    ],
+    "envelope": {
+      "trace": "плоский список id агентов в порядке вызова",
+      "agentTrace": "журнал вызовов: agentId, iteration, status, input, observations, decisions, hypotheses, limitations, output"
+    },
+    "note": "Пакет — единственный носитель состояния: агенты пишут в него, глобального состояния нет."
+  },
+  "traceEntry": {
+    "type": "string",
+    "example": "researcher",
+    "order": "порядок вызова"
+  },
+  "agentTraceEntry": {
+    "agentId": "string",
+    "iteration": "int: 0 — линейная цепочка, 1..N — номер витка цикла",
+    "status": [
+      "done"
+    ],
+    "input": "снимок пакета до вызова, без trace/agentTrace/result",
+    "observations": "массив объектов {field, value}",
+    "decisions": "массив, по умолчанию пуст",
+    "hypotheses": "массив, по умолчанию пуст",
+    "limitations": "массив, по умолчанию пуст",
+    "output": "снимок полей, записанных шагом"
+  },
+  "stoppingRule": {
+    "empty": [
+      "null",
+      "{}"
+    ],
+    "effect": "пустой результат шага останавливает линейный и циклический пайплайн; пустая ветка веера помечается empty и не глушит веер"
+  },
+  "composition": [
+    {
+      "id": "linear",
+      "runner": "run_steps",
+      "resultFields": [],
+      "note": "цепочка по одному пакету; первый пустой результат останавливает"
+    },
+    {
+      "id": "loop",
+      "runner": "run_loop",
+      "resultFields": [
+        "iteration",
+        "converged",
+        "stalled",
+        "convergence_history",
+        "shmita_resets"
+      ],
+      "convergeAgent": "convergence",
+      "maxIterationsDefault": 5,
+      "note": "виток cycle_steps, затем агент сходимости; защита от вечного круга — max_iterations; shmita_every прощает растущие поля"
+    },
+    {
+      "id": "fanout",
+      "runner": "run_fanout",
+      "resultFields": [
+        "branches",
+        "branch_id"
+      ],
+      "join": "шаги сведения получают общий пакет с уликами всех веток",
+      "note": "ветки идут по своим копиям пакета с branch_id; пустая ветка помечается empty и не глушит соседние"
+    }
+  ],
+  "convergence": {
+    "agentId": "convergence",
+    "statuses": [
+      "эмет",
+      "поток",
+      "Мавет",
+      "Тоху"
+    ],
+    "fields": [
+      "iteration",
+      "converged",
+      "stalled",
+      "delta",
+      "fresh_evidence_count",
+      "status",
+      "notes",
+      "_signature"
+    ],
+    "rule": "converged = valid and not changed; первый виток сойтись не может"
+  },
+  "writePolicy": {
+    "writable": false,
+    "note": "запись на диск разрешена только пайплайнам из server.WRITABLE_PIPELINES (сейчас arch_keeper) и только по явному флагу"
+  },
+  "deferred": [
+    {
+      "id": "quorum",
+      "reason": "ADR-019: кворум одинаковых детерминированных голосов был бы театром"
+    },
+    {
+      "id": "dag",
+      "reason": "ADR-019: граф без второго потребителя — преждевременное обобщение"
+    }
+  ]
+}

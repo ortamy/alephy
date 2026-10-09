@@ -68,6 +68,7 @@
 ## Связанные документы
 
 - `docs/03-AI/AGENT-ARCHITECTURE.md` — устройство агентного слоя и правила добавления пайплайна.
+- `docs/03-AI/AGENT-PROTOCOL.md` — контракт обмена: пакет, след (`trace` / `agentTrace`) и формы кооперации.
 - `docs/01-ARCHITECTURE/ARCHITECTURE.md` — автоблоки реестра (счётчики карточек, раннеров, движков).
 - `docs/decisions.md` — ADR-019 (веер), ADR-020 (тип карточки из UI), ADR-021 (состав реестра).
 - `products/website/apps/researchlab/data/pipelines.json` — карточки, которые видит интерфейс.
