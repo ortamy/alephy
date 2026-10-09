@@ -230,6 +230,12 @@
   background: var(--line);
 }
 
+/* Подзаголовок группы: тот же .sr-note, только с отступом под hairline —
+   базовый .sr-note имеет margin: 0, а правило шапки заканчивается на 8px выше. */
+.sr-group-subtitle {
+  margin: 0 0 var(--space-2);
+}
+
 .sr-group-count {
   padding: 0 8px;
   color: var(--text-muted);

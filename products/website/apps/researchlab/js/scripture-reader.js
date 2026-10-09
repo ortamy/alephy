@@ -391,9 +391,16 @@ const ScriptureReader = (function() {
     ketuvim: 'Кетувим',
     samaritan: 'Самаритянская Тора',
     yahad: 'Кумран / йахад',
-    geniza: 'Гениза'
+    geniza: 'Гениза',
+    britHadasha: 'Брит Хадаша',
+    targum: 'Таргумы'
   };
-  var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad', 'geniza'];
+  // Подзаголовок группы — короткая рамка корпуса. Есть только там, где она несёт
+  // смысл; остальные разделы остаются с одним лейблом. Рендер — существующим .sr-note.
+  var BOOK_CATEGORY_SUBTITLES = {
+    targum: 'Арамейские переводы ТаНаХа. Толкования, сохранившие древние смыслы.'
+  };
+  var BOOK_CATEGORY_ORDER = ['torah', 'neviim', 'ketuvim', 'samaritan', 'yahad', 'targum', 'geniza', 'britHadasha'];
   // Глиф икон-чипа строки: чип по канону модуля «Агенты», но иконка несёт природу
   // корпуса — свиток Торы, книга Невиим, перо Ктувим, самаритянский список, свитки Кумрана.
   var BOOK_CATEGORY_ICONS = {
@@ -402,7 +409,9 @@ const ScriptureReader = (function() {
     ketuvim: 'feather',
     samaritan: 'book-marked',
     yahad: 'scroll-text',
-    geniza: 'library'
+    geniza: 'library',
+    britHadasha: 'book-text',
+    targum: 'languages'
   };
 
   function bookSearchQuery() {
@@ -470,14 +479,15 @@ const ScriptureReader = (function() {
     var groups = [];
     BOOK_CATEGORY_ORDER.forEach(function(category) {
       var items = books.filter(function(book) { return String(book.category || '') === category; });
-      if (items.length) groups.push({ label: BOOK_CATEGORY_LABELS[category] || category, items: items });
+      if (items.length) groups.push({ label: BOOK_CATEGORY_LABELS[category] || category, category: category, items: items });
     });
     books.forEach(function(book) {
       if (BOOK_CATEGORY_ORDER.indexOf(String(book.category || '')) !== -1) return;
-      groups.push({ label: BOOK_CATEGORY_LABELS[book.category] || book.category || 'Прочее', items: [book] });
+      groups.push({ label: BOOK_CATEGORY_LABELS[book.category] || book.category || 'Прочее', category: book.category, items: [book] });
     });
 
     host.innerHTML = groups.map(function(group) {
+      var subtitle = BOOK_CATEGORY_SUBTITLES[group.category] || '';
       var rows = group.items.map(function(book) {
         var ready = Boolean(book.dataFile);
         var icon = BOOK_CATEGORY_ICONS[book.category] || 'book';
@@ -495,6 +505,7 @@ const ScriptureReader = (function() {
         '<div class="sr-group-head"><span class="sr-group-label">' + escapeHtml(group.label) + '</span>' +
         '<span class="sr-group-rule"></span>' +
         '<span class="sr-group-count">' + group.items.length + '</span></div>' +
+        (subtitle ? '<p class="sr-note sr-group-subtitle">' + escapeHtml(subtitle) + '</p>' : '') +
         '<div class="sr-books">' + rows + '</div></div>';
     }).join('');
 
