@@ -24,6 +24,13 @@ window.LabDevPanel = (function () {
   var shadow = null;
   var state = { open: false, tab: 'inspect' };
 
+  // Состояние инспекции: активный слушатель документа и последний цель элемент.
+  var HIGHLIGHT_ID = 'lab-dev-panel-highlight';
+  var inspect = { active: false, target: null, statusTimer: 0 };
+  var overlay = null;
+  var inspectTarget = null;
+  var docBound = false;
+
   function isEnabled() {
     if (window.UserPreferences && UserPreferences.load) {
       return UserPreferences.load().developerMode === true;
@@ -68,6 +75,17 @@ window.LabDevPanel = (function () {
     '.dp-body { flex: 1; overflow-y: auto; padding: 16px 14px;',
     '  background: var(--bg-secondary, #fbfaf6); font-size: 13px;',
     '  color: var(--text-muted, #8d8271); }',
+    '.dp-hint { margin: 0 0 10px; }',
+    '.dp-inspect { display: grid; gap: 6px; }',
+    '.dp-inspect[hidden], .dp-copy-status[hidden] { display: none; }',
+    '.dp-row { display: flex; gap: 8px; align-items: baseline; font-size: 12px; }',
+    '.dp-row-label { flex: 0 0 72px; color: var(--text-secondary, #5c5142); font-weight: 600; }',
+    '.dp-row-value { flex: 1; min-width: 0; word-break: break-all; padding: 3px 6px;',
+    '  font-family: var(--font-mono, "JetBrains Mono", monospace); font-size: 11px;',
+    '  color: var(--text-primary, #221a10); background: var(--bg-primary, #fff);',
+    '  border: 1px solid var(--border-light, #e6dfd0); border-radius: 6px; }',
+    '.dp-copy-status { margin: 10px 0 0; font-size: 12px; font-weight: 600;',
+    '  color: var(--accent-gold, #9a7420); }',
     '@media (max-width: 640px) {',
     '  .dp-root { right: 12px; bottom: 12px; }',
     '  .dp-panel { width: calc(100vw - 24px); max-height: calc(100vh - 96px); }',
@@ -89,6 +107,9 @@ window.LabDevPanel = (function () {
   }
 
   function placeholderText() {
+    if (state.tab === 'inspect') {
+      return 'Наведите курсор на элемент: он подсветится, а его данные появятся ниже. Щелчок копирует данные в буфер.';
+    }
     return 'Вкладка «' + tabLabel(state.tab) + '» заполняется на следующем этапе работы над панелью.';
   }
 
@@ -104,7 +125,10 @@ window.LabDevPanel = (function () {
       '<button type="button" class="dp-close" data-dp-close aria-label="Закрыть панель">' + CLOSE_SVG + '</button></header>' +
       '<div class="dp-tabs" role="tablist" aria-label="Разделы панели">' + tabs + '</div>' +
       '<div class="dp-body" id="dp-body" role="tabpanel" aria-labelledby="dp-tab-' + state.tab + '" tabindex="0">' +
-      '<p data-dp-placeholder>' + placeholderText() + '</p></div></section>';
+      '<p class="dp-hint" data-dp-placeholder>' + placeholderText() + '</p>' +
+      '<div class="dp-inspect" data-dp-info hidden></div>' +
+      '<p class="dp-copy-status" data-dp-status hidden>Скопировано в буфер</p>' +
+      '</div></section>';
   }
 
   function buildMarkup() {
@@ -130,7 +154,13 @@ window.LabDevPanel = (function () {
       body.setAttribute('aria-labelledby', 'dp-tab-' + state.tab);
       var placeholder = body.querySelector('[data-dp-placeholder]');
       if (placeholder) placeholder.textContent = placeholderText();
+      var info = body.querySelector('[data-dp-info]');
+      if (info) info.hidden = state.tab !== 'inspect';
+      var status = body.querySelector('[data-dp-status]');
+      if (status && state.tab !== 'inspect') status.hidden = true;
     }
+    // Вне вкладки «Инспекция» подсветка бессмысленна.
+    if (!isActive()) hideOverlay();
   }
 
   function bindEvents() {
@@ -162,6 +192,245 @@ window.LabDevPanel = (function () {
     });
   }
 
+  // ===== ИНСПЕКЦИЯ =====
+
+  function isActive() {
+    return !!(host && shadow && state.open && state.tab === 'inspect');
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof CSS.escape === 'function') return CSS.escape(value);
+    return String(value).replace(/([\0-\x1f\x7f"'#.:;,!?+<>=~*^$|&%@\s()[\]{}])/g, '\\$1');
+  }
+
+  function isUnique(selector) {
+    try {
+      return document.querySelectorAll(selector).length === 1;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Селектор: сначала уникальный id, затем уникальный класс, иначе
+  // цепочка tag:nth-child(n) от ближайшего якоря (id-предка) до элемента.
+  function buildSelector(el) {
+    if (!(el instanceof Element)) return '';
+    if (el.id) {
+      var idSel = '#' + cssEscape(el.id);
+      if (isUnique(idSel)) return idSel;
+    }
+    for (var i = 0; i < el.classList.length; i++) {
+      var clsSel = '.' + cssEscape(el.classList[i]);
+      if (isUnique(clsSel)) return clsSel;
+    }
+    var parts = [];
+    var current = el;
+    var anchor = '';
+    while (current && current.parentElement && current !== document.documentElement) {
+      var parent = current.parentElement;
+      var index = 1;
+      var siblings = parent.children;
+      for (var j = 0; j < siblings.length; j++) {
+        if (siblings[j] === current) { index = j + 1; break; }
+      }
+      parts.unshift(current.tagName.toLowerCase() + ':nth-child(' + index + ')');
+      if (parent.id) {
+        anchor = '#' + cssEscape(parent.id);
+        break;
+      }
+      current = parent;
+    }
+    var path = parts.join(' > ');
+    return anchor ? anchor + ' > ' + path : path;
+  }
+
+  function nearestDataAttr(el) {
+    var node = el;
+    for (var depth = 0; node && node.nodeType === 1 && depth < 4; depth++, node = node.parentElement) {
+      for (var i = 0; i < node.attributes.length; i++) {
+        var attr = node.attributes[i];
+        if (attr.name.indexOf('data-') === 0 && attr.value) {
+          return attr.name + '="' + attr.value + '"';
+        }
+      }
+    }
+    return '';
+  }
+
+  function elementText(el) {
+    var text = (el.textContent || '').replace(/\s+/g, ' ').trim();
+    if (text.length > 120) text = text.slice(0, 120) + '…';
+    return text;
+  }
+
+  function describe(el) {
+    var rect = el.getBoundingClientRect();
+    var text = elementText(el);
+    return {
+      selector: buildSelector(el),
+      tag: el.tagName.toLowerCase(),
+      classes: el.className && typeof el.className === 'string' ? el.className.trim() : '',
+      size: Math.round(rect.width) + ' x ' + Math.round(rect.height),
+      text: text,
+      dataAttr: text ? '' : nearestDataAttr(el)
+    };
+  }
+
+  function formatInfo(info) {
+    var lines = [
+      'Селектор: ' + info.selector,
+      'Тег: ' + info.tag,
+      'Классы: ' + (info.classes || 'нет'),
+      'Размер: ' + info.size
+    ];
+    if (info.text) lines.push('Текст: ' + info.text);
+    if (info.dataAttr) lines.push('Атрибут: ' + info.dataAttr);
+    return lines.join('\n');
+  }
+
+  function infoRows(info) {
+    var rows = [
+      ['Селектор', info.selector],
+      ['Тег', info.tag],
+      ['Классы', info.classes || 'нет'],
+      ['Размер', info.size]
+    ];
+    if (info.text) rows.push(['Текст', info.text]);
+    if (info.dataAttr) rows.push(['Атрибут', info.dataAttr]);
+    return rows;
+  }
+
+  // Значения вставляем через textContent: текст элемента страницы —
+  // внешний ввод, в разметку он не попадает в сыром виде.
+  function renderInfo(info) {
+    var box = shadow.querySelector('[data-dp-info]');
+    if (!box) return;
+    var rows = infoRows(info);
+    box.innerHTML = rows.map(function (row) {
+      return '<div class="dp-row"><span class="dp-row-label">' + row[0] + '</span>' +
+        '<code class="dp-row-value"></code></div>';
+    }).join('');
+    var codes = box.querySelectorAll('.dp-row-value');
+    for (var i = 0; i < codes.length; i++) {
+      codes[i].textContent = rows[i][1];
+    }
+  }
+
+  var statusTimer = null;
+  function showStatus(message) {
+    var status = shadow.querySelector('[data-dp-status]');
+    if (!status) return;
+    status.textContent = message;
+    status.hidden = false;
+    if (statusTimer) clearTimeout(statusTimer);
+    statusTimer = setTimeout(function () { status.hidden = true; }, 1600);
+  }
+
+  function copyText(text, okMessage) {
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      showStatus(ok ? okMessage : 'Не удалось скопировать');
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showStatus(okMessage);
+      }).catch(fallback);
+      return;
+    }
+    fallback();
+  }
+
+  function ensureOverlay() {
+    if (overlay && document.body.contains(overlay)) return overlay;
+    overlay = document.createElement('div');
+    overlay.id = 'lab-dev-inspect-overlay';
+    // Стили инлайном: оверлей живёт в основном документе и не пишется
+    // в CSS-файлы лаборатории.
+    overlay.style.position = 'fixed';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '9989';
+    overlay.style.display = 'none';
+    overlay.style.border = '2px solid #9a7420';
+    overlay.style.background = 'rgba(154, 116, 32, .14)';
+    overlay.style.borderRadius = '4px';
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function moveOverlay(el) {
+    var rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height || rect.bottom < 0 || rect.top > window.innerHeight ||
+        rect.right < 0 || rect.left > window.innerWidth) {
+      if (overlay) overlay.style.display = 'none';
+      return;
+    }
+    var ov = ensureOverlay();
+    ov.style.top = rect.top + 'px';
+    ov.style.left = rect.left + 'px';
+    ov.style.width = rect.width + 'px';
+    ov.style.height = rect.height + 'px';
+    ov.style.display = 'block';
+  }
+
+  function hideOverlay() {
+    if (overlay) overlay.style.display = 'none';
+    inspectTarget = null;
+  }
+
+  function fromPanel(event) {
+    if (!host) return false;
+    var path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    return path.indexOf(host) !== -1;
+  }
+
+  function bindDocumentEvents() {
+    if (docBound) return;
+    docBound = true;
+
+    document.addEventListener('mousemove', function (event) {
+      if (!isActive()) { hideOverlay(); return; }
+      if (fromPanel(event)) return;
+      var el = event.target instanceof Element ? event.target : null;
+      if (!el || el === overlay) return;
+      inspectTarget = el;
+      moveOverlay(el);
+      renderInfo(describe(el));
+    }, true);
+
+    // Скрытие подсветки, когда курсор уходит из документа.
+    document.addEventListener('mouseout', function (event) {
+      if (!isActive()) return;
+      if (!event.relatedTarget && overlay) overlay.style.display = 'none';
+    }, true);
+
+    // Прокрутка сдвигает элементы: подсветку гасим, мышка вернёт её.
+    document.addEventListener('scroll', function () {
+      if (isActive() && overlay) overlay.style.display = 'none';
+    }, { capture: true, passive: true });
+
+    document.addEventListener('click', function (event) {
+      if (!isActive()) return;
+      if (fromPanel(event)) return;
+      var el = event.target instanceof Element ? event.target : null;
+      if (!el || el === overlay) return;
+      event.preventDefault();
+      event.stopPropagation();
+      var info = describe(el);
+      inspectTarget = el;
+      renderInfo(info);
+      copyText(formatInfo(info), 'Данные элемента скопированы');
+    }, true);
+  }
+
   function ensureHost() {
     if (host && document.body.contains(host)) return;
     host = document.getElementById(HOST_ID);
@@ -173,9 +442,13 @@ window.LabDevPanel = (function () {
     shadow = host.shadowRoot || host.attachShadow({ mode: 'open' });
     shadow.innerHTML = '<style>' + STYLES + '</style>' + buildMarkup();
     bindEvents();
+    bindDocumentEvents();
   }
 
   function removeHost() {
+    hideOverlay();
+    if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
+    overlay = null;
     if (host && host.parentNode) host.parentNode.removeChild(host);
     host = null;
     shadow = null;
