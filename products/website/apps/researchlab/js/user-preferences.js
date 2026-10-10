@@ -135,7 +135,8 @@ const UserPreferences = (function() {
       motion: 'full',
       fontFamily: 'eb-garamond',
       startPage: 'dashboard',
-      showBreadcrumbs: true
+      showBreadcrumbs: true,
+      developerMode: false
     };
   }
 
@@ -148,6 +149,7 @@ const UserPreferences = (function() {
         Object.keys(base).forEach(function(k) {
           if (parsed[k] === undefined) parsed[k] = base[k];
         });
+        parsed.developerMode = parsed.developerMode === true;
         return parsed;
       }
     } catch (e) {}
@@ -204,6 +206,12 @@ const UserPreferences = (function() {
     } else {
       HTML.removeAttribute('data-breadcrumbs');
     }
+
+    if (prefs.developerMode === true) {
+      HTML.setAttribute('data-developer-mode', 'on');
+    } else {
+      HTML.removeAttribute('data-developer-mode');
+    }
   }
 
   function render(container, role) {
@@ -227,6 +235,7 @@ const UserPreferences = (function() {
     var cells = [
       tabAppearance(prefs, n),
       tabMotion(prefs, n),
+      tabDevelopment(prefs, n),
       isResearcher ? tabNavigation(prefs, n) : '',
       isResearcher ? tabLearning(prefs, n) : '',
       tabData(prefs, n),
@@ -268,6 +277,14 @@ const UserPreferences = (function() {
         '<div class="up-field"><span class="up-label" id="up-crumb-label">Хлебные крошки</span>' +
         '<label class="up-toggle"><input type="checkbox" id="up-show-breadcrumbs" aria-labelledby="up-crumb-label"' + (prefs.showBreadcrumbs ? ' checked' : '') + '>' +
         '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты') + '</span></label></div>', 'start');
+  }
+
+  function tabDevelopment(prefs, n) {
+    return cell(n(), 'Разработка', 'Инструменты',
+      '<div class="up-field"><span class="up-label" id="up-developer-mode-label">Режим разработчика</span>' +
+      '<p class="up-field-hint">Включает панель инспекции и аннотаций.</p>' +
+      '<label class="up-toggle"><input type="checkbox" id="up-developer-mode" aria-labelledby="up-developer-mode-label"' + (prefs.developerMode ? ' checked' : '') + '>' +
+      '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.developerMode ? 'Включён' : 'Выключен') + '</span></label></div>', 'development');
   }
 
   function tabLearning(prefs, n) {
@@ -414,6 +431,17 @@ const UserPreferences = (function() {
         commit('showBreadcrumbs', breadToggle.checked);
         // Крошки уже нарисованы для текущего маршрута — перерисовываем их.
         if (window.LabRouter) LabRouter.refreshBreadcrumbs(LabRouter.current());
+      });
+    }
+    var developerToggle = container.querySelector('#up-developer-mode');
+    if (developerToggle) {
+      developerToggle.addEventListener('change', function() {
+        var lbl = developerToggle.parentElement.querySelector('.up-toggle-label');
+        if (lbl) lbl.textContent = developerToggle.checked ? 'Включён' : 'Выключен';
+        commit('developerMode', developerToggle.checked);
+        window.dispatchEvent(new CustomEvent('alephy:developer-mode-change', {
+          detail: { enabled: developerToggle.checked }
+        }));
       });
     }
     var exportBtn = container.querySelector('#up-export');

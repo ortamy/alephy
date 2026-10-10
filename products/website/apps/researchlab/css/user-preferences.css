@@ -32,7 +32,8 @@
 .up-cell--type,
 .up-cell--motion,
 .up-cell--data,
-.up-cell--start { grid-column: span 7; }
+.up-cell--start,
+.up-cell--development { grid-column: span 7; }
 .up-cell--learn,
 .up-cell--summary { grid-column: span 5; }
 
@@ -303,6 +304,13 @@
   font-size: var(--ui-12);
 }
 
+.up-field-hint {
+  margin: calc(var(--space-1) * -1) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--ui-12);
+  line-height: var(--leading-ui);
+}
+
 /* ===== Диапазон ===== */
 .up-range {
   width: 100%;
@@ -416,6 +424,7 @@
   .up-cell--motion,
   .up-cell--data,
   .up-cell--start,
+  .up-cell--development,
   .up-cell--learn,
   .up-cell--summary {
     grid-column: 1 / -1;
