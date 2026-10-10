@@ -23,6 +23,7 @@ window.LabDevPanel = (function () {
   var host = null;
   var shadow = null;
   var state = { open: false, tab: 'inspect' };
+  var annotations = loadAnnotations();
 
   // Состояние инспекции: активный слушатель документа и последний цель элемент.
   var HIGHLIGHT_ID = 'lab-dev-panel-highlight';
@@ -30,6 +31,9 @@ window.LabDevPanel = (function () {
   var overlay = null;
   var inspectTarget = null;
   var docBound = false;
+  var markerLayer = null;
+  var draft = null;
+  var editingId = null;
 
   function isEnabled() {
     if (window.UserPreferences && UserPreferences.load) {
@@ -86,6 +90,55 @@ window.LabDevPanel = (function () {
     '  border: 1px solid var(--border-light, #e6dfd0); border-radius: 6px; }',
     '.dp-copy-status { margin: 10px 0 0; font-size: 12px; font-weight: 600;',
     '  color: var(--accent-gold, #9a7420); }',
+    '.dp-annotations { display: grid; gap: 12px; }',
+    '.dp-annotations[hidden] { display: none; }',
+    '.dp-annot-form { display: grid; gap: 10px; }',
+    '.dp-annot-heading { margin: 0; font-size: 12px; font-weight: 700;',
+    '  letter-spacing: .06em; text-transform: uppercase; color: var(--text-secondary, #5c5142); }',
+    '.dp-annot-selector { display: block; padding: 6px 8px; word-break: break-all;',
+    '  font-family: var(--font-mono, "JetBrains Mono", monospace); font-size: 11px;',
+    '  color: var(--text-primary, #221a10); background: var(--bg-primary, #fff);',
+    '  border: 1px solid var(--border-light, #e6dfd0); border-radius: 6px; }',
+    '.dp-annot-seltext, .dp-annot-item-seltext { font-size: 12px; color: var(--text-secondary, #5c5142); }',
+    '.dp-annot-label { display: grid; gap: 4px; font-size: 12px; font-weight: 600;',
+    '  color: var(--text-secondary, #5c5142); }',
+    '.dp-annot-type, .dp-annot-input, .dp-annot-note { width: 100%; box-sizing: border-box;',
+    '  padding: 7px 9px; font: inherit; font-size: 13px; color: var(--text-primary, #221a10);',
+    '  background: var(--bg-primary, #fff); border: 1px solid var(--border-light, #e6dfd0);',
+    '  border-radius: 8px; }',
+    '.dp-annot-note { resize: vertical; }',
+    '.dp-annot-type:focus, .dp-annot-input:focus, .dp-annot-note:focus {',
+    '  outline: 2px solid var(--accent-gold, #9a7420); outline-offset: 1px; }',
+    '.dp-annot-actions, .dp-annot-item-actions { display: flex; gap: 8px; }',
+    '.dp-btn { flex: 1; padding: 8px 10px; font: inherit; font-size: 13px; font-weight: 600;',
+    '  cursor: pointer; color: var(--text-primary, #221a10); background: var(--bg-primary, #fff);',
+    '  border: 1px solid var(--border-dark, #cbbfa8); border-radius: 8px; }',
+    '.dp-btn:hover { border-color: var(--accent-gold, #9a7420); }',
+    '.dp-btn-primary { color: #fff; background: var(--accent-gold, #9a7420);',
+    '  border-color: var(--accent-gold, #9a7420); }',
+    '.dp-btn-primary:hover { filter: brightness(1.05); }',
+    '.dp-btn-danger { color: #fff; background: #c0392b; border-color: #c0392b; }',
+    '.dp-btn-sm { flex: 0 0 auto; padding: 5px 9px; font-size: 12px; }',
+    '.dp-annot-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }',
+    '.dp-annot-item { padding: 10px; display: grid; gap: 6px;',
+    '  background: var(--bg-primary, #fff); border: 1px solid var(--border-light, #e6dfd0);',
+    '  border-radius: 10px; }',
+    '.dp-annot-item-head { display: flex; align-items: center; gap: 8px; }',
+    '.dp-annot-badge { flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px;',
+    '  border-radius: 10px; color: #fff; font: 700 11px/20px system-ui, sans-serif;',
+    '  text-align: center; }',
+    '.dp-annot-badge-bug { background: #c0392b; }',
+    '.dp-annot-badge-style { background: #9a7420; }',
+    '.dp-annot-badge-feature { background: #2b6cb0; }',
+    '.dp-annot-badge-content { background: #2e7d4f; }',
+    '.dp-annot-item-title { flex: 1; min-width: 0; font-weight: 600;',
+    '  color: var(--text-primary, #221a10); }',
+    '.dp-annot-item-type { font-size: 11px; text-transform: uppercase;',
+    '  letter-spacing: .04em; color: var(--text-muted, #8d8271); }',
+    '.dp-annot-item-sel { display: block; font-family: var(--font-mono, "JetBrains Mono", monospace);',
+    '  font-size: 11px; word-break: break-all; color: var(--text-secondary, #5c5142); }',
+    '.dp-annot-item-note { font-size: 12px; color: var(--text-primary, #221a10); }',
+    '.dp-annot-count { margin: 2px 0 0; }',
     '@media (max-width: 640px) {',
     '  .dp-root { right: 12px; bottom: 12px; }',
     '  .dp-panel { width: calc(100vw - 24px); max-height: calc(100vh - 96px); }',
@@ -110,6 +163,9 @@ window.LabDevPanel = (function () {
     if (state.tab === 'inspect') {
       return 'Наведите курсор на элемент: он подсветится, а его данные появятся ниже. Щелчок копирует данные в буфер.';
     }
+    if (state.tab === 'annotations') {
+      return 'Кликните по элементу или выделите текст на странице, чтобы поставить аннотацию.';
+    }
     return 'Вкладка «' + tabLabel(state.tab) + '» заполняется на следующем этапе работы над панелью.';
   }
 
@@ -128,6 +184,7 @@ window.LabDevPanel = (function () {
       '<p class="dp-hint" data-dp-placeholder>' + placeholderText() + '</p>' +
       '<div class="dp-inspect" data-dp-info hidden></div>' +
       '<p class="dp-copy-status" data-dp-status hidden>Скопировано в буфер</p>' +
+      '<div class="dp-annotations" data-dp-annotations hidden></div>' +
       '</div></section>';
   }
 
@@ -153,12 +210,18 @@ window.LabDevPanel = (function () {
     if (body) {
       body.setAttribute('aria-labelledby', 'dp-tab-' + state.tab);
       var placeholder = body.querySelector('[data-dp-placeholder]');
-      if (placeholder) placeholder.textContent = placeholderText();
+      if (placeholder) {
+        placeholder.textContent = placeholderText();
+        placeholder.hidden = state.tab === 'annotations';
+      }
       var info = body.querySelector('[data-dp-info]');
       if (info) info.hidden = state.tab !== 'inspect';
       var status = body.querySelector('[data-dp-status]');
-      if (status && state.tab !== 'inspect') status.hidden = true;
+      if (status) status.hidden = state.tab !== 'inspect';
+      var annot = body.querySelector('[data-dp-annotations]');
+      if (annot) annot.hidden = state.tab !== 'annotations';
     }
+    if (state.tab === 'annotations') renderAnnotations();
     // Вне вкладки «Инспекция» подсветка бессмысленна.
     if (!isActive()) hideOverlay();
   }
@@ -181,7 +244,14 @@ window.LabDevPanel = (function () {
       if (tabBtn) {
         state.tab = tabBtn.getAttribute('data-dp-tab');
         syncPanel();
+        return;
       }
+      if (target.closest('[data-dp-annot-save]')) { commitAnnotation(); return; }
+      if (target.closest('[data-dp-annot-cancel]')) { cancelAnnotation(); return; }
+      var delBtn = target.closest('[data-dp-annot-delete]');
+      if (delBtn) { deleteAnnotation(delBtn.getAttribute('data-dp-annot-id')); return; }
+      var editBtn = target.closest('[data-dp-annot-edit]');
+      if (editBtn) { editAnnotation(editBtn.getAttribute('data-dp-annot-id')); return; }
     });
     // Escape закрывает панель, но только когда фокус внутри тени.
     shadow.addEventListener('keydown', function (event) {
@@ -194,8 +264,14 @@ window.LabDevPanel = (function () {
 
   // ===== ИНСПЕКЦИЯ =====
 
-  function isActive() {
+  function isInspecting() {
     return !!(host && shadow && state.open && state.tab === 'inspect');
+  }
+  function isAnnotating() {
+    return !!(host && shadow && state.open && state.tab === 'annotations');
+  }
+  function isActive() {
+    return isInspecting() || isAnnotating();
   }
 
   function cssEscape(value) {
@@ -286,6 +362,266 @@ window.LabDevPanel = (function () {
     if (info.text) lines.push('Текст: ' + info.text);
     if (info.dataAttr) lines.push('Атрибут: ' + info.dataAttr);
     return lines.join('\n');
+  }
+
+  // ===== АННОТАЦИИ =====
+
+  var STORE_KEY = 'alephy_dev_annotations';
+  var TYPE_LABELS = { bug: 'Баг', style: 'Стиль', feature: 'Фича', content: 'Контент' };
+
+  function escapeHtml(value) {
+    return String(value == null ? '' : value)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function loadAnnotations() {
+    try {
+      var raw = window.localStorage.getItem(STORE_KEY);
+      var list = raw ? JSON.parse(raw) : [];
+      return Array.isArray(list) ? list : [];
+    } catch (e) { return []; }
+  }
+
+  function saveAnnotations() {
+    try {
+      window.localStorage.setItem(STORE_KEY, JSON.stringify(annotations));
+    } catch (e) { /* приватный режим: аннотации не сохранятся */ }
+  }
+
+  function nextNumber() {
+    var max = 0;
+    for (var i = 0; i < annotations.length; i++) {
+      if ((annotations[i].n || 0) > max) max = annotations[i].n;
+    }
+    return max + 1;
+  }
+
+  function findAnnotation(id) {
+    for (var i = 0; i < annotations.length; i++) {
+      if (annotations[i].id === id) return annotations[i];
+    }
+    return null;
+  }
+
+  function captureSelection() {
+    var sel = window.getSelection ? window.getSelection() : null;
+    if (!sel || sel.isCollapsed) return '';
+    var text = String(sel.toString()).replace(/\s+/g, ' ').trim();
+    if (text.length > 160) text = text.slice(0, 160) + '…';
+    return text;
+  }
+
+  function startAnnotation(el, text) {
+    editingId = null;
+    draft = {
+      selector: buildSelector(el),
+      text: text || '',
+      dataAttr: text ? '' : nearestDataAttr(el)
+    };
+    renderAnnotations();
+    var box = shadow ? shadow.querySelector('[data-dp-annot-title]') : null;
+    if (box) box.focus();
+  }
+
+  function cancelAnnotation() {
+    draft = null;
+    editingId = null;
+    renderAnnotations();
+  }
+
+  function commitAnnotation() {
+    if (!draft || !shadow) return;
+    var typeSel = shadow.querySelector('[data-dp-annot-type]');
+    var titleEl = shadow.querySelector('[data-dp-annot-title]');
+    var noteEl = shadow.querySelector('[data-dp-annot-note]');
+    var type = typeSel ? typeSel.value : 'bug';
+    var note = noteEl ? noteEl.value.trim() : '';
+    var title = titleEl ? titleEl.value.trim() : '';
+    if (editingId) {
+      var existing = findAnnotation(editingId);
+      if (existing) {
+        existing.type = type;
+        existing.note = note;
+        if (title) existing.title = title;
+      }
+      showStatus('Аннотация обновлена');
+    } else {
+      if (!title) title = TYPE_LABELS[type] + ' #' + nextNumber();
+      annotations.push({
+        id: 'ann-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        n: nextNumber(),
+        type: type,
+        selector: draft.selector,
+        title: title,
+        note: note,
+        text: draft.text,
+        dataAttr: draft.dataAttr,
+        ts: new Date().toISOString()
+      });
+      showStatus('Аннотация сохранена');
+    }
+    draft = null;
+    editingId = null;
+    saveAnnotations();
+    renderAnnotations();
+    renderMarkers();
+  }
+
+  function editAnnotation(id) {
+    var a = findAnnotation(id);
+    if (!a) return;
+    editingId = id;
+    draft = { selector: a.selector, text: a.text || '', dataAttr: a.dataAttr || '' };
+    renderAnnotations();
+    var typeSel = shadow.querySelector('[data-dp-annot-type]');
+    var titleEl = shadow.querySelector('[data-dp-annot-title]');
+    var noteEl = shadow.querySelector('[data-dp-annot-note]');
+    if (typeSel) typeSel.value = a.type;
+    if (titleEl) titleEl.value = a.title || '';
+    if (noteEl) noteEl.value = a.note || '';
+  }
+
+  function deleteAnnotation(id) {
+    annotations = annotations.filter(function (a) { return a.id !== id; });
+    if (editingId === id) { draft = null; editingId = null; }
+    saveAnnotations();
+    renderAnnotations();
+    renderMarkers();
+    showStatus('Аннотация удалена');
+  }
+
+  // Рендер вкладки «Аннотации»: форма черновика или список готовых.
+  function renderAnnotations() {
+    if (!shadow) return;
+    var box = shadow.querySelector('[data-dp-annotations]');
+    if (!box) return;
+
+    if (draft) {
+      box.innerHTML =
+        '<form class="dp-annot-form" data-dp-annot-form>' +
+          '<p class="dp-annot-heading">' + (editingId ? 'Правка аннотации' : 'Новая аннотация') + '</p>' +
+          '<span class="dp-annot-selector">' + escapeHtml(draft.selector) + '</span>' +
+          (draft.text ? '<p class="dp-annot-seltext">Выделено: ' + escapeHtml(draft.text) + '</p>' : '') +
+          (draft.dataAttr ? '<p class="dp-annot-seltext">' + escapeHtml(draft.dataAttr) + '</p>' : '') +
+          '<label class="dp-annot-label">Тип' +
+            '<select class="dp-annot-type" data-dp-annot-type>' +
+              '<option value="bug">Баг</option>' +
+              '<option value="style">Стиль</option>' +
+              '<option value="feature">Фича</option>' +
+              '<option value="content">Контент</option>' +
+            '</select>' +
+          '</label>' +
+          '<label class="dp-annot-label">Заголовок' +
+            '<input class="dp-annot-input" type="text" data-dp-annot-title placeholder="Коротко о проблеме">' +
+          '</label>' +
+          '<label class="dp-annot-label">Заметка' +
+            '<textarea class="dp-annot-note" rows="3" data-dp-annot-note placeholder="Что именно происходит"></textarea>' +
+          '</label>' +
+          '<div class="dp-annot-actions">' +
+            '<button type="button" class="dp-btn dp-btn-primary" data-dp-annot-save>Сохранить</button>' +
+            '<button type="button" class="dp-btn" data-dp-annot-cancel>Отмена</button>' +
+          '</div>' +
+        '</form>';
+      // submit формы не должен перезагружать страницу.
+      var form = box.querySelector('[data-dp-annot-form]');
+      if (form) {
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          commitAnnotation();
+        });
+      }
+      return;
+    }
+
+    if (!annotations.length) {
+      box.innerHTML =
+        '<div class="dp-annot-empty">' +
+          '<p class="dp-annot-count">Аннотаций пока нет.</p>' +
+          '<p class="dp-annot-item-seltext">Кликните по элементу или выделите текст на странице, чтобы поставить первую аннотацию.</p>' +
+        '</div>';
+      return;
+    }
+
+    var list = '<p class="dp-annot-count">Аннотаций: ' + annotations.length + '</p>' +
+      '<ul class="dp-annot-list">';
+    for (var i = 0; i < annotations.length; i++) {
+      var a = annotations[i];
+      list +=
+        '<li class="dp-annot-item" data-dp-annot-id="' + a.id + '">' +
+          '<div class="dp-annot-item-head">' +
+            '<span class="dp-annot-badge dp-annot-badge-' + a.type + '">' + a.n + '</span>' +
+            '<span class="dp-annot-item-title">' + escapeHtml(a.title) + '</span>' +
+            '<span class="dp-annot-item-type">' + (TYPE_LABELS[a.type] || a.type) + '</span>' +
+          '</div>' +
+          '<span class="dp-annot-item-sel">' + escapeHtml(a.selector) + '</span>' +
+          (a.text ? '<p class="dp-annot-item-seltext">Выделено: ' + escapeHtml(a.text) + '</p>' : '') +
+          (a.note ? '<p class="dp-annot-item-note">' + escapeHtml(a.note) + '</p>' : '') +
+          '<div class="dp-annot-item-actions">' +
+            '<button type="button" class="dp-btn dp-btn-sm" data-dp-annot-edit data-dp-annot-id="' + a.id + '">Изменить</button>' +
+            '<button type="button" class="dp-btn dp-btn-sm dp-btn-danger" data-dp-annot-delete data-dp-annot-id="' + a.id + '">Удалить</button>' +
+          '</div>' +
+        '</li>';
+    }
+    list += '</ul>';
+    box.innerHTML = list;
+  }
+
+  // Маркеры-номера поверх страницы. Живут в основном документе (оверлей),
+  // позиционируются fixed, поэтому переживают скролл и перерисовку DOM.
+  var MARKER_STYLES = {
+    bug: { bg: '#c0392b', ring: 'rgba(192,57,43,.35)' },
+    style: { bg: '#9a7420', ring: 'rgba(154,116,32,.35)' },
+    feature: { bg: '#2b6cb0', ring: 'rgba(43,108,176,.35)' },
+    content: { bg: '#2e7d4f', ring: 'rgba(46,125,79,.35)' }
+  };
+
+  function clearMarkers() {
+    if (markerLayer && markerLayer.parentNode) {
+      markerLayer.parentNode.removeChild(markerLayer);
+    }
+    markerLayer = null;
+  }
+
+  function renderMarkers() {
+    clearMarkers();
+    if (!annotations.length) return;
+    markerLayer = document.createElement('div');
+    markerLayer.id = 'lab-dev-annot-markers';
+    markerLayer.style.cssText =
+      'position:fixed;top:0;left:0;width:0;height:0;' +
+      'z-index:9988;pointer-events:none;';
+    document.body.appendChild(markerLayer);
+
+    for (var i = 0; i < annotations.length; i++) {
+      var a = annotations[i];
+      var el = null;
+      try { el = document.querySelector(a.selector); } catch (e) { el = null; }
+      if (!el) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight ||
+          rect.right < 0 || rect.left > window.innerWidth) continue;
+      var palette = MARKER_STYLES[a.type] || MARKER_STYLES.feature;
+      var marker = document.createElement('div');
+      marker.textContent = String(a.n);
+      marker.style.cssText =
+        'position:fixed;box-sizing:border-box;' +
+        'left:' + Math.max(0, rect.left) + 'px;' +
+        'top:' + Math.max(0, rect.top) + 'px;' +
+        'width:' + rect.width + 'px;height:' + rect.height + 'px;' +
+        'border:2px solid ' + palette.bg + ';border-radius:4px;' +
+        'background:' + palette.ring + ';';
+      var badge = document.createElement('span');
+      badge.textContent = String(a.n);
+      badge.style.cssText =
+        'position:absolute;top:-10px;left:-10px;' +
+        'min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;' +
+        'display:flex;align-items:center;justify-content:center;' +
+        'border-radius:10px;background:' + palette.bg + ';color:#fff;' +
+        'font:700 12px/20px system-ui,sans-serif;';
+      marker.appendChild(badge);
+      markerLayer.appendChild(marker);
+    }
   }
 
   function infoRows(info) {
@@ -403,7 +739,7 @@ window.LabDevPanel = (function () {
       if (!el || el === overlay) return;
       inspectTarget = el;
       moveOverlay(el);
-      renderInfo(describe(el));
+      if (isInspecting()) renderInfo(describe(el));
     }, true);
 
     // Скрытие подсветки, когда курсор уходит из документа.
@@ -415,6 +751,7 @@ window.LabDevPanel = (function () {
     // Прокрутка сдвигает элементы: подсветку гасим, мышка вернёт её.
     document.addEventListener('scroll', function () {
       if (isActive() && overlay) overlay.style.display = 'none';
+      if (isEnabled()) renderMarkers();
     }, { capture: true, passive: true });
 
     document.addEventListener('click', function (event) {
@@ -424,6 +761,13 @@ window.LabDevPanel = (function () {
       if (!el || el === overlay) return;
       event.preventDefault();
       event.stopPropagation();
+      if (isAnnotating()) {
+        var text = captureSelection();
+        startAnnotation(el, text);
+        var sel = window.getSelection ? window.getSelection() : null;
+        if (sel && sel.removeAllRanges) sel.removeAllRanges();
+        return;
+      }
       var info = describe(el);
       inspectTarget = el;
       renderInfo(info);
@@ -449,6 +793,7 @@ window.LabDevPanel = (function () {
     hideOverlay();
     if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay);
     overlay = null;
+    clearMarkers();
     if (host && host.parentNode) host.parentNode.removeChild(host);
     host = null;
     shadow = null;
@@ -459,6 +804,7 @@ window.LabDevPanel = (function () {
     if (isEnabled()) {
       ensureHost();
       syncPanel();
+      renderMarkers();
     } else {
       removeHost();
     }
@@ -473,12 +819,18 @@ window.LabDevPanel = (function () {
         if (event.detail.enabled) {
           ensureHost();
           syncPanel();
+          renderMarkers();
         } else {
           removeHost();
         }
         return;
       }
       sync();
+    });
+    // Роутинг через хеш перерисовывает DOM. Маркеры привязаны к селекторам,
+    // поэтому после смены маршрута их нужно пересчитать на новых элементах.
+    window.addEventListener('hashchange', function () {
+      if (isEnabled()) setTimeout(renderMarkers, 120);
     });
   }
 
