@@ -139,6 +139,13 @@ window.LabDevPanel = (function () {
     '  font-size: 11px; word-break: break-all; color: var(--text-secondary, #5c5142); }',
     '.dp-annot-item-note { font-size: 12px; color: var(--text-primary, #221a10); }',
     '.dp-annot-count { margin: 2px 0 0; }',
+    '.dp-export { display: grid; gap: 12px; }',
+    '.dp-export[hidden] { display: none; }',
+    '.dp-export-preview { margin: 0; padding: 10px; white-space: pre-wrap; word-break: break-word;',
+    '  font-family: var(--font-mono, "JetBrains Mono", monospace); font-size: 12px;',
+    '  color: var(--text-primary, #221a10); background: var(--bg-primary, #fff);',
+    '  border: 1px solid var(--border-light, #e6dfd0); border-radius: 8px;',
+    '  max-height: 220px; overflow: auto; }',
     '@media (max-width: 640px) {',
     '  .dp-root { right: 12px; bottom: 12px; }',
     '  .dp-panel { width: calc(100vw - 24px); max-height: calc(100vh - 96px); }',
@@ -166,6 +173,9 @@ window.LabDevPanel = (function () {
     if (state.tab === 'annotations') {
       return 'Кликните по элементу или выделите текст на странице, чтобы поставить аннотацию.';
     }
+    if (state.tab === 'export') {
+      return 'Соберите аннотации в Markdown и скопируйте результат в буфер.';
+    }
     return 'Вкладка «' + tabLabel(state.tab) + '» заполняется на следующем этапе работы над панелью.';
   }
 
@@ -185,6 +195,7 @@ window.LabDevPanel = (function () {
       '<div class="dp-inspect" data-dp-info hidden></div>' +
       '<p class="dp-copy-status" data-dp-status hidden>Скопировано в буфер</p>' +
       '<div class="dp-annotations" data-dp-annotations hidden></div>' +
+      '<div class="dp-export" data-dp-export hidden></div>' +
       '</div></section>';
   }
 
@@ -212,16 +223,19 @@ window.LabDevPanel = (function () {
       var placeholder = body.querySelector('[data-dp-placeholder]');
       if (placeholder) {
         placeholder.textContent = placeholderText();
-        placeholder.hidden = state.tab === 'annotations';
+        placeholder.hidden = state.tab === 'annotations' || state.tab === 'export';
       }
       var info = body.querySelector('[data-dp-info]');
       if (info) info.hidden = state.tab !== 'inspect';
       var status = body.querySelector('[data-dp-status]');
-      if (status) status.hidden = state.tab !== 'inspect';
+      if (status && state.tab !== 'inspect' && state.tab !== 'export') status.hidden = true;
       var annot = body.querySelector('[data-dp-annotations]');
       if (annot) annot.hidden = state.tab !== 'annotations';
+      var exportBox = body.querySelector('[data-dp-export]');
+      if (exportBox) exportBox.hidden = state.tab !== 'export';
     }
     if (state.tab === 'annotations') renderAnnotations();
+    if (state.tab === 'export') renderExport();
     // Вне вкладки «Инспекция» подсветка бессмысленна.
     if (!isActive()) hideOverlay();
   }
@@ -252,6 +266,8 @@ window.LabDevPanel = (function () {
       if (delBtn) { deleteAnnotation(delBtn.getAttribute('data-dp-annot-id')); return; }
       var editBtn = target.closest('[data-dp-annot-edit]');
       if (editBtn) { editAnnotation(editBtn.getAttribute('data-dp-annot-id')); return; }
+      if (target.closest('[data-dp-export-copy]')) { copyExport(); return; }
+      if (target.closest('[data-dp-export-clear]')) { clearAllAnnotations(); return; }
     });
     // Escape закрывает панель, но только когда фокус внутри тени.
     shadow.addEventListener('keydown', function (event) {
@@ -489,6 +505,64 @@ window.LabDevPanel = (function () {
     renderAnnotations();
     renderMarkers();
     showStatus('Аннотация удалена');
+  }
+
+  function formatExportMarkdown() {
+    if (!annotations.length) return '';
+    return annotations.map(function (a) {
+      var type = a.type || 'bug';
+      var title = a.title || (TYPE_LABELS[type] + ' #' + a.n);
+      var lines = ['## [' + type + '] ' + title, 'Селектор: ' + (a.selector || '')];
+      if (a.text) lines.push('Выделено: ' + a.text);
+      if (a.dataAttr) lines.push('Атрибут: ' + a.dataAttr);
+      if (a.note) lines.push('Заметка: ' + a.note);
+      return lines.join('\n');
+    }).join('\n\n');
+  }
+
+  function renderExport() {
+    if (!shadow) return;
+    var box = shadow.querySelector('[data-dp-export]');
+    if (!box) return;
+    if (!annotations.length) {
+      box.innerHTML =
+        '<p class="dp-annot-count">Аннотаций нет, копировать нечего.</p>' +
+        '<p class="dp-annot-item-seltext">Поставьте хотя бы одну аннотацию во вкладке «Аннотации».</p>';
+      return;
+    }
+    box.innerHTML =
+      '<p class="dp-annot-count">Аннотаций: ' + annotations.length + '</p>' +
+      '<pre class="dp-export-preview" data-dp-export-preview></pre>' +
+      '<div class="dp-annot-actions">' +
+        '<button type="button" class="dp-btn dp-btn-primary" data-dp-export-copy>Скопировать Markdown</button>' +
+        '<button type="button" class="dp-btn dp-btn-danger" data-dp-export-clear>Очистить все</button>' +
+      '</div>';
+    var preview = box.querySelector('[data-dp-export-preview]');
+    if (preview) preview.textContent = formatExportMarkdown();
+  }
+
+  function copyExport() {
+    var markdown = formatExportMarkdown();
+    if (!markdown) {
+      showStatus('Аннотаций нет');
+      return;
+    }
+    copyText(markdown, 'Markdown скопирован');
+  }
+
+  function clearAllAnnotations() {
+    if (!annotations.length) {
+      showStatus('Аннотаций нет');
+      return;
+    }
+    annotations = [];
+    draft = null;
+    editingId = null;
+    saveAnnotations();
+    renderMarkers();
+    renderExport();
+    renderAnnotations();
+    showStatus('Все аннотации удалены');
   }
 
   // Рендер вкладки «Аннотации»: форма черновика или список готовых.
