@@ -539,3 +539,4 @@ const UserPreferences = (function() {
 })();
 
 window.UserPreferences = UserPreferences;
+UserPreferences.init();

@@ -98,10 +98,17 @@ window.LabDocumentation = (function () {
     }).join('');
   }
 
+  function isDeveloperModeOn() {
+    if (window.UserPreferences && UserPreferences.load) {
+      return UserPreferences.load().developerMode === true;
+    }
+    return document.documentElement.getAttribute('data-developer-mode') === 'on';
+  }
+
   function renderDeveloperStatus(container) {
     var status = container.querySelector('[data-doc-dev-status]');
     if (!status) return;
-    var enabled = document.documentElement.getAttribute('data-developer-mode') === 'on';
+    var enabled = isDeveloperModeOn();
     status.dataset.state = enabled ? 'on' : 'off';
     status.textContent = enabled
       ? 'Режим разработчика включён · панель доступна в правом нижнем углу'

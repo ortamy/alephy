@@ -84,7 +84,7 @@
   font-size: var(--ui-12);
 }
 
-.doc-dev-status {
+.lab-content .module .doc-dev-status {
   display: flex;
   align-items: center;
   gap: var(--space-1);
@@ -104,8 +104,8 @@
   content: '';
 }
 
-.doc-dev-status[data-state="on"] { color: var(--accent-green); }
-.doc-dev-status[data-state="on"]::before { background: var(--accent-green); }
+.doc-dev-status[data-state="on"] { color: var(--status-ok); }
+.doc-dev-status[data-state="on"]::before { background: var(--status-ok); }
 
 .doc-nav {
   list-style: none;

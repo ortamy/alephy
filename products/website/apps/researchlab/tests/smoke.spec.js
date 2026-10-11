@@ -712,6 +712,33 @@ test.describe('documentation module', () => {
     expect(errors, 'uncaught errors on #documentation').toEqual([]);
   });
 
+  test('живой статус режима разработчика следует за localStorage', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('alephy_user_preferences', JSON.stringify({
+        developerMode: true,
+        showBreadcrumbs: true
+      }));
+    });
+    await page.goto('/#documentation', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#labContent .doc-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+    await expect(page.locator('#labContent [data-doc-dev-status]')).toHaveAttribute('data-state', 'on');
+    await expect(page.locator('#labContent [data-doc-dev-status]')).toContainText('включён');
+
+    const report = await page.evaluate(() => {
+      const html = document.documentElement;
+      const content = document.getElementById('labContent');
+      const host = document.getElementById('lab-dev-panel-host');
+      return {
+        attr: html.getAttribute('data-developer-mode'),
+        paddingBottom: content ? parseFloat(getComputedStyle(content).paddingBottom) : 0,
+        hasHost: Boolean(host)
+      };
+    });
+    expect(report.attr, 'флаг на <html>').toBe('on');
+    expect(report.hasHost, 'FAB панели разработчика').toBe(true);
+    expect(report.paddingBottom, 'отступ под фиксированную FAB').toBeGreaterThanOrEqual(80);
+  });
+
   test('deep-link #documentation/agents открывает гайд агентов', async ({ page }) => {
     await page.goto('/#documentation/agents', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#labContent .doc-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
