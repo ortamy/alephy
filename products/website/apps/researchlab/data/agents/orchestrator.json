@@ -151,24 +151,24 @@
   "canon": null,
   "module": {
     "path": "products/agents/orchestrator.py",
-    "lines": 100,
-    "bytes": 4658,
+    "lines": 90,
+    "bytes": 4993,
     "entrypoint": "orchestrator.dispatch(query)",
     "registration": "server.py → orchestrator.dispatch",
     "functions": [
       {
         "name": "select_pipeline",
-        "line": 75,
+        "line": 65,
         "doc": ""
       },
       {
         "name": "dispatch",
-        "line": 85,
+        "line": 75,
         "doc": "Запускает выбранный пайплайн и возвращает JSON-совместимый словарь."
       },
       {
         "name": "run_pipeline",
-        "line": 92,
+        "line": 82,
         "doc": "Запускает цепочку по её явному идентификатору."
       }
     ],

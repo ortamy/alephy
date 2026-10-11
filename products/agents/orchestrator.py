@@ -22,54 +22,44 @@ from pipelines.ui_canon import run as run_ui_canon
 from pipelines.registry_audit import run as run_registry_audit
 
 
-ROUTES = {
-    "разбери слово": run_word_analyzer,
-    "сравни стих": run_verse_comparator,
-    "собери исследование": run_research_builder,
-    "обратный перевод": run_paleo_translation,
-    "переведи обратно": run_paleo_translation,
-    "проверь отчёт": run_research_audit,
-    "аудит исследования": run_research_audit,
-    "сканер подмен": run_mechanism_scanner,
-    "сканируй подмены": run_mechanism_scanner,
-    "реконструируй стих": run_verse_reconstruction,
-    "самокритика": run_critique_loop,
-    "карантин пропусков": run_gap_cycle,
-    "хук свива": run_spiral_swiva,
-    "спираль": run_spiral_swiva,
-    "диалектика": run_dialectic_loop,
-    "мидраш": run_midrash_recursion,
-    "шмита": run_shmita_loop,
-    "проверь архитектуру": run_arch_keeper,
-    "следи за архитектурой": run_arch_keeper,
-    "совет свидетелей": run_witness_council,
-    "три свидетеля": run_witness_council,
-    "канон интерфейса": run_ui_canon,
-    "аудит bento": run_ui_canon,
-    "проверь чёрки": run_ui_canon,
-    "аудит реестров": run_registry_audit,
-    "проверь реестры": run_registry_audit,
-}
+# Единый реестр: (идентификатор, раннер, фразы голосовой команды).
+# Обе публичные карты строятся из него, а не ведутся отдельно: раньше
+# ROUTES и PIPELINES дублировали одни и те же функции, и добавление
+# пайплайна требовало правки в двух местах. Порядок строк реестра
+# задаёт порядок ROUTES — а это порядок первого совпадения в
+# select_pipeline, поэтому он сохранён точно по старой карте.
+REGISTRY = (
+    ("word_analyzer", run_word_analyzer, ("разбери слово",)),
+    ("verse_comparator", run_verse_comparator, ("сравни стих",)),
+    ("research_builder", run_research_builder, ("собери исследование",)),
+    ("paleo_translation", run_paleo_translation,
+     ("обратный перевод", "переведи обратно")),
+    ("research_audit", run_research_audit,
+     ("проверь отчёт", "аудит исследования")),
+    ("mechanism_scanner", run_mechanism_scanner,
+     ("сканер подмен", "сканируй подмены")),
+    ("verse_reconstruction", run_verse_reconstruction, ("реконструируй стих",)),
+    ("critique_loop", run_critique_loop, ("самокритика",)),
+    ("gap_cycle", run_gap_cycle, ("карантин пропусков",)),
+    ("spiral_swiva", run_spiral_swiva, ("хук свива", "спираль")),
+    ("dialectic_loop", run_dialectic_loop, ("диалектика",)),
+    ("midrash_recursion", run_midrash_recursion, ("мидраш",)),
+    ("shmita_loop", run_shmita_loop, ("шмита",)),
+    ("arch_keeper", run_arch_keeper,
+     ("проверь архитектуру", "следи за архитектурой")),
+    ("witness_council", run_witness_council,
+     ("совет свидетелей", "три свидетеля")),
+    ("ui_canon", run_ui_canon,
+     ("канон интерфейса", "аудит bento", "проверь чёрки")),
+    ("registry_audit", run_registry_audit,
+     ("аудит реестров", "проверь реестры")),
+)
 
-PIPELINES = {
-    "word_analyzer": run_word_analyzer,
-    "verse_comparator": run_verse_comparator,
-    "research_builder": run_research_builder,
-    "paleo_translation": run_paleo_translation,
-    "research_audit": run_research_audit,
-    "mechanism_scanner": run_mechanism_scanner,
-    "verse_reconstruction": run_verse_reconstruction,
-    "critique_loop": run_critique_loop,
-    "gap_cycle": run_gap_cycle,
-    "spiral_swiva": run_spiral_swiva,
-    "dialectic_loop": run_dialectic_loop,
-    "midrash_recursion": run_midrash_recursion,
-    "shmita_loop": run_shmita_loop,
-    "arch_keeper": run_arch_keeper,
-    "witness_council": run_witness_council,
-    "ui_canon": run_ui_canon,
-    "registry_audit": run_registry_audit,
-}
+PIPELINES = {pipeline_id: runner for pipeline_id, runner, _ in REGISTRY}
+
+ROUTES = {phrase: runner
+          for _, runner, phrases in REGISTRY
+          for phrase in phrases}
 
 
 def select_pipeline(query: str):

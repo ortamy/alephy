@@ -238,18 +238,33 @@ def orchestrator_source() -> str:
 
 
 def orchestrator_routes() -> list:
-    """Пары «фраза → пайплайн» из ROUTES: паспорт показывает, куда ведут команды."""
+    """Пары «фраза → пайплайн» из REGISTRY: паспорт показывает, куда ведут команды.
+
+    ROUTES и PIPELINES из этого реестра собираются (comprehension), поэтому
+    разбирать их литералом бесполезно — читается сам REGISTRY, единственный
+    источник обеих карт. Порядок строк сохраняется: он задаёт порядок ROUTES,
+    а значит и порядок первого совпадения в select_pipeline.
+    """
     tree = ast.parse(orchestrator_source())
     for node in tree.body:
-        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Dict):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Tuple):
             continue
-        if not any(isinstance(t, ast.Name) and t.id == "ROUTES" for t in node.targets):
+        if not any(isinstance(t, ast.Name) and t.id == "REGISTRY" for t in node.targets):
             continue
-        return [
-            (key.value, value.id[len("run_"):] if isinstance(value, ast.Name) else "pipeline")
-            for key, value in zip(node.value.keys, node.value.values)
-            if isinstance(key, ast.Constant) and isinstance(key.value, str)
-        ]
+        routes = []
+        for row in node.value.elts:
+            if not (isinstance(row, ast.Tuple) and len(row.elts) == 3):
+                continue
+            _, runner, phrases = row.elts
+            if not isinstance(runner, ast.Name):
+                continue
+            pipeline = runner.id[len("run_"):]
+            routes += [
+                (phrase.value, pipeline)
+                for phrase in phrases.elts
+                if isinstance(phrase, ast.Constant) and isinstance(phrase.value, str)
+            ]
+        return routes
     return []
 
 

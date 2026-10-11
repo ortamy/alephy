@@ -74,31 +74,17 @@ WRITABLE_PIPELINES = {"arch_keeper"}
 # Витки циклической карточки из UI, если она не назвала своё число сама.
 DEFAULT_MAX_ITERATIONS = 5
 
-# Русское имя агента (как в UI) → модуль в agents/. Тот же белый список, что и
-# AGENT_FUNCTIONS: эндпоинт исходников не должен читать произвольный путь.
+# Русское имя агента (как в UI) → модуль в agents/. Карта выводится из
+# AGENT_FUNCTIONS, а не ведётся отдельно: два списка одних и тех же имён
+# разъезжаются при добавлении агента. Эндпоинт исходников по-прежнему
+# читает только зарегистрированные модули — произвольный путь из запроса
+# не собирается. Оркестратор — control-plane, его функции нет в
+# AGENT_FUNCTIONS, поэтому его путь задан явно.
 AGENT_SOURCES = {
-    "Исследователь": "agents/researcher.py",
-    "Семитолог": "agents/semitologist.py",
-    "Разоблачитель": "agents/exposer.py",
-    "Редактор": "agents/editor.py",
-    "Сборщик": "agents/collector.py",
-    "Компаратор": "agents/comparator.py",
-    "Критик": "agents/critic.py",
-    "Проверяющий": "agents/verifier.py",
-    "Переводчик палео-иврита": "agents/paleo_translator.py",
-    "Архитектор потока": "agents/flow_architect.py",
-    "Связной": "agents/liaison.py",
-    "Технический писатель": "agents/writer.py",
-    "Ревьюер кода": "agents/code_reviewer.py",
-    "AI-инженер": "agents/ai_engineer.py",
-    "Фронтенд-разработчик": "agents/frontend.py",
-    "Архитектурный сканер": "agents/arch_scanner.py",
-    "Архитектурный критик": "agents/arch_critic.py",
-    "Архитектурный планировщик": "agents/arch_planner.py",
-    "Архитектурный писатель": "agents/arch_writer.py",
-    "Архитектурный сход": "agents/arch_convergence.py",
-    "Оркестратор": "orchestrator.py",
+    name: runner.__module__.replace(".", "/") + ".py"
+    for name, runner in AGENT_FUNCTIONS.items()
 }
+AGENT_SOURCES["Оркестратор"] = "orchestrator.py"
 
 
 def run_card_pipeline(pipeline, data, steps):
