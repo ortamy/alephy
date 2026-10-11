@@ -1,8 +1,9 @@
 /**
  * ed-chat.js — модуль «Нейрочат» (#ed-chat).
  *
- * Дизайн-язык «Палео-конструктора»: uppercase-заголовки с волосяной линией
- * и счётчиком-бейджем, компактные чипы, пунктирный empty-state, icon-кнопки.
+ * Дизайн-язык «Палео-конструктора»: uppercase-заголовки со счётчиком-бейджем
+ * (чёрточка базового `.module h2:not(:last-child)` сброшена в CSS), компактные
+ * чипы, пунктирный empty-state, icon-кнопки.
  * Модель выбирается кастомным списком: на mobile он раскрывается как
  * glass-modal ровно по ширине контейнера шапки (.lab-hero).
  */
@@ -12,8 +13,9 @@ const EdChat = (function() {
   const STORAGE_KEY = 'alephy_ed_chat';
   const HISTORY_KEY = 'alephy_ed_chat_history';
   const SETTINGS_KEY = 'alephy_ed_chat_settings';
+  const DOCS_KEY = 'alephy_ed_chat_docs';
   const TOKEN_LIMIT = 4096;
-  const CONTEXT_DOCUMENTS = ['MANIFEST.md', 'docs/06-METHODOLOGY/', 'docs/01-ARCHITECTURE/ARCHITECTURE.md'];
+  const DEFAULT_DOCUMENTS = ['MANIFEST.md', 'docs/06-METHODOLOGY/', 'docs/01-ARCHITECTURE/ARCHITECTURE.md'];
   /* Тот же порог, что в css/components/neurochat.css (одна колонка). */
   const NARROW_QUERY = '(max-width: 900px)';
   const MODELS = {
@@ -26,6 +28,7 @@ const EdChat = (function() {
 
   let messages = [];
   let settings = { model: 'claude', prompt: DEFAULT_PROMPT };
+  let contextDocuments = [];
   let globalsBound = false;
   let activeOptionIndex = 0;
 
@@ -289,15 +292,40 @@ const EdChat = (function() {
     }
   }
 
+  /* ===== КОНТЕКСТ: документы — добавление и удаление, localStorage ===== */
+
+  function addDocument() {
+    const name = window.prompt('Имя или путь документа для контекста:');
+    if (!name) return;
+    const value = name.trim();
+    if (!value || contextDocuments.indexOf(value) !== -1) return;
+    contextDocuments.push(value);
+    write(DOCS_KEY, contextDocuments);
+    renderContext();
+  }
+
+  function removeDocument(index) {
+    if (!contextDocuments[index]) return;
+    contextDocuments.splice(index, 1);
+    write(DOCS_KEY, contextDocuments);
+    renderContext();
+  }
+
   function renderContext() {
     const documents = byId('ec-context-documents');
     const prompt = byId('ec-prompt');
     const label = byId('ec-model-label');
     const docCounter = byId('ec-doc-count');
-    if (docCounter) docCounter.textContent = String(CONTEXT_DOCUMENTS.length);
+    if (docCounter) docCounter.textContent = String(contextDocuments.length);
     if (documents) {
       documents.textContent = '';
-      CONTEXT_DOCUMENTS.forEach(function(documentName) {
+      if (!contextDocuments.length) {
+        const note = document.createElement('li');
+        note.className = 'ec-empty-note';
+        note.textContent = 'Документов нет — добавьте кнопкой «+».';
+        documents.appendChild(note);
+      }
+      contextDocuments.forEach(function(documentName, index) {
         const item = document.createElement('li');
         item.className = 'ec-chip';
 
@@ -310,8 +338,21 @@ const EdChat = (function() {
         text.className = 'ec-chip-label';
         text.textContent = documentName;
 
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ec-chip-remove';
+        remove.dataset.index = String(index);
+        remove.title = 'Убрать документ из контекста';
+        remove.setAttribute('aria-label', 'Убрать документ из контекста: ' + documentName);
+        const cross = document.createElement('i');
+        cross.setAttribute('data-lucide', 'x');
+        cross.setAttribute('aria-hidden', 'true');
+        remove.appendChild(cross);
+        remove.addEventListener('click', function() { removeDocument(index); });
+
         item.appendChild(glyph);
         item.appendChild(text);
+        item.appendChild(remove);
         documents.appendChild(item);
       });
       syncIcons();
@@ -471,6 +512,10 @@ const EdChat = (function() {
     messages = read(STORAGE_KEY, []);
     settings = Object.assign(settings, read(SETTINGS_KEY, {}));
     if (!MODELS[settings.model]) settings.model = 'claude';
+    const storedDocuments = read(DOCS_KEY, DEFAULT_DOCUMENTS.slice());
+    contextDocuments = Array.isArray(storedDocuments)
+      ? storedDocuments.filter(function(name) { return typeof name === 'string' && name.trim(); })
+      : DEFAULT_DOCUMENTS.slice();
 
     const prompt = byId('ec-prompt');
     if (prompt) {
@@ -483,6 +528,12 @@ const EdChat = (function() {
           renderContext();
         });
       }
+    }
+
+    const docAdd = byId('ec-doc-add');
+    if (docAdd && !docAdd.dataset.ecBound) {
+      docAdd.dataset.ecBound = '1';
+      docAdd.addEventListener('click', addDocument);
     }
 
     const trigger = byId('ec-model');

@@ -64,6 +64,12 @@
   line-height: 1.6;
   text-align: left;
   text-transform: uppercase;
+  /* §4.1a: базовый `.module h2:not(:last-child)` из layout.css (0,2,1) даёт
+     border-bottom + padding-bottom, из-за чего под капителью печатается
+     короткая чёрка, обрезанная по ширине текста. Селектор с #ed-chat сильнее,
+     поэтому линию гасим явно. */
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 
 #ed-chat .ec-count {
@@ -258,7 +264,7 @@
   white-space: pre-wrap;
 }
 
-/* ===== КОМПОЗЕР: строка ввода + primary «Отправить» в одну линию ===== */
+/* ===== КОМПОЗЕР: строка ввода + primary «Отправить» + ряд иконок справа ===== */
 #ed-chat .ec-composer {
   display: flex;
   flex-direction: column;
@@ -269,6 +275,8 @@
 #ed-chat .ec-composer-row {
   display: flex;
   align-items: stretch;
+  /* На узком экране ряд иконок переносится под строку ввода, а не давит её. */
+  flex-wrap: wrap;
   gap: var(--space-2);
   min-width: 0;
 }
@@ -291,12 +299,19 @@
   white-space: nowrap;
 }
 
-/* Вторичные действия: icon-кнопки 36px в один ряд (mobile — максимум 2 ряда). */
+/* Вторичные действия: icon-кнопки 36px в один ряд справа от «Отправить». */
 #ed-chat .ec-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  /* Когда ряд переносится на отдельную строку (узкий экран), иконки встают
+     под кнопкой отправки, а не у левого края поля. */
+  justify-content: flex-end;
   gap: var(--space-2);
   max-width: 100%;
+  /* На широком экране свободное место забирает textarea, поэтому прижатие к
+     правому краю срабатывает только при переносе на отдельную строку. */
+  margin-left: auto;
 }
 
 #ed-chat .ec-icon-btn {
@@ -374,6 +389,32 @@
   text-transform: uppercase;
 }
 
+/* Добавление документа: маленькая icon-кнопка в строке подзаголовка. */
+#ed-chat .ec-subhead-add {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#ed-chat .ec-subhead-add:hover,
+#ed-chat .ec-subhead-add:focus-visible {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  outline: none;
+}
+
+#ed-chat .ec-subhead-add svg.lucide { width: 12px; height: 12px; }
+
 /* Компактные чипы вместо карточек: документы активного контекста. */
 #ed-chat .ec-chips {
   display: flex;
@@ -411,6 +452,31 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Удаление документа из активного контекста. */
+#ed-chat .ec-chip-remove {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  margin-right: -2px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+#ed-chat .ec-chip-remove:hover,
+#ed-chat .ec-chip-remove:focus-visible {
+  color: var(--accent-red);
+  outline: none;
+}
+
+#ed-chat .ec-chip-remove svg.lucide { width: 12px; height: 12px; }
 
 #ed-chat .ec-prompt {
   min-width: 0;
@@ -541,8 +607,9 @@
   #ed-chat .ec-model-trigger { min-height: 36px; }
   #ed-chat .ec-model-list { max-height: 50vh; }
 
-  /* Ряд icon-кнопок: ровно максимум 2 ряда, без выхода за контейнер. */
-  #ed-chat .ec-actions { max-width: calc(2 * 36px + var(--space-2)); }
+  /* Ряд иконок переносится на отдельную строку под строкой ввода: четыре
+     кнопки по 36px (168px) иначе сжимают поле ввода до нечитаемой ширины. */
+  #ed-chat .ec-actions { flex-basis: 100%; }
 }
 
 /* ===== REDUCED-MOTION ===== */
