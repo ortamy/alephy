@@ -39,6 +39,18 @@
   width: 26px;
 }
 
+/* Фиксированная FAB панели разработчика не должна перекрывать последний
+   интерактивный блок страницы. В embed-режиме панель скрыта отдельным каркасом. */
+html[data-developer-mode="on"] body:not(.is-embed) .lab-content {
+  padding-bottom: calc(var(--space-8) + 88px);
+}
+
+@media (max-width: 640px) {
+  html[data-developer-mode="on"] body:not(.is-embed) .lab-content {
+    padding-bottom: calc(var(--space-4) + 76px);
+  }
+}
+
 .lab-hero__kicker {
   position: relative;
   z-index: 1;
