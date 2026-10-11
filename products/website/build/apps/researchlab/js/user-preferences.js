@@ -135,7 +135,8 @@ const UserPreferences = (function() {
       motion: 'full',
       fontFamily: 'eb-garamond',
       startPage: 'dashboard',
-      showBreadcrumbs: true
+      showBreadcrumbs: true,
+      developerMode: false
     };
   }
 
@@ -148,6 +149,7 @@ const UserPreferences = (function() {
         Object.keys(base).forEach(function(k) {
           if (parsed[k] === undefined) parsed[k] = base[k];
         });
+        parsed.developerMode = parsed.developerMode === true;
         return parsed;
       }
     } catch (e) {}
@@ -204,6 +206,12 @@ const UserPreferences = (function() {
     } else {
       HTML.removeAttribute('data-breadcrumbs');
     }
+
+    if (prefs.developerMode === true) {
+      HTML.setAttribute('data-developer-mode', 'on');
+    } else {
+      HTML.removeAttribute('data-developer-mode');
+    }
   }
 
   function render(container, role) {
@@ -227,7 +235,7 @@ const UserPreferences = (function() {
     var cells = [
       tabAppearance(prefs, n),
       tabMotion(prefs, n),
-      isResearcher ? tabNavigation(prefs, n) : '',
+      tabDevelopment(prefs, n),
       isResearcher ? tabLearning(prefs, n) : '',
       tabData(prefs, n),
       summaryCell(prefs, n, role)
@@ -264,24 +272,34 @@ const UserPreferences = (function() {
           segmentedOption('motion', 'full', PRESETS.motion.full.label, prefs.motion) +
           segmentedOption('motion', 'reduced', PRESETS.motion.reduced.label, prefs.motion) +
         '</div></div>', 'motion') +
-      cell(n(), 'Навигация', 'Старт и крошки', startPageSelect(prefs) +
+      cell(n(), 'Навигация', 'Старт и крошки', '<div class="up-split">' +
+        startPageSelect(prefs) +
         '<div class="up-field"><span class="up-label" id="up-crumb-label">Хлебные крошки</span>' +
         '<label class="up-toggle"><input type="checkbox" id="up-show-breadcrumbs" aria-labelledby="up-crumb-label"' + (prefs.showBreadcrumbs ? ' checked' : '') + '>' +
-        '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты') + '</span></label></div>', 'start');
+        '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.showBreadcrumbs ? 'Показаны' : 'Скрыты') + '</span></label></div></div>', 'start');
+  }
+
+  function tabDevelopment(prefs, n) {
+    return cell(n(), 'Разработка', 'Инструменты',
+      '<div class="up-field"><span class="up-label" id="up-developer-mode-label">Режим разработчика</span>' +
+      '<p class="up-field-hint">Включает панель инспекции и аннотаций.</p>' +
+      '<label class="up-toggle"><input type="checkbox" id="up-developer-mode" aria-labelledby="up-developer-mode-label"' + (prefs.developerMode ? ' checked' : '') + '>' +
+      '<span class="up-toggle-slider" aria-hidden="true"></span><span class="up-toggle-label">' + (prefs.developerMode ? 'Включён' : 'Выключен') + '</span></label></div>', 'development');
   }
 
   function tabLearning(prefs, n) {
-    return cell(n(), 'Обучение', 'Интервальное повторение', '<div class="up-field"><label class="up-label" for="up-daily-new">Новые карточки в день: <span class="up-range-val" id="up-daily-new-val">10</span></label>' +
+    return cell(n(), 'Обучение', 'Интервальное повторение', '<div class="up-split">' +
+      '<div class="up-field"><label class="up-label" for="up-daily-new">Новые карточки в день: <span class="up-range-val" id="up-daily-new-val">10</span></label>' +
         '<input type="range" id="up-daily-new" min="1" max="30" value="10" class="up-range"></div>' +
       '<div class="up-field"><label class="up-label" for="up-daily-review">Повторений в день: <span class="up-range-val" id="up-daily-review-val">30</span></label>' +
-        '<input type="range" id="up-daily-review" min="5" max="100" value="30" class="up-range"></div>', 'learn');
+        '<input type="range" id="up-daily-review" min="5" max="100" value="30" class="up-range"></div></div>', 'learn');
   }
 
   function tabData(prefs, n) {
     return cell(n(), 'Данные', 'Резервная копия', '<div class="up-actions">' +
-        '<button type="button" class="lab-btn lab-btn-secondary" id="up-export"><i data-lucide="download" aria-hidden="true"></i> Экспорт настроек</button>' +
-        '<button type="button" class="lab-btn lab-btn-secondary" id="up-import"><i data-lucide="upload" aria-hidden="true"></i> Импорт настроек</button>' +
-        '<button type="button" class="lab-btn lab-btn-danger" id="up-reset"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Сбросить настройки</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="up-export"><i data-lucide="download" aria-hidden="true"></i> Экспорт настроек</button>' +
+        '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm" id="up-import"><i data-lucide="upload" aria-hidden="true"></i> Импорт настроек</button>' +
+        '<button type="button" class="lab-btn lab-btn-danger lab-btn-sm" id="up-reset"><i data-lucide="rotate-ccw" aria-hidden="true"></i> Сбросить настройки</button>' +
       '</div>' +
       '<input type="file" id="up-import-file" accept=".json,application/json" class="up-file">' +
       '<p class="up-caveat"><i data-lucide="info" aria-hidden="true"></i><span>Настройки хранятся только в этом браузере (<code>localStorage</code>). Экспортируйте их, если работаете на чужом устройстве.</span></p>' +
@@ -414,6 +432,17 @@ const UserPreferences = (function() {
         commit('showBreadcrumbs', breadToggle.checked);
         // Крошки уже нарисованы для текущего маршрута — перерисовываем их.
         if (window.LabRouter) LabRouter.refreshBreadcrumbs(LabRouter.current());
+      });
+    }
+    var developerToggle = container.querySelector('#up-developer-mode');
+    if (developerToggle) {
+      developerToggle.addEventListener('change', function() {
+        var lbl = developerToggle.parentElement.querySelector('.up-toggle-label');
+        if (lbl) lbl.textContent = developerToggle.checked ? 'Включён' : 'Выключен';
+        commit('developerMode', developerToggle.checked);
+        window.dispatchEvent(new CustomEvent('alephy:developer-mode-change', {
+          detail: { enabled: developerToggle.checked }
+        }));
       });
     }
     var exportBtn = container.querySelector('#up-export');

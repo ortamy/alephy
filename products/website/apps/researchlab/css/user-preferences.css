@@ -19,30 +19,30 @@
 .up-cell {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   min-width: 0;
-  padding: var(--space-4);
+  padding: var(--space-3);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-8);
 }
 
-/* Пропорции: образцы тем — крупный блок, остальное попарно. */
+/* Пропорции: тема 5×2, остальное попарно 7/5; обучение — полная ширина. */
 .up-cell--theme { grid-column: span 5; grid-row: span 2; }
 .up-cell--type,
 .up-cell--motion,
 .up-cell--data,
-.up-cell--start,
-.up-cell--development { grid-column: span 7; }
-.up-cell--learn,
+.up-cell--start { grid-column: span 7; }
+.up-cell--development,
 .up-cell--summary { grid-column: span 5; }
+.up-cell--learn { grid-column: 1 / -1; }
 
 /* ===== Шапка ячейки: номер + капитель + подпись справа ===== */
 .up-cell-head {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding-bottom: var(--space-2);
+  padding-bottom: var(--space-1);
   border-bottom: 1px solid var(--line);
 }
 
@@ -80,21 +80,21 @@
 .up-swatches {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .up-swatch {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   min-width: 0;
-  padding: var(--space-2);
+  padding: var(--space-1);
   font-family: inherit;
   text-align: left;
   cursor: pointer;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: var(--radius-8);
+  border-radius: var(--radius-sm);
   transition: border-color 150ms cubic-bezier(.2, .7, .2, 1), box-shadow 150ms cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -112,10 +112,10 @@
 
 .up-swatch-chip {
   display: flex;
-  height: var(--space-6);
+  height: var(--space-5);
   overflow: hidden;
   border: 1px solid var(--sw-line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
 }
 
 .up-swatch-bar { flex: 1 1 0; }
@@ -135,9 +135,9 @@
 
 .up-label {
   display: block;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   color: var(--text-primary);
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
   font-weight: 600;
   line-height: var(--leading-ui);
 }
@@ -145,13 +145,14 @@
 .up-select {
   width: 100%;
   box-sizing: border-box;
-  padding: var(--space-2) var(--space-3);
+  height: var(--control-h);
+  padding: 0 var(--space-2);
   color: var(--text-primary);
   font-family: inherit;
-  font-size: var(--ui-13);
+  font-size: var(--ui-12);
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: var(--radius-8);
+  border-radius: var(--radius-sm);
   outline: none;
 }
 
@@ -160,28 +161,42 @@
   box-shadow: var(--ring-focus);
 }
 
+/* Две колонки внутри ячейки: селектор + тумблер, два слайдера. */
+.up-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+
 /* ===== Сегменты: переключатель, а не группа кнопок ===== */
 .up-segmented {
   display: flex;
-  gap: var(--space-1);
-  padding: 2px;
+  align-items: stretch;
+  gap: 1px;
+  padding: 1px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: var(--radius-8);
+  border-radius: var(--radius-sm);
 }
 
 .up-segment {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 1 1 0;
   min-width: 0;
-  min-height: 36px;
-  padding: var(--space-2);
+  min-height: var(--control-h);
+  padding: 0 var(--space-2);
   font-family: inherit;
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
+  line-height: 1;
   color: var(--text-secondary);
   cursor: pointer;
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   transition: background 150ms cubic-bezier(.2, .7, .2, 1), color 150ms cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -203,10 +218,10 @@
   flex-direction: column;
   gap: var(--space-1);
   margin-top: auto;
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   background: var(--pv-bg);
   border: 1px solid var(--pv-line);
-  border-radius: var(--radius-8);
+  border-radius: var(--radius-sm);
 }
 
 .up-preview-title {
@@ -247,7 +262,8 @@
 .up-toggle {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
+  min-height: var(--control-h);
   cursor: pointer;
 }
 
@@ -264,12 +280,13 @@
 
 .up-toggle-slider {
   position: relative;
+  box-sizing: border-box;
   flex: 0 0 auto;
-  width: 44px;
-  height: 24px;
+  width: 36px;
+  height: 20px;
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-pill);
   transition: background 150ms cubic-bezier(.2, .7, .2, 1), border-color 150ms cubic-bezier(.2, .7, .2, 1);
 }
 
@@ -278,8 +295,8 @@
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   background: var(--text-secondary);
   border-radius: 50%;
   transition: transform 150ms cubic-bezier(.2, .7, .2, 1), background 150ms cubic-bezier(.2, .7, .2, 1);
@@ -291,7 +308,7 @@
 }
 
 .up-toggle input:checked + .up-toggle-slider::after {
-  transform: translateX(20px);
+  transform: translateX(16px);
   background: var(--text-on-accent);
 }
 
@@ -301,13 +318,13 @@
 
 .up-toggle-label {
   color: var(--text-primary);
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
 }
 
 .up-field-hint {
-  margin: calc(var(--space-1) * -1) 0 0;
+  margin: 0 0 var(--space-1);
   color: var(--text-secondary);
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
   line-height: var(--leading-ui);
 }
 
@@ -328,10 +345,23 @@
 .up-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
-.up-actions .lab-btn { flex: 1 1 auto; justify-content: center; }
+.up-actions .lab-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--control-h);
+  height: var(--control-h);
+  padding: 0 var(--space-2);
+  font-size: var(--ui-11);
+  justify-content: center;
+}
+
+.up-actions .lab-btn svg {
+  width: 14px;
+  height: 14px;
+}
 
 .up-file {
   position: absolute;
@@ -348,12 +378,12 @@
   align-items: flex-start;
   gap: var(--space-2);
   margin: 0;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-2);
   color: var(--text-secondary);
   background: var(--surface-2);
   border-left: 2px solid var(--accent-gold);
-  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  font-size: var(--ui-12);
+  border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  font-size: var(--ui-11);
   line-height: var(--leading-ui);
 }
 
@@ -371,10 +401,10 @@
 }
 
 .up-notice {
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--ui-12);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--ui-11);
   border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xs);
   background: var(--surface-2);
   color: var(--text-primary);
 }
@@ -404,7 +434,7 @@
 .up-recipe dt {
   flex: 0 0 auto;
   color: var(--text-muted);
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
 }
 
 .up-recipe dd {
@@ -412,7 +442,7 @@
   min-width: 0;
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: var(--ui-12);
+  font-size: var(--ui-11);
   text-align: right;
   overflow-wrap: anywhere;
 }
@@ -434,6 +464,7 @@
 
 @media (max-width: 560px) {
   .up-swatches { grid-template-columns: minmax(0, 1fr); }
+  .up-split { grid-template-columns: minmax(0, 1fr); }
   .up-actions { flex-direction: column; }
   .up-actions .lab-btn { width: 100%; }
   .up-recipe-row { flex-direction: column; gap: 0; }
