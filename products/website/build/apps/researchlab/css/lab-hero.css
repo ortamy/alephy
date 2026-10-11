@@ -14,14 +14,6 @@
   overflow: hidden;
 }
 
-.lab-hero__icon {
-  flex: 0 0 auto;
-  width: 38px;
-  height: 38px;
-  object-fit: contain;
-  image-rendering: auto;
-}
-
 .lab-hero__body { min-width: 0; position: relative; z-index: 1; }
 
 .lab-hero__actions {
@@ -190,10 +182,6 @@
     text-align: left;
   }
 
-  .lab-hero__icon {
-    margin: 0;
-  }
-
   .lab-hero__body {
     display: flex;
     flex: 1 1 auto;
@@ -298,13 +286,6 @@
     gap: 14px;
     padding: var(--space-5);
     text-align: center;
-  }
-
-  .lab-hero__icon {
-    display: block;
-    margin: 0 auto;
-    width: 34px;
-    height: 34px;
   }
 
   .lab-hero__body {

@@ -428,7 +428,6 @@ body.is-embed .lab-content { margin: 0; }
   border-radius: var(--radius-md);
   box-shadow: none;
 }
-.lab-hero__icon { width: 24px; height: 24px; }
 .lab-hero__kicker { margin: 0 0 3px; font-size: 11px; letter-spacing: 0.12em; }
 .lab-hero__title {
   margin: 0 0 3px;
@@ -791,7 +790,6 @@ body {
   margin-bottom: 10px;
   border-radius: var(--radius-md);
 }
-.lab-hero__icon { width: 20px; height: 20px; }
 .lab-hero__glyph { width: 28px; height: 28px; font-size: 16px; }
 .lab-hero__glyph svg { width: 16px; height: 16px; }
 [data-lab-hero] .lab-hero__kicker,

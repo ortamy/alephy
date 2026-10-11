@@ -14,8 +14,6 @@
   padding: clamp(1.25rem, 2.5vw, 2rem);
 }
 
-[data-lab-hero] .lab-hero__icon { display: none; }
-
 [data-lab-hero] .lab-hero__kicker {
   color: rgb(var(--accent-gold-rgb) / 0.85);
   font-size: 0.65rem;
