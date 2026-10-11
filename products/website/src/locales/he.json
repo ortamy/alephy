@@ -191,6 +191,11 @@
         "subtitle": "",
         "title": ""
       },
+      "documentation": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "dictionaries": {
         "kicker": "",
         "subtitle": "",
@@ -508,6 +513,7 @@
       "dashboard": "",
       "design-system": "",
       "architecture": "",
+      "documentation": "",
       "dictionaries": "",
       "exposures": "",
       "ed-chat": "",

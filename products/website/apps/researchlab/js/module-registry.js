@@ -118,6 +118,7 @@ window.ModuleRegistry = (function () {
     // «Архитектура» — витрина устройства проекта (слои, стек, поток, гейты).
     // Данные объявлены в js/architecture.js рядом с потребителем (ADR-004).
     { id: 'architecture', kind: 'panel', nav: { section: 'system', icon: 'network' } },
+    { id: 'documentation', kind: 'panel', nav: { section: 'system', icon: 'book-text' } },
 
     // --- словари-разоблачения (dict-*) ---
     // Содержимое — в data/dictionaries.json (21 словарь, 1913 терминов): маршрут

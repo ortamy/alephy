@@ -132,6 +132,7 @@ const PageController = (function() {
       if (moduleId === 'religionism-checker' && window.RelChecker) window.RelChecker.init(container);
       if (moduleId === 'state-checker' && window.StateChecker) window.StateChecker.init(container);
       if (moduleId === 'translation-comparator' && window.TransComp) window.TransComp.init(container);
+      if (moduleId === 'documentation' && window.LabDocumentation) window.LabDocumentation.init(container);
       // Витрины инструментов: тулбар поверх готовой сетки карточек.
       // Хук зовётся на каждом входе в модуль, но повторный вызов
       // ничего не добавляет — состояние живёт в showcase-toolbar.js.
@@ -3421,6 +3422,11 @@ var ARCH_AGENT_ICONS = {
       if (moduleId === 'language-map' && window.LanguageMap) {
         window.LanguageMap.init(container, parsed);
       }
+      // Документация держит оглавление и статью в одном контейнере:
+      // keep-rendered обязан перечитать гайд по #documentation/<id>.
+      if (moduleId === 'documentation' && window.LabDocumentation) {
+        window.LabDocumentation.init(container);
+      }
       // Шапка должна обновиться и при перерисовке уже загруженного модуля
       applyModuleHero(moduleId, container, parsed);
       if (window.LabRouter) LabRouter.renderBreadcrumbs(moduleId, parsed);
@@ -3984,6 +3990,7 @@ var ARCH_AGENT_ICONS = {
       case 'generators':
       case 'checkers':
       case 'translation-comparator':
+      case 'documentation':
         if (container.dataset.loading === '1') return;
         if (container.dataset.loaded === '1' && container.innerHTML.trim() !== '') {
           initHtmlModule(moduleId, container);

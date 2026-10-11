@@ -64,6 +64,11 @@ const LabRouter = (function() {
       var timelineTitle = window.Timeline.routeTitle(route);
       if (timelineTitle) return timelineTitle;
     }
+    if ((route === 'documentation' || route.indexOf('documentation/') === 0) &&
+        window.LabDocumentation && window.LabDocumentation.routeTitle) {
+      var documentationTitle = window.LabDocumentation.routeTitle(route);
+      if (documentationTitle) return documentationTitle;
+    }
     if (route === 'root-dictionary') return t('lab.breadcrumbs.rootDictionary', 'Корневой словарь');
     if (route === 'root-dictionary/search') return t('lab.breadcrumbs.search', 'Поиск');
     if (route.indexOf('root-dictionary/search/') === 0) {

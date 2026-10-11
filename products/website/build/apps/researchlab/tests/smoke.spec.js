@@ -158,7 +158,8 @@ const moduleAnchors = {
   'method-tree': '.research-section',
   'method-archeology': '.research-section',
   // Витрина архитектуры: ловит «модуль не загрузился» и пустую сетку.
-  architecture: '.arch-bento'
+  architecture: '.arch-bento',
+  documentation: '.doc-bento'
 };
 
 const gridRoutes = process.env.SMOKE_QUICK === '1' ? routes.filter((route) => quickRoutes.has(route)) : routes;
@@ -682,5 +683,45 @@ test.describe('architecture module', () => {
     expect(report.overflow, 'сетка не должна выходить за контейнер').toBeLessThanOrEqual(1);
     expect(report.moduleError, 'модуль без ошибки').toBeNull();
     expect(errors, `uncaught errors on #architecture`).toEqual([]);
+  });
+});
+
+// Документация: три гайда из data/docs, рендер marked + DOMPurify.
+test.describe('documentation module', () => {
+  test('показывает оглавление и гайд без переполнения', async ({ page }) => {
+    const errors = [];
+    page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
+
+    await page.goto('/#documentation', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#labContent .doc-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+
+    const report = await page.evaluate(() => {
+      const bento = document.querySelector('#labContent .doc-bento');
+      return {
+        nav: document.querySelectorAll('#labContent .doc-nav a').length,
+        article: document.querySelectorAll('#labContent [data-doc-body] h1, #labContent [data-doc-body] p').length,
+        overflow: bento ? bento.scrollWidth - bento.clientWidth : 0,
+        moduleError: (document.querySelector('#labContent .module.active') || {}).dataset?.moduleError || null
+      };
+    });
+
+    expect(report.nav, 'пункты оглавления').toBe(3);
+    expect(report.article, 'тело гайда').toBeGreaterThan(0);
+    expect(report.overflow, 'сетка не должна выходить за контейнер').toBeLessThanOrEqual(1);
+    expect(report.moduleError, 'модуль без ошибки').toBeNull();
+    expect(errors, 'uncaught errors on #documentation').toEqual([]);
+  });
+
+  test('deep-link #documentation/agents открывает гайд агентов', async ({ page }) => {
+    await page.goto('/#documentation/agents', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#labContent .doc-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+    await expect(page.locator('#labContent [data-doc-title]')).toHaveText('Агенты и пайплайны');
+    await expect(page.locator('#labContent .doc-nav a.is-active')).toHaveAttribute('href', '#documentation/agents');
+    await expect
+      .poll(() => page.locator('#labContent [data-doc-body]').evaluate((el) => (el.textContent || '').trim().length), {
+        timeout: SPINNER_BUDGET_MS,
+        message: 'гайд agents не загрузился'
+      })
+      .toBeGreaterThan(40);
   });
 });
