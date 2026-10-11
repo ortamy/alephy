@@ -275,7 +275,9 @@ const Cartography = (function() {
 
     if (dataPromise) return dataPromise;
 
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка картографии...</div></div>';
+    // Скелетон вместо спиннера: сетка картографии держит высоту ещё до данных.
+    if (window.Skeleton) { Skeleton.render(container, 'card', 6); }
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
 
     dataPromise = Promise.all([
       fetch(dataPath()).then(function(response) {

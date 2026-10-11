@@ -40,8 +40,15 @@ const RootEtymologyModal = (function() {
       '</div>';
   }
 
+  function showEtymologyPlaceholder() {
+    LabModal.show('Этимологический разбор', '<div id="rem-skeleton-host"></div>');
+    var host = document.getElementById('rem-skeleton-host');
+    if (host && window.Skeleton) Skeleton.render(host, 'article');
+    else if (host) host.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
+  }
+
   function showLoading(root) {
-    LabModal.show('Этимологический разбор', '<div class="rem-skeleton" aria-label="Загрузка разбора"><span></span><span></span><span></span><span></span></div>');
+    showEtymologyPlaceholder();
     load(root, 0);
   }
 
@@ -52,10 +59,7 @@ const RootEtymologyModal = (function() {
       return;
     }
 
-    LabModal.show(
-      'Этимологический разбор',
-      '<div class="rem-skeleton" aria-label="Загрузка разбора"><span></span><span></span><span></span><span></span></div>'
-    );
+    showEtymologyPlaceholder();
 
     fetch(path).then(function(response) {
       if (response.status === 404) return null;

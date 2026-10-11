@@ -113,7 +113,8 @@ const AlephyStates = (function() {
 
     if (dataPromise) return dataPromise;
 
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка карты состояний...</div></div>';
+    if (window.Skeleton) { Skeleton.render(container, 'card', 6); }
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
 
     dataPromise = Promise.all([
       fetch(dataPath(STATES_DATA_PATH)).then(function(r) {

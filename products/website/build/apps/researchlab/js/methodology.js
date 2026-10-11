@@ -21,7 +21,7 @@
     '<span class="lab-toolbar-count" id="methodology-count" aria-live="polite"></span>' +
     '<button type="button" class="lab-btn lab-btn-primary lab-btn-sm lab-toolbar-btn" id="methodology-add-btn">Добавить карточку</button>' +
     '</div></div>' +
-    '<div class="methodology-panel" id="methodology-panel" role="tabpanel" aria-live="polite"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка материалов…</div></div></div></section>';
+    '<div class="methodology-panel" id="methodology-panel" role="tabpanel" aria-live="polite"></div></section>';
   var DATA_PATH = 'data/methodology/cards.json';
   var MECHANISMS_DATA_PATH = 'data/methodology/mechanisms.json';
   var MATRICES_DATA_PATH = 'data/methodology/cultural-matrices.json';
@@ -372,12 +372,15 @@
     }
     if (container.dataset.methodologyReady === '1') return;
     container.dataset.methodologyReady = '1';
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка…</div></div>';
-
     container.innerHTML = PAGE_TEMPLATE;
     bindCategorySelect(container);
     bindAddButton(container);
     bindSearch(container);
+    // Панель до загрузки JSON держит скелетон реестра: карточки той же высоты,
+    // что и данные, поэтому ряд не перестраивается при подстановке.
+    var panel = container.querySelector('#methodology-panel');
+    if (panel && window.Skeleton) Skeleton.render(panel, 'card', 6);
+    else if (panel) panel.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка материалов…</div></div>';
     loadStore(container);
   }
 

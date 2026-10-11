@@ -56,7 +56,8 @@ const DATA_PATH = 'data/heraldry/heraldry.json';
 
     if (dataPromise) return dataPromise;
 
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка гербовника...</div></div>';
+    if (window.Skeleton) { Skeleton.render(container, 'card', 6); }
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
 
     dataPromise = fetch(dataPath())
       .then(function(response) {

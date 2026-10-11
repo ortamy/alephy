@@ -62,7 +62,8 @@
     }
     if (container.dataset.loading === '1') return;
     container.dataset.loading = '1';
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка…</div></div>';
+    if (window.Skeleton) { Skeleton.render(container, 'list', 3); }
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
 
     if (cachedMarkup) {
       applyMarkup(container, cachedMarkup);

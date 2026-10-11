@@ -233,7 +233,9 @@
   function init(container) {
     if (!container || container.dataset.promptGeneratorReady === '1') return;
     container.dataset.promptGeneratorReady = '1';
-    container.innerHTML = '<div class="prompt-generator-loading">Загрузка конструктора…</div>';
+    container.innerHTML = '<div class="prompt-generator-host" id="prompt-generator-host"></div>';
+    var host = document.getElementById('prompt-generator-host');
+    if (host && window.Skeleton) Skeleton.render(host, 'card', 3);
 
     Promise.all([
       fetch(PAGE_PATH).then(function(response) {

@@ -110,6 +110,40 @@
   background: var(--surface-hover);
 }
 
+/* ===== Скелетон реестра =====
+   Пока JSON не пришёл, панель держит скелетон той же геометрией: flex-wrap с
+   зазором 1px (фон-разделитель берёт на себя --border-light), карточка
+   flex: 1 1 20rem. Данные встают на место без перестройки ряда.
+   Высоты: head 20 + body 3 строки по 19.5 + actions 44 + паддинги 24. */
+.methodology-panel > .skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  width: 100%;
+  padding: 0;
+}
+.methodology-panel > .skeleton > .skeleton-cards { display: contents; }
+.methodology-panel > .skeleton .skeleton-card {
+  flex: 1 1 20rem;
+  min-width: 0;
+  min-height: 164px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+.methodology-panel > .skeleton .skeleton-line { height: 13px; }
+.methodology-panel > .skeleton .skeleton-line--heading { height: 20px; }
+.methodology-panel > .skeleton .skeleton-chip { width: 24px; height: 24px; }
+
+/* На узком экране карточка во всю ширину, а описание реальной карточки
+   переносится в 2-3 строки, поэтому высоты сами плавают 158-180px.
+   Берём моду (158px, 19 карточек из 33): заготовка совпадает с типичной
+   карточкой, редкие трёхстрочные всё равно подрастут. */
+@media (max-width: 640px) {
+  .methodology-panel > .skeleton .skeleton-card { flex-basis: 100%; min-height: 158px; }
+}
+
 /* Вся строка реестра кликабельна: открывает полный текст карточки. */
 .methodology-panel .methodology-card { cursor: pointer; }
 .methodology-card:focus-within { cursor: default; }

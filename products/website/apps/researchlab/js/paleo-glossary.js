@@ -50,8 +50,7 @@ const PaleoGlossary = (function() {
       '<option value="all">' + escapeHtml(t('lab.paleoGlossary.allRoots', 'Все корни')) + '</option></select>' +
       '<span class="pg-chip-mono" id="paleo-glossary-count">…</span>' +
       '</div></div>' +
-      '<div id="paleo-glossary-spinner" class="pg-spinner show"><div class="loader"></div><div class="spinner-text">' +
-      escapeHtml(t('lab.paleoGlossary.loading', 'Загрузка глоссария…')) + '</div></div>' +
+      '<div id="paleo-glossary-spinner"></div>' +
       '<div id="paleo-glossary-grid" class="paleo-glossary-grid"></div>' +
       '<div id="paleo-glossary-more" class="pg-more"></div>' +
       '<div id="paleo-glossary-empty" class="lab-alert lab-alert-info" style="display:none"></div>';
@@ -85,12 +84,15 @@ const PaleoGlossary = (function() {
   function init(container, parsed) {
     if (words.length) {
       var readySpinner = document.getElementById('paleo-glossary-spinner');
-      if (readySpinner) readySpinner.classList.remove('show');
+      if (readySpinner) readySpinner.innerHTML = '';
       applyParams(parsed);
       return;
     }
     if (loading) return;
     loading = true;
+    // Скелетон в контейнере загрузчика: сетка терминов держит высоту до данных.
+    var skeleton = document.getElementById('paleo-glossary-spinner');
+    if (skeleton && window.Skeleton) Skeleton.render(skeleton, 'card', 6);
     fetch('data/paleo-glossary/roots.json')
       .then(function(response) {
         if (!response.ok) throw new Error('roots.json: HTTP ' + response.status);
@@ -103,7 +105,7 @@ const PaleoGlossary = (function() {
           return Object.assign({}, word, { square: word.square || word.hebrew || '' });
         }) : [];
         var spinnerEl = document.getElementById('paleo-glossary-spinner');
-        if (spinnerEl) spinnerEl.classList.remove('show');
+        if (spinnerEl) spinnerEl.innerHTML = '';
         fillRootSelect();
         applyParams(parsed);
       })

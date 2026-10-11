@@ -213,7 +213,9 @@ const Dashboard = (function() {
     var container = document.getElementById('dashboard-widgets');
     if (!container || reloading) return;
     reloading = true;
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Обновление статистики…</div></div>';
+    // Скелетон вместо спиннера: сетка счётчиков держит высоту до данных.
+    if (window.Skeleton) Skeleton.render(container, 'card', 4);
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
     loadData(true).then(function(data) {
       loaded = true;
       render(container, data);

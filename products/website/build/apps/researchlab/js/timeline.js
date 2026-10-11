@@ -117,8 +117,8 @@ const Timeline = (function() {
 
     // Шапку модуля рисует LabHero (единственная шапка, как во всех модулях лаба).
     // Собственный hero удалён: он дублировал H1 «Каталог таймлайнов».
-    container.innerHTML =
-      '<div class="tl-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка таймлайнов…</div></div>';
+    if (window.Skeleton) { Skeleton.render(container, 'card', 5); }
+    else container.innerHTML = '<div class="tl-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка таймлайнов…</div></div>';
 
     // Загружаем данные
     fetch('data/timeline.json')

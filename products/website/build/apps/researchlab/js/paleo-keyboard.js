@@ -241,8 +241,9 @@ const PaleoKey = (function() {
     setBadge('pk-keys-count', loadState === 'error' ? '—' : entries.length);
 
     if (loadState === 'loading') {
-      container.innerHTML = '<div class="pk-keys-empty"><span class="pk-empty-glyph" aria-hidden="true">𐤕</span>' +
-        '<strong>Загрузка наборов…</strong></div>';
+      var keys = document.getElementById('pk-keys');
+      if (keys && window.Skeleton) Skeleton.render(keys, 'card', 8);
+      else container.innerHTML = '<div class="pk-keys-empty"><strong>Загрузка наборов…</strong></div>';
       activeIdx = -1;
       return;
     }

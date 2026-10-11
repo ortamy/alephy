@@ -51,6 +51,11 @@ const Religionisms = (function() {
     }
     if (loading) return;
     loading = true;
+    // Пока идёт запрос, каталог держит скелетон карточек:
+    // пустая панель раньше давала скачок высоты на появлении контента.
+    var panel = document.getElementById('rel-screen');
+    if (panel && window.Skeleton) Skeleton.render(panel, 'card', 6);
+    else if (panel) panel.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
     fetch('data/religionisms/religionisms.json')
       .then(function(r) { return r.json(); })
       .then(function(data) {

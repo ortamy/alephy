@@ -53,8 +53,7 @@ const RootDict = (function() {
       '<button type="button" class="rd-chip" data-rd-filter="image">' + escapeHtml(t('lab.rootDict.filterImage', 'с образом')) + '</button>' +
       '</div></div>' +
       '<nav class="rd-index" id="rd-index" aria-label="Alphabet index"></nav>' +
-      '<div id="rd-spinner" class="rd-spinner show"><div class="loader"></div><div class="spinner-text">' +
-      escapeHtml(t('lab.rootDict.loading', 'Загрузка словаря…')) + '</div></div>' +
+      '<div id="rd-spinner"></div>' +
       '<div id="rd-list"></div>' +
       '<div id="rd-more" class="rd-more"></div>' +
       '<div id="rd-empty" class="lab-alert lab-alert-info" style="display:none"></div>';
@@ -104,7 +103,7 @@ const RootDict = (function() {
   function init() {
     if (roots.length) {
       var readySpinner = document.getElementById('rd-spinner');
-      if (readySpinner) readySpinner.classList.remove('show');
+      if (readySpinner) readySpinner.innerHTML = '';
       bind();
       applyRoute(window.LabRouter && window.LabRouter.parseHash ? window.LabRouter.parseHash() : null);
       return;
@@ -112,6 +111,10 @@ const RootDict = (function() {
     if (loading) return;
     loading = true;
     bind();
+    // Скелетон в контейнере загрузчика: сетка корней держит высоту до данных.
+    // Тип card, а не list: контент — карточки .rd-card в сетке 1/2/3 колонки.
+    var skeleton = document.getElementById('rd-spinner');
+    if (skeleton && window.Skeleton) Skeleton.render(skeleton, 'card', 6);
     AlephyUtils.fetchJson('data/roots/roots.json')
       .then(function(data) {
         loading = false;
@@ -127,7 +130,7 @@ const RootDict = (function() {
       .then(function() {
         loading = false;
         var spinnerEl = document.getElementById('rd-spinner');
-        if (spinnerEl) spinnerEl.classList.remove('show');
+        if (spinnerEl) spinnerEl.innerHTML = '';
         var totalEl = document.getElementById('rd-total');
         if (totalEl) totalEl.textContent = roots.length + ' ' + t('lab.rootDict.rootsLabel', 'корней');
         applyRoute(window.LabRouter && window.LabRouter.parseHash ? window.LabRouter.parseHash() : null);

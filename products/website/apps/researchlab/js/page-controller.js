@@ -47,16 +47,29 @@ const PageController = (function() {
     container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">' + escapeHtml(text || 'Загрузка…') + '</div></div>';
   }
 
+  // Единый скелетон вместо спиннера: форма заранее повторяет будущий контент,
+  // поэтому панель не меняет высоту в момент подстановки данных.
+  // Без window.Skeleton (скрипт не доехал) остаётся прежний спиннер.
+  function showSkeleton(container, type, count) {
+    if (window.Skeleton) {
+      Skeleton.render(container, type || 'card', count || 6);
+      return;
+    }
+    showSpinner(container);
+  }
+
   // ===== ГАРД ЗАГРУЗКИ МОДУЛЯ =====
   // Вечный спиннер — это ошибка, а не состояние. Падение init или молчание
   // дольше WATCHDOG_MS переводит панель в error-state с кнопкой «Повторить».
   var WATCHDOG_MS = 8000;
   var moduleWatchdogs = {};
 
+  // Признак незавершённой загрузки — спиннер или скелетон. Скелетон пришёл
+  // на смену спиннеру, и без него гард считал бы загруженную панель готовой.
   function hasVisibleSpinner(container) {
-    var spinners = container.querySelectorAll('.lab-spinner');
-    for (var i = 0; i < spinners.length; i++) {
-      if (window.getComputedStyle(spinners[i]).display !== 'none') return true;
+    var marks = container.querySelectorAll('.lab-spinner, .skeleton');
+    for (var i = 0; i < marks.length; i++) {
+      if (window.getComputedStyle(marks[i]).display !== 'none') return true;
     }
     return false;
   }
@@ -486,8 +499,10 @@ var ARCH_AGENT_ICONS = {
     'paleo-mechanics': { key: '' }
   };
 
-  function loadJsonPage(page, path, container) {
-    showSpinner(container, 'Загрузка данных…');
+  // skeletonType — форма заготовки под конкретную страницу: индекс словарей и
+  // каталог — карточки, корпус экспозиций — список, документ — статья.
+  function loadJsonPage(page, path, container, skeletonType) {
+    showSkeleton(container, skeletonType || 'article');
     fetchJson(path).then(function(data) {
       jsonCache[page] = data;
       if (page === 'dictionaries') renderDictionaries(container, data);
@@ -1245,7 +1260,7 @@ var ARCH_AGENT_ICONS = {
   // Словарь живёт внутри модуля #dictionaries: свой маршрут dict-* открывает ту же
   // страницу словаря на месте, без редиректа — старые адреса остаются живыми.
   function loadDictionaryDocument(container, moduleId, source) {
-    showSpinner(container, 'Загрузка словаря…');
+    showSkeleton(container, 'card');
     fetchJson(source.file).then(function(data) {
       jsonCache.dictionaries = data;
       var dictionary = data[source.key];
@@ -1270,7 +1285,7 @@ var ARCH_AGENT_ICONS = {
   // отдельном файле по ключу (methodology — указатель плюс каталог).
   // Ключ записи объявлен в реестре рядом с маршрутом.
   function loadCollectionDocument(container, moduleId, source) {
-    showSpinner(container, 'Загрузка документа…');
+    showSkeleton(container, 'article');
     var body = source.doc
       ? fetchJson(source.doc).then(function(documentData) { return { documentData: documentData, index: null }; })
       : fetchJson(source.file).then(function(data) {
@@ -2047,6 +2062,7 @@ var ARCH_AGENT_ICONS = {
     // `icon` не несут, и `undefined.png` перебивал бы базовую иконку модуля
     // (битая метка вместо «молотка и зубила»). Оркестратор несёт свою ui/arrows.
     if (agent.icon) container._labHeroOverride.icon = agent.icon + '.png';
+
     if (window.LabHero && window.LabHero.setView) {
       window.LabHero.setView('ai-agents', 'detail', container._labHeroOverride);
     }
@@ -2580,7 +2596,10 @@ var ARCH_AGENT_ICONS = {
           '</div>' +
         '</div>' +
       '</section>' +
-      '<div class="agent-pipelines-status lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка локальных пайплайнов…</div></div>';
+      '<div class="agent-pipelines-status"></div>';
+    var pipelineSkel = pipelines.querySelector('.agent-pipelines-status');
+    if (pipelineSkel && window.Skeleton) Skeleton.render(pipelineSkel, 'card', 4);
+    else if (pipelineSkel) pipelineSkel.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка локальных пайплайнов…</div></div>';
     pipelines.querySelector('[data-pipelines-back]').addEventListener('click', function() {
       LabRouter.navigate('ai-agents');
     });
@@ -2984,7 +3003,9 @@ var ARCH_AGENT_ICONS = {
 
   function renderPipelineDetail(container, pipelineId) {
     if (pipelineDetailState.pipelineId !== pipelineId) pipelineDetailState = { pipelineId: pipelineId, runId: null };
-    container.innerHTML = '<div class="pd-page"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка процесса пайплайна…</div></div></div>';
+    container.innerHTML = '<div class="pd-page"><div id="pd-detail-host"></div></div>';
+    var pdHost = document.getElementById('pd-detail-host');
+    if (pdHost) showSkeleton(pdHost, 'list', 5);
     loadPipelineDetailData().then(function(payload) {
       var pipeline = findPipeline(payload[0], pipelineId);
       if (!pipeline) {
@@ -3410,7 +3431,9 @@ var ARCH_AGENT_ICONS = {
 
       // ===== СТАТИЧЕСКИЕ МОДУЛИ (HTML встроен) =====
       case 'dashboard':
-        container.innerHTML = '<div id="dashboard-widgets" class="dashboard-widgets"><div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка статистики…</div></div></div>';
+        container.innerHTML = '<div id="dashboard-widgets" class="dashboard-widgets"></div>';
+        var dwHost = document.getElementById('dashboard-widgets');
+        if (dwHost) showSkeleton(dwHost, 'card', 4);
         container.dataset.loaded = '1';
         if (window.Dashboard) window.Dashboard.init();
         break;
@@ -3693,7 +3716,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'board-generator':
-        showSpinner(container, 'Загрузка конструктора…');
+        showSkeleton(container, 'card', 3);
         if (window.BoardGenerator) {
           window.BoardGenerator.init(container);
         } else {
@@ -3702,7 +3725,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'research-generator':
-        showSpinner(container, 'Загрузка конструктора…');
+        showSkeleton(container, 'card', 3);
         if (window.ResearchGenerator) {
           window.ResearchGenerator.init(container);
         } else {
@@ -3969,7 +3992,7 @@ var ARCH_AGENT_ICONS = {
         // Гейт для асинхронной ветки. Без него .then-обработчик ниже выходил
         // сразу (loading !== '1') и панель оставалась со спиннером навсегда.
         container.dataset.loading = '1';
-        showSpinner(container, 'Загрузка модуля…');
+        showSkeleton(container, 'card', 3);
         fetchPage('pages/' + moduleId + '.html').then(function(html) {
           if (container.dataset.loading !== '1') return;
           container.innerHTML = html;
@@ -3986,7 +4009,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'prompt-generator':
-        showSpinner(container, 'Загрузка конструктора…');
+        showSkeleton(container, 'card', 3);
         if (window.PromptGenerator) {
           window.PromptGenerator.init(container);
         } else {
@@ -4006,7 +4029,7 @@ var ARCH_AGENT_ICONS = {
       // pages/state-checker.html и строится по общему канону панелей.
 
       case 'tree-checker':
-        showSpinner(container, 'Загрузка дерева…');
+        showSkeleton(container, 'list', 4);
         if (window.TreeChecker) {
           window.TreeChecker.init(container);
         } else {
@@ -4016,7 +4039,7 @@ var ARCH_AGENT_ICONS = {
 
       // ===== МОДУЛИ С JS-ИНИЦИАЛИЗАЦИЕЙ =====
       case 'cartography':
-        showSpinner(container, 'Загрузка картографии…');
+        showSkeleton(container, 'card', 6);
         if (window.Cartography) {
           container.dataset.loaded = '1';
           window.Cartography.init(container);
@@ -4026,7 +4049,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'heraldry':
-        showSpinner(container, 'Загрузка гербовника…');
+        showSkeleton(container, 'card', 6);
         if (window.Heraldry) {
           container.dataset.loaded = '1';
           window.Heraldry.init(container);
@@ -4036,7 +4059,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'states':
-        showSpinner(container, 'Загрузка карты состояний…');
+        showSkeleton(container, 'card', 6);
         if (window.AlephyStates) {
           container.dataset.loaded = '1';
           window.AlephyStates.init(parsed);
@@ -4046,7 +4069,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'timeline':
-        showSpinner(container, 'Загрузка палео-таймлайна…');
+        showSkeleton(container, 'card', 5);
         if (window.Timeline) {
           container.dataset.loaded = '1';
           window.Timeline.init(container, parsed);
@@ -4056,7 +4079,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'paleo-linguistics':
-        showSpinner(container, 'Загрузка палео-лингвистики…');
+        showSkeleton(container, 'card', 6);
         if (window.PaleoLinguistics) {
           window.PaleoLinguistics.init(parsed);
         } else {
@@ -4066,7 +4089,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'language-map':
-        showSpinner(container, 'Загрузка карты языков…');
+        showSkeleton(container, 'card', 6);
         if (window.LanguageMap) {
           window.LanguageMap.init(container, parsed);
         } else {
@@ -4076,7 +4099,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'linguistic-tensor':
-        showSpinner(container, 'Загрузка лингвистического тензора…');
+        showSkeleton(container, 'list', 5);
         if (window.LinguisticTensor) {
           window.LinguisticTensor.init(container, parsed);
         } else {
@@ -4086,7 +4109,8 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'methodology':
-        showSpinner(container, 'Загрузка методологии…');
+        // Скелетон рисует сам MethodologyLab внутри панели: init перезаписывает
+        // container, поэтому скелетон на уровне контейнера не пережил бы его.
         if (window.MethodologyLab) {
           window.MethodologyLab.init(container, parsed);
         } else {
@@ -4096,7 +4120,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'name-decoder':
-        showSpinner(container, 'Загрузка чекера имени…');
+        showSkeleton(container, 'card', 3);
         if (window.NameDecoder) {
           window.NameDecoder.init(container);
         } else {
@@ -4106,7 +4130,7 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'researches':
-        showSpinner(container, 'Загрузка исследований…');
+        showSkeleton(container, 'card', 6);
         if (window.LoadResearches) {
           window.LoadResearches.render(container, parsed);
         } else {
@@ -4117,7 +4141,7 @@ var ARCH_AGENT_ICONS = {
 
       // ===== JSON-СТРАНИЦЫ =====
       case 'manifest':
-        showSpinner(container, 'Загрузка манифеста…');
+        showSkeleton(container, 'card', 6);
         if (jsonCache.manifest) {
           renderManifestPage(container, jsonCache.manifest);
           container.dataset.loaded = '1';
@@ -4133,19 +4157,19 @@ var ARCH_AGENT_ICONS = {
         break;
 
       case 'dictionaries':
-        loadJsonPage('dictionaries', 'data/dictionaries.json', container);
+        loadJsonPage('dictionaries', 'data/dictionaries.json', container, 'card');
         break;
 
       case 'exposures':
         // Хаб документов разоблачения: список всего корпуса, документы открываются
         // по своим маршрутам #exposure-<key> (источник — data/exposures/documents.json).
         if (jsonCache.exposures) renderCollectionIndex(container, jsonCache.exposures, 'exposures');
-        else loadJsonPage('exposures', 'data/exposures/documents.json', container);
+        else loadJsonPage('exposures', 'data/exposures/documents.json', container, 'list');
         container.dataset.loaded = '1';
         break;
 
       case 'paleo-mechanics':
-        loadJsonPage('paleo-mechanics', 'data/paleo-mechanics.json', container);
+        loadJsonPage('paleo-mechanics', 'data/paleo-mechanics.json', container, 'article');
         break;
 
       // ===== ДИНАМИЧЕСКИЕ МОДУЛИ (создаются на лету) =====

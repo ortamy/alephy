@@ -106,9 +106,11 @@ const ClubModule = (function() {
 
   function renderFeed(container, discussions, onlyDiscussions, archive) {
     if (!window.ClubData) {
-      container.innerHTML = '<div class="lab-alert">Загрузка данных...</div>';
+      if (window.Skeleton) Skeleton.render(container, 'card', 4);
+      else container.innerHTML = '<div class="lab-alert lab-alert-info">Загрузка данных...</div>';
       return;
     }
+    if (window.Skeleton) Skeleton.render(container, 'card', 4);
     ClubData.getCards().then(function(cards) {
       var feed = buildFeedHTML(cards);
       if (onlyDiscussions) {
@@ -170,7 +172,7 @@ const ClubModule = (function() {
         '<label>Уверенность<select class="club-input" id="club-confidence"><option value="needs-review">Требует проверки</option><option value="hypothesis">Рабочая гипотеза</option><option value="verified">Подтверждается</option></select></label></div>' +
         '<label>Исследовательский вопрос<textarea class="club-textarea" id="club-question" placeholder="Что именно должны проверить участники?"></textarea></label>' +
         '<label>Ожидаемый результат<textarea class="club-textarea" id="club-outcome" placeholder="Какой вывод, карту связей или контрпример нужно получить?"></textarea></label>' +
-        '<fieldset><legend>Приложенные исследования из архива</legend><div id="club-research-picker" class="club-research-picker"><span class="club-picker-loading">Загрузка архива…</span></div></fieldset>' +
+        '<fieldset><legend>Приложенные исследования из архива</legend><div id="club-research-picker" class="club-research-picker"></div></fieldset>' +
         '<label>Методологические ограничения и контекст<textarea class="club-textarea" id="club-context" placeholder="Какие источники, уровни уверенности и различия эмет/шекер нужно учитывать?"></textarea></label>' +
         '<label>Теги<input class="club-input" id="club-tags" placeholder="корень, образ, перевод"></label>' +
         '<div id="club-create-error" class="lab-alert lab-alert-error" hidden></div><div class="club-create-actions"><button class="lab-btn lab-btn-primary" type="submit">Опубликовать тему</button><button class="lab-btn lab-btn-secondary" type="button" id="club-save-draft">Сохранить черновик</button></div>' +
@@ -181,6 +183,8 @@ const ClubModule = (function() {
 
   function loadResearchPicker(container) {
     var picker = container.querySelector('#club-research-picker');
+    if (!picker) return;
+    if (window.Skeleton) Skeleton.render(picker, 'list', 4);
     fetch('data/exposures/index.json').then(function(response) {
       if (!response.ok) throw new Error('HTTP ' + response.status);
       return response.json();
@@ -289,6 +293,7 @@ const ClubModule = (function() {
       container.innerHTML = '<div class="lab-alert">Архив сессий пока недоступен.</div>';
       return;
     }
+    if (window.Skeleton) Skeleton.render(container, 'card', 3);
     ClubData.getSessions().then(function(sessions) {
       var order = { active: 0, upcoming: 1, completed: 2 };
       sessions.sort(function(a, b) { return order[a.status] - order[b.status]; });
@@ -298,9 +303,11 @@ const ClubModule = (function() {
 
   function renderDetail(container, cardId) {
     if (!window.ClubData) {
-      container.innerHTML = '<div class="lab-alert">Загрузка...</div>';
+      if (window.Skeleton) Skeleton.render(container, 'card', 3);
+      else container.innerHTML = '<div class="lab-alert lab-alert-info">Загрузка...</div>';
       return;
     }
+    if (window.Skeleton) Skeleton.render(container, 'article');
     Promise.all([ClubData.getCard(cardId), ClubData.getComments(cardId)]).then(function(results) {
       var card = results[0];
       var comments = results[1];

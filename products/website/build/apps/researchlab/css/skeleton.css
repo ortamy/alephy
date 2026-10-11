@@ -1,0 +1,316 @@
+/* skeleton.css — единый индикатор загрузки (js/modules/skeleton.js).
+   Цвета только из tokens.css: переключение тем происходит само.
+   Высоты приближены к реальному контенту, чтобы данные вставали на место
+   без прыжка раскладки. */
+
+/* ===== База ===== */
+.skeleton { padding: var(--space-3); }
+.skeleton-line,
+.skeleton-avatar,
+.skeleton-block,
+.skeleton-cell {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-xs);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+@keyframes skeletonPulse { 50% { opacity: .45; } }
+
+.skeleton-line { height: 14px; }
+.skeleton-line--heading { height: 28px; }
+
+/* ===== Карточки ===== */
+.skeleton-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-2);
+}
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 132px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+}
+.skeleton-card-actions {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: auto;
+}
+.skeleton-chip {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  background: var(--bg-tertiary);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+/* ===== Список ===== */
+.skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+.skeleton-avatar {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.skeleton-row-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ===== Статья ===== */
+.skeleton-articles { display: flex; flex-direction: column; gap: var(--space-5); }
+.skeleton-article {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: 750px; /* мера прозы, как у .lab-content .module p */
+}
+.skeleton-block {
+  width: 100%;
+  height: 180px;
+  border-radius: var(--radius-md);
+}
+/* ===== Таблица ===== */
+.skeleton-table {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-8);
+  overflow: hidden;
+}
+.skeleton-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: var(--space-3);
+  align-items: center;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-light);
+}
+.skeleton-table-row:last-child { border-bottom: 0; }
+.skeleton-table-head { background: var(--bg-secondary); }
+.skeleton-cell { height: 14px; justify-self: start; width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-line,
+  .skeleton-avatar,
+  .skeleton-block,
+  .skeleton-cell { animation: none; }
+}
+
+/* ===== Подгонка под конкретный реестр =====
+   Карточка корня выше типовой: глиф-строка, значение, две hairline-строки
+   и низ с чипами связей. Мода .rd-card — 191px (15 из 24 карточек), реже
+   232 и 251: редкие карточки подрастают сами. Сетка 1/2/3 колонки как у
+   #rd-list, чтобы ряд не перестраивался при данных. */
+#rd-spinner .skeleton-cards {
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+@media (min-width: 768px) {
+  #rd-spinner .skeleton-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 1025px) {
+  #rd-spinner .skeleton-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+#rd-spinner .skeleton-card {
+  min-height: 191px;
+  gap: 10px;
+  padding: 18px;
+  border-radius: 6px;
+}
+/* Шесть блоков вместо четырёх: нижний ряд чипов связей. */
+#rd-spinner .skeleton-card::after {
+  content: "";
+  display: block;
+  height: 14px;
+  width: 96px;
+  margin-top: auto;
+  border-radius: var(--radius-xs);
+  background: var(--bg-tertiary);
+  animation: skeletonPulse 1.2s ease-in-out infinite;
+}
+
+/* Глоссарий: flex-wrap 21rem, hairline-щель 1px, как .paleo-glossary-grid. */
+#paleo-glossary-spinner > .skeleton {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  padding: 0;
+  background: var(--border-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+#paleo-glossary-spinner > .skeleton > .skeleton-cards { display: contents; }
+#paleo-glossary-spinner .skeleton-card {
+  flex: 1 1 21rem;
+  min-width: 0;
+  min-height: 145px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-radius: 0;
+  background: var(--surface);
+}
+@media (max-width: 640px) {
+  #paleo-glossary-spinner .skeleton-card { flex-basis: 100%; }
+}
+
+/* Таймлайн: три колонки, карточка-паспорт 190px. */
+#timeline .skeleton-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+#timeline .skeleton-card {
+  min-height: 190px;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+}
+@media (max-width: 640px) {
+  #timeline .skeleton-cards { grid-template-columns: 1fr; }
+  #timeline .skeleton-card { min-height: 0; padding: var(--space-4); }
+}
+
+/* Гербовник: три колонки, крупный паддинг карточки. */
+#heraldry .skeleton-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+#heraldry .skeleton-card {
+  min-height: 212px;
+  padding: var(--space-6);
+  border-radius: 7px;
+}
+@media (max-width: 640px) {
+  #heraldry .skeleton-cards { grid-template-columns: 1fr; }
+  #heraldry .skeleton-card { padding: var(--space-5); }
+}
+
+/* Карта состояний: auto-fill от 220px. */
+#states .skeleton-cards {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+#states .skeleton-card {
+  min-height: 198px;
+  padding: 12px 14px;
+}
+
+/* Картография: auto-fill от 250px, карточка темы 140px. */
+#cartography .skeleton-cards {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--space-3);
+}
+#cartography .skeleton-card {
+  min-height: 174px;
+  padding: var(--space-3) var(--space-4);
+}
+
+/* Исследования: две колонки, карточка 140px. */
+#researches .skeleton-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+#researches .skeleton-card {
+  min-height: 140px;
+  height: 140px;
+  overflow: hidden;
+  padding: var(--space-4);
+  border-radius: var(--radius-8);
+}
+#researches .skeleton-card-actions { display: none; }
+@media (max-width: 767px) {
+  #researches .skeleton-cards { grid-template-columns: 1fr; }
+}
+
+/* Дашборд: четыре ячейки в ряд 12 колонок не нужны — карточки держат высоту сводки. */
+#dashboard-widgets .skeleton-cards {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+#dashboard-widgets .skeleton-card {
+  min-height: 156px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-8);
+}
+@media (max-width: 760px) {
+  #dashboard-widgets .skeleton-cards { grid-template-columns: 1fr; }
+}
+
+/* Религионизмы: каталог сфер auto-fill от 200px. */
+#rel-screen .skeleton-cards {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+#rel-screen .skeleton-card {
+  min-height: 96px;
+  padding: var(--space-2) 10px;
+  gap: 5px;
+}
+@media (max-width: 640px) {
+  #rel-screen .skeleton-cards { grid-template-columns: 1fr; }
+}
+
+/* Манифест: карточки потерь компактные, не статья. */
+#manifest .skeleton-cards {
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+#manifest .skeleton-card {
+  min-height: 78px;
+  height: 78px;
+  overflow: hidden;
+  padding: var(--space-3);
+}
+#manifest .skeleton-card-actions { display: none; }
+
+/* Пайплайны: одна колонка, с 860px — две. */
+.agent-pipelines-status .skeleton-cards {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.agent-pipelines-status .skeleton-card {
+  min-height: 202px;
+  padding: var(--space-3) var(--space-4);
+}
+@media (min-width: 860px) {
+  .agent-pipelines-status .skeleton-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Клавиатура: чипы 56px, как настоящие клавиши. */
+#pk-keys > .skeleton { padding: 0; }
+#pk-keys .skeleton-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: var(--space-2);
+}
+#pk-keys .skeleton-card {
+  min-height: 56px;
+  padding: var(--space-1);
+  border-radius: var(--radius-8);
+}
+#pk-keys .skeleton-card-actions,
+#pk-keys .skeleton-chip { display: none; }
+
+/* Статья стиха: без 180px-блока, иначе колонка прыгает выше палео-строки. */
+#scripture-verse-article .skeleton { padding: 0; }
+#scripture-verse-article .skeleton-block { display: none; }
+#scripture-verse-article .skeleton-article { max-width: none; }
+
+/* Этимология в модалке: статья без большого блока. */
+#rem-skeleton-host .skeleton { padding: 0; }
+#rem-skeleton-host .skeleton-block { height: 72px; }

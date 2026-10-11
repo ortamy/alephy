@@ -264,7 +264,8 @@ const LoadResearches = (function() {
       renderPage(container);
       return;
     }
-    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка материалов библиотеки...</div></div>';
+    if (window.Skeleton) { Skeleton.render(container, 'card', 6); }
+    else container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div></div>';
     fetch('data/exposures/index.json')
       .then(function(r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);

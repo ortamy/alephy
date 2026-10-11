@@ -660,6 +660,10 @@ const ScriptureReader = (function() {
 
   function loadVerses(book, verseNumber) {
     setLoading('Загрузка ' + book.ru + '…');
+    // Статья стиха до ответа сети держит скелетон: пустая колонка и текст в
+    // палео-строке раньше меняли высоту блока при подстановке текста.
+    var loadingArticle = get('scripture-verse-article');
+    if (loadingArticle && window.Skeleton) Skeleton.render(loadingArticle, 'article');
     if (!book.dataFile) {
       var pendingArticle = get('scripture-verse-article');
       if (pendingArticle) {

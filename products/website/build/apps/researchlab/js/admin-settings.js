@@ -641,7 +641,9 @@ const AdminSettings = (function() {
         '</div>' +
         '<div class="metrics-detail" id="metrics-detail">' +
           '<h3 class="admin-list-title">Детальная информация</h3>' +
-          '<div id="metrics-detail-content">Загрузка...</div>' +
+          // updateMetrics() заполняет панель в том же такте, текст-заглушка
+          // не успевала показаться.
+          '<div id="metrics-detail-content"></div>' +
         '</div>' +
       '</section>' +
     '</div>';
@@ -725,9 +727,10 @@ const AdminSettings = (function() {
           '<button class="admin-btn admin-btn-secondary admin-btn-sm" id="settings-logs-clear">Очистить логи</button>' +
           '<button class="admin-btn admin-btn-secondary admin-btn-sm" id="settings-logs-export">Экспорт логов (JSON)</button>' +
         '</div>' +
-        '<div class="settings-logs-container" id="settings-logs-container">' +
-          '<div class="lab-spinner show"><div class="loader"></div></div>' +
-        '</div>' +
+        // renderLogs() заполняет контейнер в том же такте: индикатор не успевал
+        // синхронно, поэтому индикатор загрузки здесь не показывался ни разу:
+        // контейнер остаётся пустым до первого же кадра.
+        '<div class="settings-logs-container" id="settings-logs-container"></div>' +
       '</section>' +
     '</div>';
   }
@@ -768,9 +771,9 @@ const AdminSettings = (function() {
         '<div class="settings-field">' +
           '<button class="admin-btn admin-btn-danger admin-btn-sm" id="settings-errors-clear">Очистить логи ошибок</button>' +
         '</div>' +
-        '<div class="settings-logs-container" id="settings-errors-container">' +
-          '<div class="lab-spinner show"><div class="loader"></div></div>' +
-        '</div>' +
+        // То же, что и в логах запросов: renderErrorLogs() заполняет контейнер
+        // синхронно, индикатор не успевал появиться.
+        '<div class="settings-logs-container" id="settings-errors-container"></div>' +
       '</section>' +
     '</div>';
   }
