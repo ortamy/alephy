@@ -50,6 +50,40 @@
       return '<li class="ap-bullet">' + escapeHtml(item) + '</li>';
     }).join('') + '</ul>';
   }
+
+  // --- Кто это: личность, миссия, процессы, артефакты, метрики, формат ---
+  // Данные — из расширенного контракта паспорта (docstring агента через
+  // parse_agent_contract). Пустые поля ячейку не ломают: блок пропускается,
+  // а не рисуется пустым (§4.6 — честные пустые состояния).
+  function personaMarkup(contract) {
+    if (!contract) return '';
+    var blocks = '';
+    if (contract.identity || contract.mission) {
+      blocks += '<div class="ap-block"><h3 class="ap-block-title">Кто это</h3>' +
+        pairsMarkup([
+          ['Роль', contract.identity || '—'],
+          ['Миссия', contract.mission || '—']
+        ]) + '</div>';
+    }
+    if (contract.workflows && contract.workflows.length) {
+      blocks += '<div class="ap-block"><h3 class="ap-block-title">Как работает</h3>' +
+        listMarkup(contract.workflows) + '</div>';
+    }
+    if (contract.deliverables && contract.deliverables.length) {
+      blocks += '<div class="ap-block"><h3 class="ap-block-title">Что выдаёт</h3>' +
+        listMarkup(contract.deliverables) + '</div>';
+    }
+    if (contract.success_metrics && contract.success_metrics.length) {
+      blocks += '<div class="ap-block"><h3 class="ap-block-title">Признаки успеха</h3>' +
+        listMarkup(contract.success_metrics) + '</div>';
+    }
+    if (contract.format_contracts && contract.format_contracts.length) {
+      blocks += '<div class="ap-block"><h3 class="ap-block-title">Формат вывода</h3>' +
+        listMarkup(contract.format_contracts) + '</div>';
+    }
+    if (!blocks) return '';
+    return '<div class="ap-stack">' + blocks + '</div>';
+  }
   // --- Контракт: вход, выход, границы ---
   function contractMarkup(contract) {
     if (!contract) return '';
@@ -236,12 +270,16 @@
     var tasks = data.frontend_tasks || data.tasks || [];
     var capabilities = data.capabilities || (contract && contract.capabilities) || null;
 
-    // Раскладка: 5+7 (контракт и канон), 8+4 (аудит и задачи), 12 (код).
+    // Раскладка: 5+7 (контракт + кто это, контракт и канон), 8+4 (аудит и задачи), 12 (код).
     // Порядок в DOM повторяет визуальный — иначе ячейка на 12 колонок
     // разрывает строку и под ней остаётся дыра.
     view.innerHTML = '<div class="ap-bento">' +
       cell('01', 'Контракт агента', contract ? 'вход · выход · границы' : 'нет данных',
         contractMarkup(contract), 'ap-cell--contract') +
+      (personaMarkup(contract)
+        ? cell('07', 'Кто это', contract.identity || 'личность · миссия · формат',
+          personaMarkup(contract), 'ap-cell--persona')
+        : '') +
       cell('02', 'Канон проверки', canon ? canon.reference : 'нет данных',
         canon ? canonMarkup(canon) : emptyState('book-open', 'Справочник канона не собран.'),
         'ap-cell--canon') +

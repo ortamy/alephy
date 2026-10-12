@@ -24,6 +24,8 @@
 - Выход: `dict`, сохраняющий `trace` и `agentTrace`.
 - Вызов: `POST /api/run` (сервер `products/agents/server.py`).
 
+Контракт состоит из двух частей: машинной (выше) и паспортной — `identity`, `mission`, `workflows`, `deliverables`, `success_metrics`, `format_contracts`. Паспортная часть описывает агента для человека и для LLM (личность, миссия, шаги, артефакты, метрики успеха, формат ответа) и парсится из docstring модуля (`parse_agent_contract`). Подробности и формат — в [AGENT-REGISTRY.md](AGENT-REGISTRY.md).
+
 ## 3. Пакет
 
 Пакет создаётся `common.packet(query, **values)` и несёт два «конверта» следа и исследовательские поля:
@@ -80,6 +82,9 @@
 ## 6. Формы кооперации
 
 Движок `pipelines/core.py` даёт три способа собрать агентов. Больше форм в реестре нет — `run_quorum` и `run_dag` отложены осознанно (ADR-019).
+### 6.4. Граф (run_dag)
+
+Граф (run_dag) — отложен, см. открытые вопросы в AGENT-PIPELINES.md.
 
 ### 6.1. linear — `run_steps`
 

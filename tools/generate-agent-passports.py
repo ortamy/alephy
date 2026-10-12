@@ -150,6 +150,27 @@ def build(entry: dict) -> dict:
     facts = module_facts(entry["module"])
 
     entrypoint = facts["entrypoint"]
+
+    raw = getattr(module, "contract", None)
+    if raw is None:
+        contract = {
+            "input": {"type": "dict", "required": ["query"], "keys": ["query", "task"]},
+            "output": {"type": "dict", "required": ["trace", "agentTrace"], "keys": ["trace", "agentTrace", "result"]},
+            "run": {"endpoint": "POST /api/run", "entrypoint": entrypoint, "server": "python products/agents/server.py"},
+            "boundaries": [
+                "принимает пакет с обязательным полем query",
+                "сохраняет trace и agentTrace",
+                "запись на диск разрешается только именованным пайплайнам",
+            ],
+        }
+    elif callable(raw):
+        contract = dict(raw())
+        contract["run"]["entrypoint"] = entrypoint
+    else:
+        contract = dict(raw)
+        if contract.get("run"):
+            contract["run"]["entrypoint"] = entrypoint
+
     return {
         "schemaVersion": "1.0",
         "id": entry["slug"],
@@ -167,16 +188,7 @@ def build(entry: dict) -> dict:
             "writesFiles": entry["module"] == "arch_writer",
             "streaming": False,
         },
-        "contract": getattr(module, "contract", lambda: {
-            "input": {"type": "dict", "required": ["query"], "keys": ["query", "task"]},
-            "output": {"type": "dict", "required": ["trace", "agentTrace"], "keys": ["trace", "agentTrace", "result"]},
-            "run": {"endpoint": "POST /api/run", "entrypoint": entrypoint, "server": "python products/agents/server.py"},
-            "boundaries": [
-                "принимает пакет с обязательным полем query",
-                "сохраняет trace и agentTrace",
-                "запись на диск разрешается только именованным пайплайнам",
-            ],
-        })(),
+        "contract": contract,
         "tasks": getattr(module, "LAB_TASKS", [{
             "id": f"run-{entry['slug']}",
             "title": f"Запустить: {entry['name']}",

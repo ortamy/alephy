@@ -41,7 +41,8 @@
     "run": {
       "endpoint": "POST /run",
       "example": "{\"query\": \"аудит bento-заголовков\"}",
-      "server": "python products/agents/server.py"
+      "server": "python products/agents/server.py",
+      "entrypoint": "frontend.prepare(data)"
     }
   },
   "tasks": [

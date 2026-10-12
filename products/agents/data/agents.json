@@ -1,0 +1,738 @@
+{
+  "schemaVersion": "1.0",
+  "divisions": [
+    {
+      "id": "orchestration",
+      "label": "Оркестрация",
+      "color": "#b8860b",
+      "agents": [
+        "researcher",
+        "collector",
+        "flow-architect",
+        "liaison"
+      ],
+      "description": "Организуют поток работы: извлекают тему, связывают контекст, сводят итог."
+    },
+    {
+      "id": "research",
+      "label": "Исследование",
+      "color": "#2e7d32",
+      "agents": [
+        "researcher",
+        "semitologist",
+        "comparator",
+        "paleo-translator"
+      ],
+      "description": "Извлекают термины, корни, семитские параллели и палео-образы."
+    },
+    {
+      "id": "quality",
+      "label": "Контроль качества",
+      "color": "#c62828",
+      "agents": [
+        "exposer",
+        "critic",
+        "verifier"
+      ],
+      "description": "Ищут сдвиги, проверяют методологию и обязательные поля результата."
+    },
+    {
+      "id": "documentation",
+      "label": "Документация",
+      "color": "#6a1b9a",
+      "agents": [
+        "editor",
+        "collector",
+        "technical-writer"
+      ],
+      "description": "Приводят черновик к стилю проекта, сводят результат, оформляют отчёт."
+    },
+    {
+      "id": "code",
+      "label": "Разработка",
+      "color": "#1565c0",
+      "agents": [
+        "ai-engineer",
+        "frontend-developer",
+        "code-reviewer"
+      ],
+      "description": "Готовят задачи для LLM-инженера, аудитируют канон, ревьюют код."
+    },
+    {
+      "id": "architecture",
+      "label": "Архитектура",
+      "color": "#006064",
+      "agents": [
+        "arch-scanner",
+        "arch-critic",
+        "arch-planner",
+        "arch-writer",
+        "arch-convergence"
+      ],
+      "description": "Снимают снимок репозитория, сверяют паспорт с диском, сводят цикл."
+    }
+  ],
+  "agents": {
+    "researcher": {
+      "slug": "researcher",
+      "name": "Исследователь",
+      "division": "research",
+      "module": "researcher",
+      "function": "research",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "собери исследование"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "semitologist": {
+      "slug": "semitologist",
+      "name": "Семитолог",
+      "division": "research",
+      "module": "semitologist",
+      "function": "compare",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "GPT-4o",
+      "priority": 5,
+      "voiceCommands": [
+        "семитские параллели"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "exposer": {
+      "slug": "exposer",
+      "name": "Разоблачитель",
+      "division": "quality",
+      "module": "exposer",
+      "function": "expose",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "GPT-4o",
+      "priority": 5,
+      "voiceCommands": [
+        "разоблачи"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "editor": {
+      "slug": "editor",
+      "name": "Редактор",
+      "division": "documentation",
+      "module": "editor",
+      "function": "edit",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Haiku 3.5",
+      "priority": 5,
+      "voiceCommands": [
+        "отредактируй"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "collector": {
+      "slug": "collector",
+      "name": "Сборщик",
+      "division": "orchestration",
+      "module": "collector",
+      "function": "collect",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Haiku 3.5",
+      "priority": 5,
+      "voiceCommands": [
+        "собери"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "comparator": {
+      "slug": "comparator",
+      "name": "Компаратор",
+      "division": "research",
+      "module": "comparator",
+      "function": "compare",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "сравни стих"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "critic": {
+      "slug": "critic",
+      "name": "Критик",
+      "division": "quality",
+      "module": "critic",
+      "function": "critique",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "критика"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "verifier": {
+      "slug": "verifier",
+      "name": "Проверяющий",
+      "division": "quality",
+      "module": "verifier",
+      "function": "verify",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "проверь"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "paleo-translator": {
+      "slug": "paleo-translator",
+      "name": "Переводчик палео-иврита",
+      "division": "research",
+      "module": "paleo_translator",
+      "function": "translate",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "обратный перевод",
+        "переведи обратно"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "flow-architect": {
+      "slug": "flow-architect",
+      "name": "Архитектор потока",
+      "division": "orchestration",
+      "module": "flow_architect",
+      "function": "design",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "архитектор потока"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "liaison": {
+      "slug": "liaison",
+      "name": "Связной",
+      "division": "orchestration",
+      "module": "liaison",
+      "function": "relay",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "связной"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "technical-writer": {
+      "slug": "technical-writer",
+      "name": "Технический писатель",
+      "division": "documentation",
+      "module": "writer",
+      "function": "write",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "опиши"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "code-reviewer": {
+      "slug": "code-reviewer",
+      "name": "Ревьюер кода",
+      "division": "code",
+      "module": "code_reviewer",
+      "function": "review",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "ревью"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "ai-engineer": {
+      "slug": "ai-engineer",
+      "name": "AI-инженер",
+      "division": "code",
+      "module": "ai_engineer",
+      "function": "prepare",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "ai инженер"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "frontend-developer": {
+      "slug": "frontend-developer",
+      "name": "Фронтенд-разработчик",
+      "division": "code",
+      "module": "frontend",
+      "function": "prepare",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Локальный аудит",
+      "priority": 5,
+      "voiceCommands": [
+        "аудит канона"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "arch-scanner": {
+      "slug": "arch-scanner",
+      "name": "Архитектурный сканер",
+      "division": "architecture",
+      "module": "arch_scanner",
+      "function": "scan",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "сканер архитектуры"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "arch-critic": {
+      "slug": "arch-critic",
+      "name": "Архитектурный критик",
+      "division": "architecture",
+      "module": "arch_critic",
+      "function": "critique",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "критик архитектуры"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "arch-planner": {
+      "slug": "arch-planner",
+      "name": "Архитектурный планировщик",
+      "division": "architecture",
+      "module": "arch_planner",
+      "function": "plan",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "планировщик архитектуры"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "arch-writer": {
+      "slug": "arch-writer",
+      "name": "Архитектурный писатель",
+      "division": "architecture",
+      "module": "arch_writer",
+      "function": "write",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "писатель архитектуры"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    },
+    "arch-convergence": {
+      "slug": "arch-convergence",
+      "name": "Архитектурный сход",
+      "division": "architecture",
+      "module": "arch_convergence",
+      "function": "converge",
+      "capabilities": {
+        "execution": true,
+        "readRepository": true,
+        "writesFiles": false,
+        "streaming": false
+      },
+      "status": "active",
+      "model": "Claude Sonnet 4",
+      "priority": 5,
+      "voiceCommands": [
+        "архитектурный сход"
+      ],
+      "input": {
+        "type": "dict",
+        "required": [
+          "query"
+        ]
+      },
+      "output": {
+        "type": "dict",
+        "required": [
+          "trace",
+          "agentTrace",
+          "result"
+        ]
+      }
+    }
+  }
+}

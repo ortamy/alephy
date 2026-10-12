@@ -219,6 +219,8 @@ const AdminSettings = (function() {
         tabModelConfig() +
         tabCache() +
         tabAgents() +
+        tabTemplates() +
+        tabAgentsHelp() +
         tabMetrics() +
         tabLogs() +
         tabErrorLogs() +
@@ -236,6 +238,8 @@ const AdminSettings = (function() {
       '<button class="settings-nav-btn active" data-tab="model">Модель</button>' +
       '<button class="settings-nav-btn" data-tab="cache">Кэш</button>' +
       '<button class="settings-nav-btn" data-tab="agents">Агенты</button>' +
+      '<button class="settings-nav-btn" data-tab="templates">Сборки</button>' +
+      '<button class="settings-nav-btn" data-tab="agents-help">Справка</button>' +
       '<button class="settings-nav-btn" data-tab="metrics">Метрики</button>' +
       '<button class="settings-nav-btn" data-tab="logs">Логи</button>' +
       '<button class="settings-nav-btn" data-tab="errors">Ошибки</button>' +
@@ -605,6 +609,143 @@ const AdminSettings = (function() {
         addLog('Сброс настроек агентов');
       });
     }
+  }
+
+  // ─── TAB: ГОТОВЫЕ СБОРКИ ────────────────────────────────────────
+  // Шаблоны команд агентов под типовую задачу. Шаблон ещё не пайплайн:
+  // кнопка создаёт карточку через POST /api/pipelines, дальше обычный
+  // раздел «Пайплайны».
+  var TEMPLATES_API = 'http://127.0.0.1:5000';
+  var templatesCache = [];
+
+  function tabTemplates() {
+    return '<div class="settings-tab" id="settings-tab-templates" style="display:none;">' +
+      '<section class="settings-section">' +
+        '<h2 class="admin-list-title">Готовые сборки</h2>' +
+        '<p class="settings-hint">Команда агентов под типовую задачу уже собрана. «Создать пайплайн» превращает шаблон в обычную карточку — она появится в разделе «Пайплайны» и запускается оттуда. Сам шаблон не запускается.</p>' +
+        '<div id="templates-list" class="agents-grid"></div>' +
+      '</section>' +
+    '</div>';
+  }
+
+  function loadTemplates() {
+    var list = document.getElementById('templates-list');
+    if (!list) return;
+    list.innerHTML = '<p class="settings-hint">Загрузка шаблонов…</p>';
+    // Сначала статика (работает офлайн), API — запасной путь.
+    fetch('data/pipeline-templates.json')
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .catch(function() {
+        return fetch(TEMPLATES_API + '/api/pipeline-templates').then(function(response) {
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          return response.json();
+        });
+      })
+      .then(function(templates) {
+        templatesCache = Array.isArray(templates) ? templates : [];
+        renderTemplates(list);
+      })
+      .catch(function(error) {
+        list.innerHTML = '<p class="settings-hint">Шаблоны недоступны: ' + escapeHtml(error.message) +
+          '. Проверьте data/pipeline-templates.json или запущенный агентный сервер.</p>';
+      });
+  }
+
+  function renderTemplates(list) {
+    if (!templatesCache.length) {
+      list.innerHTML = '<p class="settings-hint">Шаблоны не найдены.</p>';
+      return;
+    }
+    list.innerHTML = templatesCache.map(function(template) {
+      return '<div class="agent-card" data-template="' + escapeHtml(template.id) + '">' +
+        '<div class="agent-card-header">' +
+          '<div class="agent-card-info">' +
+            '<div class="agent-card-name">' + escapeHtml(template.name) + '</div>' +
+            '<div class="agent-card-model">' + escapeHtml(template.category || '') + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="agent-card-body">' +
+          '<p class="settings-hint">' + escapeHtml(template.description || '') + '</p>' +
+          '<p class="settings-hint"><strong>Команда:</strong> ' + escapeHtml((template.agents || []).join(' → ')) + '</p>' +
+          (template.tip ? '<p class="settings-hint">' + escapeHtml(template.tip) + '</p>' : '') +
+          '<button type="button" class="admin-btn admin-btn-secondary" data-template-create="' + escapeHtml(template.id) + '">Создать пайплайн</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    // Кнопки свежие после каждой перерисовки — слушатель на каждую, без делегирования.
+    list.querySelectorAll('[data-template-create]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        createPipelineFromTemplate(this.getAttribute('data-template-create'));
+      });
+    });
+  }
+
+  function createPipelineFromTemplate(templateId) {
+    var template = templatesCache.filter(function(item) { return item.id === templateId; })[0];
+    if (!template) {
+      showNotice('Шаблон не найден: ' + templateId, true);
+      return;
+    }
+    var payload = {
+      name: template.name,
+      description: template.description || '',
+      agents: template.agents || [],
+      type: template.type || 'linear'
+    };
+    // Косметические поля сервер принимает белым списком (validate_pipeline).
+    ['maxIterations', 'defaultQuery', 'tip', 'examples'].forEach(function(key) {
+      if (template[key] !== undefined) payload[key] = template[key];
+    });
+    fetch(TEMPLATES_API + '/api/pipelines', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .then(function(created) {
+        showNotice('Пайплайн «' + created.name + '» создан — раздел «Пайплайны».', false);
+        addLog('Создан пайплайн из готовой сборки: ' + created.name);
+      })
+      .catch(function(error) {
+        showNotice('Не удалось создать пайплайн: ' + error.message +
+          '. Нужен запущенный агентный сервер (python products/agents/server.py).', true);
+      });
+  }
+
+  // ─── TAB: СПРАВКА «КАК РАБОТАЮТ АГЕНТЫ» ─────────────────────────
+  // Простыми словами: пакет, след, пайплайн, паспорт, реестр. Человек
+  // без инженерного бэкграунда должен понять систему с одного экрана.
+  function tabAgentsHelp() {
+    function block(title, body) {
+      return '<p class="admin-label">' + title + '</p>' +
+        '<p class="settings-hint">' + body + '</p>';
+    }
+    return '<div class="settings-tab" id="settings-tab-agents-help" style="display:none;">' +
+      '<section class="settings-section">' +
+        '<h2 class="admin-list-title">Как работают агенты</h2>' +
+        '<p class="settings-hint">Короткая справка без инженерной терминологии: что такое агент, откуда берётся результат и где что смотреть.</p>' +
+        block('Агент — отдельный специалист',
+          'Каждый агент («Исследователь», «Разоблачитель», «Критик»…) — маленькая программа с одной задачей: берёт пакет, делает своё, возвращает пакет. Паспорт агента — раздел «Агенты» → агент → «ПАСПОРТ АГЕНТА»: миссия, шаги работы, что выдаёт и как понять, что задача выполнена.') +
+        block('Пакет — «чемодан» с запросом',
+          'Всё, что передаётся между агентами, лежит в пакете: запрос (query), найденные улики (результаты предыдущих агентов) и след. Больше в пакете ничего нет — агенты не помнят ничего между запусками.') +
+        block('След — кто и что сделал',
+          'trace — короткий список «кто и в каком порядке сработал». agentTrace — подробный журнал шага: что агент увидел, записал и какие ограничения отметил. След виден в результате каждого запуска — по нему проверяется, что именно произошло.') +
+        block('Пайплайн — команда по порядку',
+          'Три формы: <strong>цепочка</strong> — агент за агентом; <strong>цикл</strong> — круг повторяется, пока проверяющий не подтвердит валидность (лимит витков защищает от бесконечности, «шмита» прощает накопленный шум); <strong>веер</strong> — несколько независимых проходов по одному вопросу с общим сведением. Если агенту нечего добавить, он возвращает пустой результат — цепочка честно останавливается, а не работает впустую.') +
+        block('Готовые сборки',
+          'Вкладка «Сборки» (между «Агенты» и «Справка»): типовые команды собраны заранее. Кнопка «Создать пайплайн» превращает шаблон в обычную карточку — её видно и запускают в разделе «Пайплайны».') +
+        block('Где живёт реестр',
+          'Единый список агентов и разделов — <code>products/agents/data/agents.json</code>; генератор — <code>python tools/generate-agent-registry.py</code>. Паспорта собираются из него же: <code>python tools/generate-agent-passports.py</code>. Описания агентов — в docstring модуля <code>products/agents/agents/*.py</code>: личность, миссия, шаги, артефакты, метрики и формат ответа.') +
+        block('Добавить агента — четыре шага',
+          '1) создать модуль <code>products/agents/agents/&lt;slug&gt;.py</code> с функцией <code>data → data</code> и docstring-контрактом; 2) записать агента в <code>products/agents/data/agents.json</code>; 3) <code>python tools/generate-agent-registry.py</code>; 4) <code>python tools/generate-agent-passports.py</code>. Проверка: <code>python -m unittest discover -s products/agents/tests</code>.') +
+      '</section>' +
+    '</div>';
   }
 
   // ─── TAB: SYSTEM METRICS ──────────────────────────────────────────
@@ -1049,6 +1190,9 @@ const AdminSettings = (function() {
           if (tab === 'logs') renderLogs();
           if (tab === 'errors') renderErrorLogs();
           if (tab === 'metrics') updateMetrics();
+          // Готовые сборки грузятся при первом открытии: список живой,
+          // перерисовывать его на каждом рендере настроек незачем.
+          if (tab === 'templates') loadTemplates();
         }
       });
     });

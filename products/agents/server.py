@@ -22,50 +22,66 @@ import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 
+import importlib
+
 from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 from orchestrator import dispatch, run_pipeline as execute_named_pipeline
 from pipelines.core import run_loop, run_steps
 from agents.common import packet
 from agents.convergence import converge
-from agents import ai_engineer, arch_convergence, arch_critic, arch_planner, arch_scanner, \
-    arch_writer, code_reviewer, collector, comparator, critic, editor, exposer, \
-    flow_architect, frontend, liaison, paleo_translator, researcher, semitologist, verifier, writer
 from ollama_adapter import OllamaError, status as ollama_status, summarize as ollama_summarize, \
     generate as ollama_generate
 
 app = Flask(__name__)
 PIPELINES_PATH = Path(__file__).resolve().parents[2] / "products" / "website" / "apps" / "researchlab" / "data" / "pipelines.json"
 RESULTS_PATH = PIPELINES_PATH.with_name("pipeline-results.json")
+# Готовые сборки: шаблоны команд агентов, из которых UI создаёт пайплайн
+# в один клик. Живут отдельным файлом — шаблон ещё не карточка.
+TEMPLATES_PATH = PIPELINES_PATH.with_name("pipeline-templates.json")
 WEB_ROOT = Path(__file__).resolve().parents[2] / "products" / "website"
 SERVER_START = time.time()
 
-# Русские имена агентов из UI (getAgentMapData) → их функции.
-# Позволяет исполнять кастомные пайплайны, созданные в Research Lab,
-# даже если для них не зарегистрирован Python-раннер.
-AGENT_FUNCTIONS = {
-    "Исследователь": researcher.research,
-    "Семитолог": semitologist.compare,
-    "Разоблачитель": exposer.expose,
-    "Редактор": editor.edit,
-    "Сборщик": collector.collect,
-    "Компаратор": comparator.compare,
-    "Критик": critic.critique,
-    "Проверяющий": verifier.verify,
-    "Переводчик палео-иврита": paleo_translator.translate,
-    "Архитектор потока": flow_architect.design,
-    "Связной": liaison.relay,
-    "Технический писатель": writer.write,
-    "Ревьюер кода": code_reviewer.review,
-    "AI-инженер": ai_engineer.prepare,
-    "Фронтенд-разработчик": frontend.prepare,
-    "Архитектурный сканер": arch_scanner.scan,
-    "Архитектурный критик": arch_critic.critique,
-    "Архитектурный планировщик": arch_planner.plan,
-    "Архитектурный писатель": arch_writer.write,
-    "Архитектурный сход": arch_convergence.converge,
-}
+# Источник правды о регистре агентов — единый JSON
+# (tools/generate-agent-registry.py). Каждая запись агента имеет модуль и имя
+# функции; они импортируются через importlib. Если модуль или функция не
+# найдены — сервер падает при запуске явно, а не на первом запросе.
+
 
 AGENTS_DIR = Path(__file__).resolve().parent
+AGENTS_DATA_PATH = AGENTS_DIR / "data" / "agents.json"
+
+
+def build_agent_registry():
+    """Auto-generate AGENT_FUNCTIONS / AGENT_SOURCES из единого реестра агентов.
+
+    Возвращает: (AGENT_FUNCTIONS, AGENT_SOURCES, AGENTS_MODULE_INDEX).
+    Ключи функций — русские имена, как в getAgentMapData(): UI шлёт их,
+    движок ищет по ним.
+    """
+    with AGENTS_DATA_PATH.open(encoding="utf-8") as handle:
+        registry = json.load(handle)
+    functions = {}
+    sources = {}
+    module_index = {}
+    for slug, spec in registry.get("agents", {}).items():
+        module = importlib.import_module("agents." + spec["module"])
+        fn = getattr(module, spec["function"], None)
+        if fn is None or not callable(fn):
+            raise ImportError(
+                "Агент %s: в модуле agents.%s нет функции %s"
+                % (slug, spec["module"], spec["function"])
+            )
+        functions[spec["name"]] = fn
+        sources[spec["name"]] = spec["module"] + ".py"
+        module_index[slug] = spec["module"]
+    return functions, sources, module_index
+
+
+AGENT_FUNCTIONS, AGENT_SOURCES, AGENTS_MODULE_INDEX = build_agent_registry()
+
+# Оркестратор — control-plane, его функций нет в AGENT_FUNCTIONS:
+# путь задан явно, а не импортируется.
+AGENT_SOURCES["Оркестратор"] = "orchestrator.py"
 
 # Пайплайны с правом записи в файлы проекта. Всё остальное работает только
 # на чтение, даже если запросит флаг: белый список, а не проверка имени.
@@ -74,17 +90,24 @@ WRITABLE_PIPELINES = {"arch_keeper"}
 # Витки циклической карточки из UI, если она не назвала своё число сама.
 DEFAULT_MAX_ITERATIONS = 5
 
-# Русское имя агента (как в UI) → модуль в agents/. Карта выводится из
-# AGENT_FUNCTIONS, а не ведётся отдельно: два списка одних и тех же имён
-# разъезжаются при добавлении агента. Эндпоинт исходников по-прежнему
-# читает только зарегистрированные модули — произвольный путь из запроса
-# не собирается. Оркестратор — control-plane, его функции нет в
-# AGENT_FUNCTIONS, поэтому его путь задан явно.
-AGENT_SOURCES = {
-    name: runner.__module__.replace(".", "/") + ".py"
-    for name, runner in AGENT_FUNCTIONS.items()
-}
-AGENT_SOURCES["Оркестратор"] = "orchestrator.py"
+
+def get_agent_module(slug: str):
+    """Импорт модуля агента по slug из реестра.
+
+    Используется эндпоинтом GET /api/agents/source — безопасный доступ к
+    исходникам только зарегистрированных агентов.
+    """
+    return importlib.import_module("agents." + AGENTS_MODULE_INDEX[slug])
+
+
+@app.get("/api/agents")
+def list_agents():
+    """Паспорта всех агентов из единого реестра (включая расширенный контракт).
+
+    endpoint: GET /api/agents
+    """
+    with AGENTS_DATA_PATH.open(encoding="utf-8") as handle:
+        return jsonify(json.load(handle))
 
 
 def run_card_pipeline(pipeline, data, steps):
@@ -105,7 +128,9 @@ def run_card_pipeline(pipeline, data, steps):
     else:
         data = run_steps(data, steps)
     if isinstance(data, dict) and data and "result" not in data:
-        data = collector.collect(data)
+        # Сборщик берётся из реестра, а не импортируется напрямую:
+        # иначе карта агентов и статические импорты разъезжаются.
+        data = AGENT_FUNCTIONS["Сборщик"](data)
     return data
 
 
@@ -115,6 +140,15 @@ def read_pipelines():
     with PIPELINES_PATH.open(encoding="utf-8") as handle:
         payload = json.load(handle)
     return payload if isinstance(payload, list) else payload.get("pipelines", [])
+
+
+def read_templates():
+    """Готовые сборки: статический список шаблонов, не карточки пайплайнов."""
+    if not TEMPLATES_PATH.exists():
+        return []
+    with TEMPLATES_PATH.open(encoding="utf-8") as handle:
+        payload = json.load(handle)
+    return payload if isinstance(payload, list) else payload.get("templates", [])
 
 
 def write_pipelines(pipelines):
@@ -371,6 +405,15 @@ def list_pipelines():
     return jsonify(read_pipelines())
 
 
+@app.get("/api/pipeline-templates")
+def list_pipeline_templates():
+    """Готовые сборки: шаблоны команд агентов для создания пайплайна.
+
+    endpoint: GET /api/pipeline-templates
+    """
+    return jsonify(read_templates())
+
+
 @app.get("/api/pipeline-results")
 def list_pipeline_results():
     return jsonify(read_results())
@@ -523,6 +566,17 @@ def validate_pipeline(payload):
         max_iterations = 0
     if max_iterations > 0:
         pipeline["maxIterations"] = max_iterations
+    # Косметические поля из готовой сборки: белый список, а не разбор всего
+    # payload — что не перечислено, в карточку не попадает.
+    for key in ("defaultQuery", "tip"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            pipeline[key] = value.strip()
+    examples = payload.get("examples")
+    if isinstance(examples, list):
+        kept = [str(item).strip() for item in examples if str(item).strip()][:4]
+        if kept:
+            pipeline["examples"] = kept
     return pipeline, None
 
 
