@@ -190,22 +190,89 @@
   .ll-focus { align-items:flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .ll-tile { animation:none; transition:none; } }
-.learn-lesson { max-width:720px; margin:0 auto; }
-.learn-lesson-top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
-.learn-step-label { color:var(--text-muted); font-size:15px; }
-.learn-step-track { display:flex; gap:6px; margin:12px 0 24px; }
-.learn-step-track span { height:5px; flex:1; border-radius:99px; background:var(--bg-tertiary); }.learn-step-track .active { background:var(--accent-gold); }
-.learn-question { padding:28px; text-align:center; background:var(--bg-card); border:1px solid var(--border-light); border-radius:10px; box-shadow:var(--shadow-soft); }
-.learn-question-symbol { font:clamp(72px,12vw,130px)/1 var(--font-paleo); color:var(--text-primary); margin:12px 0 20px; }
-.learn-question-image { font:600 30px/1.2 var(--font-heading); color:var(--accent-gold); margin:24px 0; }
-.learn-question label { display:block; text-align:left; font-weight:600; margin-bottom:8px; }
-.learn-answer-input { width:100%; min-height:48px; padding:10px 14px; border:1px solid var(--border-light); border-radius:6px; background:var(--bg-primary); color:var(--text-primary); font:18px var(--font-serif); }
+/* ===== Урок буквы: тулбар §4.7 + bento §5.2v (префикс `ls-`) =====
+   Пятнадцатый эталон bento внутри «Обучения»: 12 колонок, gap `--space-3`,
+   ячейка `.ls-cell` (hairline, radius `--radius-8`, тени = 0), шапка
+   `.ls-cell-head` по §4.1a. Одна ink-ячейка — только экран итога. */
+.ls-bento { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:var(--space-3); align-items:stretch; }
+.ls-cell { display:flex; flex-direction:column; gap:var(--space-3); min-width:0; padding:var(--space-4); background:var(--bg-card); border:1px solid var(--border-light); border-radius:var(--radius-8); box-shadow:none; }
+.ls-cell--stage { grid-column:span 8; }
+.ls-cell--path { grid-column:span 4; }
+.ls-cell--passport { grid-column:span 7; }
+.ls-cell--row { grid-column:span 5; }
+.ls-cell--ink { background:var(--bg-dark); border-color:var(--border-gold); color:var(--text-on-dark); }
+.ls-cell-head { display:flex; align-items:center; gap:10px; padding-bottom:var(--space-2); border-bottom:1px solid var(--border-light); }
+.ls-cell--ink .ls-cell-head { border-bottom-color:var(--line-strong); }
+.ls-num { flex:0 0 auto; color:var(--text-secondary); font:600 var(--ui-11)/1 var(--font-mono); letter-spacing:var(--tracking-caps); }
+.ls-cell--ink .ls-num { color:var(--accent-gold); }
+.module .ls-cell .ls-cell-title { margin:0; padding:0; border-bottom:0; color:var(--text-secondary); font:700 var(--ui-11)/1.3 var(--font-ui); letter-spacing:var(--tracking-caps); text-transform:uppercase; }
+.module .ls-cell--ink .ls-cell-title { color:var(--header-ink-muted); }
+.ls-cell-hint { margin-left:auto; color:var(--text-muted); font:var(--ui-12)/1 var(--font-mono); }
+.ls-cell--ink .ls-cell-hint { color:var(--header-ink-muted); }
+.lab-content .module .ls-cell p { margin:0; max-width:none; }
+.ls-stage { display:grid; justify-items:center; gap:var(--space-3); padding:var(--space-4) 0 var(--space-2); }
+.ls-symbol { color:var(--accent-gold); font:clamp(84px,16vw,148px)/1 var(--font-paleo); }
+.ls-image { color:var(--accent-gold); font:600 clamp(28px,4vw,40px)/1.15 var(--font-heading); text-align:center; }
+.ls-prompt { margin:0; color:var(--text-primary); font:600 clamp(20px,3vw,26px)/1.25 var(--font-heading); text-align:center; }
+.ls-cell--ink .ls-prompt { color:var(--text-on-dark); }
+.ls-done-note { max-width:42ch; color:var(--text-secondary); font:var(--ui-13)/1.5 var(--font-ui); text-align:center; }
+.ls-cell--ink .ls-done-note { color:var(--header-ink-muted); }
+.ls-field { display:flex; }
+.ls-input { flex:1 1 auto; min-width:0; min-height:48px; }
+.ls-actions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:var(--space-2); margin-top:auto; }
+.ls-actions .lab-btn { justify-content:center; }
+.ls-choices { margin-top:auto; }
+.ls-choice-key { display:inline-flex; align-items:center; justify-content:center; min-width:20px; margin-right:8px; color:var(--text-muted); font:600 var(--ui-11)/1 var(--font-mono); }
+.ls-metric { display:flex; align-items:baseline; gap:8px; margin:0; }
+.ls-metric strong { color:var(--accent-gold); font:600 clamp(30px,4vw,42px)/1 var(--font-heading); }
+.ls-metric span { color:var(--text-secondary); font:var(--ui-13)/1.3 var(--font-ui); }
+.ls-bar { display:block; height:6px; overflow:hidden; border-radius:99px; background:var(--bg-tertiary); }
+.ls-bar span { display:block; height:100%; background:var(--accent-gold); transition:width var(--motion-base); }
+.ls-path { display:grid; gap:6px; margin:0; padding:0; list-style:none; }
+.ls-path-item { display:flex; align-items:center; gap:8px; color:var(--text-muted); font:var(--ui-12)/1.3 var(--font-mono); }
+.ls-path-num { flex:0 0 auto; width:18px; color:var(--text-secondary); }
+.ls-path-item.is-current { color:var(--text-gold); }
+.ls-path-item.is-done { color:var(--text-primary); }
+.ls-path-item.is-done .ls-path-num { color:var(--accent-gold); }
+.ls-hint { margin:auto 0 0; padding:var(--space-2) var(--space-3); border:1px dashed var(--border-light); border-radius:var(--radius-8); color:var(--text-secondary); font:var(--ui-12)/1.45 var(--font-ui); background:var(--bg-primary); }
+.ls-hint--idle { color:var(--text-muted); }
+.ls-identity { display:flex; align-items:center; gap:var(--space-4); min-width:0; }
+.ls-identity-glyph { flex:0 0 auto; color:var(--text-primary); font:clamp(48px,7vw,72px)/1 var(--font-paleo); }
+.ls-identity-text { display:grid; gap:2px; min-width:0; }
+.ls-identity-line { color:var(--text-primary); font:600 18px/1.2 var(--font-heading); }
+.ls-identity-line.is-pending { color:var(--text-muted); font:var(--ui-12)/1.4 var(--font-ui); }
+.ls-identity-translit { color:var(--text-gold); font:var(--ui-12)/1.3 var(--font-mono); }
+.ls-note { margin-top:auto; color:var(--text-muted); font:var(--ui-12)/1.45 var(--font-ui); }
+.ls-navs { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-2); }
+.ls-nav { display:flex; align-items:center; gap:10px; min-height:48px; padding:8px 10px; text-align:left; background:var(--bg-primary); border:1px solid var(--border-light); border-radius:var(--radius-8); color:inherit; cursor:pointer; }
+.ls-nav:hover,.ls-nav:focus-visible { border-color:var(--accent-gold); outline:none; }
+.ls-nav.is-disabled { color:var(--text-muted); cursor:default; }
+.ls-nav-glyph { color:var(--accent-gold); font:28px/1 var(--font-paleo); }
+.ls-nav-name { color:var(--text-primary); font:600 14px/1.2 var(--font-heading); }
+.ls-dots { display:grid; grid-template-columns:repeat(11,minmax(0,1fr)); gap:5px; margin-top:auto; }
+.ls-dot { width:9px; height:9px; border:1px solid var(--border-light); border-radius:50%; background:var(--bg-tertiary); }
+.ls-dot.is-progress { border-color:transparent; background:var(--accent-gold); }
+.ls-dot.is-complete { border-color:transparent; background:var(--accent-green); }
+.ls-dot.is-current { outline:2px solid var(--accent-gold); outline-offset:1px; }
+.learn-answer-input { width:100%; min-height:48px; padding:10px 14px; border:1px solid var(--border-light); border-radius:var(--radius-8); background:var(--bg-primary); color:var(--text-primary); font:18px var(--font-serif); }
 .learn-answer-input:focus { border-color:var(--accent-gold); outline:2px solid color-mix(in srgb,var(--accent-gold) 35%,transparent); }
 .learn-answer-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
 .learn-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; text-align:left; }
-.learn-option { min-height:58px; padding:14px 16px; border:1px solid var(--border-light); border-radius:7px; background:var(--bg-primary); color:var(--text-primary); font:18px var(--font-serif); cursor:pointer; text-align:left; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
-.learn-option:hover,.learn-option:focus-visible { border-color:var(--accent-gold); outline:none; }.learn-option.correct { border-color:var(--accent-green); background:color-mix(in srgb,var(--accent-green) 15%,var(--bg-card)); animation:learn-correct .35s ease; }.learn-option.wrong { border-color:var(--accent-red); background:color-mix(in srgb,var(--accent-red) 15%,var(--bg-card)); animation:learn-wrong .35s ease; }
-.learn-feedback { min-height:28px; margin-top:15px; font-weight:600; }.learn-feedback.is-correct { color:var(--accent-green); }.learn-feedback.is-wrong { color:var(--accent-red); }
+.learn-option { min-height:58px; padding:14px 16px; border:1px solid var(--border-light); border-radius:var(--radius-8); background:var(--bg-primary); color:var(--text-primary); font:18px var(--font-serif); cursor:pointer; text-align:left; transition:background .18s ease,border-color .18s ease,transform .18s ease; }
+.learn-option:hover,.learn-option:focus-visible { border-color:var(--accent-gold); outline:none; }
+.learn-option.correct { border-color:var(--accent-green); background:color-mix(in srgb,var(--accent-green) 15%,var(--bg-card)); animation:learn-correct .35s ease; }
+.learn-option.wrong { border-color:var(--accent-red); background:color-mix(in srgb,var(--accent-red) 15%,var(--bg-card)); animation:learn-wrong .35s ease; }
+.learn-feedback { min-height:28px; margin-top:15px; font-weight:600; }
+.learn-feedback.is-correct { color:var(--accent-green); }
+.learn-feedback.is-wrong { color:var(--accent-red); }
+@media (max-width:900px) { .ls-cell--stage,.ls-cell--path,.ls-cell--passport,.ls-cell--row { grid-column:1 / -1; } }
+@media (max-width:640px) {
+  .ls-symbol { font-size:clamp(72px,24vw,120px); }
+  .ls-actions .lab-btn { flex:1 1 140px; }
+  .ls-navs { grid-template-columns:1fr; }
+  .ls-dots { grid-template-columns:repeat(11,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .ls-bar span { transition:none; } .learn-option { transition:none; } }
 /* ===== Угадай образ: тулбар §4.7 + bento §5.2a (префикс `gm-`) =====
    Тринадцатый эталон bento: 12 колонок, gap `--space-3`, ячейка
    `.gm-cell` (hairline, radius `--radius-8`, тени = 0), шапка — общая

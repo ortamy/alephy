@@ -94,7 +94,10 @@
       if (state.view === 'lesson') {
         item = byKey(decodeURIComponent(segments[1]));
         if (!item) state.view = 'lessons';
-        else state.lesson = state.lesson && state.lesson.item.hebrew === item.hebrew ? state.lesson : {item:item,step:1,score:0,done:false};
+        else {
+          state.lesson = state.lesson && state.lesson.item.hebrew === item.hebrew ? state.lesson : {item:item,step:1,score:0,done:false,misses:0};
+          bindLessonKeys();
+        }
       }
       state.course = null;
     } else if (target === 'review') {
@@ -854,11 +857,190 @@
     return lettersToolbar(shown) + lettersBody(progress(), shown);
   }
 
+  /* ===== Урок буквы: bento-экран «Урок» (#learn/lessons/<буква>) =====
+     Канон §5.2a / §5.2v. Четыре шага (название → образ → значение → знак)
+     живут в ячейках, а не в одной карточке 720px. Подсказка, паспорт и
+     соседние буквы не спойлерят текущий шаг: открывается только пройденное. */
+
+  var LESSON_STEPS = [
+    { id: 1, title: 'Название', prompt: 'Как называется этот знак?', kind: 'text', field: 'name', stage: 'paleo' },
+    { id: 2, title: 'Образ', prompt: 'Какой предметный образ несёт знак?', kind: 'choice', field: 'image', stage: 'paleo' },
+    { id: 3, title: 'Значение', prompt: 'Какое действие несёт этот образ?', kind: 'text', field: 'meaning', stage: 'paleo' },
+    { id: 4, title: 'Знак', prompt: 'Какой палео-глиф соответствует образу?', kind: 'choice', field: 'paleo', stage: 'image' }
+  ];
+
+  function lessonStepMeta(step) {
+    return LESSON_STEPS[Math.max(0, Math.min(3, (step || 1) - 1))];
+  }
+
+  function lessonIndex(item) {
+    var i = 0;
+    for (; i < letters.length; i++) if (letters[i].hebrew === item.hebrew) return i;
+    return 0;
+  }
+
+  function neighborLetter(item, offset) {
+    var index = lessonIndex(item) + offset;
+    return index >= 0 && index < letters.length ? letters[index] : null;
+  }
+
+  function lessonHint(item, step) {
+    if (step === 1) return 'Название начинается на «' + String(item.name).charAt(0) + '».';
+    if (step === 2) return 'Это предмет, который можно показать рукой, а не абстракция.';
+    if (step === 3) return 'Это действие или функция образа, не сам предмет.';
+    return 'Тот же знак, с которого начался урок.';
+  }
+
+  function lessonCellHead(num, title, hint) {
+    return '<header class="ls-cell-head"><span class="ls-num">' + num + '</span>' +
+      '<h2 class="ls-cell-title">' + esc(title) + '</h2>' +
+      (hint ? '<span class="ls-cell-hint">' + esc(hint) + '</span>' : '') +
+      '</header>';
+  }
+
+  function lessonToolbar(lesson) {
+    var step = lesson.done ? 5 : lesson.step;
+    var chips = LESSON_STEPS.map(function(meta) {
+      var cls = lesson.done || meta.id < step ? ' is-done' : (meta.id === step ? ' is-hot' : '');
+      return '<span class="learn-hub-chip' + cls + '">' + meta.id + ' · ' + meta.title + '</span>';
+    }).join('');
+    return '<section class="lab-toolbar" aria-label="Панель урока">' +
+        '<div class="lab-toolbar-group" role="group" aria-label="Шаги урока">' + chips + '</div>' +
+        '<div class="lab-toolbar-actions">' +
+          '<span class="lab-toolbar-count" aria-live="polite">Верно <strong>' + lesson.score + '</strong> из 4</span>' +
+          '<button type="button" class="lab-btn lab-btn-secondary lab-btn-sm lab-toolbar-btn learn-back" onclick="LearnLab.openLessons()"><i data-lucide="arrow-left" class="lab-icon" aria-hidden="true"></i>К алфавиту</button>' +
+        '</div>' +
+      '</section>';
+  }
+
+  function lessonChoiceButtons(item, meta) {
+    return distractors(item).map(function(option, index) {
+      var label = meta.field === 'image' ? option.image : option.paleo;
+      var lang = meta.field === 'paleo' ? ' lang="hbo"' : '';
+      return '<button type="button" class="learn-option" data-answer="' + esc(option.hebrew) + '"' + lang +
+        ' onclick="LearnLab.answer(\'' + esc(option.hebrew).replace(/'/g, "\\'") + '\')">' +
+        '<span class="ls-choice-key">' + (index + 1) + '</span>' + esc(label) +
+      '</button>';
+    }).join('');
+  }
+
+  function lessonStageCell(lesson) {
+    var item = lesson.item, meta = lessonStepMeta(lesson.step);
+    var stage = meta.stage === 'image'
+      ? '<div class="ls-image">' + esc(item.image) + '</div>'
+      : '<div class="ls-symbol" lang="hbo">' + esc(item.paleo) + '</div>';
+    var body = meta.kind === 'text'
+      ? '<div class="ls-field"><input id="learn-answer" class="lab-input ls-input" autocomplete="off" placeholder="Ваш ответ" aria-label="' + esc(meta.prompt) + '"></div>' +
+        '<div class="ls-actions"><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.submitText()">Проверить</button></div>'
+      : '<div class="learn-options ls-choices">' + lessonChoiceButtons(item, meta) + '</div>';
+    return '<section class="ls-cell ls-cell--stage">' +
+      lessonCellHead('01', 'Знак', 'шаг ' + lesson.step + ' из 4') +
+      '<div class="ls-stage">' + stage + '<p class="ls-prompt">' + esc(meta.prompt) + '</p></div>' +
+      body +
+      '<div id="learn-feedback" class="learn-feedback" role="status" aria-live="polite"></div>' +
+    '</section>';
+  }
+
+  function lessonDoneCell(lesson) {
+    var item = lesson.item;
+    var next = neighborLetter(item, 1);
+    var perfect = lesson.score >= 4;
+    return '<section class="ls-cell ls-cell--stage ls-cell--ink">' +
+      lessonCellHead('01', 'Итог', lesson.score + ' из 4') +
+      '<div class="ls-stage">' +
+        '<div class="ls-symbol" lang="hbo">' + esc(item.paleo) + '</div>' +
+        '<p class="ls-prompt">' + esc(item.name) + '</p>' +
+        '<p class="ls-done-note">' + (perfect
+          ? 'Четыре шага совпали. Буква собрана в очередь повторения с оценкой «хорошо».'
+          : 'Буква освоена. Шаги с промахом вернутся в повторение раньше.') + '</p>' +
+      '</div>' +
+      '<div class="ls-actions">' +
+        (next
+          ? '<button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.openLesson(\'' + next.hebrew + '\')">Следующая: ' + esc(next.name) + '</button>'
+          : '<button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.openLessons()">К алфавиту</button>') +
+        '<button type="button" class="lab-btn lab-btn-secondary" onclick="LearnLab.repeatLesson()">Пройти ещё раз</button>' +
+      '</div>' +
+    '</section>';
+  }
+
+  function lessonPathCell(lesson) {
+    var current = lesson.done ? 5 : lesson.step;
+    var passed = lesson.done ? 4 : Math.max(0, lesson.step - 1);
+    var percent = Math.round(passed / 4 * 100);
+    var items = LESSON_STEPS.map(function(meta) {
+      var cls = lesson.done || meta.id < current ? ' is-done' : (meta.id === current ? ' is-current' : '');
+      return '<li class="ls-path-item' + cls + '"><span class="ls-path-num">' + meta.id + '</span><span class="ls-path-title">' + meta.title + '</span></li>';
+    }).join('');
+    var hint = (!lesson.done && lesson.misses)
+      ? '<p class="ls-hint">' + esc(lessonHint(lesson.item, lesson.step)) + '</p>'
+      : '<p class="ls-hint ls-hint--idle">Промах откроет край образа — не готовый ответ.</p>';
+    return '<section class="ls-cell ls-cell--path">' +
+      lessonCellHead('02', 'Ход урока', passed + ' из 4') +
+      '<p class="ls-metric"><strong>' + lesson.score + '</strong><span>шагов закрыто</span></p>' +
+      '<span class="ls-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '" aria-label="Ход урока"><span style="width:' + percent + '%"></span></span>' +
+      '<ol class="ls-path">' + items + '</ol>' +
+      hint +
+    '</section>';
+  }
+
+  function lessonPassportCell(lesson) {
+    var item = lesson.item;
+    var step = lesson.done ? 5 : lesson.step;
+    var showPaleo = lesson.done || step !== 4;
+    var source = root.PaleoLetters && root.PaleoLetters.byHebrew && root.PaleoLetters.byHebrew[item.hebrew];
+    var translit = source && source.translit ? source.translit : '';
+    function line(ok, value, pending) {
+      return '<span class="ls-identity-line' + (ok ? '' : ' is-pending') + '">' + (ok ? esc(value) : pending) + '</span>';
+    }
+    return '<section class="ls-cell ls-cell--passport">' +
+      lessonCellHead('03', 'Паспорт', item.hebrew) +
+      '<div class="ls-identity">' +
+        '<span class="ls-identity-glyph" lang="' + (showPaleo ? 'hbo' : 'he') + '" aria-hidden="true">' + esc(showPaleo ? item.paleo : item.hebrew) + '</span>' +
+        '<div class="ls-identity-text">' +
+          line(step >= 2, item.name, 'имя откроется после шага 1') +
+          line(step >= 3, item.image, 'образ откроется после шага 2') +
+          line(step >= 4, item.meaning, 'значение откроется после шага 3') +
+          (lesson.done && translit ? '<span class="ls-identity-translit">' + esc(translit) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<p class="ls-note">Паспорт не подсказывает текущий шаг: открывается только уже пройденное.</p>' +
+    '</section>';
+  }
+
+  function lessonRowCell(lesson) {
+    var item = lesson.item;
+    var index = lessonIndex(item);
+    var prev = neighborLetter(item, -1);
+    var next = neighborLetter(item, 1);
+    var p = progress();
+    var dots = letters.map(function(letter, i) {
+      var status = letterStatus(p, letter);
+      var cls = i === index ? ' is-current' : (status === 'complete' ? ' is-complete' : (status === 'progress' ? ' is-progress' : ''));
+      return '<span class="ls-dot' + cls + '" title="' + esc(letter.name) + '"></span>';
+    }).join('');
+    function nav(target, emptyLabel) {
+      if (!target) return '<span class="ls-nav is-disabled">' + emptyLabel + '</span>';
+      return '<button type="button" class="ls-nav" onclick="LearnLab.openLesson(\'' + target.hebrew + '\')">' +
+        '<span class="ls-nav-glyph" lang="hbo" aria-hidden="true">' + esc(target.paleo) + '</span>' +
+        '<span class="ls-nav-name">' + esc(target.name) + '</span></button>';
+    }
+    return '<section class="ls-cell ls-cell--row">' +
+      lessonCellHead('04', 'Ряд', (index + 1) + ' из ' + letters.length) +
+      '<div class="ls-navs">' + nav(prev, 'Начало ряда') + nav(next, 'Конец ряда') + '</div>' +
+      '<div class="ls-dots" aria-hidden="true">' + dots + '</div>' +
+    '</section>';
+  }
+
   function renderLesson() {
-    var item = state.lesson.item, step = state.lesson.step, choices, prompt, body;
-    if (step === 1 || step === 3) { prompt = step === 1 ? 'Введите название буквы' : 'Введите значение образа'; body = '<label for="learn-answer">' + prompt + '</label><input id="learn-answer" class="learn-answer-input" autocomplete="off" autofocus placeholder="Ваш ответ">'; }
-    else { choices = distractors(item); prompt = step === 2 ? 'Выберите правильный образ' : 'Выберите правильный символ'; body = '<div class="learn-options">' + choices.map(function(option) { var label = step === 2 ? option.image : option.paleo; var value = step === 2 ? option.hebrew : option.hebrew; return '<button type="button" class="learn-option" data-answer="' + esc(value) + '" onclick="LearnLab.answer(\'' + esc(value).replace(/'/g,"\\'") + '\')">' + esc(label) + '</button>'; }).join('') + '</div>'; }
-    return '<div class="learn-lesson"><div class="learn-lesson-top"><div class="learn-lesson-title">' + esc(item.name) + '</div><span class="learn-step-label">Шаг ' + step + ' из 4</span></div><div class="learn-step-track">' + [1,2,3,4].map(function(n) { return '<span class="' + (n <= step ? 'active' : '') + '"></span>'; }).join('') + '</div><section class="learn-question"><div class="learn-question-symbol" lang="hbo">' + item.paleo + '</div><p>' + prompt + '</p><div class="learn-question-body">' + body + '</div><div id="learn-feedback" class="learn-feedback" role="status" aria-live="polite"></div>' + ((step === 1 || step === 3) ? '<div class="learn-answer-actions"><button type="button" class="lab-btn lab-btn-primary" onclick="LearnLab.submitText()">Проверить</button></div>' : '') + '</section></div>';
+    var lesson = state.lesson;
+    if (!lesson || !lesson.item) return '';
+    return lessonToolbar(lesson) +
+      '<div class="ls-bento">' +
+        (lesson.done ? lessonDoneCell(lesson) : lessonStageCell(lesson)) +
+        lessonPathCell(lesson) +
+        lessonPassportCell(lesson) +
+        lessonRowCell(lesson) +
+      '</div>';
   }
 
   function reviewItem(card) {
@@ -1519,7 +1701,13 @@
       root.LabHero.setView('learn', 'course', { title: course.title, subtitle: course.description, meta: [course.level + ' · ' + (window.LabPlural ? LabPlural(lessons.length, 'урок', 'урока', 'уроков') : lessons.length + ' уроков')] });
     } else if (state.view === 'lesson' && state.lesson) {
       var item = state.lesson.item;
-      root.LabHero.setView('learn', 'lesson', { title: item.name, subtitle: item.image + ' · ' + item.meaning });
+      var step = state.lesson.done ? 4 : state.lesson.step;
+      root.LabHero.setView('learn', 'lesson', {
+        title: state.lesson.done ? item.name : 'Урок',
+        subtitle: state.lesson.done ? (item.image + ' · ' + item.meaning) : 'От знака к действию: четыре шага, один образ.',
+        glyph: (state.lesson.done || step !== 4) ? item.paleo : '',
+        meta: ['Шаг ' + step + ' из 4', (lessonIndex(item) + 1) + ' / ' + letters.length]
+      });
     } else if (state.view === 'game' && state.game) {
       root.LabHero.setView('learn', 'game');
     } else if (state.view === 'review') {
@@ -1560,10 +1748,56 @@
     });
   }
 
-  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); if (state.view === 'course') courseEnhance(); if (state.view === 'home') bindHubToolbar(container); if (state.view === 'lessons') bindLettersToolbar(container); }
+  /* Клавиатура урока: Enter — проверка текста, 1–4 — варианты выбора.
+     Слушатель один на модуль, как у повторения: на других экранах цифры
+     остаются вводом, а Enter в поле ответа не уезжает в форму страницы. */
+  var lessonKeysBound = false;
+  function bindLessonKeys() {
+    if (lessonKeysBound) return;
+    lessonKeysBound = true;
+    document.addEventListener('keydown', function(event) {
+      if (state.view !== 'lesson' || !state.lesson || state.lesson.done) return;
+      if (event.ctrlKey || event.metaKey || event.altKey) return;
+      if (document.querySelector('.modal-overlay.show')) return;
+      var target = event.target || {}, tag = target.tagName || '';
+      var inField = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable;
+      var meta = lessonStepMeta(state.lesson.step);
+      if (event.key === 'Enter' && meta.kind === 'text') {
+        event.preventDefault();
+        api.submitText();
+        return;
+      }
+      if (inField) return;
+      if (meta.kind !== 'choice') return;
+      var index = Number(event.key) - 1;
+      if (index < 0 || index > 3) return;
+      var buttons = document.querySelectorAll('.ls-choices .learn-option');
+      var button = buttons[index];
+      if (!button) return;
+      event.preventDefault();
+      api.answer(button.getAttribute('data-answer'));
+    });
+  }
+
+  function focusLessonInput() {
+    var input = document.getElementById('learn-answer');
+    if (!input) return;
+    try { input.focus(); } catch (error) { /* фокус не критичен */ }
+  }
+
+  function render() { var container = getContainer(); if (!container || !letters.length) return; if (state.view === 'lessons') container.innerHTML = renderLessons(); else if (state.view === 'lesson') container.innerHTML = renderLesson(); else if (state.view === 'review') container.innerHTML = renderReview(); else if (state.view === 'game') container.innerHTML = renderGame(); else if (state.view === 'courses') container.innerHTML = renderCourses(); else if (state.view === 'course') container.innerHTML = renderCourse(); else if (state.view === 'trainer') container.innerHTML = renderTrainer(); else if (state.view === 'battle') container.innerHTML = renderBattle(); else container.innerHTML = renderHome(); applyHero(); if (state.view === 'course') courseEnhance(); if (state.view === 'home') bindHubToolbar(container); if (state.view === 'lessons') bindLettersToolbar(container); if (state.view === 'lesson') focusLessonInput(); }
   function markStarted(item) { var p = progress(); if (!p.letters[item.hebrew] || p.letters[item.hebrew].status !== 'complete') p.letters[item.hebrew] = {status:'progress',score:0}; touch(p); }
   function feedback(text, ok) { var el = document.getElementById('learn-feedback'); if (el) { el.textContent = text; el.className = 'learn-feedback ' + (ok ? 'is-correct' : 'is-wrong'); } }
-  function advance(ok) { if (!ok) return; state.lesson.score++; if (state.lesson.step < 4) { state.lesson.step++; render(); } else { var p = progress(), item = state.lesson.item; p.letters[item.hebrew] = {status:'complete',score:state.lesson.score,attempts:(p.letters[item.hebrew] && p.letters[item.hebrew].attempts || 0) + 1,lastActivity:now()}; srsLetterCards(item).forEach(function(def) { srsSchedule(def.id, def.type, def.label, state.lesson.score >= 4 ? 'good' : 'hard'); }); touch(p); state.view = 'lesson'; state.lesson.done = true; render(); } }
+  function markMiss() {
+    if (!state.lesson) return;
+    state.lesson.misses = (state.lesson.misses || 0) + 1;
+    var hint = document.querySelector('.ls-hint');
+    if (hint) {
+      hint.textContent = lessonHint(state.lesson.item, state.lesson.step);
+      hint.classList.remove('ls-hint--idle');
+    }
+  }
+  function advance(ok) { if (!ok) return; state.lesson.score++; state.lesson.misses = 0; if (state.lesson.step < 4) { state.lesson.step++; render(); } else { var p = progress(), item = state.lesson.item; p.letters[item.hebrew] = {status:'complete',score:state.lesson.score,attempts:(p.letters[item.hebrew] && p.letters[item.hebrew].attempts || 0) + 1,lastActivity:now()}; srsLetterCards(item).forEach(function(def) { srsSchedule(def.id, def.type, def.label, state.lesson.score >= 4 ? 'good' : 'hard'); }); touch(p); state.view = 'lesson'; state.lesson.done = true; render(); } }
 
   var api = {
     init: function() { if (!letters.length) loadLetters(); render(); },
@@ -1585,8 +1819,13 @@
       render();
     },
     openLesson: function(key) { var item = byKey(key); if (!item) return; markStarted(item); navigate(['lessons', encodeURIComponent(key)]); },
-    submitText: function() { var input = document.getElementById('learn-answer'), step = state.lesson.step, expected = step === 1 ? state.lesson.item.name : state.lesson.item.meaning; if (!input) return; var ok = inputMatch(input.value, expected); if (ok) advance(true); else feedback('Пока не совпало. Попробуйте ещё раз.', false); },
-    answer: function(key) { var ok = key === state.lesson.item.hebrew; if (ok) advance(true); else feedback('Это другой образ. Попробуйте ещё раз.', false); },
+    repeatLesson: function() {
+      if (!state.lesson || !state.lesson.item) return;
+      state.lesson = { item: state.lesson.item, step: 1, score: 0, done: false, misses: 0 };
+      render();
+    },
+    submitText: function() { var input = document.getElementById('learn-answer'), step = state.lesson.step, expected = step === 1 ? state.lesson.item.name : state.lesson.item.meaning; if (!input) return; var ok = inputMatch(input.value, expected); if (ok) advance(true); else { markMiss(); feedback('Пока не совпало. Попробуйте ещё раз.', false); } },
+    answer: function(key) { var ok = key === state.lesson.item.hebrew; if (ok) advance(true); else { markMiss(); feedback('Это другой образ. Попробуйте ещё раз.', false); } },
     openGame: function() { navigate(['game']); },
     openCourses: function() { navigate(['courses']); },
     openTrainer: function() { navigate(['paleo-trainer']); },
