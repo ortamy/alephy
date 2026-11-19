@@ -1,8 +1,11 @@
 # check-build-sync.py — build/ это зеркало исходников, а не источник истины.
 # Проверка паритета: любой файл apps/researchlab обязан совпадать с копией в
 # build/apps/researchlab (побайтно). Расхождение = забытый products/website/tools/build.sh.
+# Дополнительно проверяются относительные ссылки разметки index.html сборки:
+# путь на непубликуемый файл (например, ../../src/js/i18n.js) даёт 404 на сайте.
 import hashlib
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -25,6 +28,43 @@ def digest(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1 << 16), b""):
             hasher.update(chunk)
     return hasher.hexdigest()
+
+
+REF_RE = re.compile(r'(?:src|href)="([^"]+)"')
+EXTERNAL_PREFIXES = ("#", "/", "http://", "https://", "mailto:", "tel:", "data:", "javascript:")
+
+
+def asset_ref_problems() -> list[str]:
+    """Ссылки разметки index.html, которые в артефакте не разрешаются.
+
+    Ловит класс ошибки «ссылка на ../../src/js/i18n.js»: такой файл build.sh
+    не публикует, браузер получает 404, а smoke его игнорирует как
+    «Failed to load resource». Проверяем только сборку: относительные пути
+    разметки разрешаются именно от неё.
+    """
+    index = BUILD / "index.html"
+    if not index.is_file():
+        return []
+    # BUILD — каталог лабы в артефакте; публикуемый корень на два уровня выше
+    # (build/apps/researchlab → build). Ссылки вроде ../../js/… разрешаются от него.
+    artifact_root = BUILD.parents[1].resolve()
+    problems: list[str] = []
+    for match in REF_RE.finditer(index.read_text(encoding="utf-8")):
+        ref = match.group(1).strip()
+        if not ref or ref.startswith(EXTERNAL_PREFIXES):
+            continue
+        ref = ref.split("?")[0].split("#")[0]
+        if not ref:
+            continue
+        target = (index.parent / ref).resolve()
+        if target.is_dir():
+            continue  # ссылка на каталог (например, «../../» — на главную сайта)
+        inside = target == artifact_root or artifact_root in target.parents
+        if not inside:
+            problems.append(f"ссылка ведёт за пределы артефакта: {ref}")
+        elif not target.is_file():
+            problems.append(f"битая ссылка в артефакте: {ref}")
+    return problems
 
 
 def collect(root: Path) -> dict[str, Path]:
@@ -63,6 +103,10 @@ def main() -> int:
     # Файлы, которых больше нет в исходниках, но которые остались в build.
     for relative in sorted(set(build_files) - set(source_files)):
         problems.append(f"лишний файл в build: {relative}")
+
+    # Класс ошибки, который не ловит ни один гейт: ссылка разметки на файл,
+    # которого в артефакте нет (исторически — ../../src/js/i18n.js).
+    problems.extend(asset_ref_problems())
 
     if problems:
         print("::error::build/ разошёлся с products/website/apps/researchlab")

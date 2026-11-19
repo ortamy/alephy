@@ -272,8 +272,10 @@
   <kbd>⌨</kbd> ?
 </div>
 
-<!-- Shared runtime: deployed beside the site locales, before lab modules. -->
-<script defer src="../../src/js/i18n.js"></script>
+<!-- Shared runtime: build.sh кладёт src/js в build/js, поэтому рантайм живёт
+     на уровень выше лабы. Путь «../../js/…», а не «../../src/js/…»: второго
+     каталога в артефакте нет — он давал 404 на каждой странице сайта. -->
+<script defer src="../../js/i18n.js"></script>
 <!-- Общие утилиты (escapeHtml) и реестр маршрутов — первыми из js/:
      остальные модули вызывают escapeHtml при рендере, а роутер читает реестр. -->
 <script defer src="js/utils.js"></script>
