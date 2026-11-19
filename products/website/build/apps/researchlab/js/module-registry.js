@@ -181,6 +181,10 @@ window.ModuleRegistry = (function () {
     // (шаблон разоблачения) — служебные, маршрутов не имеют; их список
     // закреплён в registry-check.mjs.
     { id: 'method-books-states-map', kind: 'markdown', doc: { collection: 'methodology', key: 'books-states-map', docs: 'docs/06-METHODOLOGY/BOOKS-STATES-MAP.md' } },
+    // Модель завоевания: контрольный случай 1066 и четыре шага детектора.
+    // Вкладка хаба и чекер #abstraction-checker ссылаются на этот документ,
+    // а не пересказывают его.
+    { id: 'method-conquest-model', kind: 'markdown', doc: { collection: 'methodology', key: 'conquest-model', docs: 'docs/06-METHODOLOGY/CONQUEST-MODEL.md' } },
     { id: 'method-cultural-matrices', kind: 'markdown', doc: { collection: 'methodology', key: 'cultural-matrices', docs: 'docs/06-METHODOLOGY/CULTURAL-MATRICES.md' } },
     { id: 'method-davar', kind: 'markdown', doc: { collection: 'methodology', key: 'davar', docs: 'docs/06-METHODOLOGY/DAVAR.md' } },
     { id: 'method-distortions', kind: 'markdown', doc: { collection: 'methodology', key: 'distortions', docs: 'docs/06-METHODOLOGY/DISTORTIONS.md' } },

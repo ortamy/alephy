@@ -41,6 +41,12 @@
     "source": "docs/06-METHODOLOGY/BOOKS-STATES-MAP.md",
     "file": "data/methodology/documents/books-states-map.json"
   },
+  "conquest-model": {
+    "title": "Модель завоевания",
+    "description": "Метод проверки перевода: элита навязывает институциональный регистр, а не абстракцию. Контрольный случай 1066 и четыре шага детектора.",
+    "source": "docs/06-METHODOLOGY/CONQUEST-MODEL.md",
+    "file": "data/methodology/documents/conquest-model.json"
+  },
   "cultural-matrices": {
     "title": "Культурные матрицы подмены",
     "description": "Культурные матрицы подмены — от Вавилона до Синодального. Пять слоёв: Вавилон, Египет, Греция, Рим, Славянский.",
