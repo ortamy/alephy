@@ -2,7 +2,11 @@
 """Flask API сервер агентов + раздача Лаборатории ResearchLab.
 
 Запуск (одна команда):
-    python server.py [--host 127.0.0.1] [--port 5000] [--no-cors] [--no-browser]
+    python server.py [--host 127.0.0.1] [--port 5000] [--no-cors]
+                     [--allow-origin https://example.org] [--no-browser]
+
+CORS и мутации: API отвечает только своим origin — localhost/127.0.0.1
+и опубликованному сайту проекта (--allow-origin расширяет список).
 
 Сервер:
     /api/*          — REST API агентной системы;
@@ -21,6 +25,7 @@ import time
 import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import importlib
 
@@ -173,14 +178,59 @@ def write_results(results):
         handle.write("\n")
 
 
+LOCAL_ORIGIN_HOSTS = {"127.0.0.1", "localhost", "::1"}
+# Опубликованная лаба законно ходит в локальный сервер: это наш собственный
+# origin, а не «любой сайт». Список расширяется флагом --allow-origin.
+DEFAULT_ALLOWED_ORIGINS = {"https://ortamy.github.io"}
+
+
+def _is_allowed_origin(origin):
+    """Origin — свой компьютер или известный origin проекта."""
+    if not origin:
+        return False  # запросы без Origin (curl, тесты) обслуживаются без CORS
+    allowed = app.config.get("ALLOWED_ORIGINS", DEFAULT_ALLOWED_ORIGINS)
+    if origin in allowed:
+        return True
+    try:
+        return urlsplit(origin).hostname in LOCAL_ORIGIN_HOSTS
+    except ValueError:
+        return False
+
+
+@app.before_request
+def block_foreign_mutation():
+    """Мутации принимаются только от своих страниц.
+
+    CORS-заголовки сами по себе не защищают от «простого» POST без preflight:
+    чужая страница могла погасить сервер, перезапустить его или запустить
+    агентов. Запросы без Origin (curl, тесты, сам сервер) не блокируются.
+    """
+    if request.method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        return None
+    origin = request.headers.get("Origin")
+    if origin and not _is_allowed_origin(origin):
+        return jsonify({"error": "cross-origin request is not allowed"}), 403
+    # Запрос без Origin, но с браузерной меткой cross-site (не fetch из нашей
+    # страницы): закрываем как подделку. Свой Origin уже проверен выше.
+    if not origin and request.headers.get("Sec-Fetch-Site") == "cross-site":
+        return jsonify({"error": "cross-site request is not allowed"}), 403
+    return None
+
+
 @app.after_request
 def add_cors_headers(response):
-    """Разрешает Research Lab, открытой на другом локальном порту, вызвать API.
+    """CORS только для своих страниц: локальная лаба и опубликованный сайт.
 
-    Заголовки добавляются только если не передан флаг --no-cors.
+    Раньше отдавали `*` на каждый ответ: любая открытая страница читала API.
+    Теперь origin эхом возвращается только из allowlist, а чужим не отдаётся
+    ни заголовок, ни ответ на мутацию (см. guard выше).
     """
-    if app.config.get("CORS_ENABLED", True):
-        response.headers["Access-Control-Allow-Origin"] = "*"
+    if not app.config.get("CORS_ENABLED", True):
+        return response
+    origin = request.headers.get("Origin")
+    if origin and _is_allowed_origin(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Vary"] = "Origin"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
     return response
@@ -602,12 +652,15 @@ def main():
     parser.add_argument("--host", default="127.0.0.1", help="Адрес прослушивания (по умолчанию 127.0.0.1)")
     parser.add_argument("--port", type=int, default=5000, help="Порт (по умолчанию 5000)")
     parser.add_argument("--no-cors", action="store_true", help="Не добавлять CORS-заголовки")
+    parser.add_argument("--allow-origin", action="append", default=[], metavar="ORIGIN",
+                        help="Дополнительный origin для API (можно несколько)")
     parser.add_argument("--no-browser", action="store_true", help="Не открывать Лабораторию в браузере")
     args = parser.parse_args()
 
     app.config["SERVER_HOST"] = args.host
     app.config["SERVER_PORT"] = args.port
     app.config["CORS_ENABLED"] = not args.no_cors
+    app.config["ALLOWED_ORIGINS"] = DEFAULT_ALLOWED_ORIGINS | set(args.allow_origin)
     app.config["TESTING"] = False
 
     http_host = _http_host(args.host)

@@ -175,9 +175,58 @@ class PipelineApiTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.get_json()["testing"])
 
-    def test_cors_headers_present_by_default(self):
+    def test_cors_is_not_wildcard(self):
+        """Чужой сайт не должен читать ответы API: wildcard убран."""
         response = self.client.get("/api/health")
-        self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), "*")
+        self.assertIsNone(response.headers.get("Access-Control-Allow-Origin"))
+
+    def test_local_origin_gets_echoed(self):
+        """Лаба на соседнем порту того же компьютера — законный клиент."""
+        origin = "http://127.0.0.1:4173"
+        response = self.client.get("/api/health", headers={"Origin": origin})
+        self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), origin)
+        self.assertEqual(response.headers.get("Vary"), "Origin")
+
+    def test_foreign_origin_cannot_read_api(self):
+        response = self.client.get("/api/health", headers={"Origin": "https://evil.example"})
+        self.assertIsNone(response.headers.get("Access-Control-Allow-Origin"))
+
+    def test_foreign_origin_cannot_shutdown(self):
+        response = self.client.post("/api/lab/shutdown", headers={"Origin": "https://evil.example"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_foreign_origin_cannot_restart(self):
+        response = self.client.post("/api/lab/restart", headers={"Origin": "https://evil.example"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_local_origin_can_mutate(self):
+        """Свой origin (лаба на 4173) не должен упираться в guard."""
+        response = self.client.post("/api/lab/shutdown",
+                                    headers={"Origin": "http://127.0.0.1:4173"})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["testing"])
+
+    def test_published_site_origin_is_allowed(self):
+        """Опубликованная лаба законно ходит в локальный сервер."""
+        origin = "https://ortamy.github.io"
+        response = self.client.get("/api/health", headers={"Origin": origin})
+        self.assertEqual(response.headers.get("Access-Control-Allow-Origin"), origin)
+
+    def test_published_site_origin_can_mutate(self):
+        response = self.client.post("/api/lab/shutdown",
+                                    headers={"Origin": "https://ortamy.github.io"})
+        self.assertEqual(response.status_code, 200)
+
+    def test_foreign_origin_cannot_run_agents(self):
+        response = self.client.post("/run", json={"query": "разбор"},
+                                    headers={"Origin": "https://evil.example"})
+        self.assertEqual(response.status_code, 403)
+
+    def test_cross_site_fetch_metadata_is_blocked(self):
+        """Sec-Fetch-Site: cross-site закрывает мутацию даже без Origin."""
+        response = self.client.post("/api/lab/shutdown",
+                                    headers={"Sec-Fetch-Site": "cross-site"})
+        self.assertEqual(response.status_code, 403)
 
 
     @patch("server.write_results")
