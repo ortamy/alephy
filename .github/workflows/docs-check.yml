@@ -10,6 +10,7 @@ on:
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
       - 'tools/generate-methodology-docs.py'
+      - 'tools/generate-exposures-feed.py'
       - 'tools/design-baseline/registry-check.mjs'
       - 'tools/generate-sitemap.py'
       - 'products/website/index.html'
@@ -26,6 +27,7 @@ on:
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
       - 'tools/generate-methodology-docs.py'
+      - 'tools/generate-exposures-feed.py'
       - 'tools/design-baseline/registry-check.mjs'
       - 'tools/generate-sitemap.py'
       - 'products/website/index.html'
@@ -55,6 +57,11 @@ jobs:
       # registry-check живёт в smoke и не триггерится на docs/**.
       - name: Check methodology data parity
         run: python tools/generate-methodology-docs.py --check
+
+      # Лента кейсов на dashboard/клубе/карте языков живёт отдельным feed.json;
+      # без гейта он устареет после первого же нового разоблачения.
+      - name: Check exposures feed parity
+        run: python tools/generate-exposures-feed.py --check
 
       - uses: actions/setup-node@v4
         with:

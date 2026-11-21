@@ -78,7 +78,12 @@ const Dashboard = (function() {
     return Promise.all([
       fetchJson('data/roots/roots.json', forceReload),
       fetchJson('data/dictionaries.json', forceReload),
-      fetchJson('data/exposures/index.json', forceReload),
+      // feed — метаданные кейсов (192 КБ) с заранее посчитанной полнотой.
+      // Полный index.json (2,8 МБ) остаётся для страницы «Исследования»;
+      // фолбэк на него — на случай старого артефакта без feed.
+      fetchJson('data/exposures/feed.json', forceReload).catch(function() {
+        return fetchJson('data/exposures/index.json', forceReload);
+      }),
       fetchJson('data/heraldry/heraldry.json', forceReload),
       fetchJson('data/qumran-books.json', forceReload)
     ]).then(function(results) {
@@ -422,6 +427,17 @@ const Dashboard = (function() {
       return Array.isArray(value) ? value.length > 0 : Boolean(value && String(value).trim());
     }
     var items = records.map(function(item) {
+      // Feed приносит готовый расчёт полноты: считать её на клиенте по телам
+      // кейсов больше не нужно. Полный кейс (index.json) считаем как раньше.
+      var prepared = item.completeness;
+      if (prepared && typeof prepared.percent === 'number') {
+        return {
+          id: item.id || '', slug: item.slug || '', title: item.title || item.id || 'Без названия',
+          complete: prepared.complete, total: prepared.total, percent: prepared.percent,
+          missing: Array.isArray(prepared.missing) ? prepared.missing : [],
+          updatedAt: parseDate(item.updatedAt) ? item.updatedAt : ''
+        };
+      }
       var missing = supportFields.filter(function(field) { return !hasSupport(item, field); });
       return {
         id: item.id || '', slug: item.slug || '', title: item.title || item.id || 'Без названия',

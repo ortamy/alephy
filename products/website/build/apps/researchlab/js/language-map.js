@@ -348,7 +348,8 @@
   ];
 
   var LAYERS_PATH = 'data/paleo-linguistics/languages.json';
-  var RESEARCH_PATH = 'data/exposures/index.json';
+  // Упоминания языка ищутся по метаданным кейсов: feed вместо полного индекса.
+  var RESEARCH_PATH = 'data/exposures/feed.json';
   var relationsPromise = null;
 
   function confidenceTone(value) {

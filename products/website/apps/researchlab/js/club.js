@@ -185,7 +185,8 @@ const ClubModule = (function() {
     var picker = container.querySelector('#club-research-picker');
     if (!picker) return;
     if (window.Skeleton) Skeleton.render(picker, 'list', 4);
-    fetch('data/exposures/index.json').then(function(response) {
+    // Пикеру нужны только id, заголовок и категория: feed вместо 2,8 МБ индекса.
+    fetch('data/exposures/feed.json').then(function(response) {
       if (!response.ok) throw new Error('HTTP ' + response.status);
       return response.json();
     }).then(function(items) {
