@@ -63,6 +63,14 @@ jobs:
           SMOKE_QUICK: '0'
         run: npx playwright test
 
+      # Пять прогонов подряд падали с «exit code 1» и без имён тестов.
+      # Сводка кладёт падения в $GITHUB_STEP_SUMMARY и в артефакт.
+      - name: Smoke failures summary
+        if: always()
+        run: |
+          python tools/smoke-summary.py | tee smoke-summary.md
+          cat smoke-summary.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Registry matches page-controller, sidebar and docs
         run: node tools/design-baseline/registry-check.mjs
 
@@ -78,5 +86,6 @@ jobs:
           name: smoke-report
           path: |
             products/website/apps/researchlab/test-results/
+            smoke-summary.md
           retention-days: 7
           if-no-files-found: ignore

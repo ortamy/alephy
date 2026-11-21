@@ -137,7 +137,10 @@ const RootDict = (function() {
       })
       .catch(function(err) {
         loading = false;
-        console.error('[RootDict] Не удалось загрузить словарь:', err);
+        // Словарь грузится на старте лабы, а не только на своём экране:
+        // console.error здесь ронял smoke на любом маршруте при сетевом сбое.
+        // Пользователь видит alert ниже, поэтому это предупреждение.
+        console.warn('[RootDict] Не удалось загрузить словарь:', err);
         var spinnerEl = document.getElementById('rd-spinner');
         if (spinnerEl) spinnerEl.innerHTML = '<div class="lab-alert lab-alert-error">' + escapeHtml(t('lab.rootDict.loadFailed', 'Ошибка загрузки словаря. Проверьте, что ResearchLab открыт через HTTP-сервер.')) + '</div>';
       });

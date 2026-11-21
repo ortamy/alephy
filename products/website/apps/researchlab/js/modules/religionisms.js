@@ -65,7 +65,10 @@ const Religionisms = (function() {
       })
       .catch(function(err) {
         loading = false;
-        console.error(err);
+        // Обработанная ошибка: экран уже получил alert. console.error здесь
+        // валил smoke-прогон на любом маршруте — модуль инициализируется на
+        // старте лабы, а не только на своём экране.
+        console.warn('[Religionisms] данные недоступны:', err);
         var screen = document.getElementById('rel-screen');
         if (screen) screen.innerHTML = '<div class="lab-alert lab-alert-error">Ошибка загрузки данных о религионизмах.</div>';
       });

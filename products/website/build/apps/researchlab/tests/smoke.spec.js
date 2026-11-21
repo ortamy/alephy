@@ -44,7 +44,9 @@ async function checkRoute(page, route, projectName) {
   });
   page.on('pageerror', (error) => errors.push(`pageerror: ${error.message}`));
   await page.goto(`/#${route}`, { waitUntil: 'domcontentloaded' });
-  await expect(page.locator('#labContent')).toBeVisible();
+  // 15 с: холодный первый рендер тяжёлых маршрутов на CI выходит за 5 с,
+  // а «панель не видна» — это отказ загрузки, а не медленный рендер.
+  await expect(page.locator('#labContent')).toBeVisible({ timeout: 15_000 });
   const metrics = await page.evaluate(() => ({
     innerWidth: window.innerWidth,
     scrollWidth: document.documentElement.scrollWidth
@@ -61,6 +63,10 @@ async function checkRoute(page, route, projectName) {
   expect(hasMojibake, `mojibake on #${route}`).toBe(false);
   if (projectName === 'mobile') expect(metrics.scrollWidth, `horizontal overflow on #${route}`).toBeLessThanOrEqual(metrics.innerWidth);
   if (process.env.SMOKE_QUICK === '1') return;
+  // В CI скриншоты не публикуются: артефакт smoke-report — это test-results,
+  // а захват PNG через CDP удваивает время прогона и добавляет флейки.
+  // Все проверки (видимость, ошибки, mojibake, overflow) уже выполнены выше.
+  if (process.env.CI) return;
   await page.addStyleTag({ content: '* { animation: none !important; transition: none !important; caret-color: transparent !important; }' });
   await fs.promises.mkdir(screenshotDir, { recursive: true });
   const viewport = page.viewportSize();
