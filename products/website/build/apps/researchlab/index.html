@@ -456,13 +456,28 @@ document.addEventListener('DOMContentLoaded', function() { LabSearchToggle.init(
 const LabTheme = {
   themes: ['white', 'beige', 'brown', 'dark'],
   init: function() {
+    // Палитру применяет UserPreferences (data-theme + inline-переменные).
+    // Раньше init перетирал выбор пользователя значением из legacy-ключа
+    // alephy_theme и возвращал тему к белой при каждой загрузке лабы.
+    if (window.UserPreferences) return;
     var saved = localStorage.getItem('alephy_theme') || 'white';
     this.set(this.themes.indexOf(saved) >= 0 ? saved : 'white');
   },
   set: function(theme) {
-    if (this.themes.indexOf(theme) < 0) theme = 'light';
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('alephy_theme', theme);
+    if (this.themes.indexOf(theme) < 0) theme = 'white';
+    // Единственный владелец палитры — UserPreferences: он пишет и data-theme,
+    // и inline-переменные. Голый setAttribute не менял цвета, потому что
+    // inline-значения перекрывали CSS-темы, — кнопка темы «не работала».
+    if (window.UserPreferences && window.UserPreferences.PRESETS &&
+        window.UserPreferences.PRESETS.theme[theme]) {
+      var prefs = window.UserPreferences.load();
+      prefs.theme = theme;
+      window.UserPreferences.save(prefs);
+      window.UserPreferences.apply(prefs);
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+      localStorage.setItem('alephy_theme', theme);
+    }
     var iconName = theme === 'dark' ? 'sun' : theme === 'white' ? 'moon' : 'contrast';
     var icon = '<i data-lucide="' + iconName + '" aria-hidden="true"></i>';
     var btn = document.getElementById('themeBtn');
