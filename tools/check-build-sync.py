@@ -1,8 +1,11 @@
 # check-build-sync.py — build/ это зеркало исходников, а не источник истины.
 # Проверка паритета: любой файл apps/researchlab обязан совпадать с копией в
 # build/apps/researchlab (побайтно). Расхождение = забытый products/website/tools/build.sh.
-# Дополнительно проверяются относительные ссылки разметки index.html сборки:
-# путь на непубликуемый файл (например, ../../src/js/i18n.js) даёт 404 на сайте.
+# Дополнительно сверяются остальные деревья, которые build.sh копирует целиком
+# (js, locales, pages, content, assets) и корневые файлы сайта: раньше гейт
+# смотрел только на лабу, и устаревшие build/locales жили месяцами.
+# И проверяются относительные ссылки разметки index.html сборки: путь на
+# непубликуемый файл (например, ../../src/js/i18n.js) даёт 404 на сайте.
 import hashlib
 import os
 import re
@@ -12,7 +15,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 WEB = ROOT / "products" / "website"
 SRC = WEB / "apps" / "researchlab"
-BUILD = WEB / "build" / "apps" / "researchlab"
+ARTIFACT = WEB / "build"
+BUILD = ARTIFACT / "apps" / "researchlab"
+
+# Исходник → путь в артефакте: build.sh копирует эти деревья целиком.
+MIRROR_PAIRS = (
+    (WEB / "src" / "js", "js"),
+    (WEB / "src" / "locales", "locales"),
+    (WEB / "src" / "pages", "pages"),
+    (WEB / "src" / "content", "content"),
+    (WEB / "assets", "assets"),
+)
+# Корневые файлы сайта, которые build.sh копирует как есть. style.css и
+# package*.json генерируются сборкой и в зеркало не входят.
+MIRROR_FILES = ("index.html", "app.js", "favicon.svg", "robots.txt", "site.css", "files.json", "sitemap.xml")
 
 # Служебное и генерируемое: не зеркалится и не должно проверяться.
 SKIP_DIRS = {"node_modules", "test-results", "playwright-report", ".git"}
@@ -84,6 +100,35 @@ def collect(root: Path) -> dict[str, Path]:
     return found
 
 
+def mirror_problems() -> list[str]:
+    """Паритет деревьев и корневых файлов, которые build.sh копирует целиком."""
+    problems: list[str] = []
+    for source_root, build_rel in MIRROR_PAIRS:
+        if not source_root.is_dir():
+            continue
+        build_root = ARTIFACT / build_rel
+        source_files = collect(source_root)
+        build_files = collect(build_root) if build_root.is_dir() else {}
+        for relative, source_path in sorted(source_files.items()):
+            target = build_root / relative
+            if not target.is_file():
+                problems.append(f"нет в build/{build_rel}: {relative}")
+            elif digest(source_path) != digest(target):
+                problems.append(f"расходится с build/{build_rel}: {relative}")
+        for relative in sorted(set(build_files) - set(source_files)):
+            problems.append(f"лишний файл в build/{build_rel}: {relative}")
+    for name in MIRROR_FILES:
+        source = WEB / name
+        target = ARTIFACT / name
+        if not source.is_file():
+            continue
+        if not target.is_file():
+            problems.append(f"нет в build: {name}")
+        elif digest(source) != digest(target):
+            problems.append(f"расходится с build: {name}")
+    return problems
+
+
 def main() -> int:
     if not SRC.is_dir() or not BUILD.is_dir():
         print("::error::нет каталогов apps/researchlab или build/apps/researchlab")
@@ -107,6 +152,9 @@ def main() -> int:
     # Класс ошибки, который не ловит ни один гейт: ссылка разметки на файл,
     # которого в артефакте нет (исторически — ../../src/js/i18n.js).
     problems.extend(asset_ref_problems())
+    # Остальные зеркальные деревья и корневые файлы: раньше гейт видел только
+    # apps/researchlab, поэтому build/locales могли месяцами жить устаревшими.
+    problems.extend(mirror_problems())
 
     if problems:
         print("::error::build/ разошёлся с products/website/apps/researchlab")

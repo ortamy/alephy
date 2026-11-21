@@ -76,3 +76,8 @@ reports/STATS_*.md
 # Бэкапы редактора (метки оставляли .bak в js/ — ломали сборку и кодировку)
 *.bak
 *.orig
+
+# Сгенерированное сборкой products/website/tools/build.sh: в git не живёт,
+# деплой пересоздаёт. style.css — tailwind, package-lock — npm install.
+products/website/build/style.css
+products/website/build/package-lock.json

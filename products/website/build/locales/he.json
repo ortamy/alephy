@@ -191,6 +191,11 @@
         "subtitle": "",
         "title": ""
       },
+      "documentation": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
       "dictionaries": {
         "kicker": "",
         "subtitle": "",
@@ -508,6 +513,7 @@
       "dashboard": "",
       "design-system": "",
       "architecture": "",
+      "documentation": "",
       "dictionaries": "",
       "exposures": "",
       "ed-chat": "",
@@ -552,7 +558,8 @@
       "panel": {
         "links": "",
         "result": "",
-        "run": ""
+        "run": "",
+        "passport": ""
       },
       "result": {
         "copied": "",
@@ -1199,17 +1206,38 @@
     "detail": {
       "badge": "",
       "notFound": "",
-      "openness": ""
+      "openness": "",
+      "toolbarAria": "",
+      "total": ""
     },
     "landscape": {
       "empty": "",
       "label": "",
       "open": "",
       "route": "",
-      "routesAria": ""
+      "routesAria": "",
+      "compass": "",
+      "transitions": ""
     },
     "nav": {
       "aria": ""
+    },
+    "map": {
+      "back": "",
+      "search": "",
+      "searchAria": "",
+      "toolbarAria": ""
+    },
+    "spectrum": {
+      "back": "",
+      "cycle": "",
+      "gate": "",
+      "high": "",
+      "label": "",
+      "low": ""
+    },
+    "compass": {
+      "label": ""
     }
   }
 }

@@ -3,7 +3,7 @@
   "meta": {
     "code": "en",
     "status": "draft",
-    "coverage": 0.45,
+    "coverage": 0.43,
     "note": "черновик: переведена обвязка (шапка, меню, подвал, титулы). status=draft в locales/index.json отключает язык в переключателе"
   },
   "site": {
@@ -187,6 +187,11 @@
         "title": ""
       },
       "architecture": {
+        "kicker": "",
+        "subtitle": "",
+        "title": ""
+      },
+      "documentation": {
         "kicker": "",
         "subtitle": "",
         "title": ""
@@ -508,6 +513,7 @@
       "dashboard": "",
       "design-system": "",
       "architecture": "",
+      "documentation": "",
       "dictionaries": "",
       "exposures": "Exposures",
       "ed-chat": "",
@@ -552,7 +558,8 @@
       "panel": {
         "links": "LINKS",
         "result": "RESULT",
-        "run": "RUN"
+        "run": "RUN",
+        "passport": ""
       },
       "result": {
         "copied": "Result copied.",
@@ -1199,17 +1206,38 @@
     "detail": {
       "badge": "interpretation",
       "notFound": "State not found",
-      "openness": "openness"
+      "openness": "openness",
+      "toolbarAria": "",
+      "total": ""
     },
     "landscape": {
       "empty": "No transition route is defined for this state yet.",
       "label": "Landscape",
       "open": "Open state",
       "route": "Route",
-      "routesAria": "Transitions from the state"
+      "routesAria": "Transitions from the state",
+      "compass": "",
+      "transitions": ""
     },
     "nav": {
       "aria": "All states"
+    },
+    "map": {
+      "back": "",
+      "search": "",
+      "searchAria": "",
+      "toolbarAria": ""
+    },
+    "spectrum": {
+      "back": "",
+      "cycle": "",
+      "gate": "",
+      "high": "",
+      "label": "",
+      "low": ""
+    },
+    "compass": {
+      "label": ""
     }
   }
 }
