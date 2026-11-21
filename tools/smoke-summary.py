@@ -21,21 +21,6 @@ DEFAULT_REPORT = ROOT / "products" / "website" / "apps" / "researchlab" / "test-
 MAX_ITEMS = 30
 
 
-def failed_tests(node, found=None):
-    """Рекурсивно собирает объекты тестов со статусом unexpected."""
-    if found is None:
-        found = []
-    if isinstance(node, dict):
-        if node.get("status") == "unexpected" and node.get("title"):
-            found.append(node)
-        for value in node.values():
-            failed_tests(value, found)
-    elif isinstance(node, list):
-        for value in node:
-            failed_tests(value, found)
-    return found
-
-
 def error_message(test) -> str:
     results = test.get("results") or []
     if not results:
@@ -49,6 +34,36 @@ def error_message(test) -> str:
     return ""
 
 
+def failed_tests(data) -> list[dict[str, str]]:
+    """Упавшие тесты с заголовком spec'а.
+
+    В отчёте Playwright у объекта теста `title` пустой: человекочитаемое имя
+    живёт на уровне spec (`specs[].title`). Поэтому имя тянем из контекста,
+    иначе сводка печатает «Падений нет» при `unexpected: 2`.
+    """
+    found: list[dict[str, str]] = []
+
+    def visit(spec_title: str, node) -> None:
+        if isinstance(node, dict):
+            if node.get("status") == "unexpected":
+                found.append({
+                    "title": str(node.get("title") or spec_title or "без имени"),
+                    "error": error_message(node),
+                })
+            for key, value in node.items():
+                if key == "specs" and isinstance(value, list):
+                    for spec in value:
+                        visit(str((spec or {}).get("title") or spec_title), spec)
+                else:
+                    visit(spec_title, value)
+        elif isinstance(node, list):
+            for value in node:
+                visit(spec_title, value)
+
+    visit("", data)
+    return found
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Сводка падений smoke-прогона")
     parser.add_argument("--path", type=Path, default=DEFAULT_REPORT)
@@ -60,17 +75,22 @@ def main() -> int:
 
     data = json.loads(args.path.read_text(encoding="utf-8-sig"))
     tests = failed_tests(data)
+    stats = data.get("stats") or {}
+    summary = "expected=%s flaky=%s unexpected=%s" % (
+        stats.get("expected"), stats.get("flaky"), stats.get("unexpected"))
     if not tests:
-        print("Падений нет: все тесты прошли.")
+        print("Падений нет: все тесты прошли." + (f" Флаки: {stats.get('flaky')}." if stats.get("flaky") else ""))
+        print(f"\nstats: {summary}")
         return 0
 
     print(f"Упало тестов: {len(tests)}")
+    print(f"stats: {summary}")
     print()
     print("| # | Тест | Ошибка |")
     print("| --- | --- | --- |")
     for index, test in enumerate(tests[:MAX_ITEMS], start=1):
-        title = str(test.get("title") or "").replace("|", "\\|")
-        error = error_message(test).replace("|", "\\|")
+        title = test["title"].replace("|", "\\|")
+        error = test["error"].replace("|", "\\|")
         print(f"| {index} | {title} | {error} |")
     if len(tests) > MAX_ITEMS:
         print(f"\n… и ещё {len(tests) - MAX_ITEMS}.")

@@ -6,6 +6,10 @@ module.exports = defineConfig({
   timeout: 90_000,
   workers: 1,
   fullyParallel: false,
+  // В CI один повтор: две «плавающие» ошибки (сетевой сбой загрузки markdown
+  // и гонка темы с догрузкой CSS) не должны ронять гейт. Повторы видны в
+  // отчёте как flaky — сводка tools/smoke-summary.py их считает отдельно.
+  retries: process.env.CI ? 1 : 0,
   reporter: [['list'], ['json', { outputFile: 'test-results/smoke.json' }]],
   use: {
     baseURL: 'http://127.0.0.1:4173',

@@ -134,12 +134,12 @@ test.describe('registered routes', () => {
 // Модуль, который не закончил загрузку, обязан либо показать контент, либо
 // error-state с кнопкой «Повторить» (гард в page-controller.js). Видимый
 // спиннер дольше бюджета — это баг, а не состояние ожидания.
-// Бюджет ожидания панели/спиннера. Держим его ниже WATCHDOG_MS (8 с) в
-// page-controller: до этого порога медленный модуль — «ещё грузится», после —
-// error-state. Под полной нагрузкой (96 тестов подряд, холодный кэш) первый
-// рендер тяжёлых маршрутов (#manifest, #root-dictionary, #researches,
-// #state-analyzer) выходит за 5 с — отсюда были падения «вечного спиннера».
-const SPINNER_BUDGET_MS = 7_000;
+// Бюджет ожидания панели/спиннера/ключа. Держим его ниже WATCHDOG_MS (8 с)
+// в page-controller: до этого порога медленный модуль — «ещё грузится», после —
+// error-state. Прежние 7 с не хватало на CI: рендер markdown-документа из
+// dictionaries.json (425 КБ) на холодном раннере выходил за границу и валил
+// #dict-grecisms. 12 с оставляют запас, но всё ещё ловят вечный спиннер.
+const SPINNER_BUDGET_MS = 12_000;
 
 // Ключевой узел для модулей с fetch-разметкой (pages/<route>.html): ловит
 // случай «разметка скачалась, но панель осталась пустой».
@@ -159,7 +159,7 @@ const moduleAnchors = {
   'design-system': '.ds-bento',
   // Хаб разоблачений и документы: ловят случай «данные не дошли, панель пустая».
   exposures: '#exposure-doc-grid',
-  'dict-grecisms': '.research-page-head',
+  'dict-grecisms': '.term-head',
   'exposure-principles': '.research-section',
   'method-tree': '.research-section',
   'method-archeology': '.research-section',
@@ -624,32 +624,54 @@ test.describe('design system module', () => {
   test('образцы перечитывают токены при смене темы', async ({ page }) => {
     await page.goto('/#design-system', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#labContent .ds-bento')).toBeAttached({ timeout: SPINNER_BUDGET_MS });
+    // Токены приходят из внешних CSS: до события load computed-значение может
+    // быть начальным, и подпись образца «застынет» на нём. На холодном CI это
+    // давало расхождение подписи и темы, которого нет на прогретом браузере.
+    await page.waitForLoadState('load');
 
     // --bg-primary различается в светлой и тёмной теме. page-controller не
     // перерисовывает уже загруженную панель, поэтому модуль обязан обновлять
     // подписи сам — иначе он показывал бы цвета предыдущей темы.
-    const readLabel = () => page.evaluate(() => {
+    const read = () => page.evaluate(() => {
       const node = document.querySelector('#labContent [data-ds-token="--bg-primary"]');
-      return node ? node.textContent.trim() : '';
+      return {
+        label: node ? node.textContent.trim() : '',
+        value: getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim()
+      };
     });
 
-    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); });
+    // Тему меняем через LabTheme, а не голым атрибутом: модуль настроек
+    // синхронизирует data-theme с сохранённым выбором и иначе откатывал
+    // атрибут назад — подпись оставалась цветом белой темы (#ffffff).
+    await page.evaluate(() => { window.LabTheme.set('white'); });
     await expect
-      .poll(readLabel, { timeout: SPINNER_BUDGET_MS, message: 'подписи не обновились после смены темы' })
-      .toBe(await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--bg-primary').trim()));
-    const light = await readLabel();
+      .poll(async () => {
+        const state = await read();
+        return Boolean(state.label) && state.label === state.value;
+      }, { timeout: SPINNER_BUDGET_MS, message: 'подпись образца не совпала с --bg-primary в светлой теме' })
+      .toBe(true);
+    const light = (await read()).value;
 
-    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'dark'); });
+    await page.evaluate(() => { window.LabTheme.set('dark'); });
+    // Сначала ждём применения темы (computed изменился), и только потом —
+    // обновления подписи: иначе проверка ловит CSS, а не модуль.
     await expect
-      .poll(readLabel, { timeout: SPINNER_BUDGET_MS, message: 'подписи не обновились после смене темы' })
+      .poll(async () => (await read()).value,
+        { timeout: SPINNER_BUDGET_MS, message: 'тёмная тема не применилась: --bg-primary не изменился' })
       .not.toBe(light);
-    const dark = await readLabel();
+    await expect
+      .poll(async () => {
+        const state = await read();
+        return Boolean(state.label) && state.label === state.value;
+      }, { timeout: SPINNER_BUDGET_MS, message: 'подпись образца не совпала с --bg-primary в тёмной теме' })
+      .toBe(true);
+    const dark = (await read()).value;
 
     expect(light, 'подпись образца в светлой теме').toMatch(/#[0-9a-f]{3,8}/i);
     expect(dark, 'подпись образца в тёмной теме').toMatch(/#[0-9a-f]{3,8}/i);
     expect(dark, 'образцы обязаны показывать цвет своей темы').not.toBe(light);
 
-    await page.evaluate(() => { document.documentElement.setAttribute('data-theme', 'light'); });
+    await page.evaluate(() => { window.LabTheme.set('white'); });
   });
 });
 
