@@ -1,6 +1,8 @@
 /**
  * load-researches.js — каталог и детальный просмотр библиотеки (#researches).
- * Данные: data/exposures/index.json (единая схема дела, см. tools/migrate-exposures.py).
+ * Данные: data/exposures/index.json — метаданные списка; тело дела —
+ * data/exposures/cases/<slug>.json, грузится при открытии. Схема одна,
+ * см. tools/generate-exposures-index.py.
  * Рендер карточек, досье и превью — через ExposureCase (js/modules/exposure-case.js),
  * так что каталог, страница дела и форма создания используют один и тот же шаблон.
  */
@@ -18,6 +20,9 @@ const LoadResearches = (function() {
   var CONF_ORDER = { verified: 0, 'needs-review': 1, hypothesis: 2, disputed: 3 };
   var state = { query: '', category: 'all', confidence: 'all', activeSlug: '', view: 'cards', sort: 'date' };
   var items = [];
+  // Тела дел грузятся по одному и живут в памяти сессии: повторный вход не
+  // дёргает сеть, но и каталог не тянет 2,8 МБ ради списка.
+  var caseCache = {};
 
   /* Иконка карточки по категории дела (§4.2: маркер в заголовке).
      Имена проверены против js/vendor/lucide.min.js; без совпадения — compass. */
@@ -300,7 +305,9 @@ const LoadResearches = (function() {
       if (state.category !== 'all' && item.category !== state.category) return false;
       if (state.confidence !== 'all' && item.confidence !== state.confidence) return false;
       if (!query) return true;
-      var sectionText = ((item.sections && item.sections.content) || []).map(function(s) {
+      // Каталог больше не держит тела дел в памяти: поиск идёт по searchText,
+      // который генератор собрал из тезиса, сдвига и заголовков секций.
+      var sectionText = item.searchText || ((item.sections && item.sections.content) || []).map(function(s) {
         return [s.heading, s.body].join(' ');
       }).join(' ');
       var roots = Array.isArray(item.roots) ? item.roots.join(' ') : (item.roots || '');
@@ -573,27 +580,55 @@ const LoadResearches = (function() {
       return;
     }
     history.replaceState(null, '', '#researches/case/' + encodeURIComponent(item.slug));
+
+    // Черновик из localStorage (и старый полный объект) уже несёт sections.
+    if (item.sections) { renderCasePage(container, item); return; }
+    if (caseCache[item.slug]) { renderCasePage(container, caseCache[item.slug]); return; }
+
+    // Метаданные есть сразу — шапку рисуем ими, тело догружаем.
+    container.innerHTML = '<div class="lab-spinner show"><div class="loader"></div><div class="spinner-text">Загрузка дела…</div></div>';
+    setDetailHero(container, item);
+    fetch('data/exposures/cases/' + encodeURIComponent(item.slug) + '.json')
+      .then(function(response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+      })
+      .then(function(full) {
+        caseCache[item.slug] = full;
+        if (state.activeSlug !== item.slug) return;  // пользователь уже ушёл
+        renderCasePage(container, full);
+      })
+      .catch(function(error) {
+        container.innerHTML = '<div class="lab-alert lab-alert-error">Не удалось загрузить дело «' +
+          escapeHtml(item.title || item.slug) + '»: ' + escapeHtml(error.message) + '</div>';
+      });
+  }
+
+  function renderCasePage(container, item) {
     container.innerHTML = ExposureCase.renderCase(item, { relatedItems: itemIndex() });
     ExposureCase.bindCase(container, item);
+    setDetailHero(container, item);
+  }
 
-    // Шапка модуля собирается из данных активного дела.
-    if (window.LabHero && window.LabHero.setView) {
-      var confidence = ExposureCase.confidenceMeta(item.confidence);
-      var claim = ExposureCase.claimMeta ? ExposureCase.claimMeta(item.confidence) : confidence;
-      var statusLabel = ExposureCase.STATUS_LABELS[item.status] || item.status || '';
-      container._labHeroOverride = {
-        kicker: 'АЛЕФИ · ИССЛЕДОВАНИЯ',
-        title: item.title || '',
-        subtitle: (item.category || ''),
-        icon: 'scribe/scroll.png',
-        meta: [
-          statusLabel ? { label: statusLabel, className: 'lab-hero__chip--status' } : null,
-          { label: claim.label, className: claim.className || confidence.className }
-        ].filter(Boolean)
-      };
-      window.LabHero.setView('researches', 'detail', container._labHeroOverride);
-      if (window.LabRouter) LabRouter.renderBreadcrumbs('researches', LabRouter.parseHash());
-    }
+  // Шапка модуля собирается из данных дела: из метаданных до загрузки тела,
+  // из полного кейса — после.
+  function setDetailHero(container, item) {
+    if (!window.LabHero || !window.LabHero.setView) return;
+    var confidence = ExposureCase.confidenceMeta(item.confidence);
+    var claim = ExposureCase.claimMeta ? ExposureCase.claimMeta(item.confidence) : confidence;
+    var statusLabel = ExposureCase.STATUS_LABELS[item.status] || item.status || '';
+    container._labHeroOverride = {
+      kicker: 'АЛЕФИ · ИССЛЕДОВАНИЯ',
+      title: item.title || '',
+      subtitle: (item.category || ''),
+      icon: 'scribe/scroll.png',
+      meta: [
+        statusLabel ? { label: statusLabel, className: 'lab-hero__chip--status' } : null,
+        { label: claim.label, className: claim.className || confidence.className }
+      ].filter(Boolean)
+    };
+    window.LabHero.setView('researches', 'detail', container._labHeroOverride);
+    if (window.LabRouter) LabRouter.renderBreadcrumbs('researches', LabRouter.parseHash());
   }
 
   function routeTitle(route) {

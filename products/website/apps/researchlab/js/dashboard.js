@@ -78,12 +78,9 @@ const Dashboard = (function() {
     return Promise.all([
       fetchJson('data/roots/roots.json', forceReload),
       fetchJson('data/dictionaries.json', forceReload),
-      // feed — метаданные кейсов (192 КБ) с заранее посчитанной полнотой.
-      // Полный index.json (2,8 МБ) остаётся для страницы «Исследования»;
-      // фолбэк на него — на случай старого артефакта без feed.
-      fetchJson('data/exposures/feed.json', forceReload).catch(function() {
-        return fetchJson('data/exposures/index.json', forceReload);
-      }),
+      // index.json — метаданные кейсов (~360 КБ) с заранее посчитанной полнотой;
+      // тела дел лежат в cases/<slug>.json и грузятся только на странице дела.
+      fetchJson('data/exposures/index.json', forceReload),
       fetchJson('data/heraldry/heraldry.json', forceReload),
       fetchJson('data/qumran-books.json', forceReload)
     ]).then(function(results) {

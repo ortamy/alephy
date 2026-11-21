@@ -1,6 +1,7 @@
 /**
  * exposure-case.js — единый рендерер «дела» разоблачения.
- * renderCard/renderCase/renderPreview работают на одной схеме (data/exposures/index.json)
+ * renderCard/renderCase/renderPreview работают на одной схеме дела
+ * (метаданные — data/exposures/index.json, тело — cases/<slug>.json).
  * и используются и в каталоге (#researches), и в детальном просмотре, и в форме создания.
  */
 const ExposureCase = (function() {
