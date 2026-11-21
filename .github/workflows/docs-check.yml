@@ -9,6 +9,8 @@ on:
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
+      - 'tools/generate-methodology-docs.py'
+      - 'tools/design-baseline/registry-check.mjs'
       - 'tools/generate-sitemap.py'
       - 'products/website/index.html'
       - 'products/website/apps/researchlab/index.html'
@@ -23,6 +25,8 @@ on:
       - 'tools/check-docs.py'
       - 'tools/generate-docs-index.py'
       - 'tools/check-build-sync.py'
+      - 'tools/generate-methodology-docs.py'
+      - 'tools/design-baseline/registry-check.mjs'
       - 'tools/generate-sitemap.py'
       - 'products/website/index.html'
       - 'products/website/apps/researchlab/index.html'
@@ -45,6 +49,19 @@ jobs:
 
       - name: Check docs integrity
         run: python tools/check-docs.py check
+
+      # Методички docs/06-METHODOLOGY собираются в data/ генератором. Без этого
+      # шага правка документа без перегенерации уезжала в main зелёной:
+      # registry-check живёт в smoke и не триггерится на docs/**.
+      - name: Check methodology data parity
+        run: python tools/generate-methodology-docs.py --check
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Registry matches page-controller, sidebar and docs
+        run: node tools/design-baseline/registry-check.mjs
 
       - name: Check navigation freshness (regeneration must not change anything)
         run: |

@@ -12,6 +12,7 @@ on:
       - 'products/agents/**'
       - 'products/website/apps/researchlab/**'
       - 'tools/check-architecture-drift.py'
+      - 'tools/run-agent-tests.py'
       - '.github/workflows/architecture-audit.yml'
   pull_request:
     paths:
@@ -19,6 +20,7 @@ on:
       - 'products/agents/**'
       - 'products/website/apps/researchlab/**'
       - 'tools/check-architecture-drift.py'
+      - 'tools/run-agent-tests.py'
       - '.github/workflows/architecture-audit.yml'
   workflow_dispatch:
 
@@ -34,6 +36,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      # 119 тестов агентного слоя до этого не запускались ни в одном workflow:
+      # три падения (дрейф числа файлов данных) жили в main незамеченными.
+      - name: Install agent test dependencies
+        run: pip install Flask
+
+      - name: Agent unit tests
+        run: python tools/run-agent-tests.py
 
       - name: Architecture drift audit
         id: audit
