@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
-# ed/neuro/scripts/prepare-data.py — prepare data
-```python
-#!/usr/bin/env python3
-# prepare_data.py — подготовка данных для обучения нейросети из репозитория
+# prepare_data.py — подготовка данных для обучения нейросети из репозитория.
+# Легаси-скрипт neuro: пути приведены к текущей раскладке репозитория
+# (docs/05-DICTIONARIES, docs/06-METHODOLOGY, docs/08-AUDITS, researches/).
+# В файле раньше стояло markdown-ограждение ```python — он не компилировался.
 
 import json
 import re
 from pathlib import Path
 from typing import List, Dict
 
-REPO_ROOT = Path(__file__).parent.parent.parent
-TERMINOLOGY_DIR = REPO_ROOT / "terminology"
+REPO_ROOT = Path(__file__).resolve().parents[3]
+TERMINOLOGY_DIR = REPO_ROOT / "docs" / "05-DICTIONARIES"
 RESEARCHES_DIR = REPO_ROOT / "researches"
-INSTRUCTIONS_DIR = REPO_ROOT / "instructions"
-TRAINING_DATA_DIR = REPO_ROOT / "neural" / "training-data"
+INSTRUCTIONS_DIR = REPO_ROOT / "docs" / "06-METHODOLOGY"
+CHECKERS_DIR = REPO_ROOT / "docs" / "08-AUDITS"
+TRAINING_DATA_DIR = REPO_ROOT / "products" / "neuro" / "training-data"
 
 OUTPUT_FILE = TRAINING_DATA_DIR / "prepared.json"
 
@@ -132,7 +133,7 @@ def generate_researches_data() -> List[Dict]:
 def generate_principles_data() -> List[Dict]:
     """Генерирует данные из принципов"""
     data = []
-    principles_file = INSTRUCTIONS_DIR / "research-principles.md"
+    principles_file = INSTRUCTIONS_DIR / "RESEARCH-PRINCIPLES.md"
     
     if principles_file.exists():
         content = extract_text_from_md(principles_file, 1500)
@@ -150,7 +151,7 @@ def generate_principles_data() -> List[Dict]:
 def generate_forbidden_words_data() -> List[Dict]:
     """Генерирует данные из запрещённых слов"""
     data = []
-    forbidden_file = INSTRUCTIONS_DIR / "forbidden-words.md"
+    forbidden_file = INSTRUCTIONS_DIR / "DAVAR.md"
     
     if forbidden_file.exists():
         content = extract_text_from_md(forbidden_file, 1000)
@@ -174,7 +175,7 @@ def generate_forbidden_words_data() -> List[Dict]:
 def generate_methods_data() -> List[Dict]:
     """Генерирует данные из методов разоблачения"""
     data = []
-    methods_file = INSTRUCTIONS_DIR / "exposure" / "exposure-methods.md"
+    methods_file = INSTRUCTIONS_DIR / "METHODS.md"
     
     if methods_file.exists():
         content = extract_text_from_md(methods_file, 1500)
@@ -192,7 +193,7 @@ def generate_methods_data() -> List[Dict]:
 def generate_checkers_data() -> List[Dict]:
     """Генерирует данные из чекеров"""
     data = []
-    checkers_dir = INSTRUCTIONS_DIR / "checkers"
+    checkers_dir = CHECKERS_DIR
     
     if checkers_dir.exists():
         for md_file in checkers_dir.glob("*.md"):
@@ -264,4 +265,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-```

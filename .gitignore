@@ -16,6 +16,8 @@ venv/
 .env
 *.local.yml
 secrets.json
+# Ключи и пароль LUKS для docker/README.md: нужны локально, в git не попадают.
+.alephy-secrets/
 *.key
 *.pem
 
@@ -28,6 +30,8 @@ ed/neuro/models/*.bin
 # Training data (сырые данные)
 ed/neuro/training-data/raw/
 ed/neuro/training-data/*.json.raw
+# Генерируется products/neuro/scripts/prepare-data.py
+products/neuro/training-data/prepared.json
 
 # Backups
 *.tar.gz
