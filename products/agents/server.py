@@ -44,6 +44,10 @@ RESULTS_PATH = PIPELINES_PATH.with_name("pipeline-results.json")
 # в один клик. Живут отдельным файлом — шаблон ещё не карточка.
 TEMPLATES_PATH = PIPELINES_PATH.with_name("pipeline-templates.json")
 WEB_ROOT = Path(__file__).resolve().parents[2] / "products" / "website"
+# Карточки методологии: UI пишет сюда по кнопке «Сохранить». Путь сборки
+# держим рядом: check-build-sync требует побайтного зеркала apps ↔ build.
+METHODOLOGY_CARDS_PATH = WEB_ROOT / "apps" / "researchlab" / "data" / "methodology" / "cards.json"
+METHODOLOGY_CARDS_BUILD_PATH = WEB_ROOT / "build" / "apps" / "researchlab" / "data" / "methodology" / "cards.json"
 SERVER_START = time.time()
 
 # Источник правды о регистре агентов — единый JSON
@@ -285,6 +289,43 @@ def api_info():
         "cwd": str(Path.cwd()),
         "uptime": round(time.time() - SERVER_START, 1),
     })
+
+
+@app.get("/api/methodology/cards")
+def methodology_cards():
+    """Карточки хаба методологии для UI: источник — data/methodology/cards.json."""
+    if not METHODOLOGY_CARDS_PATH.is_file():
+        return jsonify({"cards": []})
+    try:
+        cards = json.loads(METHODOLOGY_CARDS_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return jsonify({"error": str(error)}), 500
+    return jsonify({"cards": cards})
+
+
+@app.post("/api/methodology/cards")
+def save_methodology_cards():
+    """Сохранение карточек из UI в файл (apps + зеркало build).
+
+    Раньше UI писал на localhost:8000, где ничего не слушало: правки жили
+    только в localStorage. Путь и метод теперь совпадают с клиентом.
+    """
+    payload = request.get_json(silent=True) or {}
+    cards = payload.get("cards") if isinstance(payload, dict) else None
+    if not isinstance(cards, list):
+        return jsonify({"error": "cards must be a list"}), 400
+    if len(cards) > 500:
+        return jsonify({"error": "too many cards"}), 400
+    for card in cards:
+        if not isinstance(card, dict) or not str(card.get("title") or "").strip():
+            return jsonify({"error": "every card needs a title"}), 400
+    text = json.dumps(cards, ensure_ascii=False, indent=2) + "\n"
+    written = []
+    for path in (METHODOLOGY_CARDS_PATH, METHODOLOGY_CARDS_BUILD_PATH):
+        if path.parent.is_dir():
+            path.write_text(text, encoding="utf-8", newline="\n")
+            written.append(str(path))
+    return jsonify({"saved": True, "cards": len(cards), "files": written})
 
 
 @app.get("/api/agents/source")

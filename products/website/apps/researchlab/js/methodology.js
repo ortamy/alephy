@@ -26,7 +26,10 @@
   var MECHANISMS_DATA_PATH = 'data/methodology/mechanisms.json';
   var MATRICES_DATA_PATH = 'data/methodology/cultural-matrices.json';
   var METHODS_DATA_PATH = 'data/methodology/methods.json';
-  var API_URL = 'http://localhost:8000/api/methodology/cards';
+  // Тот же origin, что и лаба: сервер агентов раздаёт её с /apps/researchlab/
+  // и принимает POST /api/methodology/cards. На статическом хостинге запрос
+  // вернёт 404 — карточки останутся в localStorage, тост скажет об этом.
+  var API_URL = '/api/methodology/cards';
   var STORAGE_KEY = 'alephy_methodology_cards_v1';
 
   var CATEGORIES = [
@@ -348,7 +351,9 @@
       if (!response.ok) throw new Error('HTTP ' + response.status);
       toast('Сохранено в файл');
     }).catch(function() {
-      toast('Сохранено локально. Файл не обновлён — запустите сервер на порту 8000.');
+      // Статический хостинг (GitHub Pages) писать в репозиторий не может:
+      // карточки остаются в браузере, и тост говорит именно это.
+      toast('Сохранено в браузере. Файл не обновлён: сервер агентов не запущен.');
     });
   }
 

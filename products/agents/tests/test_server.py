@@ -1,5 +1,7 @@
 """Контрактные тесты локального API пайплайнов."""
+import shutil
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -10,6 +12,7 @@ if str(AGENTS_DIR) not in sys.path:
     sys.path.insert(0, str(AGENTS_DIR))
 
 from server import app  # noqa: E402
+import server  # noqa: E402
 from ollama_adapter import OllamaError  # noqa: E402
 
 
@@ -317,6 +320,46 @@ class DeletePipelineResultTest(unittest.TestCase):
     def test_unknown_result_is_404(self, _read, _write):
         response = self.client.delete("/api/pipeline-results/no-such-run")
         self.assertEqual(response.status_code, 404)
+
+
+class MethodologyCardsTest(unittest.TestCase):
+    """Карточки хаба методологии: UI и сервер говорят на одном контракте."""
+
+    def setUp(self):
+        app.config["TESTING"] = True
+        self.client = app.test_client()
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.original = (server.METHODOLOGY_CARDS_PATH, server.METHODOLOGY_CARDS_BUILD_PATH)
+        self.addCleanup(self._restore)
+        server.METHODOLOGY_CARDS_PATH = self.tmp / "cards.json"
+        server.METHODOLOGY_CARDS_BUILD_PATH = self.tmp / "build-cards.json"
+        server.METHODOLOGY_CARDS_PATH.write_text("[]", encoding="utf-8")
+        server.METHODOLOGY_CARDS_BUILD_PATH.write_text("[]", encoding="utf-8")
+
+    def _restore(self):
+        server.METHODOLOGY_CARDS_PATH, server.METHODOLOGY_CARDS_BUILD_PATH = self.original
+
+    def test_round_trip_writes_both_copies(self):
+        cards = [{"title": "Новая карточка", "text": "Текст", "category": "principles"}]
+        response = self.client.post("/api/methodology/cards", json={"cards": cards})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["cards"], 1)
+        for path in (server.METHODOLOGY_CARDS_PATH, server.METHODOLOGY_CARDS_BUILD_PATH):
+            self.assertIn("Новая карточка", path.read_text(encoding="utf-8"))
+
+    def test_get_returns_saved_cards(self):
+        cards = [{"title": "Карточка", "text": "Текст"}]
+        self.client.post("/api/methodology/cards", json={"cards": cards})
+        body = self.client.get("/api/methodology/cards").get_json()
+        self.assertEqual(body["cards"], cards)
+
+    def test_bad_payload_is_rejected(self):
+        self.assertEqual(self.client.post("/api/methodology/cards", json={}).status_code, 400)
+        self.assertEqual(self.client.post("/api/methodology/cards", json={"cards": "x"}).status_code, 400)
+        self.assertEqual(
+            self.client.post("/api/methodology/cards", json={"cards": [{"text": "без заголовка"}]}).status_code,
+            400)
 
 
 if __name__ == "__main__":
