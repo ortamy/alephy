@@ -79,7 +79,7 @@ Docs map: [`docs/00-START/MANIFEST.md`](docs/00-START/MANIFEST.md) (methodology 
 
 - **Public Site** — HTML/CSS, Tailwind CSS v4 (CLI build), Motion
 - **Research Lab** — Vanilla JavaScript SPA, hash routing (`js/router.js` → `js/page-controller.js`), JSON data files, Playwright smoke tests
-- **Agent Server** — Python + Flask, OpenAI API, dotenv; pipeline results stored as JSON and consumed by the Lab
+- **Agent Server** — Python + Flask, Ollama (локальные модели), dotenv; results stored as JSON and consumed by the Lab
 - **Tooling** — Python (checkers, generators), Node.js (design baseline, automation scripts)
 - **Deployment** — GitHub Pages + GitHub Actions (`deploy.yml` publishes `products/website/build`)
 
