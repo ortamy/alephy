@@ -200,6 +200,22 @@ const AdminSettings = (function() {
     } else {
       container.innerHTML = '<div class="lab-alert lab-alert-info">Модуль настроек недоступен.</div>';
     }
+    // Админ без пароля только на своём компьютере: страница статическая,
+    // пароль в исходнике ничего не защищал. На сайте кнопки нет.
+    if (window.AccessGate && AccessGate.isLocalHost && AccessGate.isLocalHost() && role !== 'admin') {
+      container.insertAdjacentHTML('beforeend',
+        '<section class="settings-section" style="margin-top:var(--space-4);">' +
+          '<h2 class="admin-list-title">Администрирование на этом компьютере</h2>' +
+          '<p class="settings-hint">Пароля нет: доступ привязан к localhost. На опубликованном сайте режим недоступен.</p>' +
+          '<button class="admin-btn admin-btn-primary" id="settings-become-admin" type="button">Войти как администратор</button>' +
+        '</section>');
+      var becomeBtn = document.getElementById('settings-become-admin');
+      if (becomeBtn) {
+        becomeBtn.addEventListener('click', function() {
+          AccessGate.becomeAdmin();
+        });
+      }
+    }
   }
 
   function buildHTML() {
@@ -1065,17 +1081,13 @@ const AdminSettings = (function() {
   function tabLegacyAdmin() {
     return '<div class="settings-tab" id="settings-tab-admin" style="display:none;">' +
       '<section class="settings-section">' +
-        '<h2 class="admin-list-title">Пароль администратора</h2>' +
-        '<p class="settings-hint">Логин всегда «admin». Меняет пароль только в этом браузере — гейт защищён на уровне удобства, не безопасности.</p>' +
-        '<div class="settings-row">' +
-          '<input type="password" id="settings-new-pass" class="admin-input" placeholder="Новый пароль">' +
-          '<button class="admin-btn admin-btn-secondary" id="settings-pass-btn">Сохранить пароль</button>' +
-        '</div>' +
+        '<h2 class="admin-list-title">Доступ администратора</h2>' +
+        '<p class="settings-hint">Пароля нет: режим включается кнопкой на этом компьютере, на опубликованном сайте недоступен.</p>' +
       '</section>' +
 
       '<section class="settings-section">' +
         '<h2 class="admin-list-title">Гостевые ссылки-приглашения</h2>' +
-        '<p class="settings-hint">Ссылка пропускает форму входа и открывает гостевой режим.</p>' +
+        '<p class="settings-hint">Ссылка сразу открывает гостевой режим.</p>' +
         '<div class="settings-row">' +
           '<input type="text" id="settings-token-label" class="admin-input" placeholder="Кому: например, коллега">' +
           '<button class="admin-btn admin-btn-secondary" id="settings-token-btn">Создать ссылку</button>' +
@@ -1197,18 +1209,7 @@ const AdminSettings = (function() {
       });
     });
 
-    // Admin password
-    var passBtn = document.getElementById('settings-pass-btn');
-    if (passBtn) {
-      passBtn.addEventListener('click', function() {
-        var val = document.getElementById('settings-new-pass').value.trim();
-        if (!val) { showNotice('Введите новый пароль.', true); return; }
-        AccessGate.setPasswordOverride(val);
-        document.getElementById('settings-new-pass').value = '';
-        showNotice('Пароль обновлён в этом браузере.', false);
-        addLog('Смена пароля администратора');
-      });
-    }
+    // Пароля администратора больше нет: доступ привязан к localhost.
 
     // Guest tokens
     var tokenBtn = document.getElementById('settings-token-btn');

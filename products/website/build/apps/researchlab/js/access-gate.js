@@ -1,17 +1,18 @@
 /**
- * access-gate.js — entry gate for the research lab: admin login or guest mode.
- * This is a UX split (admin vs guest view), not real access control:
- * the password and logic are visible in this file's source to anyone.
+ * access-gate.js — режимы лаборатории: администратор / исследователь / гость.
+ *
+ * Это UX-разделение, а не защита: код виден любому, сервер агентов доверяет
+ * только своему origin. Пароль администратора убран: он лежал в исходнике и
+ * ничего не защищал. На своём компьютере админ включается кнопкой без пароля
+ * (becomeAdmin), на опубликованном сайте доступен гостевой режим и
+ * ссылки-приглашения вида `?access=<token>`.
  */
 const AccessGate = (function() {
   'use strict';
 
-  var ADMIN_LOGIN = 'admin';
-  var DEFAULT_PASSWORD = 'Alephy2026';
   var SESSION_ADMIN_KEY = 'alephy_admin_session';
   var SESSION_RESEARCHER_KEY = 'alephy_researcher_session';
   var SESSION_GUEST_KEY = 'alephy_guest_session';
-  var PASSWORD_OVERRIDE_KEY = 'alephy_admin_password_override';
   var CONFIG_PATH = 'data/lab-config.json';
 
   var config = null;
@@ -32,16 +33,22 @@ const AccessGate = (function() {
     return isAdmin() ? 'admin' : isResearcher() ? 'researcher' : 'guest';
   }
 
-  function hasSession() {
-    return isAdmin() || isResearcher() || isGuest();
+  /** Свой компьютер: здесь допустим вход администратора без пароля. */
+  function isLocalHost() {
+    var host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '';
   }
 
-  function currentPassword() {
-    return localStorage.getItem(PASSWORD_OVERRIDE_KEY) || DEFAULT_PASSWORD;
-  }
-
-  function setPasswordOverride(pass) {
-    localStorage.setItem(PASSWORD_OVERRIDE_KEY, pass);
+  /**
+   * Включить админ-режим на этом компьютере. Пароля нет осознанно: страница
+   * статическая, и пароль в исходнике создавал ложное чувство защиты.
+   * На опубликованном домене кнопки нет, а вызов вернёт false.
+   */
+  function becomeAdmin() {
+    if (!isLocalHost()) return false;
+    sessionStorage.setItem(SESSION_ADMIN_KEY, '1');
+    window.location.reload();
+    return true;
   }
 
   function loadConfig() {
@@ -63,6 +70,7 @@ const AccessGate = (function() {
     return config;
   }
 
+  /** Ссылка-приглашение: ?access=<token> → роль researcher или guest. */
   function checkTokenInHash() {
     var match = window.location.hash.match(/access=([^&]+)/);
     if (!match || !config) return false;
@@ -81,86 +89,15 @@ const AccessGate = (function() {
       if (checkTokenInHash()) {
         history.replaceState(null, '', window.location.pathname + window.location.search);
       }
-      if (hasSession()) {
-        var role = getRole();
-        onReady(role);
-      } else {
-        sessionStorage.setItem(SESSION_GUEST_KEY, '1');
-        onReady('guest');
-      }
+      onReady(getRole());
     });
-  }
-
-  function renderGate(onReady) {
-    var overlay = document.createElement('div');
-    overlay.id = 'access-gate-overlay';
-    overlay.className = 'gate-overlay';
-    overlay.innerHTML =
-      '<div class="gate-card">' +
-        '<div class="gate-logo">АЛЕФИ</div>' +
-        '<h1 class="gate-title">Исследовательская лаборатория</h1>' +
-        '<p class="gate-subtitle">Войдите как администратор, исследователь или продолжите в гостевом режиме.</p>' +
-        '<label class="gate-label" for="gate-login">Логин</label>' +
-        '<input type="text" id="gate-login" class="admin-input" placeholder="admin" autocomplete="off">' +
-        '<label class="gate-label" for="gate-pass">Пароль</label>' +
-        '<input type="password" id="gate-pass" class="admin-input" placeholder="Пароль" autocomplete="off">' +
-        '<button class="admin-btn admin-btn-primary gate-btn" id="gate-login-btn">Войти</button>' +
-        '<div id="gate-error" class="admin-error" style="display:none;">Неверный логин или пароль.</div>' +
-        '<div class="gate-divider">или</div>' +
-        '<label class="gate-label" for="gate-token">Токен исследователя</label>' +
-        '<input type="text" id="gate-token" class="admin-input" placeholder="Необязательно" autocomplete="off">' +
-        '<button class="admin-btn admin-btn-secondary gate-btn" id="gate-researcher-btn">Войти как исследователь</button>' +
-        '<div class="gate-divider">или</div>' +
-        '<button class="admin-btn admin-btn-secondary gate-btn" id="gate-guest-btn">Гостевой режим</button>' +
-      '</div>';
-    document.body.appendChild(overlay);
-
-    var loginInput = document.getElementById('gate-login');
-    var passInput = document.getElementById('gate-pass');
-    var tokenInput = document.getElementById('gate-token');
-    var errorBox = document.getElementById('gate-error');
-
-    function tryLogin() {
-      var login = loginInput.value.trim();
-      var pass = passInput.value;
-      if (login === ADMIN_LOGIN && pass === currentPassword()) {
-        sessionStorage.setItem(SESSION_ADMIN_KEY, '1');
-        overlay.remove();
-        onReady('admin');
-      } else {
-        errorBox.style.display = 'block';
-        passInput.value = '';
-        passInput.focus();
-      }
-    }
-
-    document.getElementById('gate-login-btn').addEventListener('click', tryLogin);
-    document.getElementById('gate-researcher-btn').addEventListener('click', function() {
-      var token = tokenInput.value.trim();
-      var found = (config.researcherTokens || []).some(function(item) { return item.token === token; });
-      if (!found) { errorBox.textContent = 'Неверный токен исследователя.'; errorBox.style.display = 'block'; tokenInput.focus(); return; }
-      sessionStorage.setItem(SESSION_RESEARCHER_KEY, '1');
-      overlay.remove();
-      onReady('researcher');
-    });
-    document.getElementById('gate-guest-btn').addEventListener('click', function() {
-      sessionStorage.setItem(SESSION_GUEST_KEY, '1');
-      overlay.remove();
-      onReady('guest');
-      window.location.hash = '#manifest';
-    });
-    [loginInput, passInput].forEach(function(input) {
-      input.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') tryLogin();
-      });
-    });
-    loginInput.focus();
   }
 
   function logout() {
     sessionStorage.removeItem(SESSION_ADMIN_KEY);
     sessionStorage.removeItem(SESSION_RESEARCHER_KEY);
-    sessionStorage.removeItem(SESSION_GUEST_KEY);
+    // Гость остаётся гостем: иначе на localhost админ вернулся бы сам.
+    sessionStorage.setItem(SESSION_GUEST_KEY, '1');
     window.location.reload();
   }
 
@@ -171,8 +108,8 @@ const AccessGate = (function() {
     getRole: getRole,
     isGuest: isGuest,
     getConfig: getConfig,
-    currentPassword: currentPassword,
-    setPasswordOverride: setPasswordOverride,
+    isLocalHost: isLocalHost,
+    becomeAdmin: becomeAdmin,
     logout: logout
   };
   return window.AccessGate;
