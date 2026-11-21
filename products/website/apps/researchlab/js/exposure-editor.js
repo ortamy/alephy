@@ -489,7 +489,9 @@ const ExposureEditor = (function() {
         if (!state.title) { showToast('Введите название разоблачения'); return; }
         if (state.sections.length === 0) { showToast('Добавьте хотя бы одну секцию'); return; }
         var draft = saveCurrentDraft(true);
-        showToast('«' + draft.title + '» опубликовано!');
+        // Редактор хранит черновики в браузере: в корпус и на сайт ничего
+        // не уходит. «Опубликовано» здесь значит «готово», а не «в продакшене».
+        showToast('«' + draft.title + '» сохранено в браузере как готовое (в корпус не отправляется)');
       });
     }
 

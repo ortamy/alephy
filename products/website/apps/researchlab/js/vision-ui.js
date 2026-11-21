@@ -7,7 +7,19 @@ const VisionUI = (function() {
   'use strict';
 
   const HF_API_URL = 'https://api-inference.huggingface.co/models/HuggingFaceTB/SmolVLM-256M-Instruct';
-  const LOCAL_API_URL = 'http://localhost:8000/describe';
+  // Адрес локального сервиса описания картинок. В репозитории такого сервиса
+  // нет (neuro-сервер умеет /generate, но не /describe), поэтому адрес
+  // настраивается: localStorage.alephy_vision_endpoint.
+  const LOCAL_ENDPOINT_KEY = 'alephy_vision_endpoint';
+  const LOCAL_ENDPOINT_DEFAULT = 'http://127.0.0.1:8000/describe';
+
+  function localEndpoint() {
+    try {
+      return localStorage.getItem(LOCAL_ENDPOINT_KEY) || LOCAL_ENDPOINT_DEFAULT;
+    } catch (e) {
+      return LOCAL_ENDPOINT_DEFAULT;
+    }
+  }
   const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const ALLOWED_TYPES = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
   const API_KEY_STORAGE = 'alephy_hf_api_key';
@@ -44,11 +56,11 @@ const VisionUI = (function() {
     var note = document.getElementById('vi-mode-note');
     if (note) {
       note.textContent = mode === 'local'
-        ? 'Локальный сервер: изображение не покидает машину. Ключ не нужен.'
+        ? 'Локальный сервис описания: POST /describe (адрес — localStorage.alephy_vision_endpoint, по умолчанию 127.0.0.1:8000/describe). Ключ не нужен.'
         : 'Hugging Face Inference API: нужен бесплатный ключ, снимок уходит на внешний сервис.';
     }
     var endpoint = document.getElementById('vi-endpoint');
-    if (endpoint) endpoint.textContent = mode === 'local' ? LOCAL_API_URL : HF_API_URL;
+    if (endpoint) endpoint.textContent = mode === 'local' ? localEndpoint() : HF_API_URL;
     var rMode = document.getElementById('vi-r-mode');
     if (rMode) {
       rMode.textContent = mode === 'local' ? 'локальный сервер' : 'Hugging Face API';
@@ -267,7 +279,7 @@ const VisionUI = (function() {
   }
 
   async function analyzeLocal() {
-    var response = await fetch(LOCAL_API_URL, {
+    var response = await fetch(localEndpoint(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
