@@ -3775,6 +3775,9 @@ var ARCH_AGENT_ICONS = {
           '<div id="bl-list"></div>' +
           '<div id="bl-empty" class="lab-alert lab-alert-info">Пока нет сохранённых досок.</div>';
         container.dataset.loaded = '1';
+        // Архив досок раньше инициализировался только на старте лабы; теперь
+        // модули стартуют на своём маршруте — init перенесён сюда.
+        if (window.BoardLib) BoardLib.init();
         break;
 
       case 'vision':
@@ -4418,20 +4421,14 @@ var ARCH_AGENT_ICONS = {
       if (window.LabHero) LabHero.observe();
       initGlassTopbar();
 
-    // Инициализируем модули, работающие с готовым DOM
-    setTimeout(function() {
-      if (window.RootDict) RootDict.init();
-    }, 500);
-    if (window.Religionisms) Religionisms.init();
-    if (window.BoardLib) BoardLib.init();
-    if (typeof VisionUI !== 'undefined') VisionUI.init();
-    if (window.EdChat) EdChat.init();
+    // Модули инициализируются на своём маршруте (case в renderModule):
+    // глобальные init на старте тянули roots, states, qumran и religionisms
+    // на каждой странице — это лишние запросы и источник флаки. Здесь
+    // остаются только служебные вещи, нужные до первого маршрута.
     if (window.LabIcons) window.LabIcons.sync();
-    if (window.Investigation) Investigation.init();
-    if (window.ScriptureReader) ScriptureReader.init();
+    // Настройки держат init отдельно от render(): case #admin-settings
+    // вызывает только render(), поэтому init нужен один раз при загрузке.
     if (window.AdminSettings) AdminSettings.init();
-    if (window.LearnLab) LearnLab.init();
-    if (window.AlephyStates) AlephyStates.init();
 
   }
   }
